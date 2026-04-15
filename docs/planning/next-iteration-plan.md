@@ -152,11 +152,11 @@ These are small but real issues observed after the production rollout and smoke 
 
 ### 7. Semantic Conclusion Memory
 
-- current repo behavior now keeps a first lightweight `aion_conclusion` record for explicit `response_style` preferences such as `concise` or `structured`, the expression layer uses that preference in both fallback generation and OpenAI prompting, and context retrieval includes those stable preferences in the runtime summary
+- current repo behavior now keeps a first lightweight `aion_conclusion` record for explicit `response_style` preferences such as `concise` or `structured`, the expression layer uses that preference in both fallback generation and OpenAI prompting, context retrieval includes those stable preferences in the runtime summary, and planning now turns them into explicit response-shaping steps such as `keep_response_concise` or `format_response_as_bullets`
 - next improvement:
   - widen conclusion memory beyond explicit requests into repeated-pattern learning once there is enough traffic signal
   - decide whether conclusions should start carrying supporting memory ids and richer provenance before the subconscious loop exists
-  - consider feeding stable semantic preferences into planning or role selection, not only context and expression
+  - consider whether stable semantic preferences should also influence role selection, not only context, planning, and expression
 
 ### 5. UTF-8 Smoke Test Reliability
 

@@ -45,6 +45,56 @@ def test_planning_agent_builds_support_plan() -> None:
     assert result.needs_action is False
 
 
+def test_planning_agent_adds_concise_step_from_semantic_preference() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Can you help me plan this?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.7,
+            urgency=0.3,
+            valence=0.0,
+            arousal=0.4,
+            mode="analyze",
+        ),
+        role=RoleOutput(selected="analyst", confidence=0.8),
+        user_preferences={"response_style": "concise"},
+    )
+
+    assert result.steps == [
+        "interpret_event",
+        "review_context",
+        "break_down_problem",
+        "highlight_next_step",
+        "keep_response_concise",
+        "prepare_response",
+    ]
+
+
+def test_planning_agent_adds_structured_step_from_semantic_preference() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Can you help me plan this?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.7,
+            urgency=0.3,
+            valence=0.0,
+            arousal=0.4,
+            mode="analyze",
+        ),
+        role=RoleOutput(selected="analyst", confidence=0.8),
+        user_preferences={"response_style": "structured"},
+    )
+
+    assert result.steps == [
+        "interpret_event",
+        "review_context",
+        "break_down_problem",
+        "highlight_next_step",
+        "format_response_as_bullets",
+        "prepare_response",
+    ]
+
+
 def test_planning_agent_adds_telegram_delivery_step_when_needed() -> None:
     result = PlanningAgent().run(
         event=_event(source="telegram", text="deploy the fix"),

@@ -212,3 +212,39 @@ async def test_runtime_pipeline_applies_structured_response_preference_from_conc
     assert result.expression.message == "Mocked OpenAI reply"
     assert openai.calls[0]["response_style"] == "structured"
     assert "Stable user preferences: prefers structured responses." in result.context.summary
+    assert "format_response_as_bullets" in result.plan.steps
+
+
+async def test_runtime_pipeline_applies_concise_response_preference_to_plan() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.user_preferences = {"response_style": "concise", "response_style_source": "explicit_request"}
+    memory.user_conclusions = [
+        {"kind": "response_style", "content": "concise", "confidence": 0.95, "source": "explicit_request"}
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+    )
+
+    event = Event(
+        event_id="evt-4",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Can you review the current deployment issue?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-4"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.expression.message == "Mocked OpenAI reply"
+    assert openai.calls[0]["response_style"] == "concise"
+    assert "keep_response_concise" in result.plan.steps

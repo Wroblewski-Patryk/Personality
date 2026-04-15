@@ -8,9 +8,11 @@ class PlanningAgent:
         context: ContextOutput,
         motivation: MotivationOutput,
         role: RoleOutput,
+        user_preferences: dict | None = None,
     ) -> PlanOutput:
         goal = "Provide a clear and useful response to the user event."
         steps = ["interpret_event", "review_context"]
+        response_style = str((user_preferences or {}).get("response_style", "")).strip().lower()
 
         if motivation.mode == "clarify":
             goal = "Ask for the missing information needed to help."
@@ -34,6 +36,13 @@ class PlanningAgent:
         needs_action = event.source == "telegram" and needs_response
         if needs_action:
             steps.append("send_telegram_message")
+
+        if response_style == "concise" and "keep_response_concise" not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, "keep_response_concise")
+        elif response_style == "structured" and "format_response_as_bullets" not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, "format_response_as_bullets")
 
         return PlanOutput(
             goal=goal,

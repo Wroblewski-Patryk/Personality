@@ -54,7 +54,13 @@ class RuntimeOrchestrator:
         )
         motivation = self.motivation_engine.run(event=event, context=context)
         role = self.role_agent.run(event=event, perception=perception, context=context)
-        plan = self.planning_agent.run(event=event, context=context, motivation=motivation, role=role)
+        plan = self.planning_agent.run(
+            event=event,
+            context=context,
+            motivation=motivation,
+            role=role,
+            user_preferences=user_preferences,
+        )
         expression = await self.expression_agent.run(
             event=event,
             perception=perception,

@@ -76,3 +76,10 @@ The current repo already works as an MVP slice, but several architecture-level d
   - runtime now persists a lightweight language preference in `aion_profile`, and a first explicit semantic preference (`response_style`) in `aion_conclusion`.
 - Decision needed:
   - should `aion_profile` remain limited to durable interaction preferences such as language, while `aion_conclusion` carries generalized learned preferences, or should those concerns merge into one wider identity-linked profile later?
+
+### 10. Preference Influence Scope
+
+- Current repo fact:
+  - stable `response_style` conclusions now influence context, planning, and expression.
+- Decision needed:
+  - which preference types should remain expression-only, and which should be allowed to shape higher-level planning or role selection as the architecture grows?
