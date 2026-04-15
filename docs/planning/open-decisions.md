@@ -12,6 +12,7 @@ The current repo already works as an MVP slice, but several architecture-level d
   - runtime now has a lightweight background reflection worker backed by a durable `aion_reflection_task` queue in Postgres.
   - `RuntimeResult.reflection_triggered` is returned as `True` when reflection was successfully persisted and queued after episode persistence.
   - failed reflection tasks now retry with bounded backoff inside the app process.
+  - `GET /health` now exposes a lightweight reflection snapshot with worker state and queue/task counts.
 - Decision needed:
   - should this app-local durable worker stay as the MVP baseline, or should reflection move into a separate external worker or scheduler before more complex consolidation is added?
 

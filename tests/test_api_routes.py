@@ -96,14 +96,56 @@ class FakeSettings:
         self.telegram_webhook_secret = telegram_webhook_secret
 
 
+class FakeMemoryRepository:
+    async def get_reflection_task_stats(
+        self,
+        *,
+        max_attempts: int,
+        stuck_after_seconds: int,
+        retry_backoff_seconds: tuple[int, ...],
+        now=None,
+    ) -> dict[str, int]:
+        assert max_attempts == 3
+        assert stuck_after_seconds == 180
+        assert retry_backoff_seconds == (5, 30, 120)
+        return {
+            "total": 4,
+            "pending": 1,
+            "processing": 1,
+            "completed": 1,
+            "failed": 1,
+            "retryable_failed": 1,
+            "exhausted_failed": 0,
+            "stuck_processing": 0,
+        }
+
+
+class FakeReflectionWorker:
+    def snapshot(self) -> dict:
+        return {
+            "running": True,
+            "queue_size": 1,
+            "queue_capacity": 99,
+            "queued_task_count": 1,
+            "queued_task_ids": [42],
+            "max_attempts": 3,
+            "retry_backoff_seconds": [5, 30, 120],
+            "stuck_processing_seconds": 180,
+        }
+
+
 def _client(secret: str | None = None) -> tuple[TestClient, FakeRuntime, FakeTelegramClient]:
     app = FastAPI()
     app.include_router(router)
     runtime = FakeRuntime()
     telegram_client = FakeTelegramClient()
+    memory_repository = FakeMemoryRepository()
+    reflection_worker = FakeReflectionWorker()
     app.state.runtime = runtime
     app.state.telegram_client = telegram_client
     app.state.settings = FakeSettings(telegram_webhook_secret=secret)
+    app.state.memory_repository = memory_repository
+    app.state.reflection_worker = reflection_worker
     return TestClient(app), runtime, telegram_client
 
 
@@ -113,7 +155,32 @@ def test_health_endpoint_returns_ok() -> None:
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {
+        "status": "ok",
+        "reflection": {
+            "healthy": True,
+            "worker": {
+                "running": True,
+                "queue_size": 1,
+                "queue_capacity": 99,
+                "queued_task_count": 1,
+                "queued_task_ids": [42],
+                "max_attempts": 3,
+                "retry_backoff_seconds": [5, 30, 120],
+                "stuck_processing_seconds": 180,
+            },
+            "tasks": {
+                "total": 4,
+                "pending": 1,
+                "processing": 1,
+                "completed": 1,
+                "failed": 1,
+                "retryable_failed": 1,
+                "exhausted_failed": 0,
+                "stuck_processing": 0,
+            },
+        },
+    }
 
 
 def test_event_endpoint_returns_runtime_result_and_normalizes_event() -> None:

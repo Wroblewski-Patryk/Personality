@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
@@ -371,6 +371,56 @@ class MemoryRepository:
 
         return self._serialize_reflection_task(row)
 
+    async def get_reflection_task_stats(
+        self,
+        *,
+        max_attempts: int,
+        stuck_after_seconds: int,
+        retry_backoff_seconds: tuple[int, ...],
+        now: datetime | None = None,
+    ) -> dict[str, int]:
+        async with self.session_factory() as session:
+            statement = select(AionReflectionTask)
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+        current_time = self._coerce_datetime(now or datetime.now(timezone.utc))
+        stats = {
+            "total": 0,
+            "pending": 0,
+            "processing": 0,
+            "completed": 0,
+            "failed": 0,
+            "retryable_failed": 0,
+            "exhausted_failed": 0,
+            "stuck_processing": 0,
+        }
+        for row in rows:
+            stats["total"] += 1
+            status = row.status
+            if status in stats:
+                stats[status] += 1
+
+            attempts = int(row.attempts or 0)
+            updated_at = self._coerce_datetime(row.updated_at)
+            age_seconds = max(0.0, (current_time - updated_at).total_seconds()) if updated_at else 0.0
+
+            if status == "processing" and age_seconds >= stuck_after_seconds:
+                stats["stuck_processing"] += 1
+
+            if status != "failed":
+                continue
+
+            if attempts >= max_attempts:
+                stats["exhausted_failed"] += 1
+                continue
+
+            backoff = self._retry_backoff_seconds_for_attempts(attempts, retry_backoff_seconds)
+            if age_seconds >= backoff:
+                stats["retryable_failed"] += 1
+
+        return stats
+
     def _should_update_language_profile(
         self,
         current_language: str,
@@ -434,3 +484,16 @@ class MemoryRepository:
             "updated_at": row.updated_at,
             "created_at": row.created_at,
         }
+
+    def _retry_backoff_seconds_for_attempts(self, attempts: int, retry_backoff_seconds: tuple[int, ...]) -> int:
+        if attempts <= 0:
+            return 0
+        index = min(attempts - 1, len(retry_backoff_seconds) - 1)
+        return retry_backoff_seconds[index]
+
+    def _coerce_datetime(self, value: datetime | None) -> datetime | None:
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)

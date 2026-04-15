@@ -117,6 +117,7 @@ Current MVP status:
 - a lightweight reflection worker now consolidates some conclusions asynchronously after episode writes
 - reflection jobs are now also stored in `aion_reflection_task`, so pending background work survives app restarts and can be recovered on startup
 - failed reflection jobs now retry with lightweight backoff and a bounded attempt limit, so transient worker errors do not immediately drop background consolidation
+- runtime health now exposes a lightweight reflection snapshot so pending, failed, retryable, exhausted, and stuck background tasks are visible operationally
 - episodic summaries now also capture the role used, so reflection can infer lightweight `preferred_role` tendencies over time
 - reflection now also maintains a lightweight `aion_theta` state with soft support, analysis, and execution biases derived from repeated recent role patterns
 - runtime still prefers explicit heuristics and reflected `preferred_role`, but can now also use theta as a softer bias on ambiguous turns for role selection, motivation mode selection, lightweight planning stance, and expression tone selection

@@ -7,6 +7,9 @@ from app.memory.repository import MemoryRepository
 
 
 class ReflectionWorker:
+    RETRY_BACKOFF_SECONDS = (5, 30, 120)
+    STUCK_PROCESSING_SECONDS = 180
+
     def __init__(
         self,
         memory_repository: MemoryRepository,
@@ -146,6 +149,19 @@ class ReflectionWorker:
             return 100
         return max(0, self.queue.maxsize - self.queue.qsize())
 
+    def snapshot(self) -> dict[str, int | bool | list[int]]:
+        running = self._task is not None and not self._task.done()
+        return {
+            "running": running,
+            "queue_size": self.queue.qsize(),
+            "queue_capacity": self._queue_capacity(),
+            "queued_task_count": len(self._queued_task_ids),
+            "queued_task_ids": sorted(self._queued_task_ids),
+            "max_attempts": self.max_attempts,
+            "retry_backoff_seconds": list(self.RETRY_BACKOFF_SECONDS),
+            "stuck_processing_seconds": self.STUCK_PROCESSING_SECONDS,
+        }
+
     def _is_task_ready(self, task: dict) -> bool:
         status = str(task.get("status", "pending"))
         attempts = int(task.get("attempts", 0) or 0)
@@ -164,11 +180,10 @@ class ReflectionWorker:
         return retry_after <= datetime.now(timezone.utc)
 
     def _retry_backoff_seconds(self, attempts: int) -> int:
-        backoff_steps = (5, 30, 120)
         if attempts <= 0:
             return 0
-        index = min(attempts - 1, len(backoff_steps) - 1)
-        return backoff_steps[index]
+        index = min(attempts - 1, len(self.RETRY_BACKOFF_SECONDS) - 1)
+        return self.RETRY_BACKOFF_SECONDS[index]
 
     def _derive_conclusions(self, recent_memory: Sequence[dict]) -> list[dict]:
         if not recent_memory:

@@ -161,10 +161,12 @@ These are small but real issues observed after the production rollout and smoke 
 ### 8. Background Reflection Worker
 
 - current repo behavior now has a lightweight reflection worker backed by durable `aion_reflection_task` rows; it runs after episode persistence, updates semantic conclusions asynchronously, recovers pending work on startup, retries failed jobs with bounded backoff, and sets `reflection_triggered=true` when the task is durably persisted and queued
+- current repo behavior also exposes lightweight queue observability through `GET /health`, including worker status plus pending, failed, retryable, exhausted, and stuck-task counts
 - next improvement:
   - move beyond explicit `preference_update` markers and infer stable conclusions from repeated behavioral patterns
   - decide whether the current app-local durable queue is enough for MVP or whether reflection should move into a separate worker process before more complex jobs exist
-  - decide whether retry policy should become configurable and observable at the API or ops layer once reflection handles more than lightweight consolidation
+  - decide whether retry policy should become configurable beyond the current built-in worker defaults once reflection handles more than lightweight consolidation
+  - decide whether health-level observability is enough, or whether a dedicated internal ops endpoint should expose richer reflection task detail
   - decide when reflection should stay limited to `aion_conclusion` plus lightweight `aion_theta`, versus growing into richer future artifacts like goals or stronger role heuristics
 
 ### 9. Theta Runtime Bias
