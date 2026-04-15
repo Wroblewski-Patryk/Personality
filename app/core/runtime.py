@@ -3,8 +3,9 @@ from time import perf_counter
 from app.agents.context import ContextAgent
 from app.agents.perception import PerceptionAgent
 from app.agents.planning import PlanningAgent
+from app.agents.role import RoleAgent
 from app.core.action import ActionExecutor
-from app.core.contracts import Event, RoleOutput, RuntimeResult
+from app.core.contracts import Event, RuntimeResult
 from app.core.logging import get_logger
 from app.expression.generator import ExpressionAgent
 from app.memory.repository import MemoryRepository
@@ -17,6 +18,7 @@ class RuntimeOrchestrator:
         perception_agent: PerceptionAgent,
         context_agent: ContextAgent,
         motivation_engine: MotivationEngine,
+        role_agent: RoleAgent,
         planning_agent: PlanningAgent,
         expression_agent: ExpressionAgent,
         action_executor: ActionExecutor,
@@ -25,6 +27,7 @@ class RuntimeOrchestrator:
         self.perception_agent = perception_agent
         self.context_agent = context_agent
         self.motivation_engine = motivation_engine
+        self.role_agent = role_agent
         self.planning_agent = planning_agent
         self.expression_agent = expression_agent
         self.action_executor = action_executor
@@ -39,7 +42,7 @@ class RuntimeOrchestrator:
         perception = self.perception_agent.run(event)
         context = self.context_agent.run(event=event, perception=perception, recent_memory=memory)
         motivation = self.motivation_engine.run(event=event, context=context)
-        role = RoleOutput(selected="advisor", confidence=0.6)
+        role = self.role_agent.run(event=event, perception=perception, context=context)
         plan = self.planning_agent.run(event=event, context=context, motivation=motivation, role=role)
         expression = await self.expression_agent.run(
             event=event,

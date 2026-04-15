@@ -10,7 +10,7 @@ class OpenAIClient:
         self.client = AsyncOpenAI(api_key=api_key) if api_key else None
         self.logger = get_logger("aion.openai")
 
-    async def generate_reply(self, user_text: str, context_summary: str) -> str | None:
+    async def generate_reply(self, user_text: str, context_summary: str, role_name: str) -> str | None:
         if not self.client:
             return None
 
@@ -22,6 +22,7 @@ class OpenAIClient:
                         "role": "system",
                         "content": (
                             "You are AION, a supportive and concise assistant. "
+                            f"Your current interaction role is '{role_name}'. "
                             "Respond clearly and use the context summary when useful."
                         ),
                     },

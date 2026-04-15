@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from app.agents.context import ContextAgent
 from app.agents.perception import PerceptionAgent
 from app.agents.planning import PlanningAgent
+from app.agents.role import RoleAgent
 from app.core.action import ActionExecutor
 from app.core.contracts import Event, EventMeta
 from app.core.runtime import RuntimeOrchestrator
@@ -33,7 +34,7 @@ class FakeTelegramClient:
 
 
 class FakeOpenAIClient:
-    async def generate_reply(self, user_text: str, context_summary: str) -> str | None:
+    async def generate_reply(self, user_text: str, context_summary: str, role_name: str) -> str | None:
         return "Mocked OpenAI reply"
 
 
@@ -54,6 +55,7 @@ async def test_runtime_pipeline_api_source() -> None:
         perception_agent=PerceptionAgent(),
         context_agent=ContextAgent(),
         motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
         planning_agent=PlanningAgent(),
         expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
         action_executor=action,
@@ -74,6 +76,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert result.action_result.status == "success"
     assert "previous hello" in result.context.summary
     assert "Earlier reply" in result.context.summary
+    assert result.role.selected == "advisor"
     assert result.expression.message == "Mocked OpenAI reply"
     assert result.memory_record is not None
     assert result.reflection_triggered is False

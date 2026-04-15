@@ -30,9 +30,9 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 4. Role Selection
 
 - Current repo fact:
-  - runtime role is hardcoded to `advisor`.
+  - runtime role now uses lightweight heuristic selection (`friend`, `analyst`, `executor`, `mentor`, `advisor`) instead of a hardcoded `advisor`.
 - Decision needed:
-  - when should role selection become real logic, and which module should own it?
+  - when should role selection move from heuristics into a richer module with user-state, memory, and goal-aware logic?
 
 ### 5. Memory Retrieval Depth
 

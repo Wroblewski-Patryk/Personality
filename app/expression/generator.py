@@ -29,6 +29,7 @@ class ExpressionAgent:
             llm_reply = await self.openai_client.generate_reply(
                 user_text=text,
                 context_summary=context.summary,
+                role_name=role.selected,
             )
             message = llm_reply or f"Echo ({role.selected}): {text}"
 

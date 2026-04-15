@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from app.agents.context import ContextAgent
 from app.agents.perception import PerceptionAgent
 from app.agents.planning import PlanningAgent
+from app.agents.role import RoleAgent
 from app.api.routes import router
 from app.core.action import ActionExecutor
 from app.core.config import get_settings
@@ -44,6 +45,7 @@ async def lifespan(app: FastAPI):
         perception_agent=PerceptionAgent(),
         context_agent=ContextAgent(),
         motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
         planning_agent=PlanningAgent(),
         expression_agent=ExpressionAgent(openai_client=openai_client),
         action_executor=action_executor,

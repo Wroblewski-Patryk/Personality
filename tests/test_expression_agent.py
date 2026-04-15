@@ -5,12 +5,12 @@ from app.expression.generator import ExpressionAgent
 
 
 class NoReplyOpenAI:
-    async def generate_reply(self, user_text: str, context_summary: str) -> str | None:
+    async def generate_reply(self, user_text: str, context_summary: str, role_name: str) -> str | None:
         return None
 
 
 class ReplyOpenAI:
-    async def generate_reply(self, user_text: str, context_summary: str) -> str | None:
+    async def generate_reply(self, user_text: str, context_summary: str, role_name: str) -> str | None:
         return "OpenAI response"
 
 
@@ -57,4 +57,3 @@ async def test_expression_uses_openai_when_available() -> None:
     agent = ExpressionAgent(openai_client=ReplyOpenAI())
     result = await agent.run(_event(), _context(), _plan(), _role(), _motivation())
     assert result.message == "OpenAI response"
-
