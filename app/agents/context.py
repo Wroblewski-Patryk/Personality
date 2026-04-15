@@ -70,7 +70,19 @@ class ContextAgent:
             ),
             reverse=True,
         )
-        return [item for _, item in ranked[:limit]]
+
+        selected: list[dict] = []
+        seen_summaries: set[str] = set()
+        for _, item in ranked:
+            normalized_summary = self._normalize_text(str(item.get("summary", "")))
+            if normalized_summary in seen_summaries:
+                continue
+            seen_summaries.add(normalized_summary)
+            selected.append(item)
+            if len(selected) >= limit:
+                break
+
+        return selected
 
     def run(self, event: Event, perception: PerceptionOutput, recent_memory: list[dict]) -> ContextOutput:
         text = str(event.payload.get("text", "")).strip()

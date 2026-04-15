@@ -154,3 +154,41 @@ def test_context_falls_back_to_unknown_language_memory_when_no_match_exists() ->
 
     assert "asked about rollout" in result.summary
     assert "We can keep going" in result.summary
+
+
+def test_context_deduplicates_same_memory_summary() -> None:
+    repeated_summary = (
+        "event=deploy the fix now; response_language=en; context=old context; "
+        "plan_goal=reply; action=success; expression=Please provide the deployment details"
+    )
+    recent_memory = [
+        {
+            "id": 13,
+            "event_id": "evt-en-1",
+            "summary": repeated_summary,
+            "importance": 0.9,
+            "event_timestamp": datetime.now(timezone.utc),
+        },
+        {
+            "id": 14,
+            "event_id": "evt-en-2",
+            "summary": repeated_summary,
+            "importance": 0.8,
+            "event_timestamp": datetime.now(timezone.utc),
+        },
+        {
+            "id": 15,
+            "event_id": "evt-en-3",
+            "summary": (
+                "event=deploy checklist; response_language=en; context=other context; "
+                "plan_goal=reply; action=success; expression=Let's verify the rollout checklist"
+            ),
+            "importance": 0.7,
+            "event_timestamp": datetime.now(timezone.utc),
+        },
+    ]
+
+    result = ContextAgent().run(event=_event(), perception=_perception(), recent_memory=recent_memory)
+
+    assert result.summary.count("deploy the fix now") == 1
+    assert "deploy checklist" in result.summary
