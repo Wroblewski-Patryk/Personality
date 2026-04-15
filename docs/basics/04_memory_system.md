@@ -117,7 +117,7 @@ Current MVP status:
 - a lightweight in-process reflection worker now consolidates some conclusions asynchronously after episode writes
 - episodic summaries now also capture the role used, so reflection can infer lightweight `preferred_role` tendencies over time
 - reflection now also maintains a lightweight `aion_theta` state with soft support, analysis, and execution biases derived from repeated recent role patterns
-- runtime still prefers explicit heuristics and reflected `preferred_role`, but can now also use theta as a softer bias on ambiguous turns for role selection, motivation mode selection, and lightweight planning stance
+- runtime still prefers explicit heuristics and reflected `preferred_role`, but can now also use theta as a softer bias on ambiguous turns for role selection, motivation mode selection, lightweight planning stance, and expression tone selection
 - vector retrieval is still planned, not live
 
 ---

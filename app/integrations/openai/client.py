@@ -20,6 +20,7 @@ class OpenAIClient:
         response_style: str | None,
         plan_goal: str,
         motivation_mode: str,
+        response_tone: str,
     ) -> str | None:
         if not self.client:
             return None
@@ -34,12 +35,14 @@ class OpenAIClient:
                             "You are AION, a supportive and concise assistant. "
                             f"Your current interaction role is '{role_name}'. "
                             f"The current response mode is '{motivation_mode}'. "
+                            f"The desired response tone is '{response_tone}'. "
                             f"The immediate goal is '{plan_goal}'. "
                             f"The preferred response language is '{language_name(response_language)}'. "
                             f"The user's stable response style preference is '{response_style or 'default'}'. "
                             "Respond clearly, preserve momentum, use the context summary when useful, "
                             "stay in the preferred response language unless the user explicitly asks to switch, "
-                            "and honor the response style preference when it is present."
+                            "honor the response style preference when it is present, "
+                            "and keep the wording aligned with the desired response tone."
                         ),
                     },
                     {

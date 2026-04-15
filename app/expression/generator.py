@@ -25,9 +25,11 @@ class ExpressionAgent:
         role: RoleOutput,
         motivation: MotivationOutput,
         user_preferences: dict | None = None,
+        theta: dict | None = None,
     ) -> ExpressionOutput:
         text = str(event.payload.get("text", "")).strip()
         response_style = preferred_response_style(user_preferences)
+        tone = self._select_tone(motivation=motivation, role=role, theta=theta)
         message: str
         if not text:
             message = self._build_fallback_message(
@@ -37,6 +39,7 @@ class ExpressionAgent:
                 role=role,
                 motivation=motivation,
                 response_style=response_style,
+                theta=theta,
             )
         else:
             llm_reply = await self.openai_client.generate_reply(
@@ -47,6 +50,7 @@ class ExpressionAgent:
                 response_style=response_style,
                 plan_goal=plan.goal,
                 motivation_mode=motivation.mode,
+                response_tone=tone,
             )
             message = llm_reply or self._build_fallback_message(
                 perception=perception,
@@ -55,12 +59,13 @@ class ExpressionAgent:
                 role=role,
                 motivation=motivation,
                 response_style=response_style,
+                theta=theta,
             )
 
         channel = "telegram" if event.source == "telegram" else "api"
         return ExpressionOutput(
             message=message,
-            tone="supportive",
+            tone=tone,
             channel=channel,
             language=perception.language,
         )
@@ -73,6 +78,7 @@ class ExpressionAgent:
         role: RoleOutput,
         motivation: MotivationOutput,
         response_style: str | None = None,
+        theta: dict | None = None,
     ) -> str:
         if motivation.mode == "clarify":
             return apply_response_style(
@@ -110,7 +116,52 @@ class ExpressionAgent:
                 response_style,
             )
 
+        theta_key = self._theta_fallback_key(theta)
+        if theta_key is not None:
+            return apply_response_style(
+                fallback_message(perception.language, theta_key, plan.goal),
+                response_style,
+            )
+
         return apply_response_style(
             fallback_message(perception.language, "default", plan.goal),
             response_style,
         )
+
+    def _select_tone(
+        self,
+        motivation: MotivationOutput,
+        role: RoleOutput,
+        theta: dict | None = None,
+    ) -> str:
+        if motivation.mode == "support" or role.selected == "friend":
+            return "supportive"
+        if motivation.mode == "execute" or role.selected == "executor":
+            return "action-oriented"
+        if motivation.mode == "analyze" or role.selected == "analyst":
+            return "analytical"
+        if role.selected == "mentor":
+            return "guiding"
+
+        theta_key = self._theta_fallback_key(theta)
+        if theta_key == "support":
+            return "supportive"
+        if theta_key == "execute":
+            return "action-oriented"
+        if theta_key == "analyze":
+            return "analytical"
+        return "supportive"
+
+    def _theta_fallback_key(self, theta: dict | None) -> str | None:
+        if not theta:
+            return None
+
+        candidates = {
+            "support": float(theta.get("support_bias", 0.0) or 0.0),
+            "analyze": float(theta.get("analysis_bias", 0.0) or 0.0),
+            "execute": float(theta.get("execution_bias", 0.0) or 0.0),
+        }
+        key, bias = max(candidates.items(), key=lambda item: item[1])
+        if bias < 0.58:
+            return None
+        return key

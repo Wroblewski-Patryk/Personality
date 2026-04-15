@@ -85,6 +85,7 @@ class RuntimeOrchestrator:
             role=role,
             motivation=motivation,
             user_preferences=user_preferences,
+            theta=user_theta,
         )
         action_result = await self.action_executor.execute(plan=plan, event=event, expression=expression)
 

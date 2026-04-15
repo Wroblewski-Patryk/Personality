@@ -83,13 +83,13 @@ The current repo already works as an MVP slice, but several architecture-level d
 - Current repo fact:
   - stable `response_style` conclusions now influence context, planning, and expression.
   - stable `preferred_role` conclusions can now influence role selection on ambiguous turns.
-  - reflected theta now provides a softer runtime bias toward support, analysis, or execution behavior without hard-overriding explicit signals, and that bias can now shape role selection, motivation mode, and planning stance on ambiguous turns.
+  - reflected theta now provides a softer runtime bias toward support, analysis, or execution behavior without hard-overriding explicit signals, and that bias can now shape role selection, motivation mode, planning stance, and expression tone on ambiguous turns.
 - Decision needed:
   - which preference types should remain expression-only, and which should be allowed to shape higher-level planning or role selection as the architecture grows?
 
 ### 11. Theta Scope And Durability
 
 - Current repo fact:
-  - reflection now updates a lightweight `aion_theta` state from repeated recent role patterns, and runtime can use that state as a soft bias for role selection, motivation, and planning on ambiguous turns.
+  - reflection now updates a lightweight `aion_theta` state from repeated recent role patterns, and runtime can use that state as a soft bias for role selection, motivation, planning, and expression on ambiguous turns.
 - Decision needed:
-  - should theta stay as a lightweight behavioral bias derived from recent runtime patterns, or evolve into a broader long-term identity state with stronger influence over planning, motivation, and proactive behavior?
+  - should theta stay as a lightweight behavioral bias derived from recent runtime patterns, or evolve into a broader long-term identity state with stronger influence over planning, motivation, expression, and proactive behavior?

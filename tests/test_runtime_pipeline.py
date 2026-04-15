@@ -76,6 +76,7 @@ class FakeOpenAIClient:
         response_style: str | None,
         plan_goal: str,
         motivation_mode: str,
+        response_tone: str,
     ) -> str | None:
         self.calls.append(
             {
@@ -86,6 +87,7 @@ class FakeOpenAIClient:
                 "response_style": response_style or "",
                 "plan_goal": plan_goal,
                 "motivation_mode": motivation_mode,
+                "response_tone": response_tone,
             }
         )
         return "Mocked OpenAI reply"
@@ -161,6 +163,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert reflection.calls == [{"user_id": "u-1", "event_id": "evt-1"}]
     assert memory.profile_updates == []
     assert openai.calls[0]["response_style"] == ""
+    assert openai.calls[0]["response_tone"] == "supportive"
 
 
 async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_without_recent_memory() -> None:
@@ -201,6 +204,7 @@ async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_wi
     assert result.reflection_triggered is True
     assert memory.profile_updates == []
     assert openai.calls[0]["response_style"] == ""
+    assert openai.calls[0]["response_tone"] == "supportive"
 
 
 async def test_runtime_pipeline_applies_structured_response_preference_from_conclusion_memory() -> None:
@@ -240,6 +244,7 @@ async def test_runtime_pipeline_applies_structured_response_preference_from_conc
     assert "Stable user preferences: prefers structured responses." in result.context.summary
     assert "format_response_as_bullets" in result.plan.steps
     assert result.reflection_triggered is True
+    assert openai.calls[0]["response_tone"] == "analytical"
 
 
 async def test_runtime_pipeline_applies_concise_response_preference_to_plan() -> None:
@@ -278,6 +283,7 @@ async def test_runtime_pipeline_applies_concise_response_preference_to_plan() ->
     assert openai.calls[0]["response_style"] == "concise"
     assert "keep_response_concise" in result.plan.steps
     assert result.reflection_triggered is True
+    assert openai.calls[0]["response_tone"] == "analytical"
 
 
 async def test_runtime_pipeline_uses_preferred_role_from_semantic_memory_for_ambiguous_question() -> None:
@@ -393,3 +399,5 @@ async def test_runtime_pipeline_uses_theta_bias_for_motivation_and_planning_on_b
     assert result.role.selected == "analyst"
     assert "break_down_problem" in result.plan.steps or "favor_structured_reasoning" in result.plan.steps
     assert result.reflection_triggered is True
+    assert result.expression.tone == "analytical"
+    assert openai.calls[0]["response_tone"] == "analytical"

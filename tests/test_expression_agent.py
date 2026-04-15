@@ -22,6 +22,7 @@ class NoReplyOpenAI:
         response_style: str | None,
         plan_goal: str,
         motivation_mode: str,
+        response_tone: str,
     ) -> str | None:
         return None
 
@@ -39,6 +40,7 @@ class ReplyOpenAI:
         response_style: str | None,
         plan_goal: str,
         motivation_mode: str,
+        response_tone: str,
     ) -> str | None:
         self.calls.append(
             {
@@ -49,6 +51,7 @@ class ReplyOpenAI:
                 "response_style": response_style or "",
                 "plan_goal": plan_goal,
                 "motivation_mode": motivation_mode,
+                "response_tone": response_tone,
             }
         )
         return "OpenAI response"
@@ -114,6 +117,7 @@ async def test_expression_uses_runtime_language_for_fallback() -> None:
 
     assert result.message.startswith("Jasne, lecimy z tym.")
     assert result.language == "pl"
+    assert result.tone == "action-oriented"
 
 
 async def test_expression_applies_concise_preference_to_fallback() -> None:
@@ -144,6 +148,7 @@ async def test_expression_uses_supportive_fallback_for_emotional_messages() -> N
 
     assert "one step at a time" in result.message
     assert result.language == "en"
+    assert result.tone == "supportive"
 
 
 async def test_expression_uses_openai_when_available() -> None:
@@ -159,6 +164,7 @@ async def test_expression_uses_openai_when_available() -> None:
     )
     assert result.message == "OpenAI response"
     assert result.language == "en"
+    assert result.tone == "supportive"
     assert openai.calls == [
         {
             "user_text": "hello",
@@ -168,6 +174,7 @@ async def test_expression_uses_openai_when_available() -> None:
             "response_style": "",
             "plan_goal": "reply",
             "motivation_mode": "respond",
+            "response_tone": "supportive",
         }
     ]
 
@@ -186,3 +193,23 @@ async def test_expression_passes_structured_preference_to_openai() -> None:
     )
 
     assert openai.calls[0]["response_style"] == "structured"
+
+
+async def test_expression_uses_theta_for_analytical_tone_and_fallback() -> None:
+    agent = ExpressionAgent(openai_client=NoReplyOpenAI())
+    result = await agent.run(
+        _event("help me"),
+        _perception(language="en"),
+        _context(),
+        _plan(),
+        _role(selected="advisor"),
+        _motivation(mode="respond"),
+        theta={
+            "support_bias": 0.14,
+            "analysis_bias": 0.72,
+            "execution_bias": 0.14,
+        },
+    )
+
+    assert "Let's break this down clearly." in result.message
+    assert result.tone == "analytical"

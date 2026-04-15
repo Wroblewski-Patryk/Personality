@@ -168,9 +168,9 @@ These are small but real issues observed after the production rollout and smoke 
 
 ### 9. Theta Runtime Bias
 
-- current repo behavior now stores lightweight theta state in `aion_theta`; reflection derives soft `support`, `analysis`, and `execution` biases from repeated recent role usage, and ambiguous runtime behavior can use theta after explicit heuristics and `preferred_role`, including role selection, motivation mode choice, and lightweight planning stance
+- current repo behavior now stores lightweight theta state in `aion_theta`; reflection derives soft `support`, `analysis`, and `execution` biases from repeated recent role usage, and ambiguous runtime behavior can use theta after explicit heuristics and `preferred_role`, including role selection, motivation mode choice, lightweight planning stance, and expression tone
 - next improvement:
-  - decide whether theta should stay as a soft nudge, or start influencing downstream expression and action selection more directly
+  - decide whether theta should stay as a soft nudge, or start influencing downstream action selection more directly
   - decide whether theta should stay recency-driven or accumulate over a longer user history
   - decide when theta deserves richer provenance and decay rules instead of simple overwrite updates
 
