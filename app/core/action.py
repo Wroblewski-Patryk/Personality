@@ -14,6 +14,7 @@ from app.memory.repository import MemoryRepository
 
 class ActionExecutor:
     GENERIC_TOPIC_TAGS = {"general"}
+    PERSISTABLE_LANGUAGE_SOURCES = {"explicit_request", "diacritic_signal", "keyword_signal"}
 
     def __init__(self, memory_repository: MemoryRepository, telegram_client: TelegramClient):
         self.memory_repository = memory_repository
@@ -80,6 +81,14 @@ class ActionExecutor:
             summary=summary,
             importance=motivation.importance,
         )
+
+        if perception.language_source in self.PERSISTABLE_LANGUAGE_SOURCES:
+            await self.memory_repository.upsert_user_profile_language(
+                user_id=event.meta.user_id,
+                language_code=expression.language,
+                confidence=perception.language_confidence,
+                source=perception.language_source,
+            )
 
         return MemoryRecord(
             id=stored["id"],

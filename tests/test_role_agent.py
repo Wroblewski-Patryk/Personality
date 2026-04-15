@@ -22,6 +22,7 @@ def _perception(event_type: str, topic: str, intent: str, language: str = "en") 
         topic_tags=[topic],
         intent=intent,
         language=language,
+        language_source="keyword_signal",
         language_confidence=0.8,
         ambiguity=0.1,
         initial_salience=0.5,

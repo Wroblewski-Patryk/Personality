@@ -34,6 +34,7 @@ class FakeRuntime:
                 topic_tags=["general"],
                 intent="share_information",
                 language="en",
+                language_source="keyword_signal",
                 language_confidence=0.8,
                 ambiguity=0.1,
                 initial_salience=0.5,
@@ -125,6 +126,7 @@ def test_event_endpoint_returns_runtime_result_and_normalizes_event() -> None:
     assert body["expression"]["message"] == "Test reply"
     assert body["expression"]["language"] == "en"
     assert body["perception"]["language"] == "en"
+    assert body["perception"]["language_source"] == "keyword_signal"
     assert body["reflection_triggered"] is False
     assert body["event"]["source"] == "api"
     assert runtime.last_event is not None

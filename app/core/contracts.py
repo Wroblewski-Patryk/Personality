@@ -24,6 +24,7 @@ class PerceptionOutput(BaseModel):
     topic_tags: list[str] = Field(default_factory=list)
     intent: str
     language: str
+    language_source: str
     language_confidence: float
     ambiguity: float
     initial_salience: float

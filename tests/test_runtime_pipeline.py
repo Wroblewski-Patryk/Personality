@@ -12,11 +12,16 @@ from app.motivation.engine import MotivationEngine
 
 
 class FakeMemoryRepository:
-    def __init__(self, recent_memory: list[dict] | None = None):
+    def __init__(self, recent_memory: list[dict] | None = None, user_profile: dict | None = None):
         self.recent_memory = recent_memory or []
+        self.user_profile = user_profile
+        self.profile_updates: list[dict] = []
 
     async def get_recent_for_user(self, user_id: str, limit: int = 5) -> list[dict]:
         return self.recent_memory[:limit]
+
+    async def get_user_profile(self, user_id: str) -> dict | None:
+        return self.user_profile
 
     async def write_episode(self, **kwargs) -> dict:
         return {
@@ -26,6 +31,10 @@ class FakeMemoryRepository:
             "summary": kwargs["summary"],
             "importance": kwargs["importance"],
         }
+
+    async def upsert_user_profile_language(self, **kwargs) -> dict:
+        self.profile_updates.append(kwargs)
+        return kwargs
 
 
 class FakeTelegramClient:
@@ -88,6 +97,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert "previous hello" in result.context.summary
     assert "Earlier reply" in result.context.summary
     assert result.perception.language == "en"
+    assert result.perception.language_source == "recent_memory"
     assert "general" in result.perception.topic_tags
     assert result.role.selected == "advisor"
     assert result.motivation.mode == "respond"
@@ -99,3 +109,39 @@ async def test_runtime_pipeline_api_source() -> None:
     assert "memory_topics=general,hello" in result.memory_record.summary
     assert "response_language=en" in result.memory_record.summary
     assert result.reflection_triggered is False
+    assert memory.profile_updates == []
+
+
+async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_without_recent_memory() -> None:
+    memory = FakeMemoryRepository(
+        recent_memory=[],
+        user_profile={"preferred_language": "pl", "language_confidence": 0.92, "language_source": "explicit_request"},
+    )
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=action,
+        memory_repository=memory,
+    )
+
+    event = Event(
+        event_id="evt-2",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "ok"},
+        meta=EventMeta(user_id="u-1", trace_id="t-2"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.perception.language == "pl"
+    assert result.perception.language_source == "user_profile"
+    assert result.expression.language == "pl"
+    assert result.context.related_tags == ["general", "language:pl"]
+    assert memory.profile_updates == []

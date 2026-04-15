@@ -13,6 +13,9 @@ from app.core.contracts import (
 
 
 class FakeMemoryRepository:
+    def __init__(self):
+        self.profile_updates: list[dict] = []
+
     async def write_episode(self, **kwargs) -> dict:
         return {
             "id": 1,
@@ -21,6 +24,10 @@ class FakeMemoryRepository:
             "summary": kwargs["summary"],
             "importance": kwargs["importance"],
         }
+
+    async def upsert_user_profile_language(self, **kwargs) -> dict:
+        self.profile_updates.append(kwargs)
+        return kwargs
 
 
 class FakeTelegramClient:
@@ -61,13 +68,14 @@ def _expression() -> ExpressionOutput:
     return ExpressionOutput(message="hello", tone="supportive", channel="api", language="en")
 
 
-def _perception(topic_tags: list[str]) -> PerceptionOutput:
+def _perception(topic_tags: list[str], language_source: str = "keyword_signal") -> PerceptionOutput:
     return PerceptionOutput(
         event_type="statement",
         topic=topic_tags[0] if topic_tags else "general",
         topic_tags=topic_tags,
         intent="share_information",
         language="en",
+        language_source=language_source,
         language_confidence=0.8,
         ambiguity=0.1,
         initial_salience=0.5,
@@ -75,7 +83,8 @@ def _perception(topic_tags: list[str]) -> PerceptionOutput:
 
 
 async def test_persist_episode_marks_specific_request_as_semantic_memory() -> None:
-    executor = ActionExecutor(memory_repository=FakeMemoryRepository(), telegram_client=FakeTelegramClient())
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
 
     record = await executor.persist_episode(
         event=_event("deploy the fix to production now"),
@@ -89,10 +98,19 @@ async def test_persist_episode_marks_specific_request_as_semantic_memory() -> No
 
     assert "memory_kind=semantic" in record.summary
     assert "memory_topics=general,deploy,production,fix" in record.summary
+    assert memory_repository.profile_updates == [
+        {
+            "user_id": "u-1",
+            "language_code": "en",
+            "confidence": 0.8,
+            "source": "keyword_signal",
+        }
+    ]
 
 
 async def test_persist_episode_marks_short_follow_up_as_continuity_memory() -> None:
-    executor = ActionExecutor(memory_repository=FakeMemoryRepository(), telegram_client=FakeTelegramClient())
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
 
     record = await executor.persist_episode(
         event=_event("ok"),
@@ -106,3 +124,28 @@ async def test_persist_episode_marks_short_follow_up_as_continuity_memory() -> N
 
     assert "memory_kind=continuity" in record.summary
     assert "memory_topics=general" in record.summary
+    assert memory_repository.profile_updates == [
+        {
+            "user_id": "u-1",
+            "language_code": "en",
+            "confidence": 0.8,
+            "source": "keyword_signal",
+        }
+    ]
+
+
+async def test_persist_episode_skips_profile_update_for_derived_language_signal() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    await executor.persist_episode(
+        event=_event("ok"),
+        perception=_perception(["general"], language_source="user_profile"),
+        context=_context(),
+        motivation=_motivation(),
+        plan=_plan(),
+        action_result=await executor.execute(_plan(), _event("ok"), _expression()),
+        expression=_expression(),
+    )
+
+    assert memory_repository.profile_updates == []

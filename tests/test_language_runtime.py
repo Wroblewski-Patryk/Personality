@@ -35,10 +35,34 @@ def test_detect_language_uses_recent_memory_for_short_follow_up() -> None:
     assert result.source == "recent_memory"
 
 
+def test_detect_language_uses_user_profile_when_recent_memory_is_missing() -> None:
+    result = detect_language(
+        "ok",
+        user_profile={"preferred_language": "pl", "language_confidence": 0.9},
+    )
+
+    assert result.code == "pl"
+    assert result.source == "user_profile"
+
+
+def test_detect_language_prefers_recent_memory_over_user_profile() -> None:
+    result = detect_language(
+        "ok",
+        recent_memory=[
+            {"summary": "event=hello; response_language=en; expression=Sure, let's keep going."},
+        ],
+        user_profile={"preferred_language": "pl", "language_confidence": 0.9},
+    )
+
+    assert result.code == "en"
+    assert result.source == "recent_memory"
+
+
 def test_perception_agent_propagates_detected_language() -> None:
     perception = PerceptionAgent().run(_event("How should we deploy this?"), recent_memory=[])
 
     assert perception.language == "en"
+    assert perception.language_source == "keyword_signal"
     assert perception.language_confidence >= 0.5
     assert "deploy" in perception.topic_tags
 
@@ -52,7 +76,20 @@ def test_perception_agent_uses_memory_language_for_ambiguous_text() -> None:
     )
 
     assert perception.language == "pl"
+    assert perception.language_source == "recent_memory"
     assert perception.language_confidence >= 0.7
+
+
+def test_perception_agent_uses_profile_language_for_ambiguous_text_without_recent_memory() -> None:
+    perception = PerceptionAgent().run(
+        _event("ok"),
+        recent_memory=[],
+        user_profile={"preferred_language": "pl", "language_confidence": 0.9},
+    )
+
+    assert perception.language == "pl"
+    assert perception.language_source == "user_profile"
+    assert perception.language_confidence >= 0.6
 
 
 def test_perception_agent_emits_topic_tags_for_planning_and_production() -> None:

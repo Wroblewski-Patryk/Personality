@@ -124,7 +124,11 @@ def fallback_message(language_code: str, key: str, plan_goal: str) -> str:
     return selected[key].format(plan_goal=plan_goal)
 
 
-def detect_language(text: str, recent_memory: list[dict] | None = None) -> LanguageDecision:
+def detect_language(
+    text: str,
+    recent_memory: list[dict] | None = None,
+    user_profile: dict | None = None,
+) -> LanguageDecision:
     normalized = normalize_for_matching(text)
 
     explicit = _detect_explicit_language_request(normalized)
@@ -151,6 +155,10 @@ def detect_language(text: str, recent_memory: list[dict] | None = None) -> Langu
     if memory_language:
         return LanguageDecision(code=memory_language, confidence=0.72, source="recent_memory")
 
+    profile_language = infer_language_from_profile(user_profile)
+    if profile_language:
+        return LanguageDecision(code=profile_language, confidence=0.66, source="user_profile")
+
     if best_score == 1 and best_score > other_score:
         return LanguageDecision(code=best_code, confidence=0.58, source="keyword_signal")
 
@@ -163,6 +171,16 @@ def infer_language_from_memory(recent_memory: list[dict]) -> str | None:
         match = re.search(r"(?:response_)?language=([a-z]{2})", summary)
         if match:
             return match.group(1)
+    return None
+
+
+def infer_language_from_profile(user_profile: dict | None) -> str | None:
+    if not user_profile:
+        return None
+
+    language = str(user_profile.get("preferred_language", "")).strip().lower()
+    if re.fullmatch(r"[a-z]{2}", language):
+        return language
     return None
 
 

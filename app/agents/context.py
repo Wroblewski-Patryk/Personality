@@ -64,6 +64,18 @@ class ContextAgent:
         tokens.update(self._text_tokens(str(event.payload.get("text", ""))))
         return {self._canonical_text(token) for token in tokens if self._canonical_text(token)}
 
+    def _related_tags(self, perception: PerceptionOutput) -> list[str]:
+        raw_tags = [perception.topic, *perception.topic_tags, f"language:{perception.language}"]
+        related_tags: list[str] = []
+        seen: set[str] = set()
+        for tag in raw_tags:
+            cleaned = self._normalize_text(tag).lower()
+            if not cleaned or cleaned in seen:
+                continue
+            seen.add(cleaned)
+            related_tags.append(tag)
+        return related_tags
+
     def _extract_fields(self, raw_summary: str) -> dict[str, str]:
         fields: dict[str, str] = {}
         for part in self._normalize_text(raw_summary).split(";"):
@@ -258,6 +270,6 @@ class ContextAgent:
         return ContextOutput(
             summary=summary,
             related_goals=[],
-            related_tags=[perception.topic, *perception.topic_tags[1:], f"language:{perception.language}"],
+            related_tags=self._related_tags(perception),
             risk_level=risk_level,
         )

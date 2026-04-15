@@ -73,6 +73,7 @@ def _perception(language: str = "en") -> PerceptionOutput:
         topic_tags=["general"],
         intent="share_information",
         language=language,
+        language_source="keyword_signal",
         language_confidence=0.8,
         ambiguity=0.1,
         initial_salience=0.5,

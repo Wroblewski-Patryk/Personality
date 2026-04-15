@@ -25,3 +25,22 @@ class AionMemory(Base):
         default=lambda: datetime.now(timezone.utc),
     )
 
+
+class AionProfile(Base):
+    __tablename__ = "aion_profile"
+
+    user_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    preferred_language: Mapped[str] = mapped_column(String(8), nullable=False)
+    language_confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    language_source: Mapped[str] = mapped_column(String(32), nullable=False, default="default")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )

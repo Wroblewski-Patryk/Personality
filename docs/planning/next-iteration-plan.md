@@ -128,10 +128,10 @@ These are small but real issues observed after the production rollout and smoke 
 
 ### 3. Runtime Language Coverage
 
-- current repo behavior selects a response language per event, carries it through runtime, and persists language hints in memory for ambiguous follow-up turns
+- current repo behavior selects a response language per event, carries it through runtime, persists language hints in memory for ambiguous follow-up turns, and now stores a lightweight preferred language in `aion_profile` for ambiguous turns without useful recent memory
 - next improvement:
-  - decide whether to store a preferred user language in memory or profile state
   - expand beyond keyword heuristics if real traffic shows mixed-language or multilingual false positives
+  - decide whether profile state should also remember response-style preferences once the runtime starts observing stronger user-specific patterns
 
 ### 4. Memory Retrieval Ranking
 
@@ -141,6 +141,13 @@ These are small but real issues observed after the production rollout and smoke 
   - decide whether `topic_tags` should stay heuristic or become a richer perception artifact with explicit entities/intents
   - consider splitting "conversation continuity" memory from "semantic recall" memory more formally once retrieval grows beyond the latest five rows
   - watch production behavior around short acknowledgements versus specific requests, so continuity memory helps only when it adds signal instead of noise
+
+### 6. Lightweight Profile Memory
+
+- current repo behavior keeps a small `aion_profile` table with preferred language updated only from explicit or higher-confidence language signals, so weak fallbacks do not reinforce themselves
+- next improvement:
+  - decide whether stable preferences such as response length, tone, or channel habits belong in the same profile state
+  - decide when durable profile updates should move from synchronous action-time writes into a more reflective conclusion/consolidation path
 
 ### 5. UTF-8 Smoke Test Reliability
 

@@ -65,6 +65,13 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 8. Language Handling Strategy
 
 - Current repo fact:
-  - runtime now makes an explicit per-event language decision, propagates it through perception and expression, and stores response-language hints in memory for short follow-up turns.
+  - runtime now makes an explicit per-event language decision, propagates it through perception and expression, stores response-language hints in episodic memory for short follow-up turns, and keeps a lightweight `aion_profile` preferred language for ambiguous turns when recent memory is not enough.
 - Decision needed:
-  - should language handling stay heuristic for the MVP, or should it move to an explicit user-language preference and broader multilingual support once more channels are added?
+  - should language handling stay heuristic-plus-profile for the MVP, or should it move to a richer user preference model and broader multilingual support once more channels are added?
+
+### 9. Lightweight Profile Scope
+
+- Current repo fact:
+  - runtime now persists a lightweight language preference in `aion_profile`, but no broader stable user preferences or semantic conclusions are stored yet.
+- Decision needed:
+  - should `aion_profile` remain limited to durable interaction preferences such as language and response style, or should it evolve into a wider identity-linked profile alongside future `aion_conclusions`?

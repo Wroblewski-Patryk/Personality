@@ -22,6 +22,7 @@ def _perception() -> PerceptionOutput:
         topic_tags=["general"],
         intent="share_information",
         language="en",
+        language_source="keyword_signal",
         language_confidence=0.8,
         ambiguity=0.1,
         initial_salience=0.5,
@@ -33,6 +34,24 @@ def test_context_summary_stays_simple_without_recent_memory() -> None:
 
     assert result.summary == "User said: 'hello' with detected intent 'share_information'."
     assert result.related_tags == ["general", "language:en"]
+
+
+def test_context_related_tags_are_deduplicated_preserving_order() -> None:
+    perception = PerceptionOutput(
+        event_type="statement",
+        topic="planning",
+        topic_tags=["planning", "production", "planning"],
+        intent="share_information",
+        language="en",
+        language_source="keyword_signal",
+        language_confidence=0.8,
+        ambiguity=0.1,
+        initial_salience=0.5,
+    )
+
+    result = ContextAgent().run(event=_event("plan the production rollout"), perception=perception, recent_memory=[])
+
+    assert result.related_tags == ["planning", "production", "language:en"]
 
 
 def test_context_summary_includes_recent_memory_signal() -> None:
@@ -107,6 +126,7 @@ def test_context_prefers_same_language_memory_over_mismatched_recent_entries() -
         topic_tags=["general"],
         intent="share_information",
         language="pl",
+        language_source="keyword_signal",
         language_confidence=0.9,
         ambiguity=0.1,
         initial_salience=0.5,
@@ -389,6 +409,7 @@ def test_context_uses_perception_topic_tags_for_memory_matching() -> None:
         topic_tags=["planning", "deploy", "production"],
         intent="request_help",
         language="en",
+        language_source="keyword_signal",
         language_confidence=0.8,
         ambiguity=0.1,
         initial_salience=0.8,

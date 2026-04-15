@@ -1,3 +1,4 @@
+import asyncio
 from time import perf_counter
 
 from app.agents.context import ContextAgent
@@ -38,8 +39,11 @@ class RuntimeOrchestrator:
         started = perf_counter()
         self.logger.info("start event_id=%s trace_id=%s", event.event_id, event.meta.trace_id)
 
-        memory = await self.memory_repository.get_recent_for_user(user_id=event.meta.user_id, limit=5)
-        perception = self.perception_agent.run(event, recent_memory=memory)
+        memory, user_profile = await asyncio.gather(
+            self.memory_repository.get_recent_for_user(user_id=event.meta.user_id, limit=5),
+            self.memory_repository.get_user_profile(user_id=event.meta.user_id),
+        )
+        perception = self.perception_agent.run(event, recent_memory=memory, user_profile=user_profile)
         context = self.context_agent.run(event=event, perception=perception, recent_memory=memory)
         motivation = self.motivation_engine.run(event=event, context=context)
         role = self.role_agent.run(event=event, perception=perception, context=context)
