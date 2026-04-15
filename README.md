@@ -58,6 +58,12 @@ curl -X POST http://localhost:8000/event ^
 .\.venv\Scripts\python -m pytest -q
 ```
 
+Optional pip upgrade:
+
+```powershell
+.\scripts\setup_windows.ps1 -UpgradePip
+```
+
 ## Coolify Deployment
 
 Use `docker-compose.coolify.yml` in Coolify and configure env vars in the Coolify UI.
