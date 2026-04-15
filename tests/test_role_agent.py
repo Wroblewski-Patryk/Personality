@@ -67,3 +67,13 @@ def test_role_agent_uses_mentor_for_general_questions() -> None:
     )
 
     assert result.selected == "mentor"
+
+
+def test_role_agent_handles_polish_executor_request() -> None:
+    result = RoleAgent().run(
+        event=_event("wdroż poprawkę na produkcję"),
+        perception=_perception("statement", "general", "share_information"),
+        context=_context(),
+    )
+
+    assert result.selected == "executor"

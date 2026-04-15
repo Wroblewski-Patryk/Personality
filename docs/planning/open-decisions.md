@@ -56,3 +56,10 @@ The current repo already works as an MVP slice, but several architecture-level d
 - Decision needed:
   - should deploys rely on GitHub webhooks, polling, or an explicit manual release step until automation is trustworthy?
   - until GitHub-side webhook delivery is verified, should manual redeploy remain the explicit release fallback?
+
+### 8. Language Handling Strategy
+
+- Current repo fact:
+  - lightweight runtime heuristics and fallback responses now handle both English and Polish user messages.
+- Decision needed:
+  - should language handling stay heuristic for the MVP, or should it move to a more explicit user-language preference and broader multilingual support once more channels are added?

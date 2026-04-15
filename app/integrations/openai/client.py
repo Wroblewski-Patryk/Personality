@@ -10,7 +10,14 @@ class OpenAIClient:
         self.client = AsyncOpenAI(api_key=api_key) if api_key else None
         self.logger = get_logger("aion.openai")
 
-    async def generate_reply(self, user_text: str, context_summary: str, role_name: str) -> str | None:
+    async def generate_reply(
+        self,
+        user_text: str,
+        context_summary: str,
+        role_name: str,
+        plan_goal: str,
+        motivation_mode: str,
+    ) -> str | None:
         if not self.client:
             return None
 
@@ -23,7 +30,10 @@ class OpenAIClient:
                         "content": (
                             "You are AION, a supportive and concise assistant. "
                             f"Your current interaction role is '{role_name}'. "
-                            "Respond clearly and use the context summary when useful."
+                            f"The current response mode is '{motivation_mode}'. "
+                            f"The immediate goal is '{plan_goal}'. "
+                            "Respond clearly, preserve momentum, use the context summary when useful, "
+                            "and reply in the same language as the user message."
                         ),
                     },
                     {

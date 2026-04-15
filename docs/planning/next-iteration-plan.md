@@ -126,6 +126,13 @@ These are small but real issues observed after the production rollout and smoke 
   - confirm the configured secret on GitHub matches the Coolify secret `codex-webhook-2026`
   - note: a manually sent, correctly signed GitHub-style `push` event to the Coolify endpoint successfully queued a deployment on 2026-04-15, so the remaining issue appears to be on the GitHub webhook configuration or delivery side
 
+### 3. Runtime Language Coverage
+
+- current repo behavior supports lightweight English and Polish heuristics in runtime role/motivation selection and fallback responses
+- next improvement:
+  - decide whether to store a preferred user language in memory or profile state
+  - expand beyond keyword heuristics if real traffic shows mixed-language or multilingual false positives
+
 ## Tasks Waiting For Coolify / VPS Access
 
 These tasks do not block local development, but they do require actual infrastructure access.

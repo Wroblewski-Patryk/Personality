@@ -11,9 +11,69 @@ class RoleAgent:
         text = str(event.payload.get("text", "")).strip()
         lowered = text.lower()
 
-        emotional_keywords = {"sad", "stressed", "overwhelmed", "tired", "lonely", "happy", "anxious"}
-        analysis_keywords = {"analyze", "analysis", "review", "compare", "debug", "explain"}
-        executor_keywords = {"build", "create", "write", "fix", "implement", "add", "setup", "deploy"}
+        emotional_keywords = {
+            "sad",
+            "stressed",
+            "overwhelmed",
+            "tired",
+            "lonely",
+            "happy",
+            "anxious",
+            "smutny",
+            "smutna",
+            "zestresowany",
+            "zestresowana",
+            "przytloczony",
+            "przytłoczony",
+            "przytloczona",
+            "przytłoczona",
+            "zmeczony",
+            "zmęczony",
+            "samotny",
+            "samotna",
+            "szczesliwy",
+            "szczęśliwy",
+            "niespokojny",
+        }
+        analysis_keywords = {
+            "analyze",
+            "analysis",
+            "review",
+            "compare",
+            "debug",
+            "explain",
+            "analiza",
+            "przeanalizuj",
+            "porownaj",
+            "porównaj",
+            "wyjasnij",
+            "wyjaśnij",
+            "sprawdz",
+            "sprawdź",
+            "zaplanuj",
+        }
+        executor_keywords = {
+            "build",
+            "create",
+            "write",
+            "fix",
+            "implement",
+            "add",
+            "setup",
+            "deploy",
+            "zbuduj",
+            "stworz",
+            "stwórz",
+            "napisz",
+            "napraw",
+            "wdroz",
+            "wdroż",
+            "dodaj",
+            "skonfiguruj",
+            "ustaw",
+            "zrob",
+            "zrób",
+        }
 
         if any(keyword in lowered for keyword in emotional_keywords):
             return RoleOutput(selected="friend", confidence=0.74)

@@ -34,7 +34,14 @@ class FakeTelegramClient:
 
 
 class FakeOpenAIClient:
-    async def generate_reply(self, user_text: str, context_summary: str, role_name: str) -> str | None:
+    async def generate_reply(
+        self,
+        user_text: str,
+        context_summary: str,
+        role_name: str,
+        plan_goal: str,
+        motivation_mode: str,
+    ) -> str | None:
         return "Mocked OpenAI reply"
 
 
@@ -77,6 +84,8 @@ async def test_runtime_pipeline_api_source() -> None:
     assert "previous hello" in result.context.summary
     assert "Earlier reply" in result.context.summary
     assert result.role.selected == "advisor"
+    assert result.motivation.mode == "respond"
+    assert result.plan.steps == ["interpret_event", "review_context", "prepare_response"]
     assert result.expression.message == "Mocked OpenAI reply"
     assert result.memory_record is not None
     assert result.reflection_triggered is False
