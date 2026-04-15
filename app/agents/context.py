@@ -2,8 +2,28 @@ from app.core.contracts import ContextOutput, Event, PerceptionOutput
 
 
 class ContextAgent:
+    def _normalize_text(self, value: str) -> str:
+        return " ".join(str(value).split())
+
+    def _clip_text(self, value: str, max_length: int) -> str:
+        text = self._normalize_text(value)
+        if len(text) <= max_length:
+            return text
+
+        sentence_endings = [index for index, char in enumerate(text[:max_length]) if char in ".!?"]
+        if sentence_endings:
+            candidate = text[: sentence_endings[-1] + 1].strip()
+            if len(candidate) >= max_length // 2:
+                return candidate
+
+        truncated = text[: max_length - 3].rstrip()
+        if " " in truncated:
+            truncated = truncated.rsplit(" ", 1)[0]
+
+        return truncated.rstrip(" ,;:-") + "..."
+
     def _summarize_memory_item(self, memory_item: dict) -> str:
-        raw_summary = " ".join(str(memory_item.get("summary", "")).split())
+        raw_summary = self._normalize_text(memory_item.get("summary", ""))
         if not raw_summary:
             return ""
 
@@ -17,13 +37,15 @@ class ContextAgent:
         event_text = fields.get("event")
         expression = fields.get("expression")
         if event_text and expression:
-            summary = f"user said '{event_text}' and received '{expression}'"
+            clipped_event = self._clip_text(event_text, 48)
+            clipped_expression = self._clip_text(expression, 96)
+            summary = f"user said '{clipped_event}' and received '{clipped_expression}'"
         elif event_text:
-            summary = f"user said '{event_text}'"
+            summary = f"user said '{self._clip_text(event_text, 72)}'"
         else:
-            summary = raw_summary
+            summary = self._clip_text(raw_summary, 140)
 
-        return summary[:160].rstrip()
+        return summary
 
     def run(self, event: Event, perception: PerceptionOutput, recent_memory: list[dict]) -> ContextOutput:
         text = str(event.payload.get("text", "")).strip()

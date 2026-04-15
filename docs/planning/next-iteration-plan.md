@@ -108,6 +108,22 @@ This iteration is done when:
 - docs reflect the new contract and current repo truth
 - deployment smoke-test tasks are ready to execute once infrastructure access is available
 
+## Follow-Ups Discovered During Production Verification
+
+These are small but real issues observed after the production rollout and smoke tests.
+
+### 1. Memory Summary Truncation Quality
+
+- current repo behavior now clips recent-memory summaries on sentence or word boundaries
+- next improvement:
+  - watch production behavior and decide whether memory summaries should also rank fields by usefulness or importance
+
+### 2. Coolify Auto-Deploy Reliability
+
+- current production behavior required a manual Coolify redeploy after pushing `main`
+- next improvement:
+  - verify whether GitHub webhook delivery, Coolify auto-deploy settings, or branch wiring is preventing reliable automatic deploys
+
 ## Tasks Waiting For Coolify / VPS Access
 
 These tasks do not block local development, but they do require actual infrastructure access.

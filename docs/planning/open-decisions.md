@@ -9,9 +9,9 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 1. Reflection Placeholder vs Real Reflection
 
 - Current repo fact:
-  - `RuntimeResult.reflection_triggered` is always `True`.
+  - `RuntimeResult.reflection_triggered` is now returned as `False`.
 - Decision needed:
-  - should reflection become a real stage, a background worker, or should the field be removed until implemented?
+  - should reflection become a real stage, a background worker, or should the field be removed until it becomes real behavior?
 
 ### 2. Migration Strategy
 
@@ -47,3 +47,10 @@ The current repo already works as an MVP slice, but several architecture-level d
   - docs and compose files already support local Docker and Coolify.
 - Decision needed:
   - is Coolify the intended production baseline, or only a temporary path until a different hosting standard is chosen?
+
+### 7. Deployment Trigger Reliability
+
+- Current repo fact:
+  - after pushing `main`, production required a manual redeploy from Coolify before the latest commit became live.
+- Decision needed:
+  - should deploys rely on GitHub webhooks, polling, or an explicit manual release step until automation is trustworthy?
