@@ -81,3 +81,25 @@ def test_role_agent_handles_polish_executor_request() -> None:
     )
 
     assert result.selected == "executor"
+
+
+def test_role_agent_uses_preferred_role_as_tie_breaker_for_ambiguous_question() -> None:
+    result = RoleAgent().run(
+        event=_event("Can you help me with this?"),
+        perception=_perception("question", "general", "request_help"),
+        context=_context(),
+        user_preferences={"preferred_role": "analyst", "preferred_role_confidence": 0.76},
+    )
+
+    assert result.selected == "analyst"
+
+
+def test_role_agent_does_not_override_explicit_executor_signal_with_preference() -> None:
+    result = RoleAgent().run(
+        event=_event("deploy the app to production"),
+        perception=_perception("statement", "general", "share_information"),
+        context=_context(),
+        user_preferences={"preferred_role": "mentor", "preferred_role_confidence": 0.9},
+    )
+
+    assert result.selected == "executor"

@@ -7,6 +7,7 @@ from app.core.contracts import (
     MotivationOutput,
     PerceptionOutput,
     PlanOutput,
+    RoleOutput,
 )
 from app.integrations.telegram.client import TelegramClient
 from app.memory.repository import MemoryRepository
@@ -55,6 +56,7 @@ class ActionExecutor:
         perception: PerceptionOutput,
         context: ContextOutput,
         motivation: MotivationOutput,
+        role: RoleOutput,
         plan: PlanOutput,
         action_result: ActionResult,
         expression: ExpressionOutput,
@@ -74,6 +76,7 @@ class ActionExecutor:
             f"response_language={expression.language}; "
             f"preference_update={preference_update}; "
             f"context={context.summary}; "
+            f"role={role.selected}; "
             f"plan_goal={plan.goal}; "
             f"action={action_result.status}; "
             f"expression={expression.message}"

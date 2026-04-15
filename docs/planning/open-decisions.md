@@ -31,7 +31,7 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 4. Role Selection
 
 - Current repo fact:
-  - runtime role now uses lightweight heuristic selection (`friend`, `analyst`, `executor`, `mentor`, `advisor`) instead of a hardcoded `advisor`.
+  - runtime role now uses lightweight heuristic selection (`friend`, `analyst`, `executor`, `mentor`, `advisor`) and can use a reflected `preferred_role` as a tie-breaker for more ambiguous turns.
 - Decision needed:
   - when should role selection move from heuristics into a richer module with user-state, memory, and goal-aware logic?
 
@@ -82,5 +82,6 @@ The current repo already works as an MVP slice, but several architecture-level d
 
 - Current repo fact:
   - stable `response_style` conclusions now influence context, planning, and expression.
+  - stable `preferred_role` conclusions can now influence role selection on ambiguous turns.
 - Decision needed:
   - which preference types should remain expression-only, and which should be allowed to shape higher-level planning or role selection as the architecture grows?

@@ -89,22 +89,30 @@ class MemoryRepository:
                 select(AionConclusion)
                 .where(
                     AionConclusion.user_id == user_id,
-                    AionConclusion.kind == "response_style",
                 )
-                .limit(1)
+                .order_by(AionConclusion.updated_at.desc(), AionConclusion.id.desc())
+                .limit(6)
             )
             result = await session.execute(statement)
-            row = result.scalar_one_or_none()
+            rows = result.scalars().all()
 
-        if row is None:
+        if not rows:
             return {}
 
-        return {
-            "response_style": row.content,
-            "response_style_confidence": row.confidence,
-            "response_style_source": row.source,
-            "response_style_updated_at": row.updated_at,
-        }
+        preferences: dict[str, object] = {}
+        for row in rows:
+            if row.kind == "response_style":
+                preferences["response_style"] = row.content
+                preferences["response_style_confidence"] = row.confidence
+                preferences["response_style_source"] = row.source
+                preferences["response_style_updated_at"] = row.updated_at
+            elif row.kind == "preferred_role":
+                preferences["preferred_role"] = row.content
+                preferences["preferred_role_confidence"] = row.confidence
+                preferences["preferred_role_source"] = row.source
+                preferences["preferred_role_updated_at"] = row.updated_at
+
+        return preferences
 
     async def get_user_conclusions(self, user_id: str, limit: int = 3) -> list[dict]:
         async with self.session_factory() as session:

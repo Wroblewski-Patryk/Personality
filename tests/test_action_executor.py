@@ -9,6 +9,7 @@ from app.core.contracts import (
     MotivationOutput,
     PerceptionOutput,
     PlanOutput,
+    RoleOutput,
 )
 
 
@@ -82,6 +83,10 @@ def _perception(topic_tags: list[str], language_source: str = "keyword_signal") 
     )
 
 
+def _role(selected: str = "advisor") -> RoleOutput:
+    return RoleOutput(selected=selected, confidence=0.8)
+
+
 async def test_persist_episode_marks_specific_request_as_semantic_memory() -> None:
     memory_repository = FakeMemoryRepository()
     executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
@@ -91,6 +96,7 @@ async def test_persist_episode_marks_specific_request_as_semantic_memory() -> No
         perception=_perception(["general", "deploy", "production"]),
         context=_context(),
         motivation=_motivation(),
+        role=_role("executor"),
         plan=_plan(),
         action_result=await executor.execute(_plan(), _event("deploy the fix to production now"), _expression()),
         expression=_expression(),
@@ -99,6 +105,7 @@ async def test_persist_episode_marks_specific_request_as_semantic_memory() -> No
     assert "memory_kind=semantic" in record.summary
     assert "memory_topics=general,deploy,production,fix" in record.summary
     assert "preference_update=" in record.summary
+    assert "role=executor" in record.summary
     assert memory_repository.profile_updates == [
         {
             "user_id": "u-1",
@@ -118,6 +125,7 @@ async def test_persist_episode_marks_short_follow_up_as_continuity_memory() -> N
         perception=_perception(["general"]),
         context=_context(),
         motivation=_motivation(),
+        role=_role(),
         plan=_plan(),
         action_result=await executor.execute(_plan(), _event("ok"), _expression()),
         expression=_expression(),
@@ -126,6 +134,7 @@ async def test_persist_episode_marks_short_follow_up_as_continuity_memory() -> N
     assert "memory_kind=continuity" in record.summary
     assert "memory_topics=general" in record.summary
     assert "preference_update=" in record.summary
+    assert "role=advisor" in record.summary
     assert memory_repository.profile_updates == [
         {
             "user_id": "u-1",
@@ -145,6 +154,7 @@ async def test_persist_episode_skips_profile_update_for_derived_language_signal(
         perception=_perception(["general"], language_source="user_profile"),
         context=_context(),
         motivation=_motivation(),
+        role=_role(),
         plan=_plan(),
         action_result=await executor.execute(_plan(), _event("ok"), _expression()),
         expression=_expression(),
@@ -162,6 +172,7 @@ async def test_persist_episode_marks_explicit_response_style_preference_for_refl
         perception=_perception(["general"]),
         context=_context(),
         motivation=_motivation(),
+        role=_role(),
         plan=_plan(),
         action_result=await executor.execute(_plan(), _event("Please answer briefly from now on."), _expression()),
         expression=_expression(),

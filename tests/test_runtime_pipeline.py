@@ -270,3 +270,42 @@ async def test_runtime_pipeline_applies_concise_response_preference_to_plan() ->
     assert openai.calls[0]["response_style"] == "concise"
     assert "keep_response_concise" in result.plan.steps
     assert result.reflection_triggered is True
+
+
+async def test_runtime_pipeline_uses_preferred_role_from_semantic_memory_for_ambiguous_question() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.user_preferences = {
+        "preferred_role": "analyst",
+        "preferred_role_confidence": 0.76,
+    }
+    memory.user_conclusions = [
+        {"kind": "preferred_role", "content": "analyst", "confidence": 0.76, "source": "background_reflection"}
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-5",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Can you help me with this?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-5"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.role.selected == "analyst"
+    assert result.reflection_triggered is True

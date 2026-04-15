@@ -152,11 +152,11 @@ These are small but real issues observed after the production rollout and smoke 
 
 ### 7. Semantic Conclusion Memory
 
-- current repo behavior now keeps a first lightweight `aion_conclusion` record for explicit `response_style` preferences such as `concise` or `structured`, the expression layer uses that preference in both fallback generation and OpenAI prompting, context retrieval includes those stable preferences in the runtime summary, and planning now turns them into explicit response-shaping steps such as `keep_response_concise` or `format_response_as_bullets`
+- current repo behavior now keeps lightweight `aion_conclusion` records for semantic preferences such as `response_style` and `preferred_role`; expression uses response-style preferences in both fallback generation and OpenAI prompting, context retrieval includes stable preferences in the runtime summary, planning turns response-style preferences into explicit response-shaping steps such as `keep_response_concise` or `format_response_as_bullets`, and role selection can use `preferred_role` as a tie-breaker on ambiguous turns
 - next improvement:
   - widen conclusion memory beyond explicit requests into repeated-pattern learning once there is enough traffic signal
   - decide whether conclusions should start carrying supporting memory ids and richer provenance before the subconscious loop exists
-  - consider whether stable semantic preferences should also influence role selection, not only context, planning, and expression
+  - decide which future preference types should be allowed to influence role selection versus staying lower in the stack
 
 ### 8. Background Reflection Worker
 
@@ -164,7 +164,7 @@ These are small but real issues observed after the production rollout and smoke 
 - next improvement:
   - move beyond explicit `preference_update` markers and infer stable conclusions from repeated behavioral patterns
   - decide whether in-process reflection is enough for MVP or whether reflection should become a durable queued worker before more complex jobs exist
-  - decide when reflection should touch only `aion_conclusion` versus richer future artifacts like goals, theta, or role heuristics
+  - decide when reflection should touch only `aion_conclusion` versus richer future artifacts like goals, theta, or stronger role heuristics
 
 ### 5. UTF-8 Smoke Test Reliability
 

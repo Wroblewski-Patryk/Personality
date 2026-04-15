@@ -43,6 +43,30 @@ async def test_reflection_worker_consolidates_explicit_preference_update_in_back
     ]
 
 
+async def test_reflection_worker_infers_preferred_role_from_repeated_role_usage() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "role=executor; action=success; expression=Done one."},
+            {"summary": "role=executor; action=success; expression=Done two."},
+            {"summary": "role=executor; action=success; expression=Done three."},
+            {"summary": "role=mentor; action=success; expression=Different path."},
+        ]
+    )
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-role")
+
+    assert result is True
+    assert {
+        "user_id": "u-1",
+        "kind": "preferred_role",
+        "content": "executor",
+        "confidence": 0.76,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-role",
+    } in repository.conclusion_updates
+
+
 async def test_reflection_worker_infers_concise_style_from_repeated_short_successful_outputs() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[

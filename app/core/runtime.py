@@ -56,7 +56,12 @@ class RuntimeOrchestrator:
             conclusions=user_conclusions,
         )
         motivation = self.motivation_engine.run(event=event, context=context)
-        role = self.role_agent.run(event=event, perception=perception, context=context)
+        role = self.role_agent.run(
+            event=event,
+            perception=perception,
+            context=context,
+            user_preferences=user_preferences,
+        )
         plan = self.planning_agent.run(
             event=event,
             context=context,
@@ -83,6 +88,7 @@ class RuntimeOrchestrator:
                 perception=perception,
                 context=context,
                 motivation=motivation,
+                role=role,
                 plan=plan,
                 action_result=action_result,
                 expression=expression,

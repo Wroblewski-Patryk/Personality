@@ -3,14 +3,19 @@ from app.utils.language import normalize_for_matching
 
 
 class RoleAgent:
+    PREFERRED_ROLES = {"friend", "analyst", "executor", "mentor"}
+
     def run(
         self,
         event: Event,
         perception: PerceptionOutput,
         context: ContextOutput,
+        user_preferences: dict | None = None,
     ) -> RoleOutput:
         text = str(event.payload.get("text", "")).strip()
         lowered = normalize_for_matching(text)
+        preferred_role = str((user_preferences or {}).get("preferred_role", "")).strip().lower()
+        preferred_role_confidence = float((user_preferences or {}).get("preferred_role_confidence", 0.0) or 0.0)
 
         emotional_keywords = {
             "sad",
@@ -74,6 +79,12 @@ class RoleAgent:
 
         if any(lowered.startswith(keyword) for keyword in executor_keywords):
             return RoleOutput(selected="executor", confidence=0.78)
+
+        if preferred_role in self.PREFERRED_ROLES and preferred_role_confidence >= 0.72:
+            if perception.event_type == "question" or perception.intent == "request_help":
+                return RoleOutput(selected=preferred_role, confidence=0.73)
+            if perception.topic == "general":
+                return RoleOutput(selected=preferred_role, confidence=0.68)
 
         if perception.event_type == "question" or perception.intent == "request_help":
             return RoleOutput(selected="mentor", confidence=0.71)
