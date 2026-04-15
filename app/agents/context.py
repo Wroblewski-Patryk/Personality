@@ -136,6 +136,9 @@ class ContextAgent:
 
         return (language_bonus, overlap, importance)
 
+    def _should_require_topical_match(self, current_text: str) -> bool:
+        return len(self._text_tokens(current_text)) >= 2
+
     def _select_memory_items(
         self,
         recent_memory: list[dict],
@@ -163,7 +166,12 @@ class ContextAgent:
             for index, item in enumerate(fallback)
         ]
         topical = [entry for entry in scored if entry[2][1] > 0]
-        candidate_pool = topical or scored
+        if topical:
+            candidate_pool = topical
+        elif self._should_require_topical_match(current_text):
+            return []
+        else:
+            candidate_pool = scored
 
         ranked = sorted(
             candidate_pool,

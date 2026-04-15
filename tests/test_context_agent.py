@@ -308,3 +308,57 @@ def test_context_uses_importance_when_relevance_is_tied() -> None:
     result = ContextAgent().run(event=event, perception=_perception(), recent_memory=recent_memory)
 
     assert "Production is healthy and all services are up" in result.summary
+
+
+def test_context_skips_irrelevant_memory_for_specific_request() -> None:
+    event = Event(
+        event_id="evt-4",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "status update please"},
+        meta=EventMeta(user_id="u-1", trace_id="t-4"),
+    )
+    recent_memory = [
+        {
+            "id": 23,
+            "event_id": "evt-en-11",
+            "summary": (
+                "event=deploy the fix now; response_language=en; context=deploy context; "
+                "plan_goal=reply; action=success; expression=Please provide the necessary deployment details to proceed."
+            ),
+            "importance": 0.95,
+            "event_timestamp": datetime.now(timezone.utc),
+        }
+    ]
+
+    result = ContextAgent().run(event=event, perception=_perception(), recent_memory=recent_memory)
+
+    assert result.summary == "User said: 'status update please' with detected intent 'share_information'."
+
+
+def test_context_keeps_memory_for_ambiguous_short_follow_up() -> None:
+    event = Event(
+        event_id="evt-5",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "ok"},
+        meta=EventMeta(user_id="u-1", trace_id="t-5"),
+    )
+    recent_memory = [
+        {
+            "id": 24,
+            "event_id": "evt-en-12",
+            "summary": (
+                "event=deploy the fix now; response_language=en; context=deploy context; "
+                "plan_goal=reply; action=success; expression=Please provide the necessary deployment details to proceed."
+            ),
+            "importance": 0.95,
+            "event_timestamp": datetime.now(timezone.utc),
+        }
+    ]
+
+    result = ContextAgent().run(event=event, perception=_perception(), recent_memory=recent_memory)
+
+    assert "Relevant recent memory:" in result.summary

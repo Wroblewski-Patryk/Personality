@@ -139,6 +139,7 @@ These are small but real issues observed after the production rollout and smoke 
 - next improvement:
   - decide whether ranking should also use explicit topic tags, recency windows, or a split between continuity memory and semantic memory instead of pure lexical overlap
   - consider splitting "conversation continuity" memory from "semantic recall" memory once retrieval grows beyond the latest five rows
+  - watch production behavior around short acknowledgements versus specific requests, so continuity memory helps only when it adds signal instead of noise
 
 ### 5. UTF-8 Smoke Test Reliability
 
