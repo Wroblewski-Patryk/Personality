@@ -172,7 +172,7 @@ Optional UTF-8 verification:
 Optional debug payload check:
 
 ```powershell
-.\scripts\run_release_smoke.ps1 -BaseUrl "https://YOUR_DOMAIN" -Debug
+.\scripts\run_release_smoke.ps1 -BaseUrl "https://YOUR_DOMAIN" -IncludeDebug
 ```
 
 ---

@@ -68,7 +68,7 @@ Debian / bash:
 Optional debug payload:
 
 ```powershell
-.\scripts\run_release_smoke.ps1 -BaseUrl "http://localhost:8000" -Debug
+.\scripts\run_release_smoke.ps1 -BaseUrl "http://localhost:8000" -IncludeDebug
 ```
 
 ### Run Health Check
