@@ -14,6 +14,8 @@ class FakeMemoryRepository:
         self.processing_marks: list[int] = []
         self.completed_marks: list[int] = []
         self.failed_marks: list[dict] = []
+        self.active_goals: list[dict] = []
+        self.active_tasks: list[dict] = []
 
     async def get_recent_for_user(self, user_id: str, limit: int = 8) -> list[dict]:
         return self.recent_memory[:limit]
@@ -25,6 +27,12 @@ class FakeMemoryRepository:
     async def upsert_theta(self, **kwargs) -> dict:
         self.theta_updates.append(kwargs)
         return kwargs
+
+    async def get_active_goals(self, user_id: str, limit: int = 5) -> list[dict]:
+        return self.active_goals[:limit]
+
+    async def get_active_tasks(self, user_id: str, limit: int = 8) -> list[dict]:
+        return self.active_tasks[:limit]
 
     async def enqueue_reflection_task(self, user_id: str, event_id: str) -> dict:
         task = {
@@ -257,6 +265,60 @@ async def test_reflection_worker_prefers_explicit_guided_collaboration_update() 
         "confidence": 0.94,
         "source": "background_reflection",
         "supporting_event_id": "evt-explicit-guided",
+    } in repository.conclusion_updates
+
+
+async def test_reflection_worker_infers_blocked_goal_execution_state() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "goal_update=ship the MVP this week; action=success; expression=One."},
+            {"summary": "task_update=fix deployment blocker; action=success; expression=Two."},
+        ]
+    )
+    repository.active_goals = [
+        {"id": 1, "name": "ship the MVP this week", "priority": "high", "status": "active", "goal_type": "operational"}
+    ]
+    repository.active_tasks = [
+        {"id": 2, "goal_id": 1, "name": "fix deployment blocker", "priority": "high", "status": "blocked"}
+    ]
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-goal-blocked")
+
+    assert result is True
+    assert {
+        "user_id": "u-1",
+        "kind": "goal_execution_state",
+        "content": "blocked",
+        "confidence": 0.82,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-goal-blocked",
+    } in repository.conclusion_updates
+
+
+async def test_reflection_worker_infers_progressing_goal_execution_state_from_done_update() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "task_status_update=fix deployment blocker:done; action=success; expression=One."},
+            {"summary": "goal_update=ship the MVP this week; action=success; expression=Two."},
+        ]
+    )
+    repository.active_goals = [
+        {"id": 1, "name": "ship the MVP this week", "priority": "high", "status": "active", "goal_type": "operational"}
+    ]
+    repository.active_tasks = []
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-goal-progress")
+
+    assert result is True
+    assert {
+        "user_id": "u-1",
+        "kind": "goal_execution_state",
+        "content": "progressing",
+        "confidence": 0.76,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-goal-progress",
     } in repository.conclusion_updates
 
 

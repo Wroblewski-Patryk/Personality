@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.memory.models import AionGoal, AionReflectionTask, AionTask
+from app.memory.models import AionConclusion, AionGoal, AionReflectionTask, AionTask
 from app.memory.repository import MemoryRepository
 
 
@@ -144,5 +144,34 @@ async def test_memory_repository_updates_task_status_and_removes_done_from_activ
 
     assert task_row is not None
     assert task_row.status == "done"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_exposes_goal_execution_state_in_runtime_preferences(tmp_path) -> None:
+    database_path = tmp_path / "memory-goal-execution-state.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    async with session_factory() as session:
+        session.add(
+            AionConclusion(
+                user_id="u-1",
+                kind="goal_execution_state",
+                content="blocked",
+                confidence=0.82,
+                source="background_reflection",
+                supporting_event_id="evt-goal-blocked",
+            )
+        )
+        await session.commit()
+
+    preferences = await repository.get_user_runtime_preferences(user_id="u-1")
+
+    assert preferences["goal_execution_state"] == "blocked"
+    assert preferences["goal_execution_state_confidence"] == 0.82
+    assert preferences["goal_execution_state_source"] == "background_reflection"
 
     await engine.dispose()

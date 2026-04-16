@@ -17,6 +17,7 @@ class PlanningAgent:
         steps = ["interpret_event", "review_context"]
         response_style = str((user_preferences or {}).get("response_style", "")).strip().lower()
         collaboration_preference = str((user_preferences or {}).get("collaboration_preference", "")).strip().lower()
+        goal_execution_state = str((user_preferences or {}).get("goal_execution_state", "")).strip().lower()
 
         if motivation.mode == "clarify":
             goal = "Ask for the missing information needed to help."
@@ -83,6 +84,11 @@ class PlanningAgent:
         if task_step is not None and task_step not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, task_step)
+
+        goal_state_step = self._goal_execution_step(goal_execution_state=goal_execution_state, steps=steps)
+        if goal_state_step is not None and goal_state_step not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, goal_state_step)
 
         return PlanOutput(
             goal=goal,
@@ -190,6 +196,17 @@ class PlanningAgent:
         if str(task.get("status", "")).strip().lower() == "blocked":
             return "unblock_active_task"
         return "advance_active_task"
+
+    def _goal_execution_step(self, goal_execution_state: str, steps: list[str]) -> str | None:
+        if goal_execution_state == "blocked":
+            if "unblock_active_task" in steps or "recover_goal_progress" in steps:
+                return None
+            return "recover_goal_progress"
+        if goal_execution_state == "progressing":
+            if "advance_active_task" in steps or "preserve_goal_momentum" in steps:
+                return None
+            return "preserve_goal_momentum"
+        return None
 
     def _apply_active_goal(self, goal: str, relevant_goal: dict) -> str:
         goal_name = str(relevant_goal.get("name", "")).strip()

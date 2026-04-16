@@ -52,7 +52,9 @@ class ReflectionWorker:
 
     async def reflect_user(self, user_id: str, event_id: str) -> bool:
         recent_memory = await self.memory_repository.get_recent_for_user(user_id=user_id, limit=8)
-        conclusions = self._derive_conclusions(recent_memory)
+        active_goals = await self.memory_repository.get_active_goals(user_id=user_id, limit=5)
+        active_tasks = await self.memory_repository.get_active_tasks(user_id=user_id, limit=8)
+        conclusions = self._derive_conclusions(recent_memory, active_goals=active_goals, active_tasks=active_tasks)
         theta = self._derive_theta(recent_memory)
         if not conclusions:
             self.logger.info("reflection_noop user_id=%s event_id=%s", user_id, event_id)
@@ -185,9 +187,15 @@ class ReflectionWorker:
         index = min(attempts - 1, len(self.RETRY_BACKOFF_SECONDS) - 1)
         return self.RETRY_BACKOFF_SECONDS[index]
 
-    def _derive_conclusions(self, recent_memory: Sequence[dict]) -> list[dict]:
+    def _derive_conclusions(
+        self,
+        recent_memory: Sequence[dict],
+        *,
+        active_goals: Sequence[dict] | None = None,
+        active_tasks: Sequence[dict] | None = None,
+    ) -> list[dict]:
         if not recent_memory:
-            return []
+            recent_memory = []
 
         explicit_updates: list[str] = []
         explicit_collaboration_updates: list[str] = []
@@ -195,6 +203,7 @@ class ReflectionWorker:
         concise_count = 0
         sample_size = 0
         role_counts: dict[str, int] = {}
+        task_done_updates = 0
 
         for memory_item in recent_memory:
             fields = self._extract_fields(str(memory_item.get("summary", "")))
@@ -204,6 +213,9 @@ class ReflectionWorker:
             collaboration_update = fields.get("collaboration_update", "").strip().lower()
             if collaboration_update in {"guided", "hands_on"}:
                 explicit_collaboration_updates.append(collaboration_update)
+            task_status_update = fields.get("task_status_update", "").strip().lower()
+            if task_status_update.endswith(":done"):
+                task_done_updates += 1
 
             role = fields.get("role", "").strip().lower()
             if role in {"friend", "analyst", "executor", "mentor"}:
@@ -274,6 +286,14 @@ class ReflectionWorker:
         if collaboration_preference is not None:
             conclusions.append(collaboration_preference)
 
+        goal_execution_state = self._derive_goal_execution_state(
+            active_goals=active_goals or [],
+            active_tasks=active_tasks or [],
+            task_done_updates=task_done_updates,
+        )
+        if goal_execution_state is not None:
+            conclusions.append(goal_execution_state)
+
         deduped: list[dict] = []
         seen: set[tuple[str, str]] = set()
         for conclusion in conclusions:
@@ -283,6 +303,45 @@ class ReflectionWorker:
             seen.add(key)
             deduped.append(conclusion)
         return deduped
+
+    def _derive_goal_execution_state(
+        self,
+        *,
+        active_goals: Sequence[dict],
+        active_tasks: Sequence[dict],
+        task_done_updates: int,
+    ) -> dict | None:
+        if not active_goals:
+            return None
+
+        blocked_tasks = [
+            task
+            for task in active_tasks
+            if str(task.get("status", "")).strip().lower() == "blocked"
+        ]
+        in_progress_tasks = [
+            task
+            for task in active_tasks
+            if str(task.get("status", "")).strip().lower() == "in_progress"
+        ]
+
+        if blocked_tasks:
+            return {
+                "kind": "goal_execution_state",
+                "content": "blocked",
+                "confidence": 0.82,
+                "source": "background_reflection",
+            }
+
+        if task_done_updates >= 1 or in_progress_tasks:
+            return {
+                "kind": "goal_execution_state",
+                "content": "progressing",
+                "confidence": 0.76,
+                "source": "background_reflection",
+            }
+
+        return None
 
     def _derive_preferred_role(self, role_counts: dict[str, int], total: int) -> dict | None:
         if total < 4 or not role_counts:

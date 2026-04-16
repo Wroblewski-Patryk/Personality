@@ -686,3 +686,62 @@ async def test_runtime_pipeline_uses_guided_collaboration_preference_for_role_an
     assert result.expression.tone == "guiding"
     assert openai.calls[0]["collaboration_preference"] == "guided"
     assert openai.calls[0]["response_tone"] == "guiding"
+
+
+async def test_runtime_pipeline_uses_reflected_goal_execution_state_across_context_motivation_and_plan() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.user_preferences = {
+        "goal_execution_state": "blocked",
+        "goal_execution_state_confidence": 0.82,
+    }
+    memory.user_conclusions = [
+        {
+            "kind": "goal_execution_state",
+            "content": "blocked",
+            "confidence": 0.82,
+            "source": "background_reflection",
+        }
+    ]
+    memory.active_goals = [
+        {
+            "id": 11,
+            "user_id": "u-1",
+            "name": "ship the MVP this week",
+            "description": "User-declared goal: ship the MVP this week",
+            "priority": "high",
+            "status": "active",
+            "goal_type": "operational",
+        }
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-10",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Can you help me move the MVP forward?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-10"),
+    )
+
+    result = await runtime.run(event)
+
+    assert "Stable user preferences: current goal progress is blocked by an active task." in result.context.summary
+    assert result.motivation.mode == "analyze"
+    assert result.motivation.importance >= 0.75
+    assert "align_with_active_goal" in result.plan.steps
+    assert "recover_goal_progress" in result.plan.steps
+    assert result.reflection_triggered is True

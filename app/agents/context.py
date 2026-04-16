@@ -3,7 +3,7 @@ from app.core.contracts import ContextOutput, Event, IdentityOutput, PerceptionO
 
 class ContextAgent:
     GENERIC_TAGS = {"general"}
-    SUPPORTED_CONCLUSION_KINDS = {"response_style", "collaboration_preference"}
+    SUPPORTED_CONCLUSION_KINDS = {"response_style", "collaboration_preference", "goal_execution_state"}
     STOPWORDS = {
         "a",
         "an",
@@ -131,6 +131,11 @@ class ContextAgent:
                     return "prefers concrete execution help"
                 if content == "guided":
                     return "prefers guided step by step help"
+            if kind == "goal_execution_state":
+                if content == "blocked":
+                    return "current goal progress is blocked by an active task"
+                if content == "progressing":
+                    return "current goal work shows recent progress"
             return ""
         if content == "concise":
             return "prefers concise responses"

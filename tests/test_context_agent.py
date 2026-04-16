@@ -129,6 +129,24 @@ def test_context_summary_includes_collaboration_preference_from_conclusions() ->
     assert "Stable user preferences: prefers guided step by step help." in result.summary
 
 
+def test_context_summary_includes_goal_execution_state_from_conclusions() -> None:
+    result = ContextAgent().run(
+        event=_event("how should we proceed"),
+        perception=_perception(),
+        recent_memory=[],
+        conclusions=[
+            {
+                "kind": "goal_execution_state",
+                "content": "blocked",
+                "confidence": 0.82,
+                "source": "background_reflection",
+            }
+        ],
+    )
+
+    assert "Stable user preferences: current goal progress is blocked by an active task." in result.summary
+
+
 def test_context_ignores_low_confidence_conclusions() -> None:
     result = ContextAgent().run(
         event=_event("how should we proceed"),
