@@ -8,6 +8,7 @@ class MotivationEngine:
         event: Event,
         context: ContextOutput,
         perception: PerceptionOutput,
+        user_preferences: dict | None = None,
         theta: dict | None = None,
     ) -> MotivationOutput:
         text = str(event.payload.get("text", "")).strip()
@@ -104,6 +105,7 @@ class MotivationEngine:
         has_execution_signal = any(lowered.startswith(keyword) for keyword in execution_keywords)
         has_positive_signal = any(keyword in lowered for keyword in positive_keywords)
         is_brief_turn = len(lowered.split()) <= 4
+        collaboration_preference = str((user_preferences or {}).get("collaboration_preference", "")).strip().lower()
 
         importance = 0.45
         importance += 0.15 if has_question else 0.0
@@ -131,6 +133,9 @@ class MotivationEngine:
         theta_mode = None
         if not has_emotional_signal and not has_execution_signal and not has_analysis_signal:
             theta_mode = self._theta_mode(theta)
+        collaboration_mode = None
+        if not has_emotional_signal and not has_execution_signal and not has_analysis_signal:
+            collaboration_mode = self._collaboration_mode(collaboration_preference)
 
         if has_emotional_signal:
             mode = "support"
@@ -138,6 +143,15 @@ class MotivationEngine:
             mode = "execute"
         elif has_analysis_signal:
             mode = "analyze"
+        elif collaboration_mode and (
+            perception.intent == "request_help"
+            or (perception.topic == "general" and is_brief_turn and not has_positive_signal)
+        ):
+            mode = collaboration_mode
+            importance += 0.05
+            if collaboration_mode == "execute":
+                urgency += 0.08
+                arousal += 0.05
         elif theta_mode and (
             perception.intent == "request_help"
             or (perception.topic == "general" and is_brief_turn and not has_positive_signal)
@@ -176,3 +190,10 @@ class MotivationEngine:
         if bias < 0.58:
             return None
         return mode
+
+    def _collaboration_mode(self, collaboration_preference: str) -> str | None:
+        if collaboration_preference == "hands_on":
+            return "execute"
+        if collaboration_preference == "guided":
+            return "analyze"
+        return None

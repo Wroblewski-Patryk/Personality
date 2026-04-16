@@ -17,6 +17,7 @@ class RoleAgent:
         lowered = normalize_for_matching(text)
         preferred_role = str((user_preferences or {}).get("preferred_role", "")).strip().lower()
         preferred_role_confidence = float((user_preferences or {}).get("preferred_role_confidence", 0.0) or 0.0)
+        collaboration_preference = str((user_preferences or {}).get("collaboration_preference", "")).strip().lower()
 
         emotional_keywords = {
             "sad",
@@ -87,6 +88,13 @@ class RoleAgent:
             if perception.topic == "general":
                 return RoleOutput(selected=preferred_role, confidence=0.68)
 
+        collaboration_role = self._collaboration_role(collaboration_preference)
+        if collaboration_role is not None:
+            if perception.event_type == "question" or perception.intent == "request_help":
+                return RoleOutput(selected=collaboration_role, confidence=0.71)
+            if perception.topic == "general":
+                return RoleOutput(selected=collaboration_role, confidence=0.66)
+
         theta_role = self._theta_role(theta)
         if theta_role is not None:
             if perception.event_type == "question" or perception.intent == "request_help":
@@ -118,3 +126,10 @@ class RoleAgent:
         if bias < 0.58:
             return None
         return role
+
+    def _collaboration_role(self, collaboration_preference: str) -> str | None:
+        if collaboration_preference == "hands_on":
+            return "executor"
+        if collaboration_preference == "guided":
+            return "mentor"
+        return None

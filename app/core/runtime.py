@@ -60,6 +60,7 @@ class RuntimeOrchestrator:
             event=event,
             context=context,
             perception=perception,
+            user_preferences=user_preferences,
             theta=user_theta,
         )
         role = self.role_agent.run(

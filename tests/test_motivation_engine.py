@@ -118,3 +118,42 @@ def test_motivation_engine_keeps_explicit_execution_signal_over_theta_support_bi
     )
 
     assert result.mode == "execute"
+
+
+def test_motivation_engine_uses_guided_collaboration_preference_for_ambiguous_turn() -> None:
+    result = MotivationEngine().run(
+        event=_event("help me"),
+        context=_context(),
+        perception=_perception(),
+        user_preferences={"collaboration_preference": "guided"},
+    )
+
+    assert result.mode == "analyze"
+    assert result.importance >= 0.5
+
+
+def test_motivation_engine_uses_hands_on_collaboration_preference_before_theta() -> None:
+    result = MotivationEngine().run(
+        event=_event("help me"),
+        context=_context(),
+        perception=_perception(),
+        user_preferences={"collaboration_preference": "hands_on"},
+        theta={
+            "support_bias": 0.15,
+            "analysis_bias": 0.75,
+            "execution_bias": 0.1,
+        },
+    )
+
+    assert result.mode == "execute"
+
+
+def test_motivation_engine_keeps_explicit_analysis_signal_over_collaboration_preference() -> None:
+    result = MotivationEngine().run(
+        event=_event("Can you explain why this rollout failed?"),
+        context=_context(),
+        perception=_perception(event_type="question", intent="request_help"),
+        user_preferences={"collaboration_preference": "hands_on"},
+    )
+
+    assert result.mode == "analyze"

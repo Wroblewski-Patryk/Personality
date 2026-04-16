@@ -125,3 +125,26 @@ def test_role_agent_keeps_explicit_emotional_signal_over_theta_bias() -> None:
     )
 
     assert result.selected == "friend"
+
+
+def test_role_agent_uses_guided_collaboration_preference_for_ambiguous_question() -> None:
+    result = RoleAgent().run(
+        event=_event("Can you help me with this?"),
+        perception=_perception("question", "general", "request_help"),
+        context=_context(),
+        user_preferences={"collaboration_preference": "guided"},
+    )
+
+    assert result.selected == "mentor"
+
+
+def test_role_agent_uses_hands_on_collaboration_preference_before_theta() -> None:
+    result = RoleAgent().run(
+        event=_event("Can you help me with this?"),
+        perception=_perception("question", "general", "request_help"),
+        context=_context(),
+        user_preferences={"collaboration_preference": "hands_on"},
+        theta={"support_bias": 0.1, "analysis_bias": 0.78, "execution_bias": 0.12},
+    )
+
+    assert result.selected == "executor"

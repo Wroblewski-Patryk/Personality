@@ -450,8 +450,58 @@ async def test_runtime_pipeline_uses_collaboration_preference_in_context_and_pla
     result = await runtime.run(event)
 
     assert "Stable user preferences: prefers concrete execution help." in result.context.summary
-    assert "favor_concrete_next_step" in result.plan.steps
+    assert result.plan.goal == "Move the requested task toward execution with the smallest concrete next step."
+    assert "propose_execution_step" in result.plan.steps
     assert result.reflection_triggered is True
     assert result.expression.tone == "action-oriented"
     assert openai.calls[0]["collaboration_preference"] == "hands_on"
     assert openai.calls[0]["response_tone"] == "action-oriented"
+
+
+async def test_runtime_pipeline_uses_guided_collaboration_preference_for_role_and_motivation() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.user_preferences = {
+        "collaboration_preference": "guided",
+        "collaboration_preference_confidence": 0.73,
+    }
+    memory.user_conclusions = [
+        {
+            "kind": "collaboration_preference",
+            "content": "guided",
+            "confidence": 0.73,
+            "source": "background_reflection",
+        }
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-9",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Can you help me with this?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-9"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.motivation.mode == "analyze"
+    assert result.role.selected == "mentor"
+    assert result.plan.goal == "Explain the situation clearly with a guided step by step path."
+    assert "break_down_problem" in result.plan.steps
+    assert result.expression.tone == "guiding"
+    assert openai.calls[0]["collaboration_preference"] == "guided"
+    assert openai.calls[0]["response_tone"] == "guiding"

@@ -152,12 +152,12 @@ These are small but real issues observed after the production rollout and smoke 
 
 ### 7. Semantic Conclusion Memory
 
-- current repo behavior now keeps lightweight `aion_conclusion` records for semantic preferences such as `response_style`, `preferred_role`, and `collaboration_preference`; expression uses response-style preferences in both fallback generation and OpenAI prompting, context retrieval includes stable preferences in the runtime summary, planning turns response-style preferences into explicit response-shaping steps such as `keep_response_concise` or `format_response_as_bullets`, role selection can use `preferred_role` as a tie-breaker on ambiguous turns, and both planning and expression can now use `collaboration_preference` to lean more guided or more hands-on
+- current repo behavior now keeps lightweight `aion_conclusion` records for semantic preferences such as `response_style`, `preferred_role`, and `collaboration_preference`; expression uses response-style preferences in both fallback generation and OpenAI prompting, context retrieval includes stable preferences in the runtime summary, planning turns response-style preferences into explicit response-shaping steps such as `keep_response_concise` or `format_response_as_bullets`, role selection can use `preferred_role` as a tie-breaker on ambiguous turns, and `collaboration_preference` can now shape role selection, motivation, planning, and expression toward a more guided or more hands-on collaboration style
 - next improvement:
   - widen conclusion memory beyond explicit requests into repeated-pattern learning once there is enough traffic signal
   - decide whether conclusions should start carrying supporting memory ids and richer provenance before the subconscious loop exists
   - decide which future preference types should be allowed to influence role selection versus staying lower in the stack
-  - decide whether collaboration preference should stay planning-and-expression scoped, or also shape action selection more directly
+  - decide whether collaboration preference should also shape action selection more directly
 
 ### 8. Background Reflection Worker
 
