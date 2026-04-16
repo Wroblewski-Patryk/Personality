@@ -190,6 +190,7 @@ class ReflectionWorker:
             return []
 
         explicit_updates: list[str] = []
+        explicit_collaboration_updates: list[str] = []
         structured_count = 0
         concise_count = 0
         sample_size = 0
@@ -200,6 +201,9 @@ class ReflectionWorker:
             preference_update = fields.get("preference_update", "")
             if preference_update.startswith("response_style:"):
                 explicit_updates.append(preference_update.split(":", 1)[1].strip().lower())
+            collaboration_update = fields.get("collaboration_update", "").strip().lower()
+            if collaboration_update in {"guided", "hands_on"}:
+                explicit_collaboration_updates.append(collaboration_update)
 
             role = fields.get("role", "").strip().lower()
             if role in {"friend", "analyst", "executor", "mentor"}:
@@ -254,6 +258,17 @@ class ReflectionWorker:
         preferred_role = self._derive_preferred_role(role_counts=role_counts, total=len(recent_memory))
         if preferred_role is not None:
             conclusions.append(preferred_role)
+
+        if explicit_collaboration_updates:
+            latest = explicit_collaboration_updates[0]
+            conclusions.append(
+                {
+                    "kind": "collaboration_preference",
+                    "content": latest,
+                    "confidence": 0.94,
+                    "source": "background_reflection",
+                }
+            )
 
         collaboration_preference = self._derive_collaboration_preference(recent_memory)
         if collaboration_preference is not None:

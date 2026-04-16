@@ -236,6 +236,30 @@ async def test_reflection_worker_infers_hands_on_collaboration_preference() -> N
     } in repository.conclusion_updates
 
 
+async def test_reflection_worker_prefers_explicit_guided_collaboration_update() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "collaboration_update=guided; action=success; expression=One."},
+            {"summary": "motivation=execute; role=executor; plan_steps=identify_requested_change,propose_execution_step; action=success; expression=Two."},
+            {"summary": "motivation=execute; role=executor; plan_steps=identify_requested_change,propose_execution_step; action=success; expression=Three."},
+            {"summary": "motivation=execute; role=executor; plan_steps=identify_requested_change,propose_execution_step; action=success; expression=Four."},
+        ]
+    )
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-explicit-guided")
+
+    assert result is True
+    assert {
+        "user_id": "u-1",
+        "kind": "collaboration_preference",
+        "content": "guided",
+        "confidence": 0.94,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-explicit-guided",
+    } in repository.conclusion_updates
+
+
 async def test_reflection_worker_enqueue_persists_durable_task() -> None:
     repository = FakeMemoryRepository(recent_memory=[])
     worker = ReflectionWorker(memory_repository=repository)

@@ -123,6 +123,7 @@ Current MVP status:
 - reflection now also maintains a lightweight `aion_theta` state with soft support, analysis, and execution biases derived from repeated recent role patterns
 - runtime still prefers explicit heuristics and reflected `preferred_role`, but can now also use theta as a softer bias on ambiguous turns for role selection, motivation mode selection, lightweight planning stance, and expression tone selection
 - semantic conclusions can now also infer `collaboration_preference`, for example whether the user tends to prefer guided step-by-step help or more hands-on concrete execution help
+- episodic summaries now also capture explicit `collaboration_update` markers from direct requests like `step by step` or `do it for me`, so reflection can honor those signals without waiting only for repeated-pattern learning
 - collaboration preference now influences role selection, motivation, planning, and expression, so the runtime can lean more guiding or more action-oriented even when the request itself is short or ambiguous
 - vector retrieval is still planned, not live
 

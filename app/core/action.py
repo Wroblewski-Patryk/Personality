@@ -11,7 +11,7 @@ from app.core.contracts import (
 )
 from app.integrations.telegram.client import TelegramClient
 from app.memory.repository import MemoryRepository
-from app.utils.preferences import detect_response_style_preference
+from app.utils.preferences import detect_collaboration_preference, detect_response_style_preference
 
 
 class ActionExecutor:
@@ -64,9 +64,15 @@ class ActionExecutor:
         memory_kind = self._memory_kind(event, perception)
         memory_topics = self._memory_topics(event, perception)
         style_preference = detect_response_style_preference(str(event.payload.get("text", "")))
+        collaboration_preference = detect_collaboration_preference(str(event.payload.get("text", "")))
         preference_update = (
             f"response_style:{style_preference.style}"
             if style_preference is not None
+            else ""
+        )
+        collaboration_update = (
+            collaboration_preference.preference
+            if collaboration_preference is not None
             else ""
         )
         summary = (
@@ -75,6 +81,7 @@ class ActionExecutor:
             f"memory_topics={','.join(memory_topics)}; "
             f"response_language={expression.language}; "
             f"preference_update={preference_update}; "
+            f"collaboration_update={collaboration_update}; "
             f"context={context.summary}; "
             f"motivation={motivation.mode}; "
             f"role={role.selected}; "

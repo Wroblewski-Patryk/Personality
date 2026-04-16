@@ -11,6 +11,13 @@ class ResponseStylePreference:
     source: str
 
 
+@dataclass(frozen=True)
+class CollaborationPreference:
+    preference: str
+    confidence: float
+    source: str
+
+
 def detect_response_style_preference(text: str) -> ResponseStylePreference | None:
     normalized = normalize_for_matching(text)
     if not normalized:
@@ -53,6 +60,44 @@ def detect_response_style_preference(text: str) -> ResponseStylePreference | Non
 
     if any(signal in normalized for signal in structured_signals):
         return ResponseStylePreference(style="structured", confidence=0.95, source="explicit_request")
+
+    return None
+
+
+def detect_collaboration_preference(text: str) -> CollaborationPreference | None:
+    normalized = normalize_for_matching(text)
+    if not normalized:
+        return None
+
+    guided_signals = {
+        "step by step",
+        "walk me through",
+        "guide me through",
+        "guide me",
+        "help me understand",
+        "teach me",
+        "show me how",
+        "krok po kroku",
+        "przeprowadz mnie",
+        "pomoz mi zrozumiec",
+        "wytlumacz mi",
+    }
+    hands_on_signals = {
+        "do it for me",
+        "just do it",
+        "take care of it",
+        "handle it",
+        "ship it",
+        "zrob to za mnie",
+        "po prostu to zrob",
+        "ogarnij to",
+    }
+
+    if any(signal in normalized for signal in guided_signals):
+        return CollaborationPreference(preference="guided", confidence=0.93, source="explicit_request")
+
+    if any(signal in normalized for signal in hands_on_signals):
+        return CollaborationPreference(preference="hands_on", confidence=0.93, source="explicit_request")
 
     return None
 

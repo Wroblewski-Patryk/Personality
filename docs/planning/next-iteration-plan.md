@@ -153,6 +153,7 @@ These are small but real issues observed after the production rollout and smoke 
 ### 7. Semantic Conclusion Memory
 
 - current repo behavior now keeps lightweight `aion_conclusion` records for semantic preferences such as `response_style`, `preferred_role`, and `collaboration_preference`; expression uses response-style preferences in both fallback generation and OpenAI prompting, context retrieval includes stable preferences in the runtime summary, planning turns response-style preferences into explicit response-shaping steps such as `keep_response_concise` or `format_response_as_bullets`, role selection can use `preferred_role` as a tie-breaker on ambiguous turns, and `collaboration_preference` can now shape role selection, motivation, planning, and expression toward a more guided or more hands-on collaboration style
+- current repo behavior also persists explicit collaboration markers in episodic memory when the user directly asks for guidance like `step by step` or for delegation like `do it for me`, so background reflection can learn `collaboration_preference` immediately instead of relying only on repeated-pattern heuristics
 - next improvement:
   - widen conclusion memory beyond explicit requests into repeated-pattern learning once there is enough traffic signal
   - decide whether conclusions should start carrying supporting memory ids and richer provenance before the subconscious loop exists

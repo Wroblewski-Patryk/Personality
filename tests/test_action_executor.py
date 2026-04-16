@@ -183,3 +183,21 @@ async def test_persist_episode_marks_explicit_response_style_preference_for_refl
     )
 
     assert "preference_update=response_style:concise" in record.summary
+
+
+async def test_persist_episode_marks_explicit_collaboration_preference_for_reflection() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    record = await executor.persist_episode(
+        event=_event("Can you walk me through this step by step?"),
+        perception=_perception(["general"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=_plan(),
+        action_result=await executor.execute(_plan(), _event("Can you walk me through this step by step?"), _expression()),
+        expression=_expression(),
+    )
+
+    assert "collaboration_update=guided" in record.summary

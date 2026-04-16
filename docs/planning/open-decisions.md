@@ -83,10 +83,10 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 10. Preference Influence Scope
 
 - Current repo fact:
-  - stable `response_style` conclusions now influence context, planning, and expression.
-  - stable `preferred_role` conclusions can now influence role selection on ambiguous turns.
-  - stable `collaboration_preference` conclusions can now influence context, role selection, motivation, planning, and expression on ambiguous turns.
-  - reflected theta now provides a softer runtime bias toward support, analysis, or execution behavior without hard-overriding explicit signals, and that bias can now shape role selection, motivation mode, planning stance, and expression tone on ambiguous turns.
+- stable `response_style` conclusions now influence context, planning, and expression.
+- stable `preferred_role` conclusions can now influence role selection on ambiguous turns.
+- stable `collaboration_preference` conclusions can now influence context, role selection, motivation, planning, and expression on ambiguous turns, and explicit user phrases like `step by step` or `do it for me` are now captured as episodic collaboration markers for reflection.
+- reflected theta now provides a softer runtime bias toward support, analysis, or execution behavior without hard-overriding explicit signals, and that bias can now shape role selection, motivation mode, planning stance, and expression tone on ambiguous turns.
 - Decision needed:
   - which preference types should remain expression-only, and which should be allowed to shape higher-level planning or role selection as the architecture grows?
 
