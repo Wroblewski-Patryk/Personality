@@ -90,6 +90,52 @@ class AionTheta(Base):
     )
 
 
+class AionGoal(Base):
+    __tablename__ = "aion_goal"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    priority: Mapped[str] = mapped_column(String(16), nullable=False, default="medium", index=True)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="active", index=True)
+    goal_type: Mapped[str] = mapped_column(String(24), nullable=False, default="tactical")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class AionTask(Base):
+    __tablename__ = "aion_task"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    goal_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    priority: Mapped[str] = mapped_column(String(16), nullable=False, default="medium", index=True)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="todo", index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
 class AionReflectionTask(Base):
     __tablename__ = "aion_reflection_task"
     __table_args__ = (UniqueConstraint("event_id", name="uq_aion_reflection_task_event_id"),)

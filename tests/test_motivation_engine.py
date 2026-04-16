@@ -157,3 +157,35 @@ def test_motivation_engine_keeps_explicit_analysis_signal_over_collaboration_pre
     )
 
     assert result.mode == "analyze"
+
+
+def test_motivation_engine_boosts_priority_for_related_goal_and_blocked_task() -> None:
+    result = MotivationEngine().run(
+        event=_event("Can you help me fix the deployment blocker for the MVP?"),
+        context=_context(),
+        perception=_perception(event_type="question", intent="request_help"),
+        active_goals=[
+            {
+                "id": 1,
+                "name": "ship the MVP this week",
+                "description": "User-declared goal: ship the MVP this week",
+                "priority": "high",
+                "status": "active",
+                "goal_type": "operational",
+            }
+        ],
+        active_tasks=[
+            {
+                "id": 2,
+                "goal_id": 1,
+                "name": "fix deployment blocker",
+                "description": "User-declared task: fix deployment blocker",
+                "priority": "high",
+                "status": "blocked",
+            }
+        ],
+    )
+
+    assert result.mode == "analyze"
+    assert result.importance >= 0.78
+    assert result.urgency >= 0.35

@@ -79,6 +79,38 @@ def test_context_summary_can_include_identity_stance() -> None:
     assert "Identity stance: direct, supportive, analytical." in result.summary
 
 
+def test_context_summary_includes_relevant_active_goals_and_tasks() -> None:
+    result = ContextAgent().run(
+        event=_event("can you help me fix the deployment blocker for the mvp"),
+        perception=_perception(),
+        recent_memory=[],
+        active_goals=[
+            {
+                "id": 1,
+                "name": "ship the MVP this week",
+                "description": "User-declared goal: ship the MVP this week",
+                "priority": "high",
+                "status": "active",
+                "goal_type": "operational",
+            }
+        ],
+        active_tasks=[
+            {
+                "id": 2,
+                "goal_id": 1,
+                "name": "fix deployment blocker",
+                "description": "User-declared task: fix deployment blocker",
+                "priority": "high",
+                "status": "blocked",
+            }
+        ],
+    )
+
+    assert "Active goals: ship the MVP this week." in result.summary
+    assert "Active tasks: fix deployment blocker (blocked)." in result.summary
+    assert result.related_goals == ["ship the MVP this week"]
+
+
 def test_context_summary_includes_collaboration_preference_from_conclusions() -> None:
     result = ContextAgent().run(
         event=_event("how should we proceed"),

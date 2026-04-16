@@ -142,6 +142,7 @@ Current MVP status:
 
 - runtime now builds a lightweight identity snapshot from a stable code-defined core plus user-linked profile, conclusion, and theta signals
 - this happens before context construction and is exposed in the runtime result for debugging and verification
+- runtime now also loads active goals and active tasks so the conscious loop can connect the current event to ongoing direction and operational blockers
 
 ---
 

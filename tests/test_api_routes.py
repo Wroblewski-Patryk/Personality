@@ -10,6 +10,7 @@ from app.core.contracts import (
     Event,
     EventMeta,
     ExpressionOutput,
+    GoalRecordOutput,
     IdentityOutput,
     MemoryRecord,
     MotivationOutput,
@@ -17,6 +18,7 @@ from app.core.contracts import (
     PlanOutput,
     RoleOutput,
     RuntimeResult,
+    TaskRecordOutput,
 )
 
 
@@ -40,6 +42,26 @@ class FakeRuntime:
                 theta_orientation=None,
                 summary="Mission: help the user move forward with clear, constructive support. Core style: direct, supportive, analytical. Preferred language context: en.",
             ),
+            active_goals=[
+                GoalRecordOutput(
+                    id=1,
+                    name="ship the MVP",
+                    description="User-declared goal: ship the MVP",
+                    priority="high",
+                    status="active",
+                    goal_type="tactical",
+                )
+            ],
+            active_tasks=[
+                TaskRecordOutput(
+                    id=2,
+                    goal_id=1,
+                    name="fix deployment blocker",
+                    description="User-declared task: fix deployment blocker",
+                    priority="high",
+                    status="blocked",
+                )
+            ],
             perception=PerceptionOutput(
                 event_type="statement",
                 topic="general",
@@ -92,6 +114,7 @@ class FakeRuntime:
             reflection_triggered=False,
             stage_timings_ms={
                 "memory_load": 1,
+                "task_load": 0,
                 "identity_load": 0,
                 "perception": 0,
                 "context": 0,
@@ -222,6 +245,8 @@ def test_event_endpoint_returns_runtime_result_and_normalizes_event() -> None:
     assert body["perception"]["language_source"] == "keyword_signal"
     assert body["reflection_triggered"] is False
     assert body["identity"]["mission"] == "Help the user move forward with clear, constructive support."
+    assert body["active_goals"][0]["name"] == "ship the MVP"
+    assert body["active_tasks"][0]["status"] == "blocked"
     assert body["stage_timings_ms"]["memory_load"] == 1
     assert body["stage_timings_ms"]["total"] == 12
     assert body["event"]["source"] == "api"

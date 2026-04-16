@@ -47,14 +47,23 @@ class RuntimeOrchestrator:
         self.logger.info("start event_id=%s trace_id=%s", event.event_id, event.meta.trace_id)
 
         stage_started = perf_counter()
-        memory, user_profile, user_preferences, user_conclusions, user_theta = await asyncio.gather(
+        memory, user_profile, user_preferences, user_conclusions, user_theta, active_goals = await asyncio.gather(
             self.memory_repository.get_recent_for_user(user_id=event.meta.user_id, limit=5),
             self.memory_repository.get_user_profile(user_id=event.meta.user_id),
             self.memory_repository.get_user_runtime_preferences(user_id=event.meta.user_id),
             self.memory_repository.get_user_conclusions(user_id=event.meta.user_id, limit=3),
             self.memory_repository.get_user_theta(user_id=event.meta.user_id),
+            self.memory_repository.get_active_goals(user_id=event.meta.user_id, limit=5),
         )
         stage_timings_ms["memory_load"] = int((perf_counter() - stage_started) * 1000)
+
+        stage_started = perf_counter()
+        active_tasks = await self.memory_repository.get_active_tasks(
+            user_id=event.meta.user_id,
+            goal_ids=[int(goal["id"]) for goal in active_goals if goal.get("id") is not None],
+            limit=5,
+        )
+        stage_timings_ms["task_load"] = int((perf_counter() - stage_started) * 1000)
 
         stage_started = perf_counter()
         identity = self.identity_service.build(
@@ -75,6 +84,8 @@ class RuntimeOrchestrator:
             recent_memory=memory,
             conclusions=user_conclusions,
             identity=identity,
+            active_goals=active_goals,
+            active_tasks=active_tasks,
         )
         stage_timings_ms["context"] = int((perf_counter() - stage_started) * 1000)
 
@@ -85,6 +96,8 @@ class RuntimeOrchestrator:
             perception=perception,
             user_preferences=user_preferences,
             theta=user_theta,
+            active_goals=active_goals,
+            active_tasks=active_tasks,
         )
         stage_timings_ms["motivation"] = int((perf_counter() - stage_started) * 1000)
 
@@ -106,6 +119,8 @@ class RuntimeOrchestrator:
             role=role,
             user_preferences=user_preferences,
             theta=user_theta,
+            active_goals=active_goals,
+            active_tasks=active_tasks,
         )
         stage_timings_ms["planning"] = int((perf_counter() - stage_started) * 1000)
 
@@ -170,6 +185,8 @@ class RuntimeOrchestrator:
         return RuntimeResult(
             event=event,
             identity=identity,
+            active_goals=active_goals,
+            active_tasks=active_tasks,
             perception=perception,
             context=context,
             motivation=motivation,

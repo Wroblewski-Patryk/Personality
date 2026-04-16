@@ -20,6 +20,8 @@ class FakeMemoryRepository:
         self.user_preferences: dict = {}
         self.user_conclusions: list[dict] = []
         self.user_theta: dict | None = None
+        self.active_goals: list[dict] = []
+        self.active_tasks: list[dict] = []
 
     async def get_recent_for_user(self, user_id: str, limit: int = 5) -> list[dict]:
         return self.recent_memory[:limit]
@@ -35,6 +37,16 @@ class FakeMemoryRepository:
 
     async def get_user_theta(self, user_id: str) -> dict | None:
         return self.user_theta
+
+    async def get_active_goals(self, user_id: str, limit: int = 5) -> list[dict]:
+        return self.active_goals[:limit]
+
+    async def get_active_tasks(self, user_id: str, *, goal_ids: list[int] | None = None, limit: int = 5) -> list[dict]:
+        if goal_ids:
+            goal_linked = [task for task in self.active_tasks if task.get("goal_id") in set(goal_ids)]
+            rest = [task for task in self.active_tasks if task.get("goal_id") not in set(goal_ids)]
+            return (goal_linked + rest)[:limit]
+        return self.active_tasks[:limit]
 
     async def write_episode(self, **kwargs) -> dict:
         return {
@@ -56,6 +68,16 @@ class FakeMemoryRepository:
     async def upsert_theta(self, **kwargs) -> dict:
         self.user_theta = kwargs
         return kwargs
+
+    async def upsert_active_goal(self, **kwargs) -> dict:
+        payload = {"id": len(self.active_goals) + 1, **kwargs}
+        self.active_goals.append(payload)
+        return payload
+
+    async def upsert_active_task(self, **kwargs) -> dict:
+        payload = {"id": len(self.active_tasks) + 1, **kwargs}
+        self.active_tasks.append(payload)
+        return payload
 
 
 class FakeTelegramClient:
@@ -151,6 +173,8 @@ async def test_runtime_pipeline_api_source() -> None:
     assert result.action_result.status == "success"
     assert result.identity.mission == "Help the user move forward with clear, constructive support."
     assert result.identity.behavioral_style == ["direct", "supportive", "analytical"]
+    assert result.active_goals == []
+    assert result.active_tasks == []
     assert "Identity stance: direct, supportive, analytical." in result.context.summary
     assert "previous hello" in result.context.summary
     assert "Earlier reply" in result.context.summary
@@ -169,6 +193,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert result.reflection_triggered is True
     assert set(result.stage_timings_ms) == {
         "memory_load",
+        "task_load",
         "identity_load",
         "perception",
         "context",
@@ -188,6 +213,66 @@ async def test_runtime_pipeline_api_source() -> None:
     assert openai.calls[0]["response_tone"] == "supportive"
     assert openai.calls[0]["collaboration_preference"] == ""
     assert "constructive support" in openai.calls[0]["identity_summary"]
+
+
+async def test_runtime_pipeline_loads_active_goals_and_tasks_into_context_and_plan() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.active_goals = [
+        {
+            "id": 11,
+            "user_id": "u-1",
+            "name": "ship the MVP this week",
+            "description": "User-declared goal: ship the MVP this week",
+            "priority": "high",
+            "status": "active",
+            "goal_type": "operational",
+        }
+    ]
+    memory.active_tasks = [
+        {
+            "id": 21,
+            "user_id": "u-1",
+            "goal_id": 11,
+            "name": "fix deployment blocker",
+            "description": "User-declared task: fix deployment blocker",
+            "priority": "high",
+            "status": "blocked",
+        }
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-goal-task",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Can you help me plan how to fix the deployment blocker for the MVP?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-goal-task"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.active_goals[0].name == "ship the MVP this week"
+    assert result.active_tasks[0].name == "fix deployment blocker"
+    assert "Active goals: ship the MVP this week." in result.context.summary
+    assert "Active tasks: fix deployment blocker (blocked)." in result.context.summary
+    assert result.context.related_goals == ["ship the MVP this week"]
+    assert "align_with_active_goal" in result.plan.steps
+    assert "unblock_active_task" in result.plan.steps
+    assert result.motivation.importance >= 0.78
 
 
 async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_without_recent_memory() -> None:

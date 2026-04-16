@@ -10,6 +10,8 @@ class MotivationEngine:
         perception: PerceptionOutput,
         user_preferences: dict | None = None,
         theta: dict | None = None,
+        active_goals: list[dict] | None = None,
+        active_tasks: list[dict] | None = None,
     ) -> MotivationOutput:
         text = str(event.payload.get("text", "")).strip()
         lowered = normalize_for_matching(text)
@@ -106,15 +108,20 @@ class MotivationEngine:
         has_positive_signal = any(keyword in lowered for keyword in positive_keywords)
         is_brief_turn = len(lowered.split()) <= 4
         collaboration_preference = str((user_preferences or {}).get("collaboration_preference", "")).strip().lower()
+        related_goal_priority = self._related_goal_priority(text=text, goals=active_goals or [])
+        blocked_task_match = self._has_related_blocked_task(text=text, tasks=active_tasks or [])
 
         importance = 0.45
         importance += 0.15 if has_question else 0.0
         importance += 0.2 if has_urgent_signal else 0.0
         importance += min(context.risk_level, 0.2)
+        importance += {"medium": 0.05, "high": 0.1, "critical": 0.18}.get(related_goal_priority, 0.0)
+        importance += 0.08 if blocked_task_match else 0.0
 
         urgency = 0.2
         urgency += 0.45 if has_urgent_signal else 0.0
         urgency += 0.1 if has_execution_signal else 0.0
+        urgency += 0.15 if blocked_task_match else 0.0
 
         if has_emotional_signal:
             valence = -0.45
@@ -173,6 +180,42 @@ class MotivationEngine:
             arousal=self._clamp(arousal),
             mode=mode,
         )
+
+    def _related_goal_priority(self, text: str, goals: list[dict]) -> str | None:
+        tokens = self._text_tokens(text)
+        best_priority: str | None = None
+        best_rank = 0
+        for goal in goals:
+            goal_tokens = self._text_tokens(str(goal.get("name", "")) + " " + str(goal.get("description", "")))
+            if tokens and not tokens.intersection(goal_tokens):
+                continue
+            rank = self._priority_rank(str(goal.get("priority", "")))
+            if rank > best_rank:
+                best_rank = rank
+                best_priority = str(goal.get("priority", "")).strip().lower() or None
+        return best_priority
+
+    def _has_related_blocked_task(self, text: str, tasks: list[dict]) -> bool:
+        tokens = self._text_tokens(text)
+        for task in tasks:
+            if str(task.get("status", "")).strip().lower() != "blocked":
+                continue
+            task_tokens = self._text_tokens(str(task.get("name", "")) + " " + str(task.get("description", "")))
+            if not tokens or tokens.intersection(task_tokens):
+                return True
+        return False
+
+    def _text_tokens(self, value: str) -> set[str]:
+        canonical = normalize_for_matching(value)
+        return {token for token in canonical.split() if len(token) >= 3}
+
+    def _priority_rank(self, priority: str) -> int:
+        return {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+            "critical": 4,
+        }.get(priority, 0)
 
     def _clamp(self, value: float) -> float:
         return max(0.0, min(1.0, round(value, 2)))

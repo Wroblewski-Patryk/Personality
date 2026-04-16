@@ -11,6 +11,7 @@ from app.core.contracts import (
 )
 from app.integrations.telegram.client import TelegramClient
 from app.memory.repository import MemoryRepository
+from app.utils.goal_task_signals import detect_goal_signal, detect_task_signal
 from app.utils.preferences import detect_collaboration_preference, detect_response_style_preference
 
 
@@ -65,6 +66,8 @@ class ActionExecutor:
         memory_topics = self._memory_topics(event, perception)
         style_preference = detect_response_style_preference(str(event.payload.get("text", "")))
         collaboration_preference = detect_collaboration_preference(str(event.payload.get("text", "")))
+        goal_signal = detect_goal_signal(str(event.payload.get("text", "")))
+        task_signal = detect_task_signal(str(event.payload.get("text", "")))
         preference_update = (
             f"response_style:{style_preference.style}"
             if style_preference is not None
@@ -75,6 +78,32 @@ class ActionExecutor:
             if collaboration_preference is not None
             else ""
         )
+        goal_update = ""
+        task_update = ""
+
+        if goal_signal is not None:
+            stored_goal = await self.memory_repository.upsert_active_goal(
+                user_id=event.meta.user_id,
+                name=goal_signal.name,
+                description=goal_signal.description,
+                priority=goal_signal.priority,
+                goal_type=goal_signal.goal_type,
+            )
+            goal_update = str(stored_goal["name"])
+
+        if task_signal is not None:
+            active_goals = await self.memory_repository.get_active_goals(user_id=event.meta.user_id, limit=5)
+            linked_goal_id = self._match_goal_for_task(task_signal.name, active_goals)
+            stored_task = await self.memory_repository.upsert_active_task(
+                user_id=event.meta.user_id,
+                name=task_signal.name,
+                description=task_signal.description,
+                priority=task_signal.priority,
+                goal_id=linked_goal_id,
+                status=task_signal.status,
+            )
+            task_update = str(stored_task["name"])
+
         summary = (
             f"event={event.payload.get('text', '')}; "
             f"memory_kind={memory_kind}; "
@@ -82,6 +111,8 @@ class ActionExecutor:
             f"response_language={expression.language}; "
             f"preference_update={preference_update}; "
             f"collaboration_update={collaboration_update}; "
+            f"goal_update={goal_update}; "
+            f"task_update={task_update}; "
             f"context={context.summary}; "
             f"motivation={motivation.mode}; "
             f"role={role.selected}; "
@@ -117,6 +148,21 @@ class ActionExecutor:
             summary=stored["summary"],
             importance=stored["importance"],
         )
+
+    def _match_goal_for_task(self, task_name: str, active_goals: list[dict]) -> int | None:
+        task_tokens = self._text_tokens(task_name)
+        best_goal_id: int | None = None
+        best_score = 0
+        for goal in active_goals:
+            goal_id = goal.get("id")
+            if goal_id is None:
+                continue
+            goal_tokens = self._text_tokens(str(goal.get("name", "")) + " " + str(goal.get("description", "")))
+            overlap = len(task_tokens.intersection(goal_tokens))
+            if overlap > best_score:
+                best_score = overlap
+                best_goal_id = int(goal_id)
+        return best_goal_id
 
     def _memory_kind(self, event: Event, perception: PerceptionOutput) -> str:
         specific_topics = [
@@ -186,3 +232,7 @@ class ActionExecutor:
             if len(topics) >= 4:
                 break
         return topics
+
+    def _text_tokens(self, value: str) -> set[str]:
+        canonical = "".join(char if char.isalnum() or char.isspace() else " " for char in value.strip().lower())
+        return {token for token in canonical.split() if len(token) >= 3}

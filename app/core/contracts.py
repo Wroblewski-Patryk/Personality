@@ -49,6 +49,24 @@ class IdentityOutput(BaseModel):
     summary: str
 
 
+class GoalRecordOutput(BaseModel):
+    id: int | None = None
+    name: str
+    description: str
+    priority: str
+    status: str
+    goal_type: str
+
+
+class TaskRecordOutput(BaseModel):
+    id: int | None = None
+    goal_id: int | None = None
+    name: str
+    description: str
+    priority: str
+    status: str
+
+
 class MotivationOutput(BaseModel):
     importance: float
     urgency: float
@@ -93,6 +111,8 @@ class MemoryRecord(BaseModel):
 class RuntimeResult(BaseModel):
     event: Event
     identity: IdentityOutput
+    active_goals: list[GoalRecordOutput] = Field(default_factory=list)
+    active_tasks: list[TaskRecordOutput] = Field(default_factory=list)
     perception: PerceptionOutput
     context: ContextOutput
     motivation: MotivationOutput

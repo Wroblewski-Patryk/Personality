@@ -3,10 +3,22 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from app.memory.models import AionConclusion, AionMemory, AionProfile, AionReflectionTask, AionTheta, Base
+from app.memory.models import (
+    AionConclusion,
+    AionGoal,
+    AionMemory,
+    AionProfile,
+    AionReflectionTask,
+    AionTask,
+    AionTheta,
+    Base,
+)
 
 
 class MemoryRepository:
+    ACTIVE_GOAL_STATUSES = ("active",)
+    ACTIVE_TASK_STATUSES = ("todo", "in_progress", "blocked")
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self.session_factory = session_factory
 
@@ -97,6 +109,177 @@ class MemoryRepository:
             "execution_bias": row.execution_bias,
             "updated_at": row.updated_at,
         }
+
+    async def get_active_goals(self, user_id: str, limit: int = 5) -> list[dict]:
+        async with self.session_factory() as session:
+            statement = (
+                select(AionGoal)
+                .where(
+                    AionGoal.user_id == user_id,
+                    AionGoal.status.in_(self.ACTIVE_GOAL_STATUSES),
+                )
+                .order_by(AionGoal.updated_at.desc(), AionGoal.id.desc())
+                .limit(limit)
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+        rows = sorted(
+            rows,
+            key=lambda row: (
+                self._goal_priority_rank(row.priority),
+                self._coerce_datetime(row.updated_at) or datetime.min.replace(tzinfo=timezone.utc),
+                row.id,
+            ),
+            reverse=True,
+        )
+        return [self._serialize_goal(row) for row in rows[:limit]]
+
+    async def get_active_tasks(
+        self,
+        user_id: str,
+        *,
+        goal_ids: list[int] | None = None,
+        limit: int = 5,
+    ) -> list[dict]:
+        async with self.session_factory() as session:
+            statement = (
+                select(AionTask)
+                .where(
+                    AionTask.user_id == user_id,
+                    AionTask.status.in_(self.ACTIVE_TASK_STATUSES),
+                )
+                .order_by(AionTask.updated_at.desc(), AionTask.id.desc())
+                .limit(max(limit * 2, limit))
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+        goal_id_set = {goal_id for goal_id in (goal_ids or []) if goal_id is not None}
+        if goal_id_set:
+            goal_linked = [row for row in rows if row.goal_id in goal_id_set]
+            unlinked = [row for row in rows if row.goal_id not in goal_id_set]
+            rows = goal_linked + unlinked
+
+        rows = sorted(
+            rows,
+            key=lambda row: (
+                self._task_status_rank(row.status),
+                self._task_priority_rank(row.priority),
+                self._coerce_datetime(row.updated_at) or datetime.min.replace(tzinfo=timezone.utc),
+                row.id,
+            ),
+            reverse=True,
+        )
+        return [self._serialize_task(row) for row in rows[:limit]]
+
+    async def upsert_active_goal(
+        self,
+        *,
+        user_id: str,
+        name: str,
+        description: str,
+        priority: str = "medium",
+        goal_type: str = "tactical",
+    ) -> dict:
+        normalized_name = self._normalize_match_text(name)
+        async with self.session_factory() as session:
+            statement = (
+                select(AionGoal)
+                .where(
+                    AionGoal.user_id == user_id,
+                    AionGoal.status.in_(("active", "paused")),
+                )
+                .order_by(AionGoal.updated_at.desc(), AionGoal.id.desc())
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+            row = next(
+                (
+                    item
+                    for item in rows
+                    if self._normalize_match_text(item.name) == normalized_name
+                ),
+                None,
+            )
+
+            if row is None:
+                row = AionGoal(
+                    user_id=user_id,
+                    name=name[:160],
+                    description=description[:500],
+                    priority=priority,
+                    status="active",
+                    goal_type=goal_type,
+                )
+                session.add(row)
+            else:
+                row.name = name[:160]
+                row.description = description[:500]
+                row.priority = priority
+                row.status = "active"
+                row.goal_type = goal_type
+
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_goal(row)
+
+    async def upsert_active_task(
+        self,
+        *,
+        user_id: str,
+        name: str,
+        description: str,
+        priority: str = "medium",
+        goal_id: int | None = None,
+        status: str = "todo",
+    ) -> dict:
+        normalized_name = self._normalize_match_text(name)
+        async with self.session_factory() as session:
+            statement = (
+                select(AionTask)
+                .where(
+                    AionTask.user_id == user_id,
+                    AionTask.status.in_(self.ACTIVE_TASK_STATUSES),
+                )
+                .order_by(AionTask.updated_at.desc(), AionTask.id.desc())
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+            row = next(
+                (
+                    item
+                    for item in rows
+                    if self._normalize_match_text(item.name) == normalized_name
+                    and (goal_id is None or item.goal_id == goal_id or item.goal_id is None)
+                ),
+                None,
+            )
+
+            if row is None:
+                row = AionTask(
+                    user_id=user_id,
+                    goal_id=goal_id,
+                    name=name[:160],
+                    description=description[:500],
+                    priority=priority,
+                    status=status,
+                )
+                session.add(row)
+            else:
+                row.goal_id = goal_id if goal_id is not None else row.goal_id
+                row.name = name[:160]
+                row.description = description[:500]
+                row.priority = priority
+                row.status = status
+
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_task(row)
 
     async def get_user_runtime_preferences(self, user_id: str) -> dict:
         async with self.session_factory() as session:
@@ -489,6 +672,58 @@ class MemoryRepository:
             "updated_at": row.updated_at,
             "created_at": row.created_at,
         }
+
+    def _serialize_goal(self, row: AionGoal) -> dict:
+        return {
+            "id": row.id,
+            "user_id": row.user_id,
+            "name": row.name,
+            "description": row.description,
+            "priority": row.priority,
+            "status": row.status,
+            "goal_type": row.goal_type,
+            "created_at": row.created_at,
+            "updated_at": row.updated_at,
+        }
+
+    def _serialize_task(self, row: AionTask) -> dict:
+        return {
+            "id": row.id,
+            "user_id": row.user_id,
+            "goal_id": row.goal_id,
+            "name": row.name,
+            "description": row.description,
+            "priority": row.priority,
+            "status": row.status,
+            "created_at": row.created_at,
+            "updated_at": row.updated_at,
+        }
+
+    def _goal_priority_rank(self, priority: str) -> int:
+        return {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+            "critical": 4,
+        }.get(priority, 0)
+
+    def _task_priority_rank(self, priority: str) -> int:
+        return {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+        }.get(priority, 0)
+
+    def _task_status_rank(self, status: str) -> int:
+        return {
+            "todo": 1,
+            "in_progress": 2,
+            "blocked": 3,
+        }.get(status, 0)
+
+    def _normalize_match_text(self, value: str) -> str:
+        lowered = " ".join(value.strip().lower().split())
+        return "".join(char if char.isalnum() or char.isspace() else " " for char in lowered).strip()
 
     def _retry_backoff_seconds_for_attempts(self, attempts: int, retry_backoff_seconds: tuple[int, ...]) -> int:
         if attempts <= 0:

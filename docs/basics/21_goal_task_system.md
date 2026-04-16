@@ -577,10 +577,18 @@ But the foundation must stay simple first.
 
 ## Final Principle
 
-Goals give AION direction.  
+Goals give AION direction.
 Tasks give AION operational traction.
 
-Without goals, the system has no direction.  
+Without goals, the system has no direction.
 Without tasks, the system has no execution path.
+
+Current MVP status:
+
+- runtime can now load active goals and active tasks before deeper planning
+- context can surface relevant active goals and tasks for the current event
+- motivation can now care more when an event touches a higher-priority goal or a blocked active task
+- planning can now align with an active goal and suggest unblocking or advancing an active task
+- explicit user phrases such as `My goal is to ...` and `I need to ...` can now seed lightweight goals and tasks through the Action layer
 
 Together, they turn cognition into progress.

@@ -194,6 +194,8 @@ This controls retrieval.
 - theta  
 - memory  
 - conclusions  
+- goals  
+- tasks  
 
 ---
 

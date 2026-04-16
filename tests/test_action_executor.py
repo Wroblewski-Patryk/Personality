@@ -16,6 +16,9 @@ from app.core.contracts import (
 class FakeMemoryRepository:
     def __init__(self):
         self.profile_updates: list[dict] = []
+        self.goal_updates: list[dict] = []
+        self.task_updates: list[dict] = []
+        self.active_goals: list[dict] = []
 
     async def write_episode(self, **kwargs) -> dict:
         return {
@@ -29,6 +32,20 @@ class FakeMemoryRepository:
     async def upsert_user_profile_language(self, **kwargs) -> dict:
         self.profile_updates.append(kwargs)
         return kwargs
+
+    async def upsert_active_goal(self, **kwargs) -> dict:
+        payload = {"id": len(self.goal_updates) + 1, **kwargs}
+        self.goal_updates.append(payload)
+        self.active_goals.append(payload)
+        return payload
+
+    async def get_active_goals(self, user_id: str, limit: int = 5) -> list[dict]:
+        return self.active_goals[:limit]
+
+    async def upsert_active_task(self, **kwargs) -> dict:
+        payload = {"id": len(self.task_updates) + 1, **kwargs}
+        self.task_updates.append(payload)
+        return payload
 
 
 class FakeTelegramClient:
@@ -201,3 +218,55 @@ async def test_persist_episode_marks_explicit_collaboration_preference_for_refle
     )
 
     assert "collaboration_update=guided" in record.summary
+
+
+async def test_persist_episode_upserts_explicit_goal_signal() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    record = await executor.persist_episode(
+        event=_event("My goal is to ship the MVP this week."),
+        perception=_perception(["general", "mvp"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=_plan(),
+        action_result=await executor.execute(_plan(), _event("My goal is to ship the MVP this week."), _expression()),
+        expression=_expression(),
+    )
+
+    assert "goal_update=ship the MVP this week" in record.summary
+    assert memory_repository.goal_updates[0]["name"] == "ship the MVP this week"
+    assert memory_repository.goal_updates[0]["priority"] == "high"
+
+
+async def test_persist_episode_upserts_task_signal_and_links_matching_goal() -> None:
+    memory_repository = FakeMemoryRepository()
+    memory_repository.active_goals = [
+        {
+            "id": 7,
+            "user_id": "u-1",
+            "name": "ship the MVP this week",
+            "description": "User-declared goal: ship the MVP this week",
+            "priority": "high",
+            "status": "active",
+            "goal_type": "operational",
+        }
+    ]
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    record = await executor.persist_episode(
+        event=_event("I need to ship the MVP deployment blocker."),
+        perception=_perception(["general", "mvp", "deploy"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=_plan(),
+        action_result=await executor.execute(_plan(), _event("I need to ship the MVP deployment blocker."), _expression()),
+        expression=_expression(),
+    )
+
+    assert "task_update=ship the MVP deployment blocker" in record.summary
+    assert memory_repository.task_updates[0]["name"] == "ship the MVP deployment blocker"
+    assert memory_repository.task_updates[0]["goal_id"] == 7
+    assert memory_repository.task_updates[0]["status"] == "blocked"

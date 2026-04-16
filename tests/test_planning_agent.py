@@ -187,3 +187,42 @@ def test_planning_agent_uses_hands_on_collaboration_preference_for_generic_turn(
         "favor_concrete_next_step",
         "prepare_response",
     ]
+
+
+def test_planning_agent_aligns_with_active_goal_and_blocked_task() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Can you help me fix the deployment blocker for the MVP?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.8,
+            urgency=0.35,
+            valence=0.05,
+            arousal=0.4,
+            mode="analyze",
+        ),
+        role=RoleOutput(selected="analyst", confidence=0.8),
+        active_goals=[
+            {
+                "id": 11,
+                "name": "ship the MVP this week",
+                "description": "User-declared goal: ship the MVP this week",
+                "priority": "high",
+                "status": "active",
+                "goal_type": "operational",
+            }
+        ],
+        active_tasks=[
+            {
+                "id": 21,
+                "goal_id": 11,
+                "name": "fix deployment blocker",
+                "description": "User-declared task: fix deployment blocker",
+                "priority": "high",
+                "status": "blocked",
+            }
+        ],
+    )
+
+    assert "ship the MVP this week" in result.goal
+    assert "align_with_active_goal" in result.steps
+    assert "unblock_active_task" in result.steps

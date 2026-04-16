@@ -77,6 +77,21 @@ class ContextAgent:
             related_tags.append(tag)
         return related_tags
 
+    def _priority_rank(self, priority: str) -> int:
+        return {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+            "critical": 4,
+        }.get(priority, 0)
+
+    def _task_status_rank(self, status: str) -> int:
+        return {
+            "todo": 1,
+            "in_progress": 2,
+            "blocked": 3,
+        }.get(status, 0)
+
     def _summarize_conclusions(self, conclusions: list[dict] | None) -> str:
         if not conclusions:
             return ""
@@ -291,6 +306,74 @@ class ContextAgent:
 
         return selected
 
+    def _select_active_goals(self, active_goals: list[dict], current_tokens: set[str], limit: int = 2) -> list[dict]:
+        if not active_goals:
+            return []
+
+        ranked = sorted(
+            active_goals,
+            key=lambda goal: (
+                len(
+                    current_tokens.intersection(
+                        self._text_tokens(str(goal.get("name", "")) + " " + str(goal.get("description", "")))
+                    )
+                ),
+                self._priority_rank(str(goal.get("priority", ""))),
+            ),
+            reverse=True,
+        )
+        selected = [goal for goal in ranked if goal.get("name")]
+        if current_tokens:
+            topical = [
+                goal
+                for goal in selected
+                if current_tokens.intersection(
+                    self._text_tokens(str(goal.get("name", "")) + " " + str(goal.get("description", "")))
+                )
+            ]
+            if topical:
+                selected = topical
+        return selected[:limit]
+
+    def _select_active_tasks(
+        self,
+        active_tasks: list[dict],
+        current_tokens: set[str],
+        selected_goals: list[dict],
+        limit: int = 2,
+    ) -> list[dict]:
+        if not active_tasks:
+            return []
+
+        goal_ids = {goal.get("id") for goal in selected_goals if goal.get("id") is not None}
+        ranked = sorted(
+            active_tasks,
+            key=lambda task: (
+                1 if task.get("goal_id") in goal_ids and goal_ids else 0,
+                len(
+                    current_tokens.intersection(
+                        self._text_tokens(str(task.get("name", "")) + " " + str(task.get("description", "")))
+                    )
+                ),
+                self._task_status_rank(str(task.get("status", ""))),
+                self._priority_rank(str(task.get("priority", ""))),
+            ),
+            reverse=True,
+        )
+        selected = [task for task in ranked if task.get("name")]
+        if current_tokens:
+            topical = [
+                task
+                for task in selected
+                if current_tokens.intersection(
+                    self._text_tokens(str(task.get("name", "")) + " " + str(task.get("description", "")))
+                )
+                or (task.get("goal_id") in goal_ids and goal_ids)
+            ]
+            if topical:
+                selected = topical
+        return selected[:limit]
+
     def run(
         self,
         event: Event,
@@ -298,15 +381,37 @@ class ContextAgent:
         recent_memory: list[dict],
         conclusions: list[dict] | None = None,
         identity: IdentityOutput | None = None,
+        active_goals: list[dict] | None = None,
+        active_tasks: list[dict] | None = None,
     ) -> ContextOutput:
         text = str(event.payload.get("text", "")).strip()
         identity_hint = ""
         if identity is not None:
             identity_hint = f" Identity stance: {', '.join(identity.behavioral_style)}."
+        current_tokens = self._current_topic_tokens(event=event, perception=perception)
+        selected_goals = self._select_active_goals(active_goals or [], current_tokens=current_tokens)
+        selected_tasks = self._select_active_tasks(
+            active_tasks or [],
+            current_tokens=current_tokens,
+            selected_goals=selected_goals,
+        )
+        goal_hint = ""
+        if selected_goals:
+            goal_names = [str(goal.get("name", "")).strip() for goal in selected_goals if goal.get("name")]
+            if goal_names:
+                goal_hint = " Active goals: " + " | ".join(goal_names) + "."
+        task_hint = ""
+        if selected_tasks:
+            task_parts = [
+                f"{str(task.get('name', '')).strip()} ({str(task.get('status', '')).strip()})"
+                for task in selected_tasks
+                if task.get("name")
+            ]
+            if task_parts:
+                task_hint = " Active tasks: " + " | ".join(task_parts) + "."
         conclusion_hint = self._summarize_conclusions(conclusions)
         memory_hint = ""
         if recent_memory:
-            current_tokens = self._current_topic_tokens(event=event, perception=perception)
             selected_memory = self._select_memory_items(
                 recent_memory,
                 preferred_language=perception.language,
@@ -325,6 +430,8 @@ class ContextAgent:
         summary = (
             f"User said: '{text}' with detected intent '{perception.intent}'."
             + identity_hint
+            + goal_hint
+            + task_hint
             + conclusion_hint
             + memory_hint
         )
@@ -332,7 +439,7 @@ class ContextAgent:
 
         return ContextOutput(
             summary=summary,
-            related_goals=[],
+            related_goals=[str(goal.get("name", "")).strip() for goal in selected_goals if goal.get("name")],
             related_tags=self._related_tags(perception),
             risk_level=risk_level,
         )

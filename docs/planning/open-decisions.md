@@ -50,6 +50,13 @@ The current repo already works as an MVP slice, but several architecture-level d
 - Decision needed:
   - when to add filtering, ranking, summarization, or episodic/semantic split memory?
 
+### 5a. Goal And Task Scope
+
+- Current repo fact:
+  - runtime now loads active goals and active tasks, includes them in the runtime result, lets context/motivation/planning react to them, and can seed lightweight goals/tasks from explicit user phrases such as `My goal is to ...` and `I need to ...`.
+- Decision needed:
+  - should goal and task creation stay limited to explicit user declarations for MVP, or should the system begin inferring and creating them from plans and repeated execution patterns?
+
 ### 6. Deployment Path After Coolify
 
 - Current repo fact:

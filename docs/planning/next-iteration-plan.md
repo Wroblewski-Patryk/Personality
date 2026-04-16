@@ -161,6 +161,15 @@ These are small but real issues observed after the production rollout and smoke 
   - decide which future preference types should be allowed to influence role selection versus staying lower in the stack
   - decide whether collaboration preference should also shape action selection more directly
 
+### 10. Goal And Task Runtime
+
+- current repo behavior now supports lightweight `aion_goal` and `aion_task` state, loads active goals/tasks before deeper planning, lets context surface them, lets motivation react to related high-priority goals and blocked tasks, and lets planning align with active goals plus unblock or advance active tasks
+- current repo behavior can also seed goals and tasks from explicit user phrases such as `My goal is to ...` and `I need to ...`
+- next improvement:
+  - decide when plans should start creating or updating tasks even without explicit user phrasing
+  - decide whether task status should begin updating automatically from successful action outcomes
+  - decide how far to push goal/task inference before a richer goal manager exists
+
 ### 8. Background Reflection Worker
 
 - current repo behavior now has a lightweight reflection worker backed by durable `aion_reflection_task` rows; it runs after episode persistence, updates semantic conclusions asynchronously, recovers pending work on startup, retries failed jobs with bounded backoff, and sets `reflection_triggered=true` when the task is durably persisted and queued

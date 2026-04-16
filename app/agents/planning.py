@@ -10,6 +10,8 @@ class PlanningAgent:
         role: RoleOutput,
         user_preferences: dict | None = None,
         theta: dict | None = None,
+        active_goals: list[dict] | None = None,
+        active_tasks: list[dict] | None = None,
     ) -> PlanOutput:
         goal = "Provide a clear and useful response to the user event."
         steps = ["interpret_event", "review_context"]
@@ -64,6 +66,23 @@ class PlanningAgent:
         if theta_step is not None and theta_step not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, theta_step)
+
+        relevant_goal = self._select_relevant_goal(event=event, active_goals=active_goals or [])
+        if relevant_goal is not None:
+            goal = self._apply_active_goal(goal=goal, relevant_goal=relevant_goal)
+            if "align_with_active_goal" not in steps:
+                prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+                steps.insert(prepare_index, "align_with_active_goal")
+
+        relevant_task = self._select_relevant_task(
+            event=event,
+            active_tasks=active_tasks or [],
+            relevant_goal_id=int(relevant_goal["id"]) if relevant_goal and relevant_goal.get("id") is not None else None,
+        )
+        task_step = self._task_plan_step(relevant_task)
+        if task_step is not None and task_step not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, task_step)
 
         return PlanOutput(
             goal=goal,
@@ -126,3 +145,73 @@ class PlanningAgent:
                 return "Explain the situation clearly with a guided step by step path."
             return "Guide the user through the next step in a calm, step by step way."
         return goal
+
+    def _select_relevant_goal(self, event: Event, active_goals: list[dict]) -> dict | None:
+        tokens = self._text_tokens(str(event.payload.get("text", "")))
+        ranked = sorted(
+            active_goals,
+            key=lambda goal: (
+                len(tokens.intersection(self._text_tokens(str(goal.get("name", "")) + " " + str(goal.get("description", ""))))),
+                self._priority_rank(str(goal.get("priority", ""))),
+            ),
+            reverse=True,
+        )
+        if not ranked:
+            return None
+        top = ranked[0]
+        overlap = len(tokens.intersection(self._text_tokens(str(top.get("name", "")) + " " + str(top.get("description", "")))))
+        if overlap <= 0 and tokens:
+            return None
+        return top
+
+    def _select_relevant_task(self, event: Event, active_tasks: list[dict], relevant_goal_id: int | None) -> dict | None:
+        tokens = self._text_tokens(str(event.payload.get("text", "")))
+        ranked = sorted(
+            active_tasks,
+            key=lambda task: (
+                1 if relevant_goal_id is not None and task.get("goal_id") == relevant_goal_id else 0,
+                len(tokens.intersection(self._text_tokens(str(task.get("name", "")) + " " + str(task.get("description", ""))))),
+                self._task_status_rank(str(task.get("status", ""))),
+                self._priority_rank(str(task.get("priority", ""))),
+            ),
+            reverse=True,
+        )
+        if not ranked:
+            return None
+        top = ranked[0]
+        overlap = len(tokens.intersection(self._text_tokens(str(top.get("name", "")) + " " + str(top.get("description", "")))))
+        if overlap <= 0 and relevant_goal_id is None and tokens:
+            return None
+        return top
+
+    def _task_plan_step(self, task: dict | None) -> str | None:
+        if not task:
+            return None
+        if str(task.get("status", "")).strip().lower() == "blocked":
+            return "unblock_active_task"
+        return "advance_active_task"
+
+    def _apply_active_goal(self, goal: str, relevant_goal: dict) -> str:
+        goal_name = str(relevant_goal.get("name", "")).strip()
+        if not goal_name:
+            return goal
+        return f"{goal} Keep the response aligned with the active goal '{goal_name}'."
+
+    def _text_tokens(self, value: str) -> set[str]:
+        canonical = "".join(char if char.isalnum() or char.isspace() else " " for char in value.strip().lower())
+        return {token for token in canonical.split() if len(token) >= 3}
+
+    def _priority_rank(self, priority: str) -> int:
+        return {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+            "critical": 4,
+        }.get(priority, 0)
+
+    def _task_status_rank(self, status: str) -> int:
+        return {
+            "todo": 1,
+            "in_progress": 2,
+            "blocked": 3,
+        }.get(status, 0)
