@@ -15,6 +15,7 @@ Last updated: 2026-04-16
 - 2026-04-16: this repo now uses a project-specific agent workflow adapted to the current Python/FastAPI/AION stack.
 - 2026-04-16: reflection is treated as a real app-local durable worker concern, not as a purely hypothetical future subsystem.
 - 2026-04-16: runtime-facing docs now explicitly distinguish implemented runtime behavior from still-planned architecture, including the current expression-before-action orchestration detail.
+- 2026-04-16: endpoint-level tests now cover the public reflection contract shape for both `GET /health` and `/event`.
 
 ## Technical Baseline
 

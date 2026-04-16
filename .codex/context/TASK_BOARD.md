@@ -4,16 +4,6 @@ Last updated: 2026-04-16
 
 ## READY
 
-- [ ] PRJ-002 Add endpoint-level coverage for reflection-related runtime contracts
-  - Status: READY
-  - Owner: QA/Test
-  - Depends on: none
-  - Priority: P1
-  - Done when:
-    - `GET /health` reflection snapshot or related runtime contract is covered where applicable
-    - `/event` reflection-trigger behavior is validated by tests if that contract is exposed
-    - any brittle assumptions are documented
-
 ## BACKLOG
 
 - [ ] PRJ-003 Decide migration baseline and either document deferral or scaffold the first formal migration path
@@ -75,3 +65,13 @@ Last updated: 2026-04-16
     - `docs/overview.md`, `docs/planning/open-decisions.md`, and any needed assumptions or basics docs reflect the current implemented runtime
     - current vs planned behavior is explicit
     - follow-up gaps remain captured rather than hidden
+
+- [x] PRJ-002 Add endpoint-level coverage for reflection-related runtime contracts
+  - Status: DONE
+  - Owner: QA/Test
+  - Depends on: none
+  - Priority: P1
+  - Done when:
+    - `GET /health` reflection snapshot or related runtime contract is covered where applicable
+    - `/event` reflection-trigger behavior is validated by tests if that contract is exposed
+    - any brittle assumptions are documented

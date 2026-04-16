@@ -24,8 +24,9 @@ from app.core.contracts import (
 
 
 class FakeRuntime:
-    def __init__(self):
+    def __init__(self, *, reflection_triggered: bool = False):
         self.last_event: Event | None = None
+        self.reflection_triggered = reflection_triggered
 
     async def run(self, event: Event) -> RuntimeResult:
         self.last_event = event
@@ -123,10 +124,12 @@ class FakeRuntime:
                 summary="stored-summary",
                 importance=0.7,
             ),
-            reflection_triggered=False,
+            reflection_triggered=self.reflection_triggered,
             stage_timings_ms={
                 "memory_load": 1,
                 "task_load": 0,
+                "goal_milestone_load": 0,
+                "goal_milestone_history_load": 0,
                 "goal_progress_load": 0,
                 "identity_load": 0,
                 "perception": 0,
@@ -160,6 +163,18 @@ class FakeSettings:
 
 
 class FakeMemoryRepository:
+    def __init__(self, stats: dict[str, int] | None = None):
+        self.stats = stats or {
+            "total": 4,
+            "pending": 1,
+            "processing": 1,
+            "completed": 1,
+            "failed": 1,
+            "retryable_failed": 1,
+            "exhausted_failed": 0,
+            "stuck_processing": 0,
+        }
+
     async def get_reflection_task_stats(
         self,
         *,
@@ -171,22 +186,16 @@ class FakeMemoryRepository:
         assert max_attempts == 3
         assert stuck_after_seconds == 180
         assert retry_backoff_seconds == (5, 30, 120)
-        return {
-            "total": 4,
-            "pending": 1,
-            "processing": 1,
-            "completed": 1,
-            "failed": 1,
-            "retryable_failed": 1,
-            "exhausted_failed": 0,
-            "stuck_processing": 0,
-        }
+        return self.stats
 
 
 class FakeReflectionWorker:
+    def __init__(self, *, running: bool = True):
+        self.running = running
+
     def snapshot(self) -> dict:
         return {
-            "running": True,
+            "running": self.running,
             "queue_size": 1,
             "queue_capacity": 99,
             "queued_task_count": 1,
@@ -197,13 +206,19 @@ class FakeReflectionWorker:
         }
 
 
-def _client(secret: str | None = None) -> tuple[TestClient, FakeRuntime, FakeTelegramClient]:
+def _client(
+    secret: str | None = None,
+    *,
+    reflection_triggered: bool = False,
+    reflection_stats: dict[str, int] | None = None,
+    reflection_running: bool = True,
+) -> tuple[TestClient, FakeRuntime, FakeTelegramClient]:
     app = FastAPI()
     app.include_router(router)
-    runtime = FakeRuntime()
+    runtime = FakeRuntime(reflection_triggered=reflection_triggered)
     telegram_client = FakeTelegramClient()
-    memory_repository = FakeMemoryRepository()
-    reflection_worker = FakeReflectionWorker()
+    memory_repository = FakeMemoryRepository(stats=reflection_stats)
+    reflection_worker = FakeReflectionWorker(running=reflection_running)
     app.state.runtime = runtime
     app.state.telegram_client = telegram_client
     app.state.settings = FakeSettings(telegram_webhook_secret=secret)
@@ -246,6 +261,45 @@ def test_health_endpoint_returns_ok() -> None:
     }
 
 
+def test_health_endpoint_marks_reflection_unhealthy_when_worker_not_running() -> None:
+    client, _, _ = _client(reflection_running=False)
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["reflection"]["healthy"] is False
+    assert body["reflection"]["worker"]["running"] is False
+    assert body["reflection"]["tasks"]["exhausted_failed"] == 0
+    assert body["reflection"]["tasks"]["stuck_processing"] == 0
+
+
+def test_health_endpoint_marks_reflection_unhealthy_when_queue_is_stuck() -> None:
+    client, _, _ = _client(
+        reflection_stats={
+            "total": 5,
+            "pending": 0,
+            "processing": 1,
+            "completed": 3,
+            "failed": 1,
+            "retryable_failed": 0,
+            "exhausted_failed": 1,
+            "stuck_processing": 1,
+        }
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["reflection"]["healthy"] is False
+    assert body["reflection"]["worker"]["running"] is True
+    assert body["reflection"]["tasks"]["exhausted_failed"] == 1
+    assert body["reflection"]["tasks"]["stuck_processing"] == 1
+
+
 def test_event_endpoint_returns_runtime_result_and_normalizes_event() -> None:
     client, runtime, _ = _client()
 
@@ -268,6 +322,22 @@ def test_event_endpoint_returns_runtime_result_and_normalizes_event() -> None:
     assert runtime.last_event is not None
     assert runtime.last_event.payload["text"] == "hello from api"
     assert runtime.last_event.meta.trace_id
+
+
+def test_event_endpoint_exposes_reflection_trigger_when_runtime_queues_reflection() -> None:
+    client, runtime, _ = _client(reflection_triggered=True)
+
+    response = client.post("/event", json={"text": "trigger reflection"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["reflection_triggered"] is True
+    assert body["stage_timings_ms"]["reflection_enqueue"] == 0
+    assert body["stage_timings_ms"]["goal_milestone_load"] == 0
+    assert body["stage_timings_ms"]["goal_milestone_history_load"] == 0
+    assert body["stage_timings_ms"]["total"] == body["duration_ms"] == 12
+    assert runtime.last_event is not None
+    assert runtime.last_event.payload["text"] == "trigger reflection"
 
 
 def test_event_endpoint_rejects_telegram_payload_with_wrong_secret() -> None:
