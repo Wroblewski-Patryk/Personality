@@ -286,6 +286,35 @@ def test_planning_agent_adds_completion_window_step_from_goal_milestone_transiti
     assert "close_goal_completion_window" in result.steps
 
 
+def test_planning_agent_adds_goal_closure_step_from_milestone_state() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="What should I do next for the MVP?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.82,
+            urgency=0.3,
+            valence=0.05,
+            arousal=0.45,
+            mode="analyze",
+        ),
+        role=RoleOutput(selected="analyst", confidence=0.8),
+        user_preferences={"goal_milestone_state": "completion_window"},
+        active_goals=[
+            {
+                "id": 11,
+                "name": "ship the MVP this week",
+                "description": "User-declared goal: ship the MVP this week",
+                "priority": "high",
+                "status": "active",
+                "goal_type": "operational",
+            }
+        ],
+    )
+
+    assert "align_with_active_goal" in result.steps
+    assert "drive_goal_to_closure" in result.steps
+
+
 def test_planning_agent_adds_preserve_goal_momentum_step_from_reflected_progress_state() -> None:
     result = PlanningAgent().run(
         event=_event(text="What should I do next for the MVP?"),

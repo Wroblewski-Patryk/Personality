@@ -423,6 +423,11 @@ class MemoryRepository:
                 preferences["goal_milestone_transition_confidence"] = row.confidence
                 preferences["goal_milestone_transition_source"] = row.source
                 preferences["goal_milestone_transition_updated_at"] = row.updated_at
+            elif row.kind == "goal_milestone_state":
+                preferences["goal_milestone_state"] = row.content
+                preferences["goal_milestone_state_confidence"] = row.confidence
+                preferences["goal_milestone_state_source"] = row.source
+                preferences["goal_milestone_state_updated_at"] = row.updated_at
 
         return preferences
 
@@ -764,6 +769,7 @@ class MemoryRepository:
             "goal_progress_score",
             "goal_progress_trend",
             "goal_progress_arc",
+            "goal_milestone_state",
             "goal_milestone_transition",
         }:
             return True

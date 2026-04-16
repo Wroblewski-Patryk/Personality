@@ -22,6 +22,7 @@ class PlanningAgent:
         goal_progress_score = float((user_preferences or {}).get("goal_progress_score", 0.0) or 0.0)
         goal_progress_trend = str((user_preferences or {}).get("goal_progress_trend", "")).strip().lower()
         goal_progress_arc = str((user_preferences or {}).get("goal_progress_arc", "")).strip().lower()
+        goal_milestone_state = str((user_preferences or {}).get("goal_milestone_state", "")).strip().lower()
         goal_milestone_transition = str((user_preferences or {}).get("goal_milestone_transition", "")).strip().lower()
         goal_history_signal = self._goal_history_signal(goal_progress_history or [])
 
@@ -118,6 +119,14 @@ class PlanningAgent:
         if goal_progress_arc_step is not None and goal_progress_arc_step not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, goal_progress_arc_step)
+
+        goal_milestone_state_step = self._goal_milestone_state_step(
+            goal_milestone_state=goal_milestone_state,
+            steps=steps,
+        )
+        if goal_milestone_state_step is not None and goal_milestone_state_step not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, goal_milestone_state_step)
 
         goal_milestone_transition_step = self._goal_milestone_transition_step(
             goal_milestone_transition=goal_milestone_transition,
@@ -365,6 +374,25 @@ class PlanningAgent:
             if "rebuild_goal_foundation" in steps or "restart_goal_progress" in steps:
                 return None
             return "rebuild_goal_foundation"
+        return None
+
+    def _goal_milestone_state_step(self, goal_milestone_state: str, steps: list[str]) -> str | None:
+        if goal_milestone_state == "early_stage":
+            if "establish_goal_foundation" in steps or "increase_goal_progress" in steps or "rebuild_goal_foundation" in steps:
+                return None
+            return "establish_goal_foundation"
+        if goal_milestone_state == "execution_phase":
+            if "sustain_goal_execution_phase" in steps or "continue_goal_execution" in steps or "advance_active_task" in steps:
+                return None
+            return "sustain_goal_execution_phase"
+        if goal_milestone_state == "recovery_phase":
+            if "stabilize_goal_recovery_phase" in steps or "stabilize_goal_recovery" in steps or "consolidate_goal_recovery" in steps:
+                return None
+            return "stabilize_goal_recovery_phase"
+        if goal_milestone_state == "completion_window":
+            if "drive_goal_to_closure" in steps or "close_goal_completion_window" in steps or "push_goal_to_completion" in steps:
+                return None
+            return "drive_goal_to_closure"
         return None
 
     def _apply_active_goal(self, goal: str, relevant_goal: dict) -> str:

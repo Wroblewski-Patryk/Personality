@@ -113,6 +113,7 @@ class MotivationEngine:
         goal_progress_score = float((user_preferences or {}).get("goal_progress_score", 0.0) or 0.0)
         goal_progress_trend = str((user_preferences or {}).get("goal_progress_trend", "")).strip().lower()
         goal_progress_arc = str((user_preferences or {}).get("goal_progress_arc", "")).strip().lower()
+        goal_milestone_state = str((user_preferences or {}).get("goal_milestone_state", "")).strip().lower()
         goal_milestone_transition = str((user_preferences or {}).get("goal_milestone_transition", "")).strip().lower()
         goal_history_signal = self._goal_history_signal(goal_progress_history or [])
         related_goal_priority = self._related_goal_priority(text=text, goals=active_goals or [])
@@ -160,6 +161,17 @@ class MotivationEngine:
         )
         importance += (
             0.05
+            if goal_milestone_state == "completion_window"
+            else 0.04
+            if goal_milestone_state == "recovery_phase"
+            else 0.03
+            if goal_milestone_state == "execution_phase"
+            else 0.02
+            if goal_milestone_state == "early_stage"
+            else 0.0
+        )
+        importance += (
+            0.05
             if goal_milestone_transition == "slipped_from_completion_window"
             else 0.04
             if goal_milestone_transition == "entered_completion_window"
@@ -197,6 +209,17 @@ class MotivationEngine:
             if goal_progress_arc == "breakthrough_momentum"
             else 0.01
             if goal_progress_arc in {"recovery_gaining_traction", "holding_pattern"}
+            else 0.0
+        )
+        urgency += (
+            0.05
+            if goal_milestone_state == "completion_window"
+            else 0.03
+            if goal_milestone_state == "recovery_phase"
+            else 0.03
+            if goal_milestone_state == "execution_phase"
+            else 0.02
+            if goal_milestone_state == "early_stage"
             else 0.0
         )
         urgency += (

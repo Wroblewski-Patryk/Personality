@@ -273,6 +273,24 @@ def test_context_summary_includes_goal_milestone_transition_from_conclusions() -
     assert "Stable user preferences: goal has entered the completion window." in result.summary
 
 
+def test_context_summary_includes_goal_milestone_state_from_conclusions() -> None:
+    result = ContextAgent().run(
+        event=_event("how should we proceed"),
+        perception=_perception(),
+        recent_memory=[],
+        conclusions=[
+            {
+                "kind": "goal_milestone_state",
+                "content": "execution_phase",
+                "confidence": 0.74,
+                "source": "background_reflection",
+            }
+        ],
+    )
+
+    assert "Stable user preferences: current goal is in an active execution phase." in result.summary
+
+
 def test_context_summary_includes_recent_goal_progress_history() -> None:
     result = ContextAgent().run(
         event=_event("how should we proceed for the MVP"),

@@ -130,6 +130,7 @@ Current MVP status:
 - reflection can now also derive a lightweight `goal_progress_trend`, so runtime can tell whether goal progress is improving, steady, or slipping compared with the previous reflected score
 - reflection now also persists lightweight `aion_goal_progress` snapshots for the primary active goal, so runtime can retrieve a short goal-level history instead of relying only on the latest reflected hint
 - reflection can now also compress short goal-history patterns into a semantic `goal_progress_arc`, for example distinguishing traction in recovery from unstable or falling-behind progress
+- reflection can now also maintain a lightweight `goal_milestone_state`, so runtime can keep a stable sense of whether the goal is still early, in active execution, in recovery, or already in the completion window
 - reflection can now also emit a lightweight `goal_milestone_transition`, so runtime can notice threshold crossings like entering active execution, entering the completion window, or slipping back out of it
 - vector retrieval is still planned, not live
 

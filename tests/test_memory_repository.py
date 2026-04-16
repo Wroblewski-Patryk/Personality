@@ -326,6 +326,35 @@ async def test_memory_repository_allows_dynamic_goal_milestone_transition_update
     await engine.dispose()
 
 
+async def test_memory_repository_exposes_goal_milestone_state_in_runtime_preferences(tmp_path) -> None:
+    database_path = tmp_path / "memory-goal-milestone-state.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    async with session_factory() as session:
+        session.add(
+            AionConclusion(
+                user_id="u-1",
+                kind="goal_milestone_state",
+                content="completion_window",
+                confidence=0.8,
+                source="background_reflection",
+                supporting_event_id="evt-goal-milestone-state",
+            )
+        )
+        await session.commit()
+
+    preferences = await repository.get_user_runtime_preferences(user_id="u-1")
+
+    assert preferences["goal_milestone_state"] == "completion_window"
+    assert preferences["goal_milestone_state_confidence"] == 0.8
+    assert preferences["goal_milestone_state_source"] == "background_reflection"
+
+    await engine.dispose()
+
+
 async def test_memory_repository_exposes_goal_progress_arc_in_runtime_preferences(tmp_path) -> None:
     database_path = tmp_path / "memory-goal-progress-arc.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")

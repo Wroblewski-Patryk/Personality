@@ -343,6 +343,14 @@ async def test_reflection_worker_infers_goal_milestone_transition_into_completio
         "source": "background_reflection",
         "supporting_event_id": "evt-goal-milestone",
     } in repository.conclusion_updates
+    assert {
+        "user_id": "u-1",
+        "kind": "goal_milestone_state",
+        "content": "completion_window",
+        "confidence": 0.8,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-goal-milestone",
+    } in repository.conclusion_updates
 
 
 async def test_reflection_worker_infers_goal_milestone_transition_out_of_completion_window() -> None:
@@ -372,6 +380,34 @@ async def test_reflection_worker_infers_goal_milestone_transition_out_of_complet
         "confidence": 0.78,
         "source": "background_reflection",
         "supporting_event_id": "evt-goal-slip",
+    } in repository.conclusion_updates
+
+
+async def test_reflection_worker_infers_goal_milestone_recovery_phase() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "task_status_update=fix deployment blocker:done; action=success; expression=One."},
+            {"summary": "goal_update=ship the MVP this week; action=success; expression=Two."},
+        ]
+    )
+    repository.active_goals = [
+        {"id": 1, "name": "ship the MVP this week", "priority": "high", "status": "active", "goal_type": "operational"}
+    ]
+    repository.active_tasks = [
+        {"id": 3, "goal_id": 1, "name": "finalize rollout checklist", "priority": "medium", "status": "todo"}
+    ]
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-goal-recovery-phase")
+
+    assert result is True
+    assert {
+        "user_id": "u-1",
+        "kind": "goal_milestone_state",
+        "content": "recovery_phase",
+        "confidence": 0.76,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-goal-recovery-phase",
     } in repository.conclusion_updates
 
 

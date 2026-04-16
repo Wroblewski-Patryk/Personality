@@ -414,6 +414,62 @@ async def test_runtime_pipeline_uses_goal_milestone_transition_across_context_mo
     assert "close_goal_completion_window" in result.plan.steps
 
 
+async def test_runtime_pipeline_uses_goal_milestone_state_after_transition_turn_has_passed() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.user_preferences = {"goal_milestone_state": "completion_window"}
+    memory.user_conclusions = [
+        {
+            "id": 1,
+            "kind": "goal_milestone_state",
+            "content": "completion_window",
+            "confidence": 0.8,
+            "source": "background_reflection",
+            "supporting_event_id": "evt-goal-milestone-state",
+            "updated_at": datetime.now(timezone.utc),
+        }
+    ]
+    memory.active_goals = [
+        {
+            "id": 11,
+            "user_id": "u-1",
+            "name": "ship the MVP this week",
+            "description": "User-declared goal: ship the MVP this week",
+            "priority": "high",
+            "status": "active",
+            "goal_type": "operational",
+        }
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-goal-milestone-state-runtime",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "What should I do next for the MVP?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-goal-milestone-state-runtime"),
+    )
+
+    result = await runtime.run(event)
+
+    assert "current goal is currently in the completion window" in result.context.summary
+    assert result.motivation.importance >= 0.8
+    assert "drive_goal_to_closure" in result.plan.steps
+
+
 async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_without_recent_memory() -> None:
     memory = FakeMemoryRepository(
         recent_memory=[],

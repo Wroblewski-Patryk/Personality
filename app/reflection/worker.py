@@ -370,6 +370,13 @@ class ReflectionWorker:
         )
         if goal_progress_arc is not None:
             conclusions.append(goal_progress_arc)
+        goal_milestone_state = self._derive_goal_milestone_state(
+            current_goal_progress_score=goal_progress_score,
+            goal_execution_state=goal_execution_state,
+            goal_progress_arc=goal_progress_arc,
+        )
+        if goal_milestone_state is not None:
+            conclusions.append(goal_milestone_state)
         goal_milestone_transition = self._derive_goal_milestone_transition(
             current_goal_progress_score=goal_progress_score,
             previous_goal_progress_score=previous_goal_progress_score,
@@ -643,6 +650,50 @@ class ReflectionWorker:
                 "source": "background_reflection",
             }
         return None
+
+    def _derive_goal_milestone_state(
+        self,
+        *,
+        current_goal_progress_score: dict | None,
+        goal_execution_state: dict | None,
+        goal_progress_arc: dict | None,
+    ) -> dict | None:
+        current_score = self._coerce_progress_score(
+            current_goal_progress_score.get("content") if current_goal_progress_score else None
+        )
+        if current_score is None or current_score <= 0.0:
+            return None
+
+        execution_state = str(goal_execution_state.get("content", "")).strip().lower() if goal_execution_state is not None else ""
+        progress_arc = str(goal_progress_arc.get("content", "")).strip().lower() if goal_progress_arc is not None else ""
+
+        if current_score >= 0.75:
+            return {
+                "kind": "goal_milestone_state",
+                "content": "completion_window",
+                "confidence": 0.8,
+                "source": "background_reflection",
+            }
+        if execution_state == "recovering" or progress_arc == "recovery_gaining_traction":
+            return {
+                "kind": "goal_milestone_state",
+                "content": "recovery_phase",
+                "confidence": 0.76,
+                "source": "background_reflection",
+            }
+        if current_score >= 0.35:
+            return {
+                "kind": "goal_milestone_state",
+                "content": "execution_phase",
+                "confidence": 0.74,
+                "source": "background_reflection",
+            }
+        return {
+            "kind": "goal_milestone_state",
+            "content": "early_stage",
+            "confidence": 0.72,
+            "source": "background_reflection",
+        }
 
     def _goal_stagnation_signal_count(self, recent_memory: Sequence[dict]) -> int:
         planning_heavy_steps = {
