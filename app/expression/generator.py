@@ -9,7 +9,11 @@ from app.core.contracts import (
 )
 from app.integrations.openai.client import OpenAIClient
 from app.utils.language import fallback_message
-from app.utils.preferences import apply_response_style, preferred_response_style
+from app.utils.preferences import (
+    apply_response_style,
+    preferred_collaboration_preference,
+    preferred_response_style,
+)
 
 
 class ExpressionAgent:
@@ -29,7 +33,13 @@ class ExpressionAgent:
     ) -> ExpressionOutput:
         text = str(event.payload.get("text", "")).strip()
         response_style = preferred_response_style(user_preferences)
-        tone = self._select_tone(motivation=motivation, role=role, theta=theta)
+        collaboration_preference = preferred_collaboration_preference(user_preferences)
+        tone = self._select_tone(
+            motivation=motivation,
+            role=role,
+            theta=theta,
+            collaboration_preference=collaboration_preference,
+        )
         message: str
         if not text:
             message = self._build_fallback_message(
@@ -40,6 +50,7 @@ class ExpressionAgent:
                 motivation=motivation,
                 response_style=response_style,
                 theta=theta,
+                collaboration_preference=collaboration_preference,
             )
         else:
             llm_reply = await self.openai_client.generate_reply(
@@ -51,6 +62,7 @@ class ExpressionAgent:
                 plan_goal=plan.goal,
                 motivation_mode=motivation.mode,
                 response_tone=tone,
+                collaboration_preference=collaboration_preference,
             )
             message = llm_reply or self._build_fallback_message(
                 perception=perception,
@@ -60,6 +72,7 @@ class ExpressionAgent:
                 motivation=motivation,
                 response_style=response_style,
                 theta=theta,
+                collaboration_preference=collaboration_preference,
             )
 
         channel = "telegram" if event.source == "telegram" else "api"
@@ -79,6 +92,7 @@ class ExpressionAgent:
         motivation: MotivationOutput,
         response_style: str | None = None,
         theta: dict | None = None,
+        collaboration_preference: str | None = None,
     ) -> str:
         if motivation.mode == "clarify":
             return apply_response_style(
@@ -116,6 +130,13 @@ class ExpressionAgent:
                 response_style,
             )
 
+        collaboration_key = self._collaboration_fallback_key(collaboration_preference)
+        if collaboration_key is not None:
+            return apply_response_style(
+                fallback_message(perception.language, collaboration_key, plan.goal),
+                response_style,
+            )
+
         theta_key = self._theta_fallback_key(theta)
         if theta_key is not None:
             return apply_response_style(
@@ -133,11 +154,19 @@ class ExpressionAgent:
         motivation: MotivationOutput,
         role: RoleOutput,
         theta: dict | None = None,
+        collaboration_preference: str | None = None,
     ) -> str:
         if motivation.mode == "support" or role.selected == "friend":
             return "supportive"
         if motivation.mode == "execute" or role.selected == "executor":
             return "action-oriented"
+        collaboration_tone = self._collaboration_tone(
+            collaboration_preference=collaboration_preference,
+            motivation=motivation,
+            role=role,
+        )
+        if collaboration_tone is not None:
+            return collaboration_tone
         if motivation.mode == "analyze" or role.selected == "analyst":
             return "analytical"
         if role.selected == "mentor":
@@ -165,3 +194,26 @@ class ExpressionAgent:
         if bias < 0.58:
             return None
         return key
+
+    def _collaboration_fallback_key(self, collaboration_preference: str | None) -> str | None:
+        if collaboration_preference == "hands_on":
+            return "execute"
+        if collaboration_preference == "guided":
+            return "mentor"
+        return None
+
+    def _collaboration_tone(
+        self,
+        collaboration_preference: str | None,
+        motivation: MotivationOutput,
+        role: RoleOutput,
+    ) -> str | None:
+        if collaboration_preference == "hands_on":
+            if motivation.mode in {"respond", "analyze"} or role.selected in {"advisor", "analyst", "mentor"}:
+                return "action-oriented"
+            return "action-oriented"
+        if collaboration_preference == "guided":
+            if motivation.mode in {"respond", "analyze"} or role.selected in {"advisor", "analyst", "mentor"}:
+                return "guiding"
+            return "guiding"
+        return None

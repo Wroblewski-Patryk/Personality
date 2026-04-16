@@ -21,6 +21,7 @@ class OpenAIClient:
         plan_goal: str,
         motivation_mode: str,
         response_tone: str,
+        collaboration_preference: str | None,
     ) -> str | None:
         if not self.client:
             return None
@@ -39,10 +40,12 @@ class OpenAIClient:
                             f"The immediate goal is '{plan_goal}'. "
                             f"The preferred response language is '{language_name(response_language)}'. "
                             f"The user's stable response style preference is '{response_style or 'default'}'. "
+                            f"The user's stable collaboration preference is '{collaboration_preference or 'default'}'. "
                             "Respond clearly, preserve momentum, use the context summary when useful, "
                             "stay in the preferred response language unless the user explicitly asks to switch, "
                             "honor the response style preference when it is present, "
-                            "and keep the wording aligned with the desired response tone."
+                            "keep the wording aligned with the desired response tone, "
+                            "and if a collaboration preference exists, match the response shape to it."
                         ),
                     },
                     {

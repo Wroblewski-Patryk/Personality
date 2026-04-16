@@ -77,6 +77,7 @@ class FakeOpenAIClient:
         plan_goal: str,
         motivation_mode: str,
         response_tone: str,
+        collaboration_preference: str | None,
     ) -> str | None:
         self.calls.append(
             {
@@ -88,6 +89,7 @@ class FakeOpenAIClient:
                 "plan_goal": plan_goal,
                 "motivation_mode": motivation_mode,
                 "response_tone": response_tone,
+                "collaboration_preference": collaboration_preference or "",
             }
         )
         return "Mocked OpenAI reply"
@@ -164,6 +166,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert memory.profile_updates == []
     assert openai.calls[0]["response_style"] == ""
     assert openai.calls[0]["response_tone"] == "supportive"
+    assert openai.calls[0]["collaboration_preference"] == ""
 
 
 async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_without_recent_memory() -> None:
@@ -205,6 +208,7 @@ async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_wi
     assert memory.profile_updates == []
     assert openai.calls[0]["response_style"] == ""
     assert openai.calls[0]["response_tone"] == "supportive"
+    assert openai.calls[0]["collaboration_preference"] == ""
 
 
 async def test_runtime_pipeline_applies_structured_response_preference_from_conclusion_memory() -> None:
@@ -245,6 +249,7 @@ async def test_runtime_pipeline_applies_structured_response_preference_from_conc
     assert "format_response_as_bullets" in result.plan.steps
     assert result.reflection_triggered is True
     assert openai.calls[0]["response_tone"] == "analytical"
+    assert openai.calls[0]["collaboration_preference"] == ""
 
 
 async def test_runtime_pipeline_applies_concise_response_preference_to_plan() -> None:
@@ -284,6 +289,7 @@ async def test_runtime_pipeline_applies_concise_response_preference_to_plan() ->
     assert "keep_response_concise" in result.plan.steps
     assert result.reflection_triggered is True
     assert openai.calls[0]["response_tone"] == "analytical"
+    assert openai.calls[0]["collaboration_preference"] == ""
 
 
 async def test_runtime_pipeline_uses_preferred_role_from_semantic_memory_for_ambiguous_question() -> None:
@@ -446,3 +452,6 @@ async def test_runtime_pipeline_uses_collaboration_preference_in_context_and_pla
     assert "Stable user preferences: prefers concrete execution help." in result.context.summary
     assert "favor_concrete_next_step" in result.plan.steps
     assert result.reflection_triggered is True
+    assert result.expression.tone == "action-oriented"
+    assert openai.calls[0]["collaboration_preference"] == "hands_on"
+    assert openai.calls[0]["response_tone"] == "action-oriented"

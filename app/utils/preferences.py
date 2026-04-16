@@ -67,6 +67,16 @@ def preferred_response_style(user_preferences: dict | None) -> str | None:
     return None
 
 
+def preferred_collaboration_preference(user_preferences: dict | None) -> str | None:
+    if not user_preferences:
+        return None
+
+    preference = str(user_preferences.get("collaboration_preference", "")).strip().lower()
+    if preference in {"hands_on", "guided"}:
+        return preference
+    return None
+
+
 def apply_response_style(message: str, style: str | None) -> str:
     if not message or not style:
         return message

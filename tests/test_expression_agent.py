@@ -23,6 +23,7 @@ class NoReplyOpenAI:
         plan_goal: str,
         motivation_mode: str,
         response_tone: str,
+        collaboration_preference: str | None,
     ) -> str | None:
         return None
 
@@ -41,6 +42,7 @@ class ReplyOpenAI:
         plan_goal: str,
         motivation_mode: str,
         response_tone: str,
+        collaboration_preference: str | None,
     ) -> str | None:
         self.calls.append(
             {
@@ -52,6 +54,7 @@ class ReplyOpenAI:
                 "plan_goal": plan_goal,
                 "motivation_mode": motivation_mode,
                 "response_tone": response_tone,
+                "collaboration_preference": collaboration_preference or "",
             }
         )
         return "OpenAI response"
@@ -175,6 +178,7 @@ async def test_expression_uses_openai_when_available() -> None:
             "plan_goal": "reply",
             "motivation_mode": "respond",
             "response_tone": "supportive",
+            "collaboration_preference": "",
         }
     ]
 
@@ -213,3 +217,36 @@ async def test_expression_uses_theta_for_analytical_tone_and_fallback() -> None:
 
     assert "Let's break this down clearly." in result.message
     assert result.tone == "analytical"
+
+
+async def test_expression_uses_guided_collaboration_preference_for_tone_and_fallback() -> None:
+    agent = ExpressionAgent(openai_client=NoReplyOpenAI())
+    result = await agent.run(
+        _event("help me"),
+        _perception(language="en"),
+        _context(),
+        _plan(),
+        _role(selected="advisor"),
+        _motivation(mode="respond"),
+        user_preferences={"collaboration_preference": "guided"},
+    )
+
+    assert "A good next move is to define the goal" in result.message
+    assert result.tone == "guiding"
+
+
+async def test_expression_passes_collaboration_preference_to_openai() -> None:
+    openai = ReplyOpenAI()
+    agent = ExpressionAgent(openai_client=openai)
+    await agent.run(
+        _event("hello"),
+        _perception(language="en"),
+        _context(),
+        _plan(),
+        _role(),
+        _motivation(),
+        user_preferences={"collaboration_preference": "hands_on"},
+    )
+
+    assert openai.calls[0]["collaboration_preference"] == "hands_on"
+    assert openai.calls[0]["response_tone"] == "action-oriented"
