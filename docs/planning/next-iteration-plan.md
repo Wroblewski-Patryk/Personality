@@ -146,6 +146,7 @@ These are small but real issues observed after the production rollout and smoke 
 ### 6. Lightweight Profile Memory
 
 - current repo behavior keeps a small `aion_profile` table with preferred language updated only from explicit or higher-confidence language signals, so weak fallbacks do not reinforce themselves
+- runtime now also builds a lightweight `IdentitySnapshot` from stable core identity plus profile, conclusion, and theta signals before context construction
 - next improvement:
   - decide whether stable preferences such as tone or channel habits belong in the same profile state
   - decide when durable profile updates should move from synchronous action-time writes into a more reflective conclusion/consolidation path

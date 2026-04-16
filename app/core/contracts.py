@@ -37,6 +37,18 @@ class ContextOutput(BaseModel):
     risk_level: float
 
 
+class IdentityOutput(BaseModel):
+    mission: str
+    values: list[str] = Field(default_factory=list)
+    behavioral_style: list[str] = Field(default_factory=list)
+    boundaries: list[str] = Field(default_factory=list)
+    preferred_language: str | None = None
+    response_style: str | None = None
+    collaboration_preference: str | None = None
+    theta_orientation: str | None = None
+    summary: str
+
+
 class MotivationOutput(BaseModel):
     importance: float
     urgency: float
@@ -80,6 +92,7 @@ class MemoryRecord(BaseModel):
 
 class RuntimeResult(BaseModel):
     event: Event
+    identity: IdentityOutput
     perception: PerceptionOutput
     context: ContextOutput
     motivation: MotivationOutput

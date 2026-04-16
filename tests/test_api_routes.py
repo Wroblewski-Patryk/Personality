@@ -10,6 +10,7 @@ from app.core.contracts import (
     Event,
     EventMeta,
     ExpressionOutput,
+    IdentityOutput,
     MemoryRecord,
     MotivationOutput,
     PerceptionOutput,
@@ -28,6 +29,17 @@ class FakeRuntime:
         timestamp = datetime.now(timezone.utc)
         return RuntimeResult(
             event=event,
+            identity=IdentityOutput(
+                mission="Help the user move forward with clear, constructive support.",
+                values=["clarity", "continuity", "constructiveness"],
+                behavioral_style=["direct", "supportive", "analytical"],
+                boundaries=["do_not_fake_capabilities"],
+                preferred_language="en",
+                response_style=None,
+                collaboration_preference=None,
+                theta_orientation=None,
+                summary="Mission: help the user move forward with clear, constructive support. Core style: direct, supportive, analytical. Preferred language context: en.",
+            ),
             perception=PerceptionOutput(
                 event_type="statement",
                 topic="general",
@@ -80,6 +92,7 @@ class FakeRuntime:
             reflection_triggered=False,
             stage_timings_ms={
                 "memory_load": 1,
+                "identity_load": 0,
                 "perception": 0,
                 "context": 0,
                 "motivation": 0,
@@ -208,6 +221,7 @@ def test_event_endpoint_returns_runtime_result_and_normalizes_event() -> None:
     assert body["perception"]["language"] == "en"
     assert body["perception"]["language_source"] == "keyword_signal"
     assert body["reflection_triggered"] is False
+    assert body["identity"]["mission"] == "Help the user move forward with clear, constructive support."
     assert body["stage_timings_ms"]["memory_load"] == 1
     assert body["stage_timings_ms"]["total"] == 12
     assert body["event"]["source"] == "api"

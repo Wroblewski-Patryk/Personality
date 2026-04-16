@@ -279,4 +279,10 @@ AION is coherent because:
 - skills are reusable  
 - theta adapts expression  
 
+Current MVP status:
+
+- runtime now builds a lightweight `IdentitySnapshot` before deeper cognition begins
+- that snapshot carries a stable mission, values, behavioral style, and boundaries
+- user-linked preferences such as preferred language, response style, collaboration preference, and dominant theta orientation can now be attached to identity without redefining the core identity itself
+
 This is what turns the system from a chatbot into a cognitive architecture.

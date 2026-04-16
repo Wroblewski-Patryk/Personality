@@ -2,6 +2,7 @@ from app.core.contracts import (
     ContextOutput,
     Event,
     ExpressionOutput,
+    IdentityOutput,
     MotivationOutput,
     PerceptionOutput,
     PlanOutput,
@@ -28,6 +29,7 @@ class ExpressionAgent:
         plan: PlanOutput,
         role: RoleOutput,
         motivation: MotivationOutput,
+        identity: IdentityOutput | None = None,
         user_preferences: dict | None = None,
         theta: dict | None = None,
     ) -> ExpressionOutput:
@@ -63,6 +65,7 @@ class ExpressionAgent:
                 motivation_mode=motivation.mode,
                 response_tone=tone,
                 collaboration_preference=collaboration_preference,
+                identity_summary=identity.summary if identity is not None else "",
             )
             message = llm_reply or self._build_fallback_message(
                 perception=perception,

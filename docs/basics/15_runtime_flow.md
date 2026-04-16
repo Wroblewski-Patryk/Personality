@@ -138,6 +138,11 @@ Before deeper cognition begins, system loads stable state:
 
 This creates the minimal baseline for interpretation.
 
+Current MVP status:
+
+- runtime now builds a lightweight identity snapshot from a stable code-defined core plus user-linked profile, conclusion, and theta signals
+- this happens before context construction and is exposed in the runtime result for debugging and verification
+
 ---
 
 ### Step 5. Perception

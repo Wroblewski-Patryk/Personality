@@ -78,6 +78,7 @@ class FakeOpenAIClient:
         motivation_mode: str,
         response_tone: str,
         collaboration_preference: str | None,
+        identity_summary: str = "",
     ) -> str | None:
         self.calls.append(
             {
@@ -90,6 +91,7 @@ class FakeOpenAIClient:
                 "motivation_mode": motivation_mode,
                 "response_tone": response_tone,
                 "collaboration_preference": collaboration_preference or "",
+                "identity_summary": identity_summary,
             }
         )
         return "Mocked OpenAI reply"
@@ -147,6 +149,9 @@ async def test_runtime_pipeline_api_source() -> None:
     result = await runtime.run(event)
 
     assert result.action_result.status == "success"
+    assert result.identity.mission == "Help the user move forward with clear, constructive support."
+    assert result.identity.behavioral_style == ["direct", "supportive", "analytical"]
+    assert "Identity stance: direct, supportive, analytical." in result.context.summary
     assert "previous hello" in result.context.summary
     assert "Earlier reply" in result.context.summary
     assert result.perception.language == "en"
@@ -164,6 +169,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert result.reflection_triggered is True
     assert set(result.stage_timings_ms) == {
         "memory_load",
+        "identity_load",
         "perception",
         "context",
         "motivation",
@@ -181,6 +187,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert openai.calls[0]["response_style"] == ""
     assert openai.calls[0]["response_tone"] == "supportive"
     assert openai.calls[0]["collaboration_preference"] == ""
+    assert "constructive support" in openai.calls[0]["identity_summary"]
 
 
 async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_without_recent_memory() -> None:

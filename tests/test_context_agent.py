@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from app.agents.context import ContextAgent
-from app.core.contracts import Event, EventMeta, PerceptionOutput
+from app.core.contracts import Event, EventMeta, IdentityOutput, PerceptionOutput
 
 
 def _event(text: str = "hello") -> Event:
@@ -29,6 +29,20 @@ def _perception() -> PerceptionOutput:
     )
 
 
+def _identity() -> IdentityOutput:
+    return IdentityOutput(
+        mission="Help the user move forward with clear, constructive support.",
+        values=["clarity", "continuity", "constructiveness"],
+        behavioral_style=["direct", "supportive", "analytical"],
+        boundaries=["do_not_fake_capabilities"],
+        preferred_language="en",
+        response_style=None,
+        collaboration_preference=None,
+        theta_orientation=None,
+        summary="Mission: help the user move forward with clear, constructive support. Core style: direct, supportive, analytical.",
+    )
+
+
 def test_context_summary_stays_simple_without_recent_memory() -> None:
     result = ContextAgent().run(event=_event(), perception=_perception(), recent_memory=[])
 
@@ -52,6 +66,17 @@ def test_context_summary_includes_stable_user_preferences_from_conclusions() -> 
     )
 
     assert "Stable user preferences: prefers concise responses." in result.summary
+
+
+def test_context_summary_can_include_identity_stance() -> None:
+    result = ContextAgent().run(
+        event=_event("how should we proceed"),
+        perception=_perception(),
+        recent_memory=[],
+        identity=_identity(),
+    )
+
+    assert "Identity stance: direct, supportive, analytical." in result.summary
 
 
 def test_context_summary_includes_collaboration_preference_from_conclusions() -> None:

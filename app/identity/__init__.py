@@ -1,2 +1,3 @@
-"""Identity layer placeholder for future iterations."""
+from app.identity.service import IdentityService
 
+__all__ = ["IdentityService"]

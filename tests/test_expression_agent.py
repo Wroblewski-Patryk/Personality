@@ -4,6 +4,7 @@ from app.core.contracts import (
     ContextOutput,
     Event,
     EventMeta,
+    IdentityOutput,
     MotivationOutput,
     PerceptionOutput,
     PlanOutput,
@@ -24,6 +25,7 @@ class NoReplyOpenAI:
         motivation_mode: str,
         response_tone: str,
         collaboration_preference: str | None,
+        identity_summary: str = "",
     ) -> str | None:
         return None
 
@@ -43,6 +45,7 @@ class ReplyOpenAI:
         motivation_mode: str,
         response_tone: str,
         collaboration_preference: str | None,
+        identity_summary: str = "",
     ) -> str | None:
         self.calls.append(
             {
@@ -55,6 +58,7 @@ class ReplyOpenAI:
                 "motivation_mode": motivation_mode,
                 "response_tone": response_tone,
                 "collaboration_preference": collaboration_preference or "",
+                "identity_summary": identity_summary,
             }
         )
         return "OpenAI response"
@@ -105,6 +109,20 @@ def _plan() -> PlanOutput:
 
 def _role(selected: str = "advisor") -> RoleOutput:
     return RoleOutput(selected=selected, confidence=0.8)
+
+
+def _identity() -> IdentityOutput:
+    return IdentityOutput(
+        mission="Help the user move forward with clear, constructive support.",
+        values=["clarity", "continuity", "constructiveness"],
+        behavioral_style=["direct", "supportive", "analytical"],
+        boundaries=["do_not_fake_capabilities"],
+        preferred_language="en",
+        response_style=None,
+        collaboration_preference=None,
+        theta_orientation=None,
+        summary="Mission: help the user move forward with clear, constructive support. Core style: direct, supportive, analytical.",
+    )
 
 
 async def test_expression_uses_runtime_language_for_fallback() -> None:
@@ -179,6 +197,7 @@ async def test_expression_uses_openai_when_available() -> None:
             "motivation_mode": "respond",
             "response_tone": "supportive",
             "collaboration_preference": "",
+            "identity_summary": "",
         }
     ]
 
@@ -250,3 +269,19 @@ async def test_expression_passes_collaboration_preference_to_openai() -> None:
 
     assert openai.calls[0]["collaboration_preference"] == "hands_on"
     assert openai.calls[0]["response_tone"] == "action-oriented"
+
+
+async def test_expression_passes_identity_summary_to_openai() -> None:
+    openai = ReplyOpenAI()
+    agent = ExpressionAgent(openai_client=openai)
+    await agent.run(
+        _event("hello"),
+        _perception(language="en"),
+        _context(),
+        _plan(),
+        _role(),
+        _motivation(),
+        identity=_identity(),
+    )
+
+    assert "constructive support" in openai.calls[0]["identity_summary"]

@@ -1,4 +1,4 @@
-from app.core.contracts import ContextOutput, Event, PerceptionOutput
+from app.core.contracts import ContextOutput, Event, IdentityOutput, PerceptionOutput
 
 
 class ContextAgent:
@@ -297,8 +297,12 @@ class ContextAgent:
         perception: PerceptionOutput,
         recent_memory: list[dict],
         conclusions: list[dict] | None = None,
+        identity: IdentityOutput | None = None,
     ) -> ContextOutput:
         text = str(event.payload.get("text", "")).strip()
+        identity_hint = ""
+        if identity is not None:
+            identity_hint = f" Identity stance: {', '.join(identity.behavioral_style)}."
         conclusion_hint = self._summarize_conclusions(conclusions)
         memory_hint = ""
         if recent_memory:
@@ -318,7 +322,12 @@ class ContextAgent:
             if memory_summaries:
                 memory_hint = " Relevant recent memory: " + " | ".join(memory_summaries) + "."
 
-        summary = f"User said: '{text}' with detected intent '{perception.intent}'." + conclusion_hint + memory_hint
+        summary = (
+            f"User said: '{text}' with detected intent '{perception.intent}'."
+            + identity_hint
+            + conclusion_hint
+            + memory_hint
+        )
         risk_level = 0.1 if text else 0.4
 
         return ContextOutput(

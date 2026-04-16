@@ -9,6 +9,7 @@ from app.core.action import ActionExecutor
 from app.core.contracts import Event, RuntimeResult
 from app.core.logging import get_logger
 from app.expression.generator import ExpressionAgent
+from app.identity.service import IdentityService
 from app.memory.repository import MemoryRepository
 from app.motivation.engine import MotivationEngine
 from app.reflection.worker import ReflectionWorker
@@ -26,6 +27,7 @@ class RuntimeOrchestrator:
         action_executor: ActionExecutor,
         memory_repository: MemoryRepository,
         reflection_worker: ReflectionWorker | None = None,
+        identity_service: IdentityService | None = None,
     ):
         self.perception_agent = perception_agent
         self.context_agent = context_agent
@@ -36,6 +38,7 @@ class RuntimeOrchestrator:
         self.action_executor = action_executor
         self.memory_repository = memory_repository
         self.reflection_worker = reflection_worker
+        self.identity_service = identity_service or IdentityService()
         self.logger = get_logger("aion.runtime")
 
     async def run(self, event: Event) -> RuntimeResult:
@@ -54,6 +57,14 @@ class RuntimeOrchestrator:
         stage_timings_ms["memory_load"] = int((perf_counter() - stage_started) * 1000)
 
         stage_started = perf_counter()
+        identity = self.identity_service.build(
+            user_profile=user_profile,
+            user_preferences=user_preferences,
+            user_theta=user_theta,
+        )
+        stage_timings_ms["identity_load"] = int((perf_counter() - stage_started) * 1000)
+
+        stage_started = perf_counter()
         perception = self.perception_agent.run(event, recent_memory=memory, user_profile=user_profile)
         stage_timings_ms["perception"] = int((perf_counter() - stage_started) * 1000)
 
@@ -63,6 +74,7 @@ class RuntimeOrchestrator:
             perception=perception,
             recent_memory=memory,
             conclusions=user_conclusions,
+            identity=identity,
         )
         stage_timings_ms["context"] = int((perf_counter() - stage_started) * 1000)
 
@@ -105,6 +117,7 @@ class RuntimeOrchestrator:
             plan=plan,
             role=role,
             motivation=motivation,
+            identity=identity,
             user_preferences=user_preferences,
             theta=user_theta,
         )
@@ -156,6 +169,7 @@ class RuntimeOrchestrator:
 
         return RuntimeResult(
             event=event,
+            identity=identity,
             perception=perception,
             context=context,
             motivation=motivation,

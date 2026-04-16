@@ -76,7 +76,7 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 9. Lightweight Profile Scope
 
 - Current repo fact:
-  - runtime now persists a lightweight language preference in `aion_profile`, and a first explicit semantic preference (`response_style`) in `aion_conclusion`.
+  - runtime now persists a lightweight language preference in `aion_profile`, keeps semantic preferences in `aion_conclusion`, and builds a lightweight runtime `IdentitySnapshot` from that state plus theta.
 - Decision needed:
   - should `aion_profile` remain limited to durable interaction preferences such as language, while `aion_conclusion` carries generalized learned preferences, or should those concerns merge into one wider identity-linked profile later?
 
