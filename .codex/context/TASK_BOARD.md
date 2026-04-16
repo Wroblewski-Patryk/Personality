@@ -6,16 +6,6 @@ Last updated: 2026-04-16
 
 ## BACKLOG
 
-- [ ] PRJ-003 Decide migration baseline and either document deferral or scaffold the first formal migration path
-  - Status: BACKLOG
-  - Owner: DB/Migrations
-  - Depends on: none
-  - Priority: P1
-  - Done when:
-    - the schema strategy is explicit
-    - rollback risk is documented
-    - local bootstrap behavior remains understood
-
 - [ ] PRJ-004 Revisit the public `/event` response contract
   - Status: BACKLOG
   - Owner: Planner
@@ -75,3 +65,13 @@ Last updated: 2026-04-16
     - `GET /health` reflection snapshot or related runtime contract is covered where applicable
     - `/event` reflection-trigger behavior is validated by tests if that contract is exposed
     - any brittle assumptions are documented
+
+- [x] PRJ-003 Decide migration baseline and either document deferral or scaffold the first formal migration path
+  - Status: DONE
+  - Owner: DB/Migrations
+  - Depends on: none
+  - Priority: P1
+  - Done when:
+    - the schema strategy is explicit
+    - rollback risk is documented
+    - local bootstrap behavior remains understood

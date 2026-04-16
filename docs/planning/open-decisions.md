@@ -19,9 +19,10 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 2. Migration Strategy
 
 - Current repo fact:
-  - database tables are created automatically on startup.
+  - the repo now has an Alembic baseline rooted in the current SQLAlchemy metadata, with an initial revision under `migrations/versions/`.
+  - startup still creates tables automatically on app boot through `MemoryRepository.create_tables()`.
 - Decision needed:
-  - keep bootstrap simplicity for MVP, or introduce explicit migrations before schema complexity grows?
+  - when should runtime and deployment move from this temporary dual path into a strict migration-first flow, and when is it safe to remove startup `create_tables()`?
 
 ### 3. Public API Shape
 

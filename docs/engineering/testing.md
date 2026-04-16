@@ -42,6 +42,7 @@ Primary command:
 - Memory or database changes:
   - add repository or integration coverage
   - verify startup table creation or migration behavior
+  - when migration files change, validate the Alembic path explicitly
 - Integration changes:
   - mock external providers
   - verify fallback behavior when providers are unavailable
@@ -61,3 +62,9 @@ For meaningful repo changes, leave behind:
 - the exact test command used
 - pass/fail result
 - a short note if coverage is still missing for a known edge case
+
+Useful migration verification command:
+
+```powershell
+.\.venv\Scripts\python -m alembic upgrade head --sql
+```

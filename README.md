@@ -64,6 +64,12 @@ curl -X POST http://localhost:8000/event ^
 .\.venv\Scripts\python -m pytest -q
 ```
 
+Apply the current schema baseline explicitly:
+
+```powershell
+.\scripts\run_db_migrations.ps1
+```
+
 Optional pip upgrade:
 
 ```powershell

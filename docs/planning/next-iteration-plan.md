@@ -187,6 +187,14 @@ These are small but real issues observed after the production rollout and smoke 
   - decide whether health-level observability is enough, or whether a dedicated internal ops endpoint should expose richer reflection task detail
   - decide when reflection should stay limited to `aion_conclusion` plus lightweight `aion_theta`, versus growing into richer future artifacts like goals or stronger role heuristics
 
+### 11. Migration Rollout
+
+- current repo behavior now has a formal Alembic schema baseline, but app startup still keeps `create_tables()` as a temporary MVP bootstrap
+- next improvement:
+  - decide when local and production flows should become migration-first
+  - add a release-safe migration step before removing startup bootstrap behavior
+  - document rollback expectations once the deploy path actually runs migrations automatically
+
 ### 9. Theta Runtime Bias
 
 - current repo behavior now stores lightweight theta state in `aion_theta`; reflection derives soft `support`, `analysis`, and `execution` biases from repeated recent role usage, and ambiguous runtime behavior can use theta after explicit heuristics and `preferred_role`, including role selection, motivation mode choice, lightweight planning stance, and expression tone
