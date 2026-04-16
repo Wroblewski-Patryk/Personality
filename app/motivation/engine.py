@@ -121,6 +121,10 @@ class MotivationEngine:
         importance += (
             0.06
             if goal_execution_state == "blocked"
+            else 0.05
+            if goal_execution_state == "recovering"
+            else 0.04
+            if goal_execution_state == "advancing"
             else 0.04
             if goal_execution_state == "stagnating"
             else 0.03
@@ -132,7 +136,17 @@ class MotivationEngine:
         urgency += 0.45 if has_urgent_signal else 0.0
         urgency += 0.1 if has_execution_signal else 0.0
         urgency += 0.15 if blocked_task_match else 0.0
-        urgency += 0.08 if goal_execution_state == "blocked" else 0.05 if goal_execution_state == "stagnating" else 0.0
+        urgency += (
+            0.08
+            if goal_execution_state == "blocked"
+            else 0.04
+            if goal_execution_state == "recovering"
+            else 0.03
+            if goal_execution_state == "advancing"
+            else 0.05
+            if goal_execution_state == "stagnating"
+            else 0.0
+        )
 
         if has_emotional_signal:
             valence = -0.45

@@ -125,7 +125,7 @@ Current MVP status:
 - semantic conclusions can now also infer `collaboration_preference`, for example whether the user tends to prefer guided step-by-step help or more hands-on concrete execution help
 - episodic summaries now also capture explicit `collaboration_update` markers from direct requests like `step by step` or `do it for me`, so reflection can honor those signals without waiting only for repeated-pattern learning
 - collaboration preference now influences role selection, motivation, planning, and expression, so the runtime can lean more guiding or more action-oriented even when the request itself is short or ambiguous
-- semantic conclusions can now also infer lightweight goal-execution momentum, including `blocked`, `progressing`, and an early `stagnating` pattern derived from repeated planning-heavy turns without recent execution
+- semantic conclusions can now also infer lightweight goal-execution momentum, including `blocked`, `recovering`, `advancing`, `progressing`, and an early `stagnating` pattern derived from active task state plus repeated plan-vs-execution patterns
 - vector retrieval is still planned, not live
 
 ---

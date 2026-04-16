@@ -204,6 +204,7 @@ class ReflectionWorker:
         sample_size = 0
         role_counts: dict[str, int] = {}
         task_done_updates = 0
+        task_in_progress_updates = 0
 
         for memory_item in recent_memory:
             fields = self._extract_fields(str(memory_item.get("summary", "")))
@@ -216,6 +217,8 @@ class ReflectionWorker:
             task_status_update = fields.get("task_status_update", "").strip().lower()
             if task_status_update.endswith(":done"):
                 task_done_updates += 1
+            elif task_status_update.endswith(":in_progress"):
+                task_in_progress_updates += 1
 
             role = fields.get("role", "").strip().lower()
             if role in {"friend", "analyst", "executor", "mentor"}:
@@ -291,6 +294,7 @@ class ReflectionWorker:
             active_goals=active_goals or [],
             active_tasks=active_tasks or [],
             task_done_updates=task_done_updates,
+            task_in_progress_updates=task_in_progress_updates,
         )
         if goal_execution_state is not None:
             conclusions.append(goal_execution_state)
@@ -312,6 +316,7 @@ class ReflectionWorker:
         active_goals: Sequence[dict],
         active_tasks: Sequence[dict],
         task_done_updates: int,
+        task_in_progress_updates: int,
     ) -> dict | None:
         if not active_goals:
             return None
@@ -326,6 +331,11 @@ class ReflectionWorker:
             for task in active_tasks
             if str(task.get("status", "")).strip().lower() == "in_progress"
         ]
+        remaining_active_tasks = [
+            task
+            for task in active_tasks
+            if str(task.get("status", "")).strip().lower() in {"todo", "in_progress"}
+        ]
 
         if blocked_tasks:
             return {
@@ -335,7 +345,23 @@ class ReflectionWorker:
                 "source": "background_reflection",
             }
 
-        if task_done_updates >= 1 or in_progress_tasks:
+        if task_done_updates >= 1 and remaining_active_tasks:
+            return {
+                "kind": "goal_execution_state",
+                "content": "recovering",
+                "confidence": 0.77,
+                "source": "background_reflection",
+            }
+
+        if in_progress_tasks or task_in_progress_updates >= 1:
+            return {
+                "kind": "goal_execution_state",
+                "content": "advancing",
+                "confidence": 0.75,
+                "source": "background_reflection",
+            }
+
+        if task_done_updates >= 1:
             return {
                 "kind": "goal_execution_state",
                 "content": "progressing",

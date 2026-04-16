@@ -165,6 +165,42 @@ def test_context_summary_includes_stagnating_goal_execution_state_from_conclusio
     assert "Stable user preferences: current goal seems to be stagnating without recent execution." in result.summary
 
 
+def test_context_summary_includes_recovering_goal_execution_state_from_conclusions() -> None:
+    result = ContextAgent().run(
+        event=_event("how should we proceed"),
+        perception=_perception(),
+        recent_memory=[],
+        conclusions=[
+            {
+                "kind": "goal_execution_state",
+                "content": "recovering",
+                "confidence": 0.77,
+                "source": "background_reflection",
+            }
+        ],
+    )
+
+    assert "Stable user preferences: current goal is recovering after a recent unblock or completion." in result.summary
+
+
+def test_context_summary_includes_advancing_goal_execution_state_from_conclusions() -> None:
+    result = ContextAgent().run(
+        event=_event("how should we proceed"),
+        perception=_perception(),
+        recent_memory=[],
+        conclusions=[
+            {
+                "kind": "goal_execution_state",
+                "content": "advancing",
+                "confidence": 0.75,
+                "source": "background_reflection",
+            }
+        ],
+    )
+
+    assert "Stable user preferences: current goal work is actively advancing." in result.summary
+
+
 def test_context_ignores_low_confidence_conclusions() -> None:
     result = ContextAgent().run(
         event=_event("how should we proceed"),

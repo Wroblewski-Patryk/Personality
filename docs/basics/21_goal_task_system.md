@@ -592,7 +592,7 @@ Current MVP status:
 - explicit user phrases such as `My goal is to ...` and `I need to ...` can now seed lightweight goals and tasks through the Action layer
 - explicit user progress phrases such as `I fixed ...` can now update matching task status
 - runtime now refreshes active goal/task state after Action-layer writes, so the returned result reflects the latest operational state
-- background reflection can now derive a lightweight `goal_execution_state` such as `blocked` or `progressing` from active goals, active tasks, and recent task status updates
+- background reflection can now derive a lightweight `goal_execution_state` such as `blocked`, `recovering`, `advancing`, or `progressing` from active goals, active tasks, and recent task status updates
 - background reflection can now also detect an early `stagnating` pattern when the system keeps planning around an active goal without seeing recent operational traction
 - that reflected goal state can now shape context, motivation, and planning even when the current turn does not restate the full blocker details
 

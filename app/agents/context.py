@@ -134,6 +134,10 @@ class ContextAgent:
             if kind == "goal_execution_state":
                 if content == "blocked":
                     return "current goal progress is blocked by an active task"
+                if content == "recovering":
+                    return "current goal is recovering after a recent unblock or completion"
+                if content == "advancing":
+                    return "current goal work is actively advancing"
                 if content == "progressing":
                     return "current goal work shows recent progress"
                 if content == "stagnating":

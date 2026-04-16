@@ -202,6 +202,18 @@ class PlanningAgent:
             if "unblock_active_task" in steps or "recover_goal_progress" in steps:
                 return None
             return "recover_goal_progress"
+        if goal_execution_state == "recovering":
+            if (
+                "unblock_active_task" in steps
+                or "recover_goal_progress" in steps
+                or "stabilize_goal_recovery" in steps
+            ):
+                return None
+            return "stabilize_goal_recovery"
+        if goal_execution_state == "advancing":
+            if "advance_active_task" in steps or "continue_goal_execution" in steps:
+                return None
+            return "continue_goal_execution"
         if goal_execution_state == "stagnating":
             if (
                 "unblock_active_task" in steps
