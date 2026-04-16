@@ -39,7 +39,7 @@ class PlanningAgent:
         if motivation.mode == "clarify":
             goal = "Ask for the missing information needed to help."
             steps.extend(["request_missing_input", "prepare_response"])
-        elif motivation.mode == "support" or role.selected == "friend":
+        elif role.selected == "friend" or motivation.valence <= -0.3:
             goal = "Provide grounded emotional support and one manageable next step."
             steps.extend(["acknowledge_emotion", "reduce_pressure", "prepare_response"])
         elif motivation.mode == "execute" or role.selected == "executor":

@@ -1,7 +1,10 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+
+MotivationMode = Literal["respond", "ignore", "analyze", "execute", "clarify"]
 
 
 class EventMeta(BaseModel):
@@ -109,7 +112,7 @@ class MotivationOutput(BaseModel):
     urgency: float
     valence: float
     arousal: float
-    mode: str
+    mode: MotivationMode
 
 
 class RoleOutput(BaseModel):

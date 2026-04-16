@@ -103,7 +103,7 @@ class ExpressionAgent:
                 response_style,
             )
 
-        if motivation.mode == "support" or role.selected == "friend":
+        if role.selected == "friend" or motivation.valence <= -0.3:
             return apply_response_style(
                 fallback_message(perception.language, "support", plan.goal),
                 response_style,
@@ -159,7 +159,7 @@ class ExpressionAgent:
         theta: dict | None = None,
         collaboration_preference: str | None = None,
     ) -> str:
-        if motivation.mode == "support" or role.selected == "friend":
+        if role.selected == "friend" or motivation.valence <= -0.3:
             return "supportive"
         if motivation.mode == "execute" or role.selected == "executor":
             return "action-oriented"

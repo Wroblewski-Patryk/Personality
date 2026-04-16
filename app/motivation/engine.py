@@ -422,7 +422,7 @@ class MotivationEngine:
             collaboration_mode = self._collaboration_mode(collaboration_preference)
 
         if has_emotional_signal:
-            mode = "support"
+            mode = "respond"
         elif has_execution_signal:
             mode = "execute"
         elif has_analysis_signal:
@@ -445,7 +445,7 @@ class MotivationEngine:
             if theta_mode == "execute":
                 urgency += 0.08
                 arousal += 0.05
-            elif theta_mode == "support":
+            elif theta_mode == "respond":
                 valence = min(valence, -0.05)
         else:
             mode = "respond"
@@ -502,7 +502,7 @@ class MotivationEngine:
             return None
 
         candidates = {
-            "support": float(theta.get("support_bias", 0.0) or 0.0),
+            "respond": float(theta.get("support_bias", 0.0) or 0.0),
             "analyze": float(theta.get("analysis_bias", 0.0) or 0.0),
             "execute": float(theta.get("execution_bias", 0.0) or 0.0),
         }

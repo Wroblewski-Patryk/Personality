@@ -22,6 +22,8 @@ Last updated: 2026-04-17
 - 2026-04-17: repo analysis confirmed that the main remaining risks are semistructured episodic-memory contracts, motivation-mode drift versus `docs/basics`, duplicated signal logic, missing stage-level structured logging, and the temporary migration/bootstrap dual path.
 - 2026-04-17: the next execution roadmap was regrouped into small task batches under `docs/planning/next-iteration-plan.md` and `.codex/context/TASK_BOARD.md`, with parallel-ready lanes for memory contracts, motivation alignment, and logging.
 - 2026-04-17: episodic memory rows now persist a typed JSON payload alongside a human-readable summary, and both context retrieval and reflection now read payload-first with legacy summary fallback.
+- 2026-04-17: motivation now uses only the documented shared mode set (`respond|ignore|analyze|execute|clarify`), while emotional support remains visible through role, valence, planning, and expression tone.
+- 2026-04-17: emotional-turn contract tests now describe supportive behavior through the documented runtime surfaces (`respond`, negative valence, `friend` role, supportive planning, and supportive expression tone).
 
 ## Technical Baseline
 
@@ -46,14 +48,12 @@ Last updated: 2026-04-17
 ## Current Focus
 
 - Main active objective: harden the runtime contracts that future behavior depends on before adding more heuristics
-- Current runtime emphasis: align motivation behavior with documented contracts, reduce duplicated signal logic across stages, and improve structured observability
+- Current runtime emphasis: reduce duplicated signal logic across stages and improve structured observability
 - Top blockers:
-  - runtime currently emits an undocumented `support` motivation mode even though `docs/basics/16_agent_contracts.md` defines a smaller shared mode set
   - goal and milestone signal logic is duplicated across context, motivation, planning, and reflection
   - stage-level structured logging is still missing even though stage timings already exist
   - startup is still on a temporary dual-path schema model: Alembic baseline plus startup `create_tables()`
 - Success criteria for this phase:
-  - shared motivation modes match `docs/basics/16_agent_contracts.md`
   - shared goal and milestone signals have one clear implementation owner
   - runtime stage decisions are observable through structured logs
   - docs, task board, and code stay synchronized after each slice

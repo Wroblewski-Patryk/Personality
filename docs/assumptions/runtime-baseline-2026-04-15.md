@@ -62,7 +62,7 @@ Its job is to preserve repo truth, especially where the long-form architecture d
 - LangGraph, vector retrieval, a separate reflection worker process, richer relation systems, and proactive loops are still planned, not implemented.
 - Goal and milestone management is now real, but it is still a lightweight semantic layer rather than a full milestone engine with explicit dependency graphs or migration-backed lifecycle rules.
 - Episodic memory now persists a typed JSON payload alongside a human-readable `aion_memory.summary`, and both context retrieval and background reflection prefer that payload while still falling back to legacy summary-only rows.
-- The documented shared motivation contract in `docs/basics/16_agent_contracts.md` still lists `respond|ignore|analyze|execute|clarify`, while the current runtime also emits `support` for emotional turns and several downstream stages consume that extra mode.
+- The runtime now keeps emotional-turn behavior inside the documented shared motivation contract (`respond|ignore|analyze|execute|clarify`); supportive behavior remains expressed through role selection, negative valence, planning stance, and expression tone instead of an extra `support` mode.
 - Logging currently exposes runtime start/end, reflection updates, and per-stage timings, but it still does not provide the consistent stage-level input/output summaries described in `docs/basics/17_logging_and_debugging.md`.
 
 ## Recommended Promotion Targets

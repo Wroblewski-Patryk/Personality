@@ -149,7 +149,7 @@ async def test_expression_applies_concise_preference_to_fallback() -> None:
         _context(),
         _plan(),
         _role(selected="friend"),
-        _motivation(mode="support"),
+        _motivation(mode="respond"),
         user_preferences={"response_style": "concise"},
     )
 
@@ -164,11 +164,32 @@ async def test_expression_uses_supportive_fallback_for_emotional_messages() -> N
         _context(),
         _plan(),
         _role(selected="friend"),
-        _motivation(mode="support"),
+        _motivation(mode="respond"),
     )
 
     assert "one step at a time" in result.message
     assert result.language == "en"
+    assert result.tone == "supportive"
+
+
+async def test_expression_keeps_supportive_tone_from_negative_valence_without_support_mode() -> None:
+    agent = ExpressionAgent(openai_client=NoReplyOpenAI())
+    result = await agent.run(
+        _event("I feel anxious and lonely"),
+        _perception(language="en"),
+        _context(),
+        _plan(),
+        _role(selected="advisor"),
+        MotivationOutput(
+            importance=0.6,
+            urgency=0.2,
+            valence=-0.45,
+            arousal=0.55,
+            mode="respond",
+        ),
+    )
+
+    assert "one step at a time" in result.message
     assert result.tone == "supportive"
 
 

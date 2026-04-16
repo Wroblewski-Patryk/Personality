@@ -296,6 +296,45 @@ async def test_runtime_pipeline_api_source() -> None:
     assert "constructive support" in openai.calls[0]["identity_summary"]
 
 
+async def test_runtime_pipeline_routes_emotional_turn_through_documented_contract() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-emotional",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "I feel stressed and overwhelmed right now"},
+        meta=EventMeta(user_id="u-1", trace_id="t-emotional"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.motivation.mode == "respond"
+    assert result.motivation.valence <= -0.45
+    assert result.role.selected == "friend"
+    assert "acknowledge_emotion" in result.plan.steps
+    assert "reduce_pressure" in result.plan.steps
+    assert result.expression.tone == "supportive"
+    assert openai.calls[0]["motivation_mode"] == "respond"
+    assert openai.calls[0]["response_tone"] == "supportive"
+    assert result.reflection_triggered is True
+
+
 async def test_runtime_pipeline_loads_active_goals_and_tasks_into_context_and_plan() -> None:
     memory = FakeMemoryRepository(recent_memory=[])
     memory.active_goals = [

@@ -28,7 +28,7 @@ def test_planning_agent_builds_support_plan() -> None:
             urgency=0.4,
             valence=-0.3,
             arousal=0.6,
-            mode="support",
+            mode="respond",
         ),
         role=RoleOutput(selected="friend", confidence=0.8),
     )
@@ -43,6 +43,25 @@ def test_planning_agent_builds_support_plan() -> None:
     ]
     assert result.needs_response is True
     assert result.needs_action is False
+
+
+def test_planning_agent_keeps_supportive_steps_inside_documented_contract() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="I feel overwhelmed and tired"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.78,
+            urgency=0.24,
+            valence=-0.45,
+            arousal=0.55,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.7),
+    )
+
+    assert result.goal == "Provide grounded emotional support and one manageable next step."
+    assert "acknowledge_emotion" in result.steps
+    assert "reduce_pressure" in result.steps
 
 
 def test_planning_agent_adds_concise_step_from_semantic_preference() -> None:

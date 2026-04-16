@@ -34,6 +34,8 @@ Completed on 2026-04-17:
 - `PRJ-006` introduced a structured episodic memory payload plus a readable summary and formal migration step.
 - `PRJ-007` moved context retrieval and reflection to payload-first episodic readers with legacy-summary fallback.
 - `PRJ-008` locked that episodic contract with regression tests across persistence, context, reflection, and runtime.
+- `PRJ-009` normalized motivation to the documented shared mode set while keeping emotional support visible through role, valence, planning, and expression tone.
+- `PRJ-010` added explicit emotional-turn contract tests that describe supportive behavior through the documented runtime surfaces instead of an extra motivation mode.
 
 ## Highest-Risk Gaps
 
@@ -53,14 +55,14 @@ Why it matters:
 
 Current behavior:
 
-- runtime can emit `motivation.mode == "support"` for emotional turns
-- `docs/basics/16_agent_contracts.md` still defines:
+- resolved in code by `PRJ-009`
+- runtime now keeps emotional-turn behavior inside the documented shared mode set:
   - `respond|ignore|analyze|execute|clarify`
 
 Why it matters:
 
-- the code is currently ahead of the documented contract in a way that affects several stages
-- this creates confusion for future agents and makes integration contracts fuzzy
+- this removed one of the clearest runtime-vs-basics contract mismatches
+- the remaining work is to keep that documented contract stable while other runtime slices evolve
 
 ### 3. Core heuristic modules are too large
 
@@ -142,23 +144,15 @@ This group removed the biggest architectural brittleness first.
 
 This group removes the clearest code-vs-basics mismatch.
 
-- `PRJ-009` Normalize the motivation mode contract to the documented set.
-  - Files: `app/motivation/engine.py`, `app/agents/planning.py`, `app/expression/generator.py`, `app/core/contracts.py`, related tests
-  - Depends on: none
-  - Done when:
+- `PRJ-009` is complete.
+  - Result:
     - shared runtime behavior no longer depends on undocumented `support`
     - emotional turns still produce supportive behavior through documented contracts such as role, tone, plan goal, or valence
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
 
-- `PRJ-010` Add explicit contract tests for emotional-turn behavior after normalization.
-  - Files: `tests/test_motivation_engine.py`, `tests/test_planning_agent.py`, `tests/test_expression_agent.py`, `tests/test_runtime_pipeline.py`
-  - Depends on: `PRJ-009`
-  - Done when:
-    - tests describe how emotional support flows through the documented contract
-    - the expected behavior is readable without inspecting implementation details
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
+- `PRJ-010` is complete.
+  - Result:
+    - emotional-turn behavior is now described at test level across motivation, planning, expression, and the full runtime pipeline
+    - the documented contract is readable from regression tests without relying on implementation-only details
 
 ## Group 3 - Shared Signal Engine Extraction
 
@@ -238,7 +232,7 @@ These tasks are intentionally chosen so different execution agents can work in p
 
 After those finish:
 
-- run `PRJ-007` and `PRJ-010`
+- run `PRJ-007`
 - then run `PRJ-011` and `PRJ-015`
 - then run `PRJ-012`
 - then run `PRJ-013`
@@ -246,14 +240,12 @@ After those finish:
 
 ## Recommended Execution Order
 
-1. `PRJ-009`
-2. `PRJ-014`
-3. `PRJ-010`
-4. `PRJ-011`
-5. `PRJ-015`
-6. `PRJ-012`
-7. `PRJ-013`
-8. `PRJ-016`
+1. `PRJ-014`
+2. `PRJ-011`
+3. `PRJ-015`
+4. `PRJ-012`
+5. `PRJ-013`
+6. `PRJ-016`
 
 ## Handoff Rules For Execution Agents
 

@@ -44,15 +44,27 @@ def test_motivation_engine_requests_clarification_without_text() -> None:
     assert result.importance == 0.3
 
 
-def test_motivation_engine_uses_support_mode_for_emotional_text() -> None:
+def test_motivation_engine_keeps_emotional_text_on_documented_respond_mode() -> None:
     result = MotivationEngine().run(
         event=_event("I feel stressed and overwhelmed"),
         context=_context(),
         perception=_perception(),
     )
 
-    assert result.mode == "support"
+    assert result.mode == "respond"
     assert result.valence < 0
+
+
+def test_motivation_engine_describes_emotional_turn_without_undocumented_support_mode() -> None:
+    result = MotivationEngine().run(
+        event=_event("I feel anxious and lonely right now"),
+        context=_context(),
+        perception=_perception(),
+    )
+
+    assert result.mode == "respond"
+    assert result.valence <= -0.45
+    assert result.arousal >= 0.5
 
 
 def test_motivation_engine_uses_execute_mode_for_urgent_action_requests() -> None:

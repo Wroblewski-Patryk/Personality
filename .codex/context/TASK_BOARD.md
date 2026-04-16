@@ -4,23 +4,6 @@ Last updated: 2026-04-17
 
 ## READY
 
-- [ ] PRJ-009 Normalize motivation mode contract to the documented set
-  - Status: READY
-  - Group: Motivation And Runtime Contract Alignment
-  - Owner: Backend Builder
-  - Depends on: none
-  - Priority: P1
-  - Files:
-    - `app/motivation/engine.py`
-    - `app/agents/planning.py`
-    - `app/expression/generator.py`
-    - `app/core/contracts.py`
-  - Done when:
-    - emotional-turn behavior no longer depends on undocumented `support`
-    - supportive behavior still remains visible through documented runtime contracts
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
-
 - [ ] PRJ-014 Add a reusable stage-level structured logging scaffold
   - Status: READY
   - Group: Observability And Runtime Honesty
@@ -37,13 +20,6 @@ Last updated: 2026-04-17
     - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py`
 
 ## BACKLOG
-
-- [ ] PRJ-010 Add explicit emotional-turn contract tests after motivation normalization
-  - Status: BACKLOG
-  - Group: Motivation And Runtime Contract Alignment
-  - Owner: QA/Test
-  - Depends on: PRJ-009
-  - Priority: P1
 
 - [ ] PRJ-011 Extract shared goal/task selection helpers
   - Status: BACKLOG
@@ -181,3 +157,32 @@ Last updated: 2026-04-17
   - Priority: P1
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_action_executor.py tests/test_memory_repository.py tests/test_context_agent.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py tests/test_schema_baseline.py`
+
+- [x] PRJ-009 Normalize motivation mode contract to the documented set
+  - Status: DONE
+  - Group: Motivation And Runtime Contract Alignment
+  - Owner: Backend Builder
+  - Depends on: none
+  - Priority: P1
+  - Done when:
+    - emotional-turn behavior no longer depends on undocumented `support`
+    - supportive behavior still remains visible through documented runtime contracts
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
+
+- [x] PRJ-010 Add explicit emotional-turn contract tests after motivation normalization
+  - Status: DONE
+  - Group: Motivation And Runtime Contract Alignment
+  - Owner: QA/Test
+  - Depends on: PRJ-009
+  - Priority: P1
+  - Files:
+    - `tests/test_motivation_engine.py`
+    - `tests/test_planning_agent.py`
+    - `tests/test_expression_agent.py`
+    - `tests/test_runtime_pipeline.py`
+  - Done when:
+    - tests describe how emotional support flows through the documented contract
+    - the expected behavior is readable without inspecting implementation details
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
