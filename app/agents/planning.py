@@ -29,6 +29,7 @@ class PlanningAgent:
         goal_milestone_pressure = str((user_preferences or {}).get("goal_milestone_pressure", "")).strip().lower()
         goal_milestone_dependency_state = str((user_preferences or {}).get("goal_milestone_dependency_state", "")).strip().lower()
         goal_milestone_due_state = str((user_preferences or {}).get("goal_milestone_due_state", "")).strip().lower()
+        goal_milestone_due_window = str((user_preferences or {}).get("goal_milestone_due_window", "")).strip().lower()
         goal_milestone_transition = str((user_preferences or {}).get("goal_milestone_transition", "")).strip().lower()
         goal_milestone_risk = str((user_preferences or {}).get("goal_milestone_risk", "")).strip().lower()
         goal_completion_criteria = str((user_preferences or {}).get("goal_completion_criteria", "")).strip().lower()
@@ -186,6 +187,14 @@ class PlanningAgent:
         if goal_milestone_due_step is not None and goal_milestone_due_step not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, goal_milestone_due_step)
+
+        goal_milestone_due_window_step = self._goal_milestone_due_window_step(
+            goal_milestone_due_window=goal_milestone_due_window,
+            steps=steps,
+        )
+        if goal_milestone_due_window_step is not None and goal_milestone_due_window_step not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, goal_milestone_due_window_step)
 
         goal_completion_criteria_step = self._goal_completion_criteria_step(
             goal_completion_criteria=goal_completion_criteria,
@@ -590,6 +599,25 @@ class PlanningAgent:
             return "start_due_execution"
         return None
 
+    def _goal_milestone_due_window_step(self, goal_milestone_due_window: str, steps: list[str]) -> str | None:
+        if goal_milestone_due_window == "fresh_due_window":
+            if "work_within_due_window" in steps or "make_due_closure_call" in steps:
+                return None
+            return "work_within_due_window"
+        if goal_milestone_due_window == "active_due_window":
+            if "keep_due_window_moving" in steps or "finish_due_dependency" in steps:
+                return None
+            return "keep_due_window_moving"
+        if goal_milestone_due_window == "overdue_due_window":
+            if "recover_overdue_window" in steps or "force_goal_closure_decision" in steps:
+                return None
+            return "recover_overdue_window"
+        if goal_milestone_due_window == "reopened_due_window":
+            if "stabilize_reopened_due_window" in steps or "stabilize_reentered_completion_window" in steps:
+                return None
+            return "stabilize_reopened_due_window"
+        return None
+
     def _goal_completion_criteria_step(self, goal_completion_criteria: str, steps: list[str]) -> str | None:
         if goal_completion_criteria == "resolve_remaining_blocker":
             if "resolve_remaining_blocker" in steps or "unblock_active_task" in steps or "reduce_milestone_risk" in steps:
@@ -669,6 +697,7 @@ class PlanningAgent:
     def _apply_active_milestone_signals(self, goal: str, relevant_milestone: dict) -> str:
         dependency_state = str(relevant_milestone.get("dependency_state", "")).strip().lower()
         due_state = str(relevant_milestone.get("due_state", "")).strip().lower()
+        due_window = str(relevant_milestone.get("due_window", "")).strip().lower()
         risk_level = str(relevant_milestone.get("risk_level", "")).strip().lower()
         completion_criteria = str(relevant_milestone.get("completion_criteria", "")).strip().lower()
         hints: list[str] = []
@@ -681,6 +710,11 @@ class PlanningAgent:
             hints.append(
                 "Treat the milestone due state as "
                 f"'{due_state.replace('_', ' ')}'."
+            )
+        if due_window:
+            hints.append(
+                "Treat the milestone due window as "
+                f"'{due_window.replace('_', ' ')}'."
             )
         if risk_level:
             hints.append(f"Treat the milestone risk as '{risk_level}'.")

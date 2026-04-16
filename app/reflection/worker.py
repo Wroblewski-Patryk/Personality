@@ -488,6 +488,14 @@ class ReflectionWorker:
         )
         if goal_milestone_due_state is not None:
             conclusions.append(goal_milestone_due_state)
+        goal_milestone_due_window = self._derive_goal_milestone_due_window(
+            goal_milestone_due_state=goal_milestone_due_state,
+            goal_milestone_pressure=goal_milestone_pressure,
+            goal_milestone_arc=goal_milestone_arc,
+            goal_milestone_transition=goal_milestone_transition,
+        )
+        if goal_milestone_due_window is not None:
+            conclusions.append(goal_milestone_due_window)
 
         deduped: list[dict] = []
         seen: set[tuple[str, str]] = set()
@@ -1097,6 +1105,53 @@ class ReflectionWorker:
             }
 
         return None
+
+    def _derive_goal_milestone_due_window(
+        self,
+        *,
+        goal_milestone_due_state: dict | None,
+        goal_milestone_pressure: dict | None,
+        goal_milestone_arc: dict | None,
+        goal_milestone_transition: dict | None,
+    ) -> dict | None:
+        due_state = str(goal_milestone_due_state.get("content", "")).strip().lower() if goal_milestone_due_state is not None else ""
+        pressure = str(goal_milestone_pressure.get("content", "")).strip().lower() if goal_milestone_pressure is not None else ""
+        milestone_arc = str(goal_milestone_arc.get("content", "")).strip().lower() if goal_milestone_arc is not None else ""
+        transition = (
+            str(goal_milestone_transition.get("content", "")).strip().lower()
+            if goal_milestone_transition is not None
+            else ""
+        )
+
+        if not due_state:
+            return None
+        if milestone_arc == "reentered_completion_window":
+            return {
+                "kind": "goal_milestone_due_window",
+                "content": "reopened_due_window",
+                "confidence": 0.8,
+                "source": "background_reflection",
+            }
+        if pressure in {"lingering_completion", "dragging_recovery", "stale_execution", "lingering_setup"}:
+            return {
+                "kind": "goal_milestone_due_window",
+                "content": "overdue_due_window",
+                "confidence": 0.82,
+                "source": "background_reflection",
+            }
+        if transition == "entered_completion_window" or pressure == "building_closure_pressure":
+            return {
+                "kind": "goal_milestone_due_window",
+                "content": "fresh_due_window",
+                "confidence": 0.76,
+                "source": "background_reflection",
+            }
+        return {
+            "kind": "goal_milestone_due_window",
+            "content": "active_due_window",
+            "confidence": 0.73,
+            "source": "background_reflection",
+        }
 
     def _derive_goal_milestone_risk(
         self,

@@ -603,6 +603,35 @@ def test_planning_agent_adds_milestone_due_step_for_dependency_due_next() -> Non
     assert "finish_due_dependency" in result.steps
 
 
+def test_planning_agent_adds_milestone_due_window_step_for_overdue_window() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="What should I do next for the MVP?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.94,
+            urgency=0.51,
+            valence=0.05,
+            arousal=0.45,
+            mode="analyze",
+        ),
+        role=RoleOutput(selected="analyst", confidence=0.8),
+        user_preferences={"goal_milestone_due_window": "overdue_due_window"},
+        active_goals=[
+            {
+                "id": 11,
+                "name": "ship the MVP this week",
+                "description": "User-declared goal: ship the MVP this week",
+                "priority": "high",
+                "status": "active",
+                "goal_type": "operational",
+            }
+        ],
+    )
+
+    assert "align_with_active_goal" in result.steps
+    assert "recover_overdue_window" in result.steps
+
+
 def test_planning_agent_adds_preserve_goal_momentum_step_from_reflected_progress_state() -> None:
     result = PlanningAgent().run(
         event=_event(text="What should I do next for the MVP?"),

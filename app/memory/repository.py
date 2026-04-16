@@ -529,7 +529,7 @@ class MemoryRepository:
                     AionConclusion.user_id == user_id,
                 )
                 .order_by(AionConclusion.updated_at.desc(), AionConclusion.id.desc())
-                .limit(16)
+                .limit(18)
             )
             result = await session.execute(statement)
             rows = result.scalars().all()
@@ -607,6 +607,11 @@ class MemoryRepository:
                 preferences["goal_milestone_due_state_confidence"] = row.confidence
                 preferences["goal_milestone_due_state_source"] = row.source
                 preferences["goal_milestone_due_state_updated_at"] = row.updated_at
+            elif row.kind == "goal_milestone_due_window":
+                preferences["goal_milestone_due_window"] = row.content
+                preferences["goal_milestone_due_window_confidence"] = row.confidence
+                preferences["goal_milestone_due_window_source"] = row.source
+                preferences["goal_milestone_due_window_updated_at"] = row.updated_at
             elif row.kind == "goal_milestone_risk":
                 preferences["goal_milestone_risk"] = row.content
                 preferences["goal_milestone_risk_confidence"] = row.confidence
@@ -963,6 +968,7 @@ class MemoryRepository:
             "goal_milestone_pressure",
             "goal_milestone_dependency_state",
             "goal_milestone_due_state",
+            "goal_milestone_due_window",
             "goal_milestone_transition",
             "goal_milestone_risk",
             "goal_completion_criteria",

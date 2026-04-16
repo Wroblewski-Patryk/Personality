@@ -607,6 +607,7 @@ Current MVP status:
 - background reflection can now also derive lightweight `goal_milestone_pressure`, so runtime can tell when a milestone is lingering too long in completion, dragging in recovery, or staying stale in execution or setup
 - background reflection can now also derive lightweight `goal_milestone_dependency_state`, so runtime can tell whether the active milestone is blocked by a dependency, still waiting on several remaining work items, down to a single remaining dependency, or operationally clear to close
 - background reflection can now also derive lightweight `goal_milestone_due_state`, so runtime can tell what is due next for the active milestone rather than only whether it is pressured, risky, or dependency-heavy
+- background reflection can now also derive lightweight `goal_milestone_due_window`, so runtime can distinguish a freshly opened due window from one that is simply active, overdue, or reopened after recovery
 - that reflected goal state can now shape context, motivation, and planning even when the current turn does not restate the full blocker details
 
 Together, they turn cognition into progress.

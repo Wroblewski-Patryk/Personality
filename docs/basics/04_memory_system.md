@@ -139,6 +139,7 @@ Current MVP status:
 - reflection can now also derive lightweight `goal_milestone_pressure`, so runtime can notice when a milestone is not just in a phase, but has started lingering too long in completion, recovery, execution, or setup
 - reflection can now also derive lightweight `goal_milestone_dependency_state`, so runtime can tell whether the active milestone is blocked by a dependency, still depends on multiple remaining work items, is down to a single remaining dependency, or is operationally clear to close
 - reflection can now also derive lightweight `goal_milestone_due_state`, so runtime can tell what is operationally due next for the active milestone, such as making the closure call, finishing the next dependency, restoring recovery momentum, or forcing the first execution move
+- reflection can now also derive lightweight `goal_milestone_due_window`, so runtime can tell whether the current due window is fresh, actively in play, overdue, or reopened after recovery
 - vector retrieval is still planned, not live
 
 ---

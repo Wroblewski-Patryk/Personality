@@ -15,6 +15,7 @@ class ContextAgent:
         "goal_milestone_pressure",
         "goal_milestone_dependency_state",
         "goal_milestone_due_state",
+        "goal_milestone_due_window",
         "goal_milestone_transition",
         "goal_milestone_risk",
         "goal_completion_criteria",
@@ -173,6 +174,8 @@ class ContextAgent:
                 return self._summarize_goal_milestone_dependency_state(content)
             if kind == "goal_milestone_due_state":
                 return self._summarize_goal_milestone_due_state(content)
+            if kind == "goal_milestone_due_window":
+                return self._summarize_goal_milestone_due_window(content)
             if kind == "goal_milestone_transition":
                 return self._summarize_goal_milestone_transition(content)
             if kind == "goal_milestone_risk":
@@ -290,6 +293,17 @@ class ContextAgent:
             return "active milestone execution is due a concrete push"
         if content == "setup_due_start":
             return "active milestone setup is due its first execution move"
+        return ""
+
+    def _summarize_goal_milestone_due_window(self, content: str) -> str:
+        if content == "fresh_due_window":
+            return "active milestone has just entered a fresh due window"
+        if content == "active_due_window":
+            return "active milestone remains in an active due window"
+        if content == "overdue_due_window":
+            return "active milestone due window has become overdue"
+        if content == "reopened_due_window":
+            return "active milestone due window has reopened after recovery"
         return ""
 
     def _summarize_goal_milestone_risk(self, content: str) -> str:
@@ -777,12 +791,14 @@ class ContextAgent:
         raw_pressure_level = milestone.get("pressure_level")
         raw_dependency_state = milestone.get("dependency_state")
         raw_due_state = milestone.get("due_state")
+        raw_due_window = milestone.get("due_window")
         raw_risk_level = milestone.get("risk_level")
         raw_completion_criteria = milestone.get("completion_criteria")
         arc = str(raw_arc).strip().lower() if raw_arc else ""
         pressure_level = str(raw_pressure_level).strip().lower() if raw_pressure_level else ""
         dependency_state = str(raw_dependency_state).strip().lower() if raw_dependency_state else ""
         due_state = str(raw_due_state).strip().lower() if raw_due_state else ""
+        due_window = str(raw_due_window).strip().lower() if raw_due_window else ""
         risk_level = str(raw_risk_level).strip().lower() if raw_risk_level else ""
         completion_criteria = str(raw_completion_criteria).strip().lower() if raw_completion_criteria else ""
 
@@ -795,6 +811,8 @@ class ContextAgent:
             details.append(self._humanize_dependency_state(dependency_state))
         if due_state:
             details.append(self._humanize_due_state(due_state))
+        if due_window:
+            details.append(self._humanize_due_window(due_window))
         if risk_level:
             details.append(risk_level)
         if completion_criteria:
@@ -856,6 +874,14 @@ class ContextAgent:
             "recovery_due_attention": "recovery needs attention now",
             "execution_due_attention": "execution needs a push now",
             "setup_due_start": "setup needs a start now",
+        }.get(value, value.replace("_", " "))
+
+    def _humanize_due_window(self, value: str) -> str:
+        return {
+            "fresh_due_window": "fresh due window",
+            "active_due_window": "active due window",
+            "overdue_due_window": "overdue due window",
+            "reopened_due_window": "reopened due window",
         }.get(value, value.replace("_", " "))
 
     def _humanize_risk(self, value: str) -> str:
