@@ -166,13 +166,13 @@ These are small but real issues observed after the production rollout and smoke 
 - current repo behavior now supports lightweight `aion_goal` and `aion_task` state, loads active goals/tasks before deeper planning, lets context surface them, lets motivation react to related high-priority goals and blocked tasks, and lets planning align with active goals plus unblock or advance active tasks
 - current repo behavior can also seed goals and tasks from explicit user phrases such as `My goal is to ...` and `I need to ...`
 - current repo behavior can now also update task status from explicit progress signals such as `I fixed ...`, runtime refreshes returned goal/task state after Action-layer writes, and background reflection can now derive a lightweight `goal_execution_state` such as `blocked`, `recovering`, `advancing`, `progressing`, or early `stagnating` from active goals, active tasks, and recent plan-vs-execution patterns
-- current repo behavior can now also derive a lightweight `goal_progress_score` from active task status mix and recent completions, compare it to the previous reflected score to infer `goal_progress_trend`, and use both signals in context, motivation, and planning
+- current repo behavior can now also derive a lightweight `goal_progress_score` from active task status mix and recent completions, compare it to the previous reflected score to infer `goal_progress_trend`, persist short goal-level snapshots in `aion_goal_progress`, and use both the latest hints and recent history in context, motivation, and planning
 - next improvement:
   - decide when plans should start creating or updating tasks even without explicit user phrasing
   - decide whether task status should begin updating automatically from successful action outcomes beyond explicit user progress signals
   - decide how far to push goal/task inference before a richer goal manager exists
   - decide whether `goal_execution_state` should stay as a lightweight semantic conclusion, or grow into a richer progress/stagnation model with stronger momentum, decay, and recovery rules
-  - decide when the runtime should stop treating `goal_progress_score` and `goal_progress_trend` as lightweight derived hints and move toward explicit goal-level progress history or scored milestones
+  - decide when the runtime should stop treating `goal_progress_score` and `goal_progress_trend` as lightweight derived hints and move from short snapshot history toward richer goal-level milestones or progress arcs
 
 ### 8. Background Reflection Worker
 

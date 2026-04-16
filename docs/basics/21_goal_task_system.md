@@ -596,6 +596,7 @@ Current MVP status:
 - background reflection can now also detect an early `stagnating` pattern when the system keeps planning around an active goal without seeing recent operational traction
 - background reflection can now also estimate a lightweight `goal_progress_score` from the active task mix, so runtime can distinguish an early-stage goal from one that is close to completion
 - background reflection can now also compare the latest reflected score against the previous one and infer a lightweight `goal_progress_trend` such as `improving`, `steady`, or `slipping`
+- background reflection now also writes lightweight `aion_goal_progress` snapshots for the primary active goal, so runtime can use short progress history during context-building and planning
 - that reflected goal state can now shape context, motivation, and planning even when the current turn does not restate the full blocker details
 
 Together, they turn cognition into progress.

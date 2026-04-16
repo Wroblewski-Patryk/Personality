@@ -22,6 +22,7 @@ class FakeMemoryRepository:
         self.user_theta: dict | None = None
         self.active_goals: list[dict] = []
         self.active_tasks: list[dict] = []
+        self.goal_progress_history: list[dict] = []
 
     async def get_recent_for_user(self, user_id: str, limit: int = 5) -> list[dict]:
         return self.recent_memory[:limit]
@@ -48,6 +49,12 @@ class FakeMemoryRepository:
             rest = [task for task in active if task.get("goal_id") not in set(goal_ids)]
             return (goal_linked + rest)[:limit]
         return active[:limit]
+
+    async def get_recent_goal_progress(self, user_id: str, *, goal_ids: list[int] | None = None, limit: int = 6) -> list[dict]:
+        rows = self.goal_progress_history[:]
+        if goal_ids:
+            rows = [row for row in rows if int(row.get("goal_id", -1)) in set(goal_ids)]
+        return rows[:limit]
 
     async def write_episode(self, **kwargs) -> dict:
         return {
@@ -211,6 +218,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert set(result.stage_timings_ms) == {
         "memory_load",
         "task_load",
+        "goal_progress_load",
         "identity_load",
         "perception",
         "context",
@@ -1049,3 +1057,78 @@ async def test_runtime_pipeline_uses_goal_progress_trend_to_correct_drift() -> N
     assert "increase_goal_progress" in result.plan.steps
     assert "correct_goal_drift" in result.plan.steps
     assert result.reflection_triggered is True
+
+
+async def test_runtime_pipeline_uses_goal_progress_history_for_context_and_planning() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.active_goals = [
+        {
+            "id": 11,
+            "user_id": "u-1",
+            "name": "ship the MVP this week",
+            "description": "User-declared goal: ship the MVP this week",
+            "priority": "high",
+            "status": "active",
+            "goal_type": "operational",
+        }
+    ]
+    memory.goal_progress_history = [
+        {
+            "id": 3,
+            "goal_id": 11,
+            "score": 0.72,
+            "execution_state": "advancing",
+            "progress_trend": "improving",
+            "source_event_id": "evt-older",
+            "created_at": datetime.now(timezone.utc),
+        },
+        {
+            "id": 2,
+            "goal_id": 11,
+            "score": 0.49,
+            "execution_state": "recovering",
+            "progress_trend": "improving",
+            "source_event_id": "evt-old",
+            "created_at": datetime.now(timezone.utc),
+        },
+        {
+            "id": 1,
+            "goal_id": 11,
+            "score": 0.26,
+            "execution_state": "blocked",
+            "progress_trend": "slipping",
+            "source_event_id": "evt-oldest",
+            "created_at": datetime.now(timezone.utc),
+        },
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-16",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "What should I do next for the MVP?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-16"),
+    )
+
+    result = await runtime.run(event)
+
+    assert len(result.goal_progress_history) == 3
+    assert "Recent goal history shows lift from 0.26 to 0.72." in result.context.summary
+    assert result.motivation.importance >= 0.75
+    assert "align_with_active_goal" in result.plan.steps
+    assert "protect_goal_trajectory" in result.plan.steps

@@ -66,6 +66,14 @@ class RuntimeOrchestrator:
         stage_timings_ms["task_load"] = int((perf_counter() - stage_started) * 1000)
 
         stage_started = perf_counter()
+        goal_progress_history = await self.memory_repository.get_recent_goal_progress(
+            user_id=event.meta.user_id,
+            goal_ids=[int(goal["id"]) for goal in active_goals if goal.get("id") is not None],
+            limit=6,
+        )
+        stage_timings_ms["goal_progress_load"] = int((perf_counter() - stage_started) * 1000)
+
+        stage_started = perf_counter()
         identity = self.identity_service.build(
             user_profile=user_profile,
             user_preferences=user_preferences,
@@ -86,6 +94,7 @@ class RuntimeOrchestrator:
             identity=identity,
             active_goals=active_goals,
             active_tasks=active_tasks,
+            goal_progress_history=goal_progress_history,
         )
         stage_timings_ms["context"] = int((perf_counter() - stage_started) * 1000)
 
@@ -98,6 +107,7 @@ class RuntimeOrchestrator:
             theta=user_theta,
             active_goals=active_goals,
             active_tasks=active_tasks,
+            goal_progress_history=goal_progress_history,
         )
         stage_timings_ms["motivation"] = int((perf_counter() - stage_started) * 1000)
 
@@ -121,6 +131,7 @@ class RuntimeOrchestrator:
             theta=user_theta,
             active_goals=active_goals,
             active_tasks=active_tasks,
+            goal_progress_history=goal_progress_history,
         )
         stage_timings_ms["planning"] = int((perf_counter() - stage_started) * 1000)
 
@@ -201,6 +212,7 @@ class RuntimeOrchestrator:
             identity=identity,
             active_goals=result_active_goals,
             active_tasks=result_active_tasks,
+            goal_progress_history=goal_progress_history,
             perception=perception,
             context=context,
             motivation=motivation,

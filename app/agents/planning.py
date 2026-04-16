@@ -12,6 +12,7 @@ class PlanningAgent:
         theta: dict | None = None,
         active_goals: list[dict] | None = None,
         active_tasks: list[dict] | None = None,
+        goal_progress_history: list[dict] | None = None,
     ) -> PlanOutput:
         goal = "Provide a clear and useful response to the user event."
         steps = ["interpret_event", "review_context"]
@@ -20,6 +21,7 @@ class PlanningAgent:
         goal_execution_state = str((user_preferences or {}).get("goal_execution_state", "")).strip().lower()
         goal_progress_score = float((user_preferences or {}).get("goal_progress_score", 0.0) or 0.0)
         goal_progress_trend = str((user_preferences or {}).get("goal_progress_trend", "")).strip().lower()
+        goal_history_signal = self._goal_history_signal(goal_progress_history or [])
 
         if motivation.mode == "clarify":
             goal = "Ask for the missing information needed to help."
@@ -104,6 +106,11 @@ class PlanningAgent:
         if goal_progress_trend_step is not None and goal_progress_trend_step not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, goal_progress_trend_step)
+
+        goal_history_step = self._goal_history_step(goal_history_signal=goal_history_signal, steps=steps)
+        if goal_history_step is not None and goal_history_step not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, goal_history_step)
 
         return PlanOutput(
             goal=goal,
@@ -279,6 +286,30 @@ class PlanningAgent:
             return "maintain_goal_consistency"
         return None
 
+    def _goal_history_step(self, goal_history_signal: str, steps: list[str]) -> str | None:
+        if goal_history_signal == "regression":
+            if (
+                "rebuild_goal_trajectory" in steps
+                or "correct_goal_drift" in steps
+                or "restart_goal_progress" in steps
+                or "recover_goal_progress" in steps
+            ):
+                return None
+            return "rebuild_goal_trajectory"
+        if goal_history_signal == "lift":
+            if (
+                "protect_goal_trajectory" in steps
+                or "reinforce_goal_progress" in steps
+                or "push_goal_to_completion" in steps
+            ):
+                return None
+            return "protect_goal_trajectory"
+        if goal_history_signal == "volatile":
+            if "stabilize_goal_trajectory" in steps or "stabilize_goal_recovery" in steps:
+                return None
+            return "stabilize_goal_trajectory"
+        return None
+
     def _apply_active_goal(self, goal: str, relevant_goal: dict) -> str:
         goal_name = str(relevant_goal.get("name", "")).strip()
         if not goal_name:
@@ -303,3 +334,28 @@ class PlanningAgent:
             "in_progress": 2,
             "blocked": 3,
         }.get(status, 0)
+
+    def _goal_history_signal(self, goal_progress_history: list[dict]) -> str:
+        if len(goal_progress_history) < 2:
+            return ""
+
+        ordered = list(reversed(goal_progress_history))
+        scores: list[float] = []
+        for item in ordered:
+            try:
+                scores.append(float(item.get("score", 0.0)))
+            except (TypeError, ValueError):
+                continue
+
+        if len(scores) < 2:
+            return ""
+
+        delta = round(scores[-1] - scores[0], 2)
+        span = round(max(scores) - min(scores), 2)
+        if delta <= -0.2:
+            return "regression"
+        if delta >= 0.2:
+            return "lift"
+        if span >= 0.3:
+            return "volatile"
+        return ""

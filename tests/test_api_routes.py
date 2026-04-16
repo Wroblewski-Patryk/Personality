@@ -11,6 +11,7 @@ from app.core.contracts import (
     EventMeta,
     ExpressionOutput,
     GoalRecordOutput,
+    GoalProgressRecordOutput,
     IdentityOutput,
     MemoryRecord,
     MotivationOutput,
@@ -60,6 +61,17 @@ class FakeRuntime:
                     description="User-declared task: fix deployment blocker",
                     priority="high",
                     status="blocked",
+                )
+            ],
+            goal_progress_history=[
+                GoalProgressRecordOutput(
+                    id=1,
+                    goal_id=1,
+                    score=0.42,
+                    execution_state="recovering",
+                    progress_trend="improving",
+                    source_event_id=event.event_id,
+                    created_at=timestamp,
                 )
             ],
             perception=PerceptionOutput(
@@ -115,6 +127,7 @@ class FakeRuntime:
             stage_timings_ms={
                 "memory_load": 1,
                 "task_load": 0,
+                "goal_progress_load": 0,
                 "identity_load": 0,
                 "perception": 0,
                 "context": 0,
@@ -248,6 +261,7 @@ def test_event_endpoint_returns_runtime_result_and_normalizes_event() -> None:
     assert body["identity"]["mission"] == "Help the user move forward with clear, constructive support."
     assert body["active_goals"][0]["name"] == "ship the MVP"
     assert body["active_tasks"][0]["status"] == "blocked"
+    assert body["goal_progress_history"][0]["score"] == 0.42
     assert body["stage_timings_ms"]["memory_load"] == 1
     assert body["stage_timings_ms"]["total"] == 12
     assert body["event"]["source"] == "api"

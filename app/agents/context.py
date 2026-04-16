@@ -416,6 +416,54 @@ class ContextAgent:
                 selected = topical
         return selected[:limit]
 
+    def _select_goal_progress_history(
+        self,
+        goal_progress_history: list[dict],
+        selected_goals: list[dict],
+        limit: int = 3,
+    ) -> list[dict]:
+        if not goal_progress_history:
+            return []
+
+        goal_ids = {int(goal["id"]) for goal in selected_goals if goal.get("id") is not None}
+        if goal_ids:
+            filtered = [
+                item
+                for item in goal_progress_history
+                if int(item.get("goal_id", -1)) in goal_ids
+            ]
+            if filtered:
+                return filtered[:limit]
+        return goal_progress_history[:limit]
+
+    def _goal_history_hint(self, goal_progress_history: list[dict]) -> str:
+        if len(goal_progress_history) < 2:
+            return ""
+
+        ordered = list(reversed(goal_progress_history))
+        scores: list[float] = []
+        for item in ordered:
+            try:
+                scores.append(float(item.get("score", 0.0)))
+            except (TypeError, ValueError):
+                continue
+
+        if len(scores) < 2:
+            return ""
+
+        start = round(scores[0], 2)
+        end = round(scores[-1], 2)
+        span = round(max(scores) - min(scores), 2)
+        delta = round(end - start, 2)
+
+        if span >= 0.3 and abs(delta) < 0.12:
+            return f" Recent goal history has been volatile between {min(scores):.2f} and {max(scores):.2f}."
+        if delta >= 0.2:
+            return f" Recent goal history shows lift from {start:.2f} to {end:.2f}."
+        if delta <= -0.2:
+            return f" Recent goal history shows regression from {start:.2f} to {end:.2f}."
+        return f" Recent goal history is holding near {end:.2f}."
+
     def run(
         self,
         event: Event,
@@ -425,6 +473,7 @@ class ContextAgent:
         identity: IdentityOutput | None = None,
         active_goals: list[dict] | None = None,
         active_tasks: list[dict] | None = None,
+        goal_progress_history: list[dict] | None = None,
     ) -> ContextOutput:
         text = str(event.payload.get("text", "")).strip()
         identity_hint = ""
@@ -451,6 +500,9 @@ class ContextAgent:
             ]
             if task_parts:
                 task_hint = " Active tasks: " + " | ".join(task_parts) + "."
+        goal_history_hint = self._goal_history_hint(
+            self._select_goal_progress_history(goal_progress_history or [], selected_goals=selected_goals)
+        )
         conclusion_hint = self._summarize_conclusions(conclusions)
         memory_hint = ""
         if recent_memory:
@@ -474,6 +526,7 @@ class ContextAgent:
             + identity_hint
             + goal_hint
             + task_hint
+            + goal_history_hint
             + conclusion_hint
             + memory_hint
         )

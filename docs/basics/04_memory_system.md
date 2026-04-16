@@ -128,6 +128,7 @@ Current MVP status:
 - semantic conclusions can now also infer lightweight goal-execution momentum, including `blocked`, `recovering`, `advancing`, `progressing`, and an early `stagnating` pattern derived from active task state plus repeated plan-vs-execution patterns
 - reflection can now also derive a lightweight `goal_progress_score`, so runtime can tell not only whether the goal is moving, but also whether it is still early, mid-way, or entering the final stretch
 - reflection can now also derive a lightweight `goal_progress_trend`, so runtime can tell whether goal progress is improving, steady, or slipping compared with the previous reflected score
+- reflection now also persists lightweight `aion_goal_progress` snapshots for the primary active goal, so runtime can retrieve a short goal-level history instead of relying only on the latest reflected hint
 - vector retrieval is still planned, not live
 
 ---
@@ -269,6 +270,7 @@ Memory must not:
 - aion_profile  
 - aion_reflection_task  
 - aion_theta  
+- aion_goal_progress  
 - goals  
 - tasks  
 

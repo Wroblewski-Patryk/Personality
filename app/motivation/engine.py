@@ -12,6 +12,7 @@ class MotivationEngine:
         theta: dict | None = None,
         active_goals: list[dict] | None = None,
         active_tasks: list[dict] | None = None,
+        goal_progress_history: list[dict] | None = None,
     ) -> MotivationOutput:
         text = str(event.payload.get("text", "")).strip()
         lowered = normalize_for_matching(text)
@@ -111,6 +112,7 @@ class MotivationEngine:
         goal_execution_state = str((user_preferences or {}).get("goal_execution_state", "")).strip().lower()
         goal_progress_score = float((user_preferences or {}).get("goal_progress_score", 0.0) or 0.0)
         goal_progress_trend = str((user_preferences or {}).get("goal_progress_trend", "")).strip().lower()
+        goal_history_signal = self._goal_history_signal(goal_progress_history or [])
         related_goal_priority = self._related_goal_priority(text=text, goals=active_goals or [])
         blocked_task_match = self._has_related_blocked_task(text=text, tasks=active_tasks or [])
 
@@ -143,6 +145,7 @@ class MotivationEngine:
             if goal_progress_trend == "steady"
             else 0.0
         )
+        importance += 0.04 if goal_history_signal == "regression" else 0.02 if goal_history_signal == "lift" else 0.0
 
         urgency = 0.2
         urgency += 0.45 if has_urgent_signal else 0.0
@@ -161,6 +164,7 @@ class MotivationEngine:
         )
         urgency += 0.03 if 0 < goal_progress_score < 0.35 else 0.04 if goal_progress_score >= 0.75 else 0.0
         urgency += 0.05 if goal_progress_trend == "slipping" else 0.02 if goal_progress_trend == "improving" else 0.0
+        urgency += 0.04 if goal_history_signal == "regression" else 0.01 if goal_history_signal == "lift" else 0.0
 
         if has_emotional_signal:
             valence = -0.45
@@ -279,3 +283,28 @@ class MotivationEngine:
         if collaboration_preference == "guided":
             return "analyze"
         return None
+
+    def _goal_history_signal(self, goal_progress_history: list[dict]) -> str:
+        if len(goal_progress_history) < 2:
+            return ""
+
+        ordered = list(reversed(goal_progress_history))
+        scores: list[float] = []
+        for item in ordered:
+            try:
+                scores.append(float(item.get("score", 0.0)))
+            except (TypeError, ValueError):
+                continue
+
+        if len(scores) < 2:
+            return ""
+
+        delta = round(scores[-1] - scores[0], 2)
+        span = round(max(scores) - min(scores), 2)
+        if delta <= -0.2:
+            return "regression"
+        if delta >= 0.2:
+            return "lift"
+        if span >= 0.3:
+            return "volatile"
+        return ""

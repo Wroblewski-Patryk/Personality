@@ -458,3 +458,36 @@ def test_planning_agent_adds_correct_goal_drift_step_for_slipping_progress_trend
 
     assert "align_with_active_goal" in result.steps
     assert "correct_goal_drift" in result.steps
+
+
+def test_planning_agent_adds_protect_goal_trajectory_step_for_lift_history() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="What should I do next for the MVP?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.76,
+            urgency=0.24,
+            valence=0.05,
+            arousal=0.4,
+            mode="analyze",
+        ),
+        role=RoleOutput(selected="analyst", confidence=0.8),
+        active_goals=[
+            {
+                "id": 11,
+                "name": "ship the MVP this week",
+                "description": "User-declared goal: ship the MVP this week",
+                "priority": "high",
+                "status": "active",
+                "goal_type": "operational",
+            }
+        ],
+        goal_progress_history=[
+            {"goal_id": 11, "score": 0.72},
+            {"goal_id": 11, "score": 0.49},
+            {"goal_id": 11, "score": 0.26},
+        ],
+    )
+
+    assert "align_with_active_goal" in result.steps
+    assert "protect_goal_trajectory" in result.steps

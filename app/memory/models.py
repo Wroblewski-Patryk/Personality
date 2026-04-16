@@ -136,6 +136,23 @@ class AionTask(Base):
     )
 
 
+class AionGoalProgress(Base):
+    __tablename__ = "aion_goal_progress"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    goal_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    execution_state: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    progress_trend: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    source_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
 class AionReflectionTask(Base):
     __tablename__ = "aion_reflection_task"
     __table_args__ = (UniqueConstraint("event_id", name="uq_aion_reflection_task_event_id"),)

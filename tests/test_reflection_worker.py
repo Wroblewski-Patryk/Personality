@@ -10,6 +10,8 @@ class FakeMemoryRepository:
         self.conclusion_updates: list[dict] = []
         self.theta_updates: list[dict] = []
         self.runtime_preferences: dict = {}
+        self.goal_progress_history: list[dict] = []
+        self.goal_progress_snapshots: list[dict] = []
         self.created_tasks: list[dict] = []
         self.pending_tasks: list[dict] = []
         self.processing_marks: list[int] = []
@@ -23,6 +25,18 @@ class FakeMemoryRepository:
 
     async def get_user_runtime_preferences(self, user_id: str) -> dict:
         return self.runtime_preferences
+
+    async def get_recent_goal_progress(self, user_id: str, *, goal_ids: list[int] | None = None, limit: int = 6) -> list[dict]:
+        rows = self.goal_progress_history[:]
+        if goal_ids:
+            rows = [row for row in rows if int(row.get("goal_id", -1)) in set(goal_ids)]
+        return rows[:limit]
+
+    async def append_goal_progress_snapshot(self, **kwargs) -> dict:
+        payload = {"id": len(self.goal_progress_snapshots) + 1, **kwargs}
+        self.goal_progress_snapshots.insert(0, payload)
+        self.goal_progress_history.insert(0, payload)
+        return payload
 
     async def upsert_conclusion(self, **kwargs) -> dict:
         self.conclusion_updates.append(kwargs)
@@ -409,6 +423,17 @@ async def test_reflection_worker_derives_goal_progress_score_from_task_mix() -> 
         "source": "background_reflection",
         "supporting_event_id": "evt-goal-progress-score",
     } in repository.conclusion_updates
+    assert repository.goal_progress_snapshots == [
+        {
+            "id": 1,
+            "user_id": "u-1",
+            "goal_id": 1,
+            "score": 0.65,
+            "execution_state": "recovering",
+            "progress_trend": None,
+            "source_event_id": "evt-goal-progress-score",
+        }
+    ]
 
 
 async def test_reflection_worker_derives_improving_goal_progress_trend_against_previous_score() -> None:

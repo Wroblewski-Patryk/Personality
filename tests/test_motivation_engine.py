@@ -373,3 +373,30 @@ def test_motivation_engine_adds_pressure_for_slipping_goal_progress_trend() -> N
     assert result.mode == "analyze"
     assert result.importance >= 0.75
     assert result.urgency >= 0.25
+
+
+def test_motivation_engine_adds_pressure_for_goal_history_regression() -> None:
+    result = MotivationEngine().run(
+        event=_event("What should I do next for the MVP?"),
+        context=_context(),
+        perception=_perception(event_type="question", intent="request_help"),
+        active_goals=[
+            {
+                "id": 1,
+                "name": "ship the MVP this week",
+                "description": "User-declared goal: ship the MVP this week",
+                "priority": "high",
+                "status": "active",
+                "goal_type": "operational",
+            }
+        ],
+        goal_progress_history=[
+            {"goal_id": 1, "score": 0.34},
+            {"goal_id": 1, "score": 0.61},
+            {"goal_id": 1, "score": 0.82},
+        ],
+    )
+
+    assert result.mode == "analyze"
+    assert result.importance >= 0.76
+    assert result.urgency >= 0.24

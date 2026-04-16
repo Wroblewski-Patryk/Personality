@@ -55,7 +55,17 @@ class ReflectionWorker:
         runtime_preferences = await self.memory_repository.get_user_runtime_preferences(user_id=user_id)
         active_goals = await self.memory_repository.get_active_goals(user_id=user_id, limit=5)
         active_tasks = await self.memory_repository.get_active_tasks(user_id=user_id, limit=8)
+        primary_goal = self._select_primary_goal(active_goals)
+        recent_goal_progress = []
+        if primary_goal is not None and primary_goal.get("id") is not None:
+            recent_goal_progress = await self.memory_repository.get_recent_goal_progress(
+                user_id=user_id,
+                goal_ids=[int(primary_goal["id"])],
+                limit=4,
+            )
         previous_goal_progress_score = self._coerce_progress_score(runtime_preferences.get("goal_progress_score"))
+        if recent_goal_progress:
+            previous_goal_progress_score = self._coerce_progress_score(recent_goal_progress[0].get("score"))
         conclusions = self._derive_conclusions(
             recent_memory,
             active_goals=active_goals,
@@ -86,6 +96,37 @@ class ReflectionWorker:
                 conclusion["confidence"],
                 conclusion["source"],
             )
+        if primary_goal is not None and primary_goal.get("id") is not None:
+            goal_progress_score = next(
+                (item for item in conclusions if str(item.get("kind")) == "goal_progress_score"),
+                None,
+            )
+            if goal_progress_score is not None:
+                goal_execution_state = next(
+                    (item for item in conclusions if str(item.get("kind")) == "goal_execution_state"),
+                    None,
+                )
+                goal_progress_trend = next(
+                    (item for item in conclusions if str(item.get("kind")) == "goal_progress_trend"),
+                    None,
+                )
+                await self.memory_repository.append_goal_progress_snapshot(
+                    user_id=user_id,
+                    goal_id=int(primary_goal["id"]),
+                    score=float(goal_progress_score["content"]),
+                    execution_state=str(goal_execution_state["content"]) if goal_execution_state is not None else None,
+                    progress_trend=str(goal_progress_trend["content"]) if goal_progress_trend is not None else None,
+                    source_event_id=event_id,
+                )
+                self.logger.info(
+                    "reflection_goal_progress_snapshot user_id=%s event_id=%s goal_id=%s score=%s state=%s trend=%s",
+                    user_id,
+                    event_id,
+                    primary_goal["id"],
+                    goal_progress_score["content"],
+                    goal_execution_state["content"] if goal_execution_state is not None else "",
+                    goal_progress_trend["content"] if goal_progress_trend is not None else "",
+                )
         if theta is not None:
             await self.memory_repository.upsert_theta(
                 user_id=user_id,
@@ -529,6 +570,21 @@ class ReflectionWorker:
             "source": "background_reflection",
         }
 
+    def _select_primary_goal(self, active_goals: Sequence[dict]) -> dict | None:
+        if not active_goals:
+            return None
+
+        ranked = sorted(
+            active_goals,
+            key=lambda goal: (
+                self._goal_priority_rank(str(goal.get("priority", ""))),
+                str(goal.get("updated_at", "")),
+                int(goal.get("id", 0) or 0),
+            ),
+            reverse=True,
+        )
+        return ranked[0]
+
     def _derive_theta(self, recent_memory: Sequence[dict]) -> dict | None:
         if len(recent_memory) < 3:
             return None
@@ -640,3 +696,11 @@ class ReflectionWorker:
             return float(value)
         except (TypeError, ValueError):
             return None
+
+    def _goal_priority_rank(self, priority: str) -> int:
+        return {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+            "critical": 4,
+        }.get(priority, 0)

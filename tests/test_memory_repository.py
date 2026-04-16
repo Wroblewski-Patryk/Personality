@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.memory.models import AionConclusion, AionGoal, AionReflectionTask, AionTask
+from app.memory.models import AionConclusion, AionGoal, AionGoalProgress, AionReflectionTask, AionTask
 from app.memory.repository import MemoryRepository
 
 
@@ -262,5 +262,52 @@ async def test_memory_repository_exposes_goal_progress_trend_in_runtime_preferen
     assert preferences["goal_progress_trend"] == "improving"
     assert preferences["goal_progress_trend_confidence"] == 0.73
     assert preferences["goal_progress_trend_source"] == "background_reflection"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_appends_and_reads_goal_progress_history(tmp_path) -> None:
+    database_path = tmp_path / "memory-goal-progress-history.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    first = await repository.append_goal_progress_snapshot(
+        user_id="u-1",
+        goal_id=11,
+        score=0.28,
+        execution_state="blocked",
+        progress_trend="slipping",
+        source_event_id="evt-1",
+    )
+    second = await repository.append_goal_progress_snapshot(
+        user_id="u-1",
+        goal_id=11,
+        score=0.28,
+        execution_state="blocked",
+        progress_trend="slipping",
+        source_event_id="evt-2",
+    )
+    third = await repository.append_goal_progress_snapshot(
+        user_id="u-1",
+        goal_id=11,
+        score=0.61,
+        execution_state="recovering",
+        progress_trend="improving",
+        source_event_id="evt-3",
+    )
+
+    history = await repository.get_recent_goal_progress(user_id="u-1", goal_ids=[11], limit=5)
+
+    assert first["id"] == second["id"]
+    assert third["score"] == 0.61
+    assert [item["score"] for item in history] == [0.61, 0.28]
+    assert history[0]["progress_trend"] == "improving"
+
+    async with session_factory() as session:
+        rows = (await session.execute(select(AionGoalProgress).order_by(AionGoalProgress.id.asc()))).scalars().all()
+
+    assert len(rows) == 2
 
     await engine.dispose()
