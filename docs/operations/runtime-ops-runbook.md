@@ -43,6 +43,34 @@ Recommended when Telegram webhooks are enabled:
 docker compose up --build
 ```
 
+### Run Repeatable Manual Smoke
+
+Windows PowerShell:
+
+```powershell
+.\scripts\run_release_smoke.ps1 -BaseUrl "http://localhost:8000"
+```
+
+Windows PowerShell with UTF-8 payload check:
+
+```powershell
+.\scripts\run_release_smoke.ps1 `
+  -BaseUrl "http://localhost:8000" `
+  -Text "zażółć gęślą jaźń"
+```
+
+Debian / bash:
+
+```bash
+./scripts/run_release_smoke.sh "http://localhost:8000"
+```
+
+Optional debug payload:
+
+```powershell
+.\scripts\run_release_smoke.ps1 -BaseUrl "http://localhost:8000" -Debug
+```
+
 ### Run Health Check
 
 ```powershell
@@ -57,6 +85,8 @@ curl -X POST http://localhost:8000/event `
   -d "{\"text\":\"hello AION\"}"
 ```
 
+Use the smoke helper when you want a repeatable operator check instead of crafting requests manually.
+
 ### Configure Telegram Webhook
 
 Use the helper script or call:
@@ -68,10 +98,10 @@ with a webhook URL and optional secret token.
 ## Known Operational Limits
 
 - there is no background queue or worker isolation yet
-- there is no migration framework in place yet
-- startup table creation is convenient but not ideal for complex production schema changes
+- reflection is durable but still app-local, not isolated into a separate worker process yet
+- startup table creation still coexists with the new Alembic baseline during the current migration transition
 - runtime logging is present, but there is no external observability stack yet
-- reflection and proactive systems are still architectural intent, not live ops surfaces
+- proactive systems are still architectural intent, not live ops surfaces
 
 ## Incident Triage Shortlist
 

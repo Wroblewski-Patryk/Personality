@@ -79,6 +79,7 @@ The current repo already works as an MVP slice, but several architecture-level d
 - Current repo fact:
   - after pushing `main`, production required a manual redeploy from Coolify before the latest commit became live.
   - a manually sent, correctly signed GitHub-style webhook request to the configured Coolify endpoint successfully queued a deployment on 2026-04-15.
+  - the repo now has a repeatable release smoke helper for `GET /health` plus `POST /event`, so manual verification no longer depends on hand-written curl snippets.
 - Decision needed:
   - should deploys rely on GitHub webhooks, polling, or an explicit manual release step until automation is trustworthy?
   - until GitHub-side webhook delivery is verified, should manual redeploy remain the explicit release fallback?

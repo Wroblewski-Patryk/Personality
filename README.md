@@ -59,6 +59,12 @@ curl -X POST http://localhost:8000/event ^
   - optional debug payload: `POST /event?debug=true`
 - `POST /telegram/set-webhook`
 
+Manual smoke helper:
+
+```powershell
+.\scripts\run_release_smoke.ps1 -BaseUrl "http://localhost:8000"
+```
+
 ## Local Windows Environment
 
 ```powershell

@@ -65,6 +65,12 @@ Health:
 Invoke-RestMethod http://localhost:8000/health
 ```
 
+Repeatable smoke:
+
+```powershell
+.\scripts\run_release_smoke.ps1 -BaseUrl "http://localhost:8000"
+```
+
 ---
 
 ## 2) Test OpenAI + Telegram Locally
@@ -146,6 +152,28 @@ Debian / bash:
 ```
 
 Both helpers infer repository and commit data from local git when possible and send a GitHub-style `push` event payload to Coolify.
+
+### E) Post-deploy smoke verification
+
+After a deploy, run:
+
+```powershell
+.\scripts\run_release_smoke.ps1 -BaseUrl "https://YOUR_DOMAIN"
+```
+
+Optional UTF-8 verification:
+
+```powershell
+.\scripts\run_release_smoke.ps1 `
+  -BaseUrl "https://YOUR_DOMAIN" `
+  -Text "zażółć gęślą jaźń"
+```
+
+Optional debug payload check:
+
+```powershell
+.\scripts\run_release_smoke.ps1 -BaseUrl "https://YOUR_DOMAIN" -Debug
+```
 
 ---
 

@@ -6,16 +6,6 @@ Last updated: 2026-04-16
 
 ## BACKLOG
 
-- [ ] PRJ-005 Harden release and deployment confidence for the Coolify path
-  - Status: BACKLOG
-  - Owner: Ops/Release
-  - Depends on: none
-  - Priority: P2
-  - Done when:
-    - deployment smoke steps are explicit
-    - webhook or manual-release fallback is documented
-    - release verification is repeatable
-
 ## IN_PROGRESS
 
 - [ ] (none)
@@ -75,3 +65,13 @@ Last updated: 2026-04-16
     - the owner and purpose of the response shape are explicit
     - tests and docs match the chosen contract
     - debug-only fields are intentional rather than accidental
+
+- [x] PRJ-005 Harden release and deployment confidence for the Coolify path
+  - Status: DONE
+  - Owner: Ops/Release
+  - Depends on: none
+  - Priority: P2
+  - Done when:
+    - deployment smoke steps are explicit
+    - webhook or manual-release fallback is documented
+    - release verification is repeatable

@@ -18,6 +18,7 @@ Last updated: 2026-04-16
 - 2026-04-16: endpoint-level tests now cover the public reflection contract shape for both `GET /health` and `/event`.
 - 2026-04-16: the repo now has a formal Alembic baseline for the current schema, while startup `create_tables()` remains as a temporary MVP bootstrap path.
 - 2026-04-17: `POST /event` now returns a smaller public response contract by default, while the full internal `RuntimeResult` is exposed only through an explicit `debug=true` API path.
+- 2026-04-17: the repo now has a repeatable release smoke helper for health plus event verification, including an optional UTF-8 payload check and optional debug response validation.
 
 ## Technical Baseline
 
