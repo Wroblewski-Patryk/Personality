@@ -15,6 +15,10 @@ Last updated: 2026-04-18
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
+- The current active queue remains `PRJ-015` through `PRJ-016`.
+- Additional architecture-alignment work should be appended after that queue so
+  the backlog stays explicitly open for later discovery instead of pretending
+  the plan is complete.
 
 ## READY
 
@@ -45,6 +49,88 @@ Last updated: 2026-04-18
   - Owner: DB/Migrations
   - Depends on: none
   - Priority: P2
+
+## FUTURE
+
+- [ ] PRJ-017 Make the expression-to-action handoff explicit and test-covered
+  - Status: FUTURE
+  - Group: Stage Boundary Alignment
+  - Owner: Backend Builder
+  - Depends on: PRJ-016
+  - Priority: P2
+  - Files:
+    - `app/core/runtime.py`
+    - `app/action/`
+    - `app/expression/`
+    - `docs/architecture/15_runtime_flow.md`
+    - `docs/architecture/16_agent_contracts.md`
+  - Done when:
+    - the runtime passes an explicit delivery contract from expression into
+      action instead of relying on hidden stage coupling
+    - action inputs and outputs stay aligned with the documented action
+      boundary
+    - regression tests pin the handoff contract without changing current
+      user-facing behavior
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_action_executor.py tests/test_expression_agent.py`
+
+- [ ] PRJ-018 Reduce expression/action integration coupling without changing behavior
+  - Status: FUTURE
+  - Group: Stage Boundary Alignment
+  - Owner: Backend Builder
+  - Depends on: PRJ-017
+  - Priority: P2
+  - Files:
+    - `app/action/`
+    - `app/integrations/`
+    - `app/core/runtime.py`
+    - related tests
+  - Done when:
+    - integrations consume the explicit handoff contract instead of stage-local
+      assumptions
+    - side effects remain isolated inside action
+    - behavior stays equivalent from the public runtime point of view
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_telegram_webhook.py`
+
+- [ ] PRJ-019 Add runtime stage ownership and architecture-to-code traceability
+  - Status: FUTURE
+  - Group: Architecture Traceability And Contract Tests
+  - Owner: Product Docs
+  - Depends on: PRJ-016
+  - Priority: P3
+  - Files:
+    - `docs/overview.md`
+    - `docs/architecture/02_architecture.md`
+    - `docs/architecture/15_runtime_flow.md`
+    - `docs/architecture/16_agent_contracts.md`
+    - `.codex/context/PROJECT_STATE.md`
+  - Done when:
+    - each documented runtime stage points to its implementation owner in code
+      and its primary validation surface
+    - current implementation notes versus intended architecture remain explicit
+    - the repo truth is easier to audit without reading large modules first
+  - Validation:
+    - doc-only change, no automated validation required
+
+- [ ] PRJ-020 Add contract-level runtime flow smoke tests for architecture invariants
+  - Status: FUTURE
+  - Group: Architecture Traceability And Contract Tests
+  - Owner: QA/Test
+  - Depends on: PRJ-017, PRJ-019
+  - Priority: P2
+  - Files:
+    - `tests/test_runtime_pipeline.py`
+    - `tests/test_api_routes.py`
+    - `tests/test_logging.py`
+    - related helper fixtures
+  - Done when:
+    - tests pin the documented stage presence, action-boundary rules, and
+      traceable runtime result/log invariants
+    - future refactors fail loudly when code drifts away from the documented
+      runtime flow
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_logging.py`
 
 ## IN_PROGRESS
 

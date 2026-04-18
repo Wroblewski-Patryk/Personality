@@ -209,6 +209,68 @@ This group makes the system easier to operate and safer to evolve.
     - `.\.venv\Scripts\python -m pytest -q tests/test_schema_baseline.py`
     - `.\.venv\Scripts\python -m alembic upgrade head --sql`
 
+## Post-Current Queue Expansion
+
+The current recommended execution order stays unchanged through `PRJ-016`.
+
+The groups below are intentionally appended after that queue so the repo keeps
+an explicit architecture-alignment backlog instead of implying that current
+tasks fully close the gap between docs and code.
+
+These groups are a later wave, not a replacement for the active queue.
+
+## Group 5 - Stage Boundary Alignment
+
+This group makes the documented action boundary more visible in code without
+forcing a risky broad rewrite first.
+
+- `PRJ-017` Make the expression-to-action handoff explicit and test-covered.
+  - Files: `app/core/runtime.py`, `app/action/`, `app/expression/`, related docs/tests
+  - Depends on: `PRJ-016`
+  - Done when:
+    - expression hands action a deliberate delivery contract rather than an
+      implicit payload shape
+    - the action boundary stays explicit in code and docs
+    - current user-facing behavior remains unchanged
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_action_executor.py tests/test_expression_agent.py`
+
+- `PRJ-018` Reduce expression/action integration coupling without changing behavior.
+  - Files: `app/action/`, `app/integrations/`, `app/core/runtime.py`, related tests
+  - Depends on: `PRJ-017`
+  - Done when:
+    - channel integrations consume the explicit contract instead of runtime-only
+      assumptions
+    - side effects still remain isolated inside action
+    - the runtime is easier to evolve toward stricter stage parity later
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_telegram_webhook.py`
+
+## Group 6 - Architecture Traceability And Contract Tests
+
+This group makes the implemented architecture easier to audit and harder to let
+drift silently.
+
+- `PRJ-019` Add runtime stage ownership and architecture-to-code traceability.
+  - Files: `docs/overview.md`, `docs/architecture/02_architecture.md`, `docs/architecture/15_runtime_flow.md`, `docs/architecture/16_agent_contracts.md`, `.codex/context/PROJECT_STATE.md`
+  - Depends on: `PRJ-016`
+  - Done when:
+    - each documented stage names its code owner and main validation surface
+    - current-runtime differences remain explicit and searchable
+    - the repo truth can be audited faster during future refactors
+  - Validation:
+    - doc-only change, no automated validation required
+
+- `PRJ-020` Add contract-level runtime flow smoke tests for architecture invariants.
+  - Files: `tests/test_runtime_pipeline.py`, `tests/test_api_routes.py`, `tests/test_logging.py`, related helper fixtures
+  - Depends on: `PRJ-017`, `PRJ-019`
+  - Done when:
+    - tests pin documented stage presence, action-boundary rules, and traceable
+      runtime result/log invariants
+    - future architectural drift causes fast, obvious failures
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_logging.py`
+
 ## Parallel-Ready Lanes
 
 These tasks are intentionally chosen so different execution agents can work in parallel with minimal overlap:
@@ -225,11 +287,23 @@ After those finished:
 
 - run `PRJ-015`
 - then run `PRJ-016`
+- then run `PRJ-017`
+- then run `PRJ-019`
+- then run `PRJ-018`
+- then run `PRJ-020`
 
 ## Recommended Execution Order
 
 1. `PRJ-015`
 2. `PRJ-016`
+3. `PRJ-017`
+4. `PRJ-019`
+5. `PRJ-018`
+6. `PRJ-020`
+
+The queue should still be treated as intentionally open after those items.
+Additional small architecture-alignment slices may still be discovered while
+executing Groups 4 through 6.
 
 ## Handoff Rules For Execution Agents
 
@@ -250,4 +324,5 @@ This phase is complete when:
 - duplicated signal logic has one clear owner
 - stage-level logging makes runtime decisions observable
 - startup schema ownership is migration-first or explicitly guarded as temporary
+- runtime stage ownership is traceable from docs to code and tests
 - docs, code, and `.codex/context/` describe the same runtime truth

@@ -84,6 +84,9 @@ Last updated: 2026-04-18
 
 - Main active objective: harden runtime contracts that future behavior depends
   on before adding more heuristics
+- Active execution queue remains `PRJ-015` through `PRJ-016`; later
+  architecture-alignment work is staged after that queue instead of mixed into
+  it
 - Top blockers:
   - startup is still on a temporary dual-path schema model: Alembic baseline
     plus startup `create_tables()`
@@ -113,6 +116,10 @@ Last updated: 2026-04-18
   heuristic modules were reduced (`context: 801->751`, `planning: 755->676`,
   `motivation: 560->489`, `reflection: 1362->1318`) with behavior preserved by
   regression tests.
+- 2026-04-18: the post-`PRJ-016` planning queue was expanded with future
+  `Stage Boundary Alignment` and `Architecture Traceability And Contract Tests`
+  groups so architecture-parity follow-up is visible without displacing the
+  current execution order.
 
 ## Working Agreements
 
