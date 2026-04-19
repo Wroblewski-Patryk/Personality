@@ -26,6 +26,12 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
         snapshot["semantic_embedding_provider_ownership_enforcement_hint"]
         == "no_provider_ownership_violation"
     )
+    assert snapshot["semantic_embedding_owner_strategy_state"] == "deterministic_on_write_owner"
+    assert snapshot["semantic_embedding_owner_strategy_hint"] == "deterministic_baseline_owner_active"
+    assert (
+        snapshot["semantic_embedding_owner_strategy_recommendation"]
+        == "deterministic_on_write_baseline_is_active"
+    )
     assert snapshot["semantic_embedding_model_governance_state"] == "model_contract_aligned"
     assert (
         snapshot["semantic_embedding_model_governance_hint"]
@@ -70,6 +76,12 @@ def test_embedding_strategy_snapshot_marks_vectors_disabled_warning_state() -> N
         snapshot["semantic_embedding_provider_ownership_enforcement_hint"]
         == "not_applicable_vectors_disabled"
     )
+    assert snapshot["semantic_embedding_owner_strategy_state"] == "vectors_disabled"
+    assert snapshot["semantic_embedding_owner_strategy_hint"] == "enable_vectors_before_owner_strategy_rollout"
+    assert (
+        snapshot["semantic_embedding_owner_strategy_recommendation"]
+        == "defer_owner_strategy_selection_until_vectors_enabled"
+    )
     assert snapshot["semantic_embedding_model_governance_state"] == "vectors_disabled"
     assert snapshot["semantic_embedding_model_governance_hint"] == "not_applicable_vectors_disabled"
     assert snapshot["semantic_embedding_model_governance_enforcement"] == "warn"
@@ -112,6 +124,12 @@ def test_embedding_strategy_snapshot_marks_provider_fallback_warning_state() -> 
     assert (
         snapshot["semantic_embedding_provider_ownership_enforcement_hint"]
         == "fallback_allowed_in_warn_mode"
+    )
+    assert snapshot["semantic_embedding_owner_strategy_state"] == "fallback_owner_active"
+    assert snapshot["semantic_embedding_owner_strategy_hint"] == "requested_provider_not_effective_owner"
+    assert (
+        snapshot["semantic_embedding_owner_strategy_recommendation"]
+        == "keep_deterministic_owner_until_provider_execution_is_available"
     )
     assert snapshot["semantic_embedding_model_governance_state"] == "provider_fallback_effective_model"
     assert (
@@ -180,6 +198,7 @@ def test_embedding_strategy_snapshot_marks_deterministic_custom_model_governance
         snapshot["semantic_embedding_model_governance_enforcement_hint"]
         == "custom_model_name_allowed_in_warn_mode"
     )
+    assert snapshot["semantic_embedding_owner_strategy_state"] == "deterministic_on_write_owner"
 
 
 def test_embedding_strategy_snapshot_marks_provider_ownership_enforcement_blocked_in_strict_mode() -> None:
@@ -197,6 +216,7 @@ def test_embedding_strategy_snapshot_marks_provider_ownership_enforcement_blocke
         snapshot["semantic_embedding_provider_ownership_enforcement_hint"]
         == "switch_to_effective_provider_owner_before_startup"
     )
+    assert snapshot["semantic_embedding_owner_strategy_state"] == "fallback_owner_active"
 
 
 def test_embedding_strategy_snapshot_marks_model_governance_enforcement_blocked_in_strict_mode() -> None:
@@ -213,6 +233,24 @@ def test_embedding_strategy_snapshot_marks_model_governance_enforcement_blocked_
     assert (
         snapshot["semantic_embedding_model_governance_enforcement_hint"]
         == "use_deterministic_v1_or_switch_to_effective_provider_model"
+    )
+
+
+def test_embedding_strategy_snapshot_marks_deterministic_manual_owner_strategy_when_manual_refresh_is_enabled() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="deterministic",
+        model="deterministic-v1",
+        dimensions=32,
+        refresh_mode="manual",
+        refresh_interval_seconds=7200,
+    )
+
+    assert snapshot["semantic_embedding_owner_strategy_state"] == "deterministic_manual_owner"
+    assert snapshot["semantic_embedding_owner_strategy_hint"] == "manual_refresh_required_for_deterministic_owner"
+    assert (
+        snapshot["semantic_embedding_owner_strategy_recommendation"]
+        == "document_and_operate_manual_refresh_process"
     )
 
 

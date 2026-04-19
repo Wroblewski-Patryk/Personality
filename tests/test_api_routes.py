@@ -465,6 +465,9 @@ def test_health_endpoint_returns_ok() -> None:
             "semantic_embedding_provider_ownership_enforcement": "warn",
             "semantic_embedding_provider_ownership_enforcement_state": "not_applicable_no_fallback",
             "semantic_embedding_provider_ownership_enforcement_hint": "no_provider_ownership_violation",
+            "semantic_embedding_owner_strategy_state": "deterministic_on_write_owner",
+            "semantic_embedding_owner_strategy_hint": "deterministic_baseline_owner_active",
+            "semantic_embedding_owner_strategy_recommendation": "deterministic_on_write_baseline_is_active",
             "semantic_embedding_model_requested": "deterministic-v1",
             "semantic_embedding_model_effective": "deterministic-v1",
             "semantic_embedding_model_governance_state": "model_contract_aligned",
@@ -569,6 +572,9 @@ def test_health_endpoint_exposes_lexical_only_memory_retrieval_mode_when_semanti
         "semantic_embedding_provider_ownership_enforcement": "warn",
         "semantic_embedding_provider_ownership_enforcement_state": "not_applicable_vectors_disabled",
         "semantic_embedding_provider_ownership_enforcement_hint": "not_applicable_vectors_disabled",
+        "semantic_embedding_owner_strategy_state": "vectors_disabled",
+        "semantic_embedding_owner_strategy_hint": "enable_vectors_before_owner_strategy_rollout",
+        "semantic_embedding_owner_strategy_recommendation": "defer_owner_strategy_selection_until_vectors_enabled",
         "semantic_embedding_model_requested": "deterministic-v1",
         "semantic_embedding_model_effective": "deterministic-v1",
         "semantic_embedding_model_governance_state": "vectors_disabled",
@@ -613,6 +619,9 @@ def test_health_endpoint_exposes_embedding_provider_fallback_posture_when_non_de
         "semantic_embedding_provider_ownership_enforcement": "warn",
         "semantic_embedding_provider_ownership_enforcement_state": "warning_only",
         "semantic_embedding_provider_ownership_enforcement_hint": "fallback_allowed_in_warn_mode",
+        "semantic_embedding_owner_strategy_state": "fallback_owner_active",
+        "semantic_embedding_owner_strategy_hint": "requested_provider_not_effective_owner",
+        "semantic_embedding_owner_strategy_recommendation": "keep_deterministic_owner_until_provider_execution_is_available",
         "semantic_embedding_model_requested": "text-embedding-3-small",
         "semantic_embedding_model_effective": "deterministic-v1",
         "semantic_embedding_model_governance_state": "provider_fallback_effective_model",
@@ -721,6 +730,11 @@ def test_health_endpoint_exposes_embedding_refresh_posture() -> None:
     assert (
         body["memory_retrieval"]["semantic_embedding_refresh_hint"]
         == "ensure_manual_refresh_process_is_defined"
+    )
+    assert body["memory_retrieval"]["semantic_embedding_owner_strategy_state"] == "deterministic_manual_owner"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_owner_strategy_hint"]
+        == "manual_refresh_required_for_deterministic_owner"
     )
 
 

@@ -78,6 +78,9 @@ retrieval posture:
 - `semantic_embedding_provider_ownership_enforcement`
 - `semantic_embedding_provider_ownership_enforcement_state`
 - `semantic_embedding_provider_ownership_enforcement_hint`
+- `semantic_embedding_owner_strategy_state`
+- `semantic_embedding_owner_strategy_hint`
+- `semantic_embedding_owner_strategy_recommendation`
 - `semantic_embedding_model_requested`
 - `semantic_embedding_model_effective`
 - `semantic_embedding_model_governance_state`
@@ -99,7 +102,8 @@ retrieval posture:
 When semantic vectors are enabled and a non-implemented provider is requested
 (for example `EMBEDDING_PROVIDER=openai` today), startup emits
 `embedding_strategy_warning` with requested/effective provider-model posture
-and deterministic fallback hint, plus provider-ownership diagnostics.
+and deterministic fallback hint, plus provider-ownership and owner-strategy
+diagnostics.
 
 When provider-ownership fallback is active and
 `EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT=strict`, startup emits

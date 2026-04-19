@@ -214,6 +214,11 @@ Current limitation:
   `semantic_embedding_model_governance_enforcement_state`,
   `semantic_embedding_model_governance_enforcement_hint`), enabling strict
   startup block mode for deterministic custom-model-name governance posture.
+- owner-strategy recommendation posture is now explicit through helper-owned
+  diagnostics (`semantic_embedding_owner_strategy_state`,
+  `semantic_embedding_owner_strategy_hint`,
+  `semantic_embedding_owner_strategy_recommendation`) for vectors-disabled,
+  deterministic baseline/manual, and fallback provider ownership states.
 
 ### Event API behavior
 

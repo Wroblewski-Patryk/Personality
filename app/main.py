@@ -121,7 +121,7 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
     )
     if str(snapshot["semantic_embedding_warning_state"]) == "provider_fallback_active":
         logger.warning(
-            "embedding_strategy_warning semantic_vector_enabled=%s requested_provider=%s effective_provider=%s requested_model=%s effective_model=%s ownership_state=%s ownership_hint=%s ownership_enforcement=%s ownership_enforcement_state=%s ownership_enforcement_hint=%s hint=%s recommendation=keep_deterministic_or_implement_provider_execution",
+            "embedding_strategy_warning semantic_vector_enabled=%s requested_provider=%s effective_provider=%s requested_model=%s effective_model=%s ownership_state=%s ownership_hint=%s ownership_enforcement=%s ownership_enforcement_state=%s ownership_enforcement_hint=%s owner_strategy_state=%s owner_strategy_hint=%s owner_strategy_recommendation=%s hint=%s recommendation=keep_deterministic_or_implement_provider_execution",
             bool(snapshot["semantic_vector_enabled"]),
             str(snapshot["semantic_embedding_provider_requested"]),
             str(snapshot["semantic_embedding_provider_effective"]),
@@ -132,6 +132,9 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
             str(snapshot["semantic_embedding_provider_ownership_enforcement"]),
             str(snapshot["semantic_embedding_provider_ownership_enforcement_state"]),
             str(snapshot["semantic_embedding_provider_ownership_enforcement_hint"]),
+            str(snapshot["semantic_embedding_owner_strategy_state"]),
+            str(snapshot["semantic_embedding_owner_strategy_hint"]),
+            str(snapshot["semantic_embedding_owner_strategy_recommendation"]),
             str(snapshot["semantic_embedding_provider_hint"]),
         )
     if str(snapshot["semantic_embedding_provider_ownership_enforcement_state"]) == "blocked":

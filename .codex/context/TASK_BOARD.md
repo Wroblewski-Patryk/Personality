@@ -15,7 +15,7 @@ Last updated: 2026-04-19
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-243`.
+- The planning queue is complete through `PRJ-244`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,27 @@ Last updated: 2026-04-19
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-244 Add embedding owner-strategy recommendation posture in shared diagnostics
+  - Status: DONE
+  - Group: Embedding Strategy Posture
+  - Owner: Backend Builder + QA/Test + Product Docs
+  - Depends on: PRJ-243
+  - Priority: P2
+  - Result:
+    - shared embedding strategy helper now exposes explicit owner-strategy
+      recommendation posture through
+      `semantic_embedding_owner_strategy_state`,
+      `semantic_embedding_owner_strategy_hint`, and
+      `semantic_embedding_owner_strategy_recommendation`
+    - `/health.memory_retrieval` now surfaces owner-strategy recommendation
+      posture for vectors-disabled, deterministic baseline/manual, and fallback
+      provider ownership states
+    - startup fallback warning now includes shared owner-strategy diagnostics
+      for operator visibility
+    - docs/context/planning are synchronized through `PRJ-244`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
 
 - [x] PRJ-243 Add embedding model-governance enforcement posture and strict startup block option
   - Status: DONE

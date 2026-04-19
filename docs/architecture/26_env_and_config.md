@@ -310,6 +310,9 @@ Allowed values:
 - `semantic_embedding_provider_ownership_enforcement`
 - `semantic_embedding_provider_ownership_enforcement_state`
 - `semantic_embedding_provider_ownership_enforcement_hint`
+- `semantic_embedding_owner_strategy_state`
+- `semantic_embedding_owner_strategy_hint`
+- `semantic_embedding_owner_strategy_recommendation`
 - `semantic_embedding_model_requested`
 - `semantic_embedding_model_effective`
 - `semantic_embedding_model_governance_state`

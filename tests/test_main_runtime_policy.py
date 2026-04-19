@@ -342,6 +342,7 @@ def test_startup_logs_embedding_strategy_warning_when_provider_falls_back_to_det
     assert any("ownership_state=provider_fallback_active" in message for message in messages)
     assert any("ownership_enforcement=warn" in message for message in messages)
     assert any("ownership_enforcement_state=warning_only" in message for message in messages)
+    assert any("owner_strategy_state=fallback_owner_active" in message for message in messages)
     assert not any("embedding_model_governance_warning" in message for message in messages)
     assert not any("embedding_strategy_block" in message for message in messages)
 

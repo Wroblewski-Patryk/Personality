@@ -149,6 +149,30 @@ def embedding_strategy_snapshot(
         provider_ownership_enforcement_state = "not_applicable_no_fallback"
         provider_ownership_enforcement_hint = "no_provider_ownership_violation"
 
+    if not semantic_vector_enabled:
+        owner_strategy_state = "vectors_disabled"
+        owner_strategy_hint = "enable_vectors_before_owner_strategy_rollout"
+        owner_strategy_recommendation = "defer_owner_strategy_selection_until_vectors_enabled"
+    elif provider_ownership_state == "provider_fallback_active":
+        owner_strategy_state = "fallback_owner_active"
+        owner_strategy_hint = "requested_provider_not_effective_owner"
+        owner_strategy_recommendation = "keep_deterministic_owner_until_provider_execution_is_available"
+    elif (
+        posture["provider_effective"] == DEFAULT_EMBEDDING_PROVIDER
+        and normalized_refresh_mode == "manual"
+    ):
+        owner_strategy_state = "deterministic_manual_owner"
+        owner_strategy_hint = "manual_refresh_required_for_deterministic_owner"
+        owner_strategy_recommendation = "document_and_operate_manual_refresh_process"
+    elif posture["provider_effective"] == DEFAULT_EMBEDDING_PROVIDER:
+        owner_strategy_state = "deterministic_on_write_owner"
+        owner_strategy_hint = "deterministic_baseline_owner_active"
+        owner_strategy_recommendation = "deterministic_on_write_baseline_is_active"
+    else:
+        owner_strategy_state = "provider_owned_execution"
+        owner_strategy_hint = "effective_provider_owns_embedding_execution"
+        owner_strategy_recommendation = "provider_owned_strategy_active"
+
     if model_governance_state == "deterministic_custom_model_name":
         if normalized_model_governance_enforcement == "strict":
             model_governance_enforcement_state = "blocked"
@@ -176,6 +200,9 @@ def embedding_strategy_snapshot(
         "semantic_embedding_provider_ownership_enforcement": normalized_provider_ownership_enforcement,
         "semantic_embedding_provider_ownership_enforcement_state": provider_ownership_enforcement_state,
         "semantic_embedding_provider_ownership_enforcement_hint": provider_ownership_enforcement_hint,
+        "semantic_embedding_owner_strategy_state": owner_strategy_state,
+        "semantic_embedding_owner_strategy_hint": owner_strategy_hint,
+        "semantic_embedding_owner_strategy_recommendation": owner_strategy_recommendation,
         "semantic_embedding_model_requested": posture["model_requested"],
         "semantic_embedding_model_effective": posture["model_effective"],
         "semantic_embedding_model_governance_state": model_governance_state,
