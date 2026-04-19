@@ -40,6 +40,7 @@ class RuntimeOrchestrator:
         reflection_worker: ReflectionWorker | None = None,
         identity_service: IdentityService | None = None,
         affective_assessor: AffectiveAssessor | None = None,
+        semantic_vector_enabled: bool = True,
     ):
         self.perception_agent = perception_agent
         self.context_agent = context_agent
@@ -52,6 +53,7 @@ class RuntimeOrchestrator:
         self.reflection_worker = reflection_worker
         self.identity_service = identity_service or IdentityService()
         self.affective_assessor = affective_assessor or AffectiveAssessor()
+        self.semantic_vector_enabled = semantic_vector_enabled
         self.graph_stage_adapters = GraphStageAdapters(
             perception_agent=self.perception_agent,
             context_agent=self.context_agent,
@@ -283,7 +285,11 @@ class RuntimeOrchestrator:
             pending_subconscious_proposals: list[dict] = []
             query_text = str(event.payload.get("text", "")).strip()
             if hasattr(self.memory_repository, "get_hybrid_memory_bundle"):
-                query_embedding = deterministic_embedding(query_text, dimensions=32) if query_text else []
+                query_embedding = (
+                    deterministic_embedding(query_text, dimensions=32)
+                    if self.semantic_vector_enabled and query_text
+                    else []
+                )
                 hybrid_bundle = await self.memory_repository.get_hybrid_memory_bundle(
                     user_id=event.meta.user_id,
                     query_text=query_text,

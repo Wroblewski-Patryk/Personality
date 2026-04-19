@@ -178,6 +178,7 @@ class FakeSettings:
         event_debug_query_compat_enabled: bool | None = None,
         event_debug_query_compat_recent_window: int = 20,
         event_debug_query_compat_stale_after_seconds: int = 86400,
+        semantic_vector_enabled: bool = True,
         startup_schema_mode: str = "migrate",
         production_policy_enforcement: str = "warn",
         reflection_runtime_mode: str = "in_process",
@@ -193,6 +194,7 @@ class FakeSettings:
         self.event_debug_query_compat_enabled = event_debug_query_compat_enabled
         self.event_debug_query_compat_recent_window = event_debug_query_compat_recent_window
         self.event_debug_query_compat_stale_after_seconds = event_debug_query_compat_stale_after_seconds
+        self.semantic_vector_enabled = semantic_vector_enabled
         self.startup_schema_mode = startup_schema_mode
         self.production_policy_enforcement = production_policy_enforcement
         self.reflection_runtime_mode = reflection_runtime_mode
@@ -302,6 +304,7 @@ def _client(
     event_debug_query_compat_enabled: bool | None = None,
     event_debug_query_compat_recent_window: int = 20,
     event_debug_query_compat_stale_after_seconds: int = 86400,
+    semantic_vector_enabled: bool = True,
     startup_schema_mode: str = "migrate",
     production_policy_enforcement: str = "warn",
     reflection_runtime_mode: str = "in_process",
@@ -335,6 +338,7 @@ def _client(
         event_debug_query_compat_enabled=event_debug_query_compat_enabled,
         event_debug_query_compat_recent_window=event_debug_query_compat_recent_window,
         event_debug_query_compat_stale_after_seconds=event_debug_query_compat_stale_after_seconds,
+        semantic_vector_enabled=semantic_vector_enabled,
         startup_schema_mode=startup_schema_mode,
         production_policy_enforcement=production_policy_enforcement,
         reflection_runtime_mode=reflection_runtime_mode,
@@ -416,6 +420,10 @@ def test_health_endpoint_returns_ok() -> None:
                 "recent_blocked_total": 0,
             },
         },
+        "memory_retrieval": {
+            "semantic_vector_enabled": True,
+            "semantic_retrieval_mode": "hybrid_vector_lexical",
+        },
         "scheduler": {
             "healthy": True,
             "enabled": False,
@@ -480,6 +488,19 @@ def test_health_endpoint_allows_deferred_reflection_mode_without_running_worker(
     assert body["reflection"]["runtime_mode"] == "deferred"
     assert body["reflection"]["worker"]["running"] is False
     assert body["reflection"]["healthy"] is True
+
+
+def test_health_endpoint_exposes_lexical_only_memory_retrieval_mode_when_semantic_vectors_are_disabled() -> None:
+    client, _, _ = _client(semantic_vector_enabled=False)
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["memory_retrieval"] == {
+        "semantic_vector_enabled": False,
+        "semantic_retrieval_mode": "lexical_only",
+    }
 
 
 def test_health_endpoint_marks_scheduler_unhealthy_when_enabled_but_not_running() -> None:

@@ -78,6 +78,14 @@ def _attention_snapshot_from_request(request: Request) -> dict[str, Any]:
     }
 
 
+def _memory_retrieval_snapshot_from_settings(settings) -> dict[str, Any]:
+    semantic_vector_enabled = bool(getattr(settings, "semantic_vector_enabled", True))
+    return {
+        "semantic_vector_enabled": semantic_vector_enabled,
+        "semantic_retrieval_mode": "hybrid_vector_lexical" if semantic_vector_enabled else "lexical_only",
+    }
+
+
 def _debug_query_compat_telemetry_from_request(request: Request) -> DebugQueryCompatTelemetry:
     telemetry = getattr(request.app.state, "debug_query_compat_telemetry", None)
     if isinstance(telemetry, DebugQueryCompatTelemetry):
@@ -224,9 +232,11 @@ async def health(request: Request) -> dict[str, Any]:
         not scheduler_snapshot.get("enabled") or scheduler_snapshot.get("running")
     )
     attention_snapshot = _attention_snapshot_from_request(request)
+    memory_retrieval_snapshot = _memory_retrieval_snapshot_from_settings(settings)
     return {
         "status": "ok",
         "runtime_policy": runtime_policy,
+        "memory_retrieval": memory_retrieval_snapshot,
         "scheduler": {
             "healthy": scheduler_healthy,
             **scheduler_snapshot,

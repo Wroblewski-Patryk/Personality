@@ -129,6 +129,11 @@ Last updated: 2026-04-19
 - 2026-04-19: runtime memory retrieval now supports hybrid lexical + vector
   scoring across episodic, semantic, and affective memory layers, with
   diagnostics emitted for retrieval observability.
+- 2026-04-19: semantic vector retrieval posture is now explicit through
+  `SEMANTIC_VECTOR_ENABLED`; runtime/action now honor that gate and
+  `GET /health` exposes `memory_retrieval.semantic_vector_enabled` plus
+  `memory_retrieval.semantic_retrieval_mode`
+  (`hybrid_vector_lexical|lexical_only`).
 - 2026-04-19: relation memory is now a first-class subsystem (`aion_relation`)
   with scoped repository APIs; reflection derives relation updates and runtime
   stages now consume high-confidence relation cues across context, role,
@@ -267,7 +272,7 @@ Last updated: 2026-04-19
   explicit without regressing current runtime behavior, then deepen the runtime
   toward affective understanding, scoped memory, and stronger action intent
   ownership
-- Active `PRJ` execution queue is complete through `PRJ-230`; the next slice
+- Active `PRJ` execution queue is complete through `PRJ-231`; the next slice
   should be derived from `docs/planning/open-decisions.md` and registered as
   `READY` before implementation.
 - Top blockers:
@@ -282,6 +287,13 @@ Last updated: 2026-04-19
 
 ## Recent Progress
 
+- 2026-04-19: `PRJ-231` is complete: semantic retrieval now has an explicit
+  runtime feature gate (`SEMANTIC_VECTOR_ENABLED`) and operator-visible
+  `/health.memory_retrieval` posture, while action/runtime preserve default
+  hybrid behavior unless lexical-only mode is explicitly selected.
+- 2026-04-19: `PRJ-231` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+  passed with `136 passed`.
 - 2026-04-19: `PRJ-221..PRJ-230` are complete: compat activity posture is now
   explicit in `/health.runtime_policy`, including stale-historical vs
   recent-attempt migration states and action hints.

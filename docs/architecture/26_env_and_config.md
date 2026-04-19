@@ -135,6 +135,16 @@ Controls when the latest compat-route attempt should be treated as stale in
 
 Default: `86400` (must be at least `1`).
 
+`SEMANTIC_VECTOR_ENABLED`
+
+Controls whether semantic retrieval and embedding persistence use vector
+operations.
+
+Default: `true`.
+
+When `false`, runtime retrieval remains lexical-only while keeping the same
+hybrid retrieval API surface.
+
 `PRODUCTION_DEBUG_TOKEN_REQUIRED`
 
 Controls whether production debug payload access requires a configured debug
@@ -204,6 +214,12 @@ Allowed values:
 - `strict_rollout_ready` to indicate no strict-mode mismatches are present
 - `recommended_production_policy_enforcement` to guide rollout posture
 - `strict_rollout_hint` to provide a concise rollout action summary
+
+`GET /health` also includes `memory_retrieval` posture fields:
+
+- `semantic_vector_enabled`
+- `semantic_retrieval_mode`
+  (`hybrid_vector_lexical|lexical_only`)
 
 Compatibility route `POST /event?debug=true` also emits:
 

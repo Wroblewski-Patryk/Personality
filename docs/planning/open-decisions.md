@@ -217,6 +217,11 @@ The current repo already works as an MVP slice, but several architecture-level d
   - runtime now has a semantic embedding contract, deterministic embedding
     fallback helpers, pgvector-ready schema/migration scaffolding, and hybrid
     lexical-plus-vector retrieval APIs.
+  - semantic vector retrieval now has an explicit runtime feature gate
+    (`SEMANTIC_VECTOR_ENABLED`) and `/health` operator visibility through
+    `memory_retrieval.semantic_vector_enabled` and
+    `memory_retrieval.semantic_retrieval_mode`
+    (`hybrid_vector_lexical|lexical_only`).
   - runtime memory load now consumes hybrid retrieval diagnostics, but provider
     embedding ownership and production retrieval posture are not finalized yet.
 - Decision needed:

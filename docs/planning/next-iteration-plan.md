@@ -171,6 +171,11 @@ Completed on 2026-04-18:
   `event_debug_query_compat_activity_hint`) to separate
   disabled/no-attempt/stale-history/recent-traffic migration states while
   preserving existing sunset-ready contract semantics.
+- `PRJ-231` is complete: semantic retrieval activation posture is now explicit
+  through config/runtime (`SEMANTIC_VECTOR_ENABLED`) and `/health` operator
+  visibility (`memory_retrieval.semantic_vector_enabled`,
+  `memory_retrieval.semantic_retrieval_mode`), with regression coverage for
+  config, action, runtime, and API health behavior.
 
 ## Highest-Risk Gaps
 
@@ -861,7 +866,7 @@ implicit or uncontrolled side effects.
 
 ## Next Derived Slice
 
-The planning queue is complete through `PRJ-230`.
+The planning queue is complete through `PRJ-231`.
 There is currently no execution-ready PRJ slice in the board.
 Before the next implementation slice:
 

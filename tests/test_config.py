@@ -14,6 +14,7 @@ def test_settings_default_to_migration_first_startup_mode() -> None:
     assert settings.event_debug_query_compat_enabled is None
     assert settings.event_debug_query_compat_recent_window == 20
     assert settings.event_debug_query_compat_stale_after_seconds == 86400
+    assert settings.semantic_vector_enabled is True
     assert settings.reflection_runtime_mode == "in_process"
     assert settings.scheduler_enabled is False
     assert settings.reflection_interval == 900
@@ -126,6 +127,15 @@ def test_settings_allow_explicit_debug_query_compat_stale_after_seconds() -> Non
     )
 
     assert settings.event_debug_query_compat_stale_after_seconds == 300
+
+
+def test_settings_allow_disabling_semantic_vector_retrieval() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        semantic_vector_enabled=False,
+    )
+
+    assert settings.semantic_vector_enabled is False
 
 
 def test_settings_allow_strict_production_policy_enforcement_mode() -> None:

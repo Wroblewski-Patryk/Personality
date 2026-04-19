@@ -31,9 +31,16 @@ class ActionExecutor:
     GENERIC_TOPIC_TAGS = {"general"}
     PERSISTABLE_LANGUAGE_SOURCES = {"explicit_request", "diacritic_signal", "keyword_signal"}
 
-    def __init__(self, memory_repository: MemoryRepository, telegram_client: TelegramClient):
+    def __init__(
+        self,
+        memory_repository: MemoryRepository,
+        telegram_client: TelegramClient,
+        *,
+        semantic_vector_enabled: bool = True,
+    ):
         self.memory_repository = memory_repository
         self.delivery_router = DeliveryRouter(telegram_client=telegram_client)
+        self.semantic_vector_enabled = semantic_vector_enabled
 
     async def execute(self, plan: PlanOutput, delivery: ActionDelivery) -> ActionResult:
         proactive_delivery_guard = plan.proactive_delivery_guard
@@ -113,7 +120,7 @@ class ActionExecutor:
             payload=payload,
             importance=motivation.importance,
         )
-        if hasattr(self.memory_repository, "upsert_semantic_embedding"):
+        if self.semantic_vector_enabled and hasattr(self.memory_repository, "upsert_semantic_embedding"):
             episode_embedding = deterministic_embedding(
                 f"{payload['event']} {payload['context']} {payload['expression']}",
                 dimensions=32,

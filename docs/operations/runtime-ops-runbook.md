@@ -63,6 +63,12 @@ posture (`burst_window_ms`, `answered_ttl_seconds`, `stale_turn_seconds`) and
 live turn counters (`pending`, `claimed`, `answered`) to support burst-message
 triage and operator verification of attention gate behavior.
 
+`GET /health` now also includes a `memory_retrieval` object with semantic
+retrieval posture:
+
+- `semantic_vector_enabled`
+- `semantic_retrieval_mode` (`hybrid_vector_lexical|lexical_only`)
+
 On startup, production now emits an explicit warning when
 `EVENT_DEBUG_ENABLED=true`. Treat this warning as a release-hardening signal:
 disable debug payload exposure in production unless there is a short-lived,
@@ -119,6 +125,9 @@ Recommended when Telegram webhooks are enabled:
   rolling-window size used by compat-route trend telemetry
 - `EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS` (optional, default `86400`)
   to control stale-age threshold used by compat-route freshness telemetry
+- `SEMANTIC_VECTOR_ENABLED` (optional, default `true`) to toggle semantic
+  vector retrieval/persistence posture (`true` for hybrid vector+lexical,
+  `false` for lexical-only)
 - `PRODUCTION_DEBUG_TOKEN_REQUIRED` (`true|false`, default `true`) to require
   a configured debug token for production debug payload access when debug
   exposure is enabled

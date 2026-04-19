@@ -33,6 +33,8 @@
   rolling-window size for compat-route trend telemetry in `/health`
 - `EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS` (optional, default `86400`)
   to tune when last compat-route attempt is marked as stale in `/health`
+- `SEMANTIC_VECTOR_ENABLED` (optional, default `true`) to switch semantic
+  retrieval between `hybrid_vector_lexical` and `lexical_only` modes
 - `PRODUCTION_DEBUG_TOKEN_REQUIRED` (optional, default `true`) to enforce
   debug-token configuration for production debug payload access
 - `ATTENTION_BURST_WINDOW_MS` (optional) to tune Telegram burst coalescing

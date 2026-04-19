@@ -34,6 +34,7 @@ class FakeMemoryRepository:
         self.active_tasks: list[dict] = []
         self.task_status_updates: list[dict] = []
         self.written_episodes: list[dict] = []
+        self.semantic_embedding_updates: list[dict] = []
 
     async def write_episode(self, **kwargs) -> dict:
         self.written_episodes.append(kwargs)
@@ -76,6 +77,10 @@ class FakeMemoryRepository:
                 self.task_status_updates.append(payload)
                 return task
         return None
+
+    async def upsert_semantic_embedding(self, **kwargs) -> dict:
+        self.semantic_embedding_updates.append(kwargs)
+        return {"id": len(self.semantic_embedding_updates), **kwargs}
 
 
 class FakeTelegramClient:
@@ -275,6 +280,49 @@ async def test_persist_episode_marks_short_follow_up_as_continuity_memory() -> N
             "source": "keyword_signal",
         }
     ]
+
+
+async def test_persist_episode_upserts_semantic_embedding_when_vector_retrieval_is_enabled() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    await executor.persist_episode(
+        event=_event("deploy the fix"),
+        perception=_perception(["general", "deploy"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=_plan(),
+        action_result=await executor.execute(_plan(), _delivery()),
+        expression=_expression(),
+    )
+
+    assert len(memory_repository.semantic_embedding_updates) == 1
+    update = memory_repository.semantic_embedding_updates[0]
+    assert update["embedding_model"] == "deterministic-v1"
+    assert update["embedding_dimensions"] == 32
+
+
+async def test_persist_episode_skips_semantic_embedding_when_vector_retrieval_is_disabled() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(
+        memory_repository=memory_repository,
+        telegram_client=FakeTelegramClient(),
+        semantic_vector_enabled=False,
+    )
+
+    await executor.persist_episode(
+        event=_event("deploy the fix"),
+        perception=_perception(["general", "deploy"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=_plan(),
+        action_result=await executor.execute(_plan(), _delivery()),
+        expression=_expression(),
+    )
+
+    assert memory_repository.semantic_embedding_updates == []
 
 
 async def test_persist_episode_skips_profile_update_for_derived_language_signal() -> None:

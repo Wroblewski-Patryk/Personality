@@ -661,6 +661,37 @@ async def test_runtime_pipeline_uses_hybrid_memory_bundle_when_supported() -> No
     assert "deployment blocker" in result.context.summary
 
 
+async def test_runtime_pipeline_uses_lexical_only_hybrid_query_when_semantic_vector_is_disabled() -> None:
+    memory = FakeHybridMemoryRepository(recent_memory=[])
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+        semantic_vector_enabled=False,
+    )
+
+    event = Event(
+        event_id="evt-hybrid-lexical-only",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "help me sequence this deploy blocker"},
+        meta=EventMeta(user_id="u-1", trace_id="t-hybrid-lexical-only"),
+    )
+
+    await runtime.run(event)
+
+    assert len(memory.hybrid_calls) == 1
+    assert memory.hybrid_calls[0]["query_embedding_dimensions"] == 0
+
+
 async def test_runtime_pipeline_surfaces_relation_signals_in_context_and_planning() -> None:
     memory = FakeHybridMemoryRepository(recent_memory=[])
     memory.relations = [

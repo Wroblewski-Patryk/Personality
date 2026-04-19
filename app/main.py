@@ -126,6 +126,7 @@ async def lifespan(app: FastAPI):
     action_executor = ActionExecutor(
         memory_repository=memory_repository,
         telegram_client=telegram_client,
+        semantic_vector_enabled=bool(getattr(settings, "semantic_vector_enabled", True)),
     )
     reflection_worker = ReflectionWorker(memory_repository=memory_repository)
     scheduler_worker = SchedulerWorker(
@@ -167,6 +168,7 @@ async def lifespan(app: FastAPI):
         memory_repository=memory_repository,
         reflection_worker=runtime_reflection_worker,
         affective_assessor=AffectiveAssessor(classifier_client=openai_client),
+        semantic_vector_enabled=bool(getattr(settings, "semantic_vector_enabled", True)),
     )
     attention_turn_coordinator = AttentionTurnCoordinator(
         burst_window_ms=settings.attention_burst_window_ms,
@@ -188,13 +190,14 @@ async def lifespan(app: FastAPI):
     app.state.runtime = runtime
 
     logger.info(
-        "AION started env=%s port=%s openai_enabled=%s telegram_enabled=%s reflection_runtime_mode=%s scheduler_enabled=%s",
+        "AION started env=%s port=%s openai_enabled=%s telegram_enabled=%s reflection_runtime_mode=%s scheduler_enabled=%s semantic_vector_enabled=%s",
         settings.app_env,
         settings.app_port,
         bool(settings.openai_api_key),
         bool(settings.telegram_bot_token),
         settings.reflection_runtime_mode,
         settings.scheduler_enabled,
+        bool(getattr(settings, "semantic_vector_enabled", True)),
     )
     try:
         yield

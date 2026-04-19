@@ -15,7 +15,7 @@ Last updated: 2026-04-19
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-230`.
+- The planning queue is complete through `PRJ-231`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,26 @@ Last updated: 2026-04-19
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-231 Add semantic vector retrieval feature gate and health posture visibility
+  - Status: DONE
+  - Group: Semantic Retrieval Activation Posture
+  - Owner: Backend Builder + QA/Test + Product Docs
+  - Depends on: PRJ-230
+  - Priority: P2
+  - Result:
+    - runtime now supports explicit `SEMANTIC_VECTOR_ENABLED` posture, so
+      hybrid retrieval can run in `hybrid_vector_lexical` (default) or
+      `lexical_only` mode without hidden behavior
+    - action now skips episodic embedding writes when semantic vectors are
+      disabled
+    - `GET /health` now exposes `memory_retrieval` posture fields
+      (`semantic_vector_enabled`, `semantic_retrieval_mode`) for operator
+      visibility
+    - task board, project state, and planning docs are now synchronized through
+      `PRJ-231` with no hidden `READY` work
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
 
 - [x] PRJ-230 Sync compat activity posture slice across source-of-truth docs/context
   - Status: DONE

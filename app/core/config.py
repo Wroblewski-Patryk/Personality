@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     event_debug_query_compat_enabled: bool | None = None
     event_debug_query_compat_recent_window: int = 20
     event_debug_query_compat_stale_after_seconds: int = 86400
+    semantic_vector_enabled: bool = True
     startup_schema_mode: Literal["migrate", "create_tables"] = "migrate"
     production_policy_enforcement: Literal["warn", "strict"] = "warn"
     reflection_runtime_mode: Literal["in_process", "deferred"] = "in_process"
