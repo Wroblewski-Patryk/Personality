@@ -327,6 +327,14 @@ The current repo already works as an MVP slice, but several architecture-level d
     `semantic_embedding_source_rollout_phase_total`,
     `semantic_embedding_source_rollout_progress_percent`), and startup now
     emits `embedding_source_rollout_hint` while rollout remains in progress.
+  - source-rollout enforcement posture is now explicit through
+    `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT` (`warn|strict`) plus shared
+    diagnostics (`semantic_embedding_source_rollout_enforcement`,
+    `semantic_embedding_source_rollout_enforcement_state`,
+    `semantic_embedding_source_rollout_enforcement_hint`); startup now emits
+    `embedding_source_rollout_warning` in warn mode and
+    `embedding_source_rollout_block` with fail-fast behavior in strict mode
+    while rollout is still pending.
   - refresh cadence and rollout-alignment posture are now explicit through
     shared diagnostics (`semantic_embedding_refresh_cadence_state`,
     `semantic_embedding_refresh_cadence_hint`,

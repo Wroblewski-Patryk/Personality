@@ -303,6 +303,22 @@ Completed on 2026-04-18:
   now include cadence diagnostics.
 - `PRJ-260` is complete: planning/docs/context are synchronized through
   `PRJ-260` with targeted regression coverage for refresh strategy diagnostics.
+- `PRJ-261` is complete: runtime config now exposes
+  `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT` (`warn|strict`) with defaults and
+  validation.
+- `PRJ-262` is complete: shared embedding strategy snapshot now exposes
+  source-rollout enforcement diagnostics
+  (`semantic_embedding_source_rollout_enforcement`,
+  `semantic_embedding_source_rollout_enforcement_state`,
+  `semantic_embedding_source_rollout_enforcement_hint`).
+- `PRJ-263` is complete: `/health.memory_retrieval` now surfaces
+  source-rollout enforcement posture for vectors-disabled, pending, and
+  complete rollout states.
+- `PRJ-264` is complete: startup now emits
+  `embedding_source_rollout_warning` in warn mode and
+  `embedding_source_rollout_block` in strict mode for pending source rollout.
+- `PRJ-265` is complete: planning/docs/context are synchronized through
+  `PRJ-265` with targeted regression coverage for source-rollout enforcement.
 
 ## Highest-Risk Gaps
 
@@ -993,7 +1009,7 @@ implicit or uncontrolled side effects.
 
 ## Next Derived Slice
 
-The planning queue is complete through `PRJ-260`.
+The planning queue is complete through `PRJ-265`.
 There is currently no execution-ready PRJ slice in the board.
 Before the next implementation slice:
 

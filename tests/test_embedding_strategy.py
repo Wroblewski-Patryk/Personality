@@ -27,6 +27,12 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
     assert snapshot["semantic_embedding_source_rollout_phase_index"] == 2
     assert snapshot["semantic_embedding_source_rollout_phase_total"] == 3
     assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 67
+    assert snapshot["semantic_embedding_source_rollout_enforcement"] == "warn"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_state"] == "warning_only"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_hint"]
+        == "pending_source_rollout_allowed_in_warn_mode"
+    )
     assert snapshot["semantic_embedding_warning_state"] == "no_warning"
     assert snapshot["semantic_embedding_warning_hint"] == "embedding_strategy_ready"
     assert snapshot["semantic_embedding_provider_ownership_state"] == "deterministic_baseline_owner"
@@ -111,6 +117,15 @@ def test_embedding_strategy_snapshot_marks_vectors_disabled_warning_state() -> N
     )
     assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "none"
     assert snapshot["semantic_embedding_source_rollout_completion_state"] == "vectors_disabled"
+    assert snapshot["semantic_embedding_source_rollout_enforcement"] == "warn"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_state"]
+        == "not_applicable_vectors_disabled"
+    )
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_hint"]
+        == "not_applicable_vectors_disabled"
+    )
     assert snapshot["semantic_embedding_warning_state"] == "vectors_disabled"
     assert (
         snapshot["semantic_embedding_warning_hint"]
@@ -343,6 +358,12 @@ def test_embedding_strategy_snapshot_marks_all_vector_sources_enabled_rollout_st
     assert snapshot["semantic_embedding_source_rollout_phase_index"] == 3
     assert snapshot["semantic_embedding_source_rollout_phase_total"] == 3
     assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 100
+    assert snapshot["semantic_embedding_source_rollout_enforcement"] == "warn"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_state"]
+        == "not_applicable_rollout_complete"
+    )
+    assert snapshot["semantic_embedding_source_rollout_enforcement_hint"] == "source_rollout_is_complete"
     assert snapshot["semantic_embedding_recommended_refresh_mode"] == "manual"
     assert snapshot["semantic_embedding_refresh_alignment_state"] == "on_write_before_recommended_manual"
     assert (
@@ -447,6 +468,25 @@ def test_embedding_strategy_snapshot_marks_model_governance_enforcement_blocked_
     assert (
         snapshot["semantic_embedding_model_governance_enforcement_hint"]
         == "use_deterministic_v1_or_switch_to_effective_provider_model"
+    )
+
+
+def test_embedding_strategy_snapshot_marks_source_rollout_enforcement_blocked_in_strict_mode() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="deterministic",
+        model="deterministic-v1",
+        dimensions=32,
+        source_kinds=("episodic", "semantic", "affective"),
+        source_rollout_enforcement="strict",
+    )
+
+    assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "relation"
+    assert snapshot["semantic_embedding_source_rollout_enforcement"] == "strict"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_state"] == "blocked"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_hint"]
+        == "enable_pending_source_kinds_before_startup"
     )
 
 

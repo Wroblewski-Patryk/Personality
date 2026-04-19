@@ -15,7 +15,7 @@ Last updated: 2026-04-20
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-260`.
+- The planning queue is complete through `PRJ-265`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,87 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-265 Sync embedding source-rollout enforcement slice across docs, planning, and context
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement
+  - Owner: Product Docs + Backend Builder
+  - Depends on: PRJ-264
+  - Priority: P2
+  - Result:
+    - task board, project state, iteration plan, and open-decisions docs are
+      synchronized through `PRJ-265`
+    - canonical env/config and runtime ops docs now include source-rollout
+      enforcement controls and diagnostics
+    - runtime reality docs now record startup source-rollout enforcement
+      warning/block posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_config.py`
+    - `.\.venv\Scripts\python -m pytest -q`
+
+- [x] PRJ-264 Add startup source-rollout enforcement warning/block logs from shared diagnostics
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-263
+  - Priority: P2
+  - Result:
+    - startup now emits `embedding_source_rollout_warning` when rollout is
+      pending and enforcement stays in `warn`
+    - startup now emits `embedding_source_rollout_block` and fails fast when
+      rollout is pending and `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT=strict`
+    - runtime policy regressions now pin both warn-mode visibility and strict
+      startup block behavior for pending rollout posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_main_runtime_policy.py tests/test_embedding_strategy.py`
+
+- [x] PRJ-263 Expose source-rollout enforcement diagnostics through `/health.memory_retrieval`
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-262
+  - Priority: P2
+  - Result:
+    - `/health.memory_retrieval` now surfaces source-rollout enforcement fields
+      (`semantic_embedding_source_rollout_enforcement`,
+      `semantic_embedding_source_rollout_enforcement_state`,
+      `semantic_embedding_source_rollout_enforcement_hint`)
+    - health contract regressions now pin vectors-disabled, pending-rollout,
+      and fully-enabled rollout enforcement posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_embedding_strategy.py`
+
+- [x] PRJ-262 Add source-rollout enforcement diagnostics in shared embedding strategy snapshot
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-261
+  - Priority: P2
+  - Result:
+    - shared embedding strategy snapshot now exposes source-rollout enforcement
+      diagnostics
+      (`semantic_embedding_source_rollout_enforcement`,
+      `semantic_embedding_source_rollout_enforcement_state`,
+      `semantic_embedding_source_rollout_enforcement_hint`)
+    - rollout enforcement posture is now machine-readable for vectors-disabled,
+      pending-rollout, and fully-enabled rollout states
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py`
+
+- [x] PRJ-261 Add source-rollout enforcement runtime setting contract
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-260
+  - Priority: P2
+  - Result:
+    - runtime settings now expose
+      `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT` (`warn|strict`) with `warn`
+      default
+    - config regressions now pin defaults, strict mode acceptance, and invalid
+      mode rejection
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_config.py`
 
 - [x] PRJ-260 Sync embedding refresh-strategy guidance slice across docs, planning, and context
   - Status: DONE

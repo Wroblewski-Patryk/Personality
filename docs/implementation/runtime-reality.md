@@ -253,6 +253,13 @@ Current limitation:
   vectors are enabled.
 - startup now also emits `embedding_source_rollout_hint` when vectors are
   enabled and rollout still has a pending next source kind.
+- source-rollout enforcement posture is now explicit through
+  `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT` and shared diagnostics
+  (`semantic_embedding_source_rollout_enforcement`,
+  `semantic_embedding_source_rollout_enforcement_state`,
+  `semantic_embedding_source_rollout_enforcement_hint`), enabling
+  warn-mode rollout visibility and strict-mode startup block behavior while
+  rollout remains pending.
 - refresh cadence posture is now explicit through helper-owned diagnostics
   (`semantic_embedding_refresh_cadence_state`,
   `semantic_embedding_refresh_cadence_hint`) plus refresh recommendation and

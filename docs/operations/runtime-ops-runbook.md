@@ -117,6 +117,9 @@ retrieval posture:
 - `semantic_embedding_source_rollout_phase_index`
 - `semantic_embedding_source_rollout_phase_total`
 - `semantic_embedding_source_rollout_progress_percent`
+- `semantic_embedding_source_rollout_enforcement`
+- `semantic_embedding_source_rollout_enforcement_state`
+- `semantic_embedding_source_rollout_enforcement_hint`
 - `semantic_embedding_refresh_mode`
 - `semantic_embedding_refresh_interval_seconds`
 - `semantic_embedding_refresh_state`
@@ -157,6 +160,15 @@ for next-step guidance.
 When vectors are enabled and source rollout still has a pending next source
 kind, startup emits `embedding_source_rollout_hint` with rollout completion
 state, next source kind, enabled/missing source sets, and rollout progress.
+
+When vectors are enabled, source rollout is still pending, and
+`EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT=warn`, startup emits
+`embedding_source_rollout_warning` to keep pending rollout posture visible.
+
+When vectors are enabled, source rollout is still pending, and
+`EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT=strict`, startup emits
+`embedding_source_rollout_block` and fails fast until source rollout is
+complete.
 
 When semantic vectors are enabled and `EMBEDDING_REFRESH_MODE=manual`, startup
 also emits `embedding_refresh_warning` so operators can confirm that a separate
@@ -251,6 +263,9 @@ Recommended when Telegram webhooks are enabled:
 - `EMBEDDING_MODEL_GOVERNANCE_ENFORCEMENT` (`warn|strict`, default `warn`) to
   decide whether deterministic custom-model-name governance posture remains
   warning-only or blocks startup
+- `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT` (`warn|strict`, default `warn`) to
+  decide whether pending source-rollout posture remains warning-only or blocks
+  startup
 - `PRODUCTION_DEBUG_TOKEN_REQUIRED` (`true|false`, default `true`) to require
   a configured debug token for production debug payload access when debug
   exposure is enabled

@@ -243,6 +243,14 @@ Last updated: 2026-04-20
 - 2026-04-20: startup now emits `embedding_refresh_hint` whenever refresh
   posture deviates from rollout recommendation, and manual refresh warnings now
   include cadence diagnostics.
+- 2026-04-20: source-rollout enforcement posture is now explicit through
+  `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT` (`warn|strict`) plus shared
+  diagnostics (`semantic_embedding_source_rollout_enforcement`,
+  `semantic_embedding_source_rollout_enforcement_state`,
+  `semantic_embedding_source_rollout_enforcement_hint`) in
+  `/health.memory_retrieval`; startup now emits
+  `embedding_source_rollout_warning` in warn mode and
+  `embedding_source_rollout_block` in strict mode for pending rollout states.
 - 2026-04-19: relation memory is now a first-class subsystem (`aion_relation`)
   with scoped repository APIs; reflection derives relation updates and runtime
   stages now consume high-confidence relation cues across context, role,

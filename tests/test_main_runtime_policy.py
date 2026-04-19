@@ -549,6 +549,55 @@ def test_startup_skips_embedding_source_rollout_hint_when_all_sources_are_enable
     assert not any("embedding_source_rollout_hint" in message for message in messages)
 
 
+def test_startup_logs_embedding_source_rollout_warning_when_rollout_enforcement_is_warn(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("WARNING", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective",
+        embedding_source_rollout_enforcement="warn",
+    )
+
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("embedding_source_rollout_warning" in message for message in messages)
+    assert any("source_rollout_enforcement=warn" in message for message in messages)
+    assert any("source_rollout_enforcement_state=warning_only" in message for message in messages)
+    assert any("rollout_next_source_kind=relation" in message for message in messages)
+    assert not any("embedding_source_rollout_block" in message for message in messages)
+
+
+def test_startup_blocks_embedding_source_rollout_when_enforcement_is_strict(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("WARNING", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective",
+        embedding_source_rollout_enforcement="strict",
+    )
+
+    try:
+        _log_embedding_strategy_warnings(settings=settings, logger=logger)
+    except RuntimeError as exc:
+        assert "Embedding source rollout strict-mode violation" in str(exc)
+        assert "rollout_completion_state=baseline_complete_relation_pending" in str(exc)
+        assert "next_source_kind=relation" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected strict source rollout enforcement to block startup.")
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("embedding_source_rollout_block" in message for message in messages)
+    assert any("source_rollout_enforcement=strict" in message for message in messages)
+    assert any("source_rollout_enforcement_state=blocked" in message for message in messages)
+
+
 def test_startup_logs_embedding_refresh_warning_when_manual_refresh_mode_is_enabled(caplog) -> None:
     logger_name = "aion.app"
     caplog.set_level("WARNING", logger=logger_name)

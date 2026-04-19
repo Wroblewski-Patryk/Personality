@@ -118,6 +118,9 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
         model_governance_enforcement=str(
             getattr(settings, "embedding_model_governance_enforcement", "warn")
         ),
+        source_rollout_enforcement=str(
+            getattr(settings, "embedding_source_rollout_enforcement", "warn")
+        ),
     )
     if str(snapshot["semantic_embedding_warning_state"]) == "provider_fallback_active":
         logger.warning(
@@ -215,6 +218,34 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
             int(snapshot["semantic_embedding_source_rollout_phase_total"]),
             int(snapshot["semantic_embedding_source_rollout_progress_percent"]),
             str(snapshot["semantic_embedding_source_rollout_recommendation"]),
+        )
+    if str(snapshot["semantic_embedding_source_rollout_enforcement_state"]) == "warning_only":
+        logger.warning(
+            "embedding_source_rollout_warning semantic_vector_enabled=%s source_rollout_enforcement=%s source_rollout_enforcement_state=%s source_rollout_enforcement_hint=%s rollout_state=%s rollout_completion_state=%s rollout_next_source_kind=%s recommendation=complete_source_rollout_or_keep_warn_mode",
+            bool(snapshot["semantic_vector_enabled"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement_state"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement_hint"]),
+            str(snapshot["semantic_embedding_source_rollout_state"]),
+            str(snapshot["semantic_embedding_source_rollout_completion_state"]),
+            str(snapshot["semantic_embedding_source_rollout_next_source_kind"]),
+        )
+    if str(snapshot["semantic_embedding_source_rollout_enforcement_state"]) == "blocked":
+        logger.error(
+            "embedding_source_rollout_block semantic_vector_enabled=%s source_rollout_enforcement=%s source_rollout_enforcement_state=%s source_rollout_enforcement_hint=%s rollout_state=%s rollout_completion_state=%s rollout_next_source_kind=%s",
+            bool(snapshot["semantic_vector_enabled"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement_state"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement_hint"]),
+            str(snapshot["semantic_embedding_source_rollout_state"]),
+            str(snapshot["semantic_embedding_source_rollout_completion_state"]),
+            str(snapshot["semantic_embedding_source_rollout_next_source_kind"]),
+        )
+        raise RuntimeError(
+            "Embedding source rollout strict-mode violation: "
+            f"rollout_completion_state={snapshot['semantic_embedding_source_rollout_completion_state']} "
+            f"next_source_kind={snapshot['semantic_embedding_source_rollout_next_source_kind']}. "
+            "Complete source rollout or set EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT=warn."
         )
     if str(snapshot["semantic_embedding_refresh_state"]) == "manual_refresh_required":
         logger.warning(
@@ -375,7 +406,7 @@ async def lifespan(app: FastAPI):
     app.state.runtime = runtime
 
     logger.info(
-        "AION started env=%s port=%s openai_enabled=%s telegram_enabled=%s reflection_runtime_mode=%s scheduler_enabled=%s semantic_vector_enabled=%s embedding_provider=%s embedding_model=%s embedding_dimensions=%s embedding_refresh_mode=%s embedding_refresh_interval_seconds=%s embedding_provider_ownership_enforcement=%s embedding_model_governance_enforcement=%s",
+        "AION started env=%s port=%s openai_enabled=%s telegram_enabled=%s reflection_runtime_mode=%s scheduler_enabled=%s semantic_vector_enabled=%s embedding_provider=%s embedding_model=%s embedding_dimensions=%s embedding_refresh_mode=%s embedding_refresh_interval_seconds=%s embedding_provider_ownership_enforcement=%s embedding_model_governance_enforcement=%s embedding_source_rollout_enforcement=%s",
         settings.app_env,
         settings.app_port,
         bool(settings.openai_api_key),
@@ -390,6 +421,7 @@ async def lifespan(app: FastAPI):
         int(getattr(settings, "embedding_refresh_interval_seconds", 21600)),
         str(getattr(settings, "embedding_provider_ownership_enforcement", "warn")),
         str(getattr(settings, "embedding_model_governance_enforcement", "warn")),
+        str(getattr(settings, "embedding_source_rollout_enforcement", "warn")),
     )
     try:
         yield

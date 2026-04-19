@@ -224,6 +224,18 @@ Allowed values:
 
 Default: `warn`.
 
+`EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT`
+
+Controls whether pending source-rollout posture is warning-only or
+startup-blocking.
+
+Allowed values:
+
+- `warn`
+- `strict`
+
+Default: `warn`.
+
 `PRODUCTION_DEBUG_TOKEN_REQUIRED`
 
 Controls whether production debug payload access requires a configured debug
@@ -349,6 +361,9 @@ Allowed values:
 - `semantic_embedding_source_rollout_phase_index`
 - `semantic_embedding_source_rollout_phase_total`
 - `semantic_embedding_source_rollout_progress_percent`
+- `semantic_embedding_source_rollout_enforcement`
+- `semantic_embedding_source_rollout_enforcement_state`
+- `semantic_embedding_source_rollout_enforcement_hint`
 - `semantic_embedding_refresh_mode`
 - `semantic_embedding_refresh_interval_seconds`
 - `semantic_embedding_refresh_state`

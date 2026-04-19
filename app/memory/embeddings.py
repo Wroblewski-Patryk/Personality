@@ -14,6 +14,8 @@ EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT_MODES = ("warn", "strict")
 DEFAULT_EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT = "warn"
 EMBEDDING_MODEL_GOVERNANCE_ENFORCEMENT_MODES = ("warn", "strict")
 DEFAULT_EMBEDDING_MODEL_GOVERNANCE_ENFORCEMENT = "warn"
+EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT_MODES = ("warn", "strict")
+DEFAULT_EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT = "warn"
 
 
 def resolve_embedding_posture(
@@ -53,6 +55,7 @@ def embedding_strategy_snapshot(
     refresh_interval_seconds: int | None = None,
     provider_ownership_enforcement: str | None = None,
     model_governance_enforcement: str | None = None,
+    source_rollout_enforcement: str | None = None,
 ) -> dict[str, str | bool | int | list[str]]:
     posture = resolve_embedding_posture(provider=provider, model=model)
     if source_kinds is None:
@@ -182,6 +185,23 @@ def embedding_strategy_snapshot(
     normalized_model_governance_enforcement = normalize_embedding_model_governance_enforcement(
         model_governance_enforcement
     )
+    normalized_source_rollout_enforcement = normalize_embedding_source_rollout_enforcement(
+        source_rollout_enforcement
+    )
+    if not semantic_vector_enabled:
+        source_rollout_enforcement_state = "not_applicable_vectors_disabled"
+        source_rollout_enforcement_hint = "not_applicable_vectors_disabled"
+    elif source_rollout_next_source_kind != "none":
+        if normalized_source_rollout_enforcement == "strict":
+            source_rollout_enforcement_state = "blocked"
+            source_rollout_enforcement_hint = "enable_pending_source_kinds_before_startup"
+        else:
+            source_rollout_enforcement_state = "warning_only"
+            source_rollout_enforcement_hint = "pending_source_rollout_allowed_in_warn_mode"
+    else:
+        source_rollout_enforcement_state = "not_applicable_rollout_complete"
+        source_rollout_enforcement_hint = "source_rollout_is_complete"
+
     if not semantic_vector_enabled:
         refresh_state = "vectors_disabled"
         refresh_hint = "not_applicable_vectors_disabled"
@@ -433,6 +453,9 @@ def embedding_strategy_snapshot(
         "semantic_embedding_source_rollout_phase_index": source_rollout_phase_index,
         "semantic_embedding_source_rollout_phase_total": source_rollout_phase_total,
         "semantic_embedding_source_rollout_progress_percent": source_rollout_progress_percent,
+        "semantic_embedding_source_rollout_enforcement": normalized_source_rollout_enforcement,
+        "semantic_embedding_source_rollout_enforcement_state": source_rollout_enforcement_state,
+        "semantic_embedding_source_rollout_enforcement_hint": source_rollout_enforcement_hint,
         "semantic_embedding_warning_state": warning_state,
         "semantic_embedding_warning_hint": warning_hint,
         "semantic_embedding_refresh_mode": normalized_refresh_mode,
@@ -495,6 +518,13 @@ def normalize_embedding_model_governance_enforcement(value: str | None) -> str:
     normalized = str(value or DEFAULT_EMBEDDING_MODEL_GOVERNANCE_ENFORCEMENT).strip().lower()
     if normalized not in EMBEDDING_MODEL_GOVERNANCE_ENFORCEMENT_MODES:
         return DEFAULT_EMBEDDING_MODEL_GOVERNANCE_ENFORCEMENT
+    return normalized
+
+
+def normalize_embedding_source_rollout_enforcement(value: str | None) -> str:
+    normalized = str(value or DEFAULT_EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT).strip().lower()
+    if normalized not in EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT_MODES:
+        return DEFAULT_EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT
     return normalized
 
 

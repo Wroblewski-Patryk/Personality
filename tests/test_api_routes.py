@@ -187,6 +187,7 @@ class FakeSettings:
         embedding_refresh_interval_seconds: int = 21600,
         embedding_provider_ownership_enforcement: str = "warn",
         embedding_model_governance_enforcement: str = "warn",
+        embedding_source_rollout_enforcement: str = "warn",
         startup_schema_mode: str = "migrate",
         production_policy_enforcement: str = "warn",
         reflection_runtime_mode: str = "in_process",
@@ -211,6 +212,7 @@ class FakeSettings:
         self.embedding_refresh_interval_seconds = embedding_refresh_interval_seconds
         self.embedding_provider_ownership_enforcement = embedding_provider_ownership_enforcement
         self.embedding_model_governance_enforcement = embedding_model_governance_enforcement
+        self.embedding_source_rollout_enforcement = embedding_source_rollout_enforcement
         self.startup_schema_mode = startup_schema_mode
         self.production_policy_enforcement = production_policy_enforcement
         self.reflection_runtime_mode = reflection_runtime_mode
@@ -329,6 +331,7 @@ def _client(
     embedding_refresh_interval_seconds: int = 21600,
     embedding_provider_ownership_enforcement: str = "warn",
     embedding_model_governance_enforcement: str = "warn",
+    embedding_source_rollout_enforcement: str = "warn",
     startup_schema_mode: str = "migrate",
     production_policy_enforcement: str = "warn",
     reflection_runtime_mode: str = "in_process",
@@ -371,6 +374,7 @@ def _client(
         embedding_refresh_interval_seconds=embedding_refresh_interval_seconds,
         embedding_provider_ownership_enforcement=embedding_provider_ownership_enforcement,
         embedding_model_governance_enforcement=embedding_model_governance_enforcement,
+        embedding_source_rollout_enforcement=embedding_source_rollout_enforcement,
         startup_schema_mode=startup_schema_mode,
         production_policy_enforcement=production_policy_enforcement,
         reflection_runtime_mode=reflection_runtime_mode,
@@ -504,6 +508,9 @@ def test_health_endpoint_returns_ok() -> None:
             "semantic_embedding_source_rollout_phase_index": 2,
             "semantic_embedding_source_rollout_phase_total": 3,
             "semantic_embedding_source_rollout_progress_percent": 67,
+            "semantic_embedding_source_rollout_enforcement": "warn",
+            "semantic_embedding_source_rollout_enforcement_state": "warning_only",
+            "semantic_embedding_source_rollout_enforcement_hint": "pending_source_rollout_allowed_in_warn_mode",
             "semantic_embedding_refresh_mode": "on_write",
             "semantic_embedding_refresh_interval_seconds": 21600,
             "semantic_embedding_refresh_state": "on_write_refresh_active",
@@ -639,6 +646,9 @@ def test_health_endpoint_exposes_lexical_only_memory_retrieval_mode_when_semanti
         "semantic_embedding_source_rollout_phase_index": 2,
         "semantic_embedding_source_rollout_phase_total": 3,
         "semantic_embedding_source_rollout_progress_percent": 67,
+        "semantic_embedding_source_rollout_enforcement": "warn",
+        "semantic_embedding_source_rollout_enforcement_state": "not_applicable_vectors_disabled",
+        "semantic_embedding_source_rollout_enforcement_hint": "not_applicable_vectors_disabled",
         "semantic_embedding_refresh_mode": "on_write",
         "semantic_embedding_refresh_interval_seconds": 21600,
         "semantic_embedding_refresh_state": "vectors_disabled",
@@ -714,6 +724,9 @@ def test_health_endpoint_exposes_embedding_provider_fallback_posture_when_non_de
         "semantic_embedding_source_rollout_phase_index": 2,
         "semantic_embedding_source_rollout_phase_total": 3,
         "semantic_embedding_source_rollout_progress_percent": 67,
+        "semantic_embedding_source_rollout_enforcement": "warn",
+        "semantic_embedding_source_rollout_enforcement_state": "warning_only",
+        "semantic_embedding_source_rollout_enforcement_hint": "pending_source_rollout_allowed_in_warn_mode",
         "semantic_embedding_refresh_mode": "on_write",
         "semantic_embedding_refresh_interval_seconds": 21600,
         "semantic_embedding_refresh_state": "on_write_refresh_active",
@@ -752,6 +765,12 @@ def test_health_endpoint_exposes_configured_embedding_source_kinds() -> None:
         == "baseline_blocked_semantic_missing"
     )
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_progress_percent"] == 33
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement"] == "warn"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_state"] == "warning_only"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_hint"]
+        == "pending_source_rollout_allowed_in_warn_mode"
+    )
 
 
 def test_health_endpoint_marks_source_rollout_fully_enabled_when_relation_is_included() -> None:
@@ -778,6 +797,11 @@ def test_health_endpoint_marks_source_rollout_fully_enabled_when_relation_is_inc
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "none"
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_completion_state"] == "fully_enabled"
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_progress_percent"] == 100
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_state"]
+        == "not_applicable_rollout_complete"
+    )
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_hint"] == "source_rollout_is_complete"
     assert body["memory_retrieval"]["semantic_embedding_recommended_refresh_mode"] == "manual"
     assert (
         body["memory_retrieval"]["semantic_embedding_refresh_alignment_state"]
@@ -854,6 +878,27 @@ def test_health_endpoint_exposes_model_governance_enforcement_blocked_posture_in
         body["memory_retrieval"]["semantic_embedding_enforcement_alignment_hint"]
         == "normalize_enforcement_levels_to_recommendation"
     )
+
+
+def test_health_endpoint_exposes_source_rollout_enforcement_blocked_posture_in_strict_mode() -> None:
+    client, _, _ = _client(
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective",
+        embedding_source_rollout_enforcement="strict",
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement"] == "strict"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_state"] == "blocked"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_hint"]
+        == "enable_pending_source_kinds_before_startup"
+    )
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "relation"
 
 
 def test_health_endpoint_exposes_embedding_refresh_posture() -> None:

@@ -96,6 +96,9 @@ def _memory_retrieval_snapshot_from_settings(settings) -> dict[str, Any]:
         model_governance_enforcement=str(
             getattr(settings, "embedding_model_governance_enforcement", "warn")
         ),
+        source_rollout_enforcement=str(
+            getattr(settings, "embedding_source_rollout_enforcement", "warn")
+        ),
     )
 
 

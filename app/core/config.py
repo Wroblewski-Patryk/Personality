@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     embedding_refresh_interval_seconds: int = 21600
     embedding_provider_ownership_enforcement: Literal["warn", "strict"] = "warn"
     embedding_model_governance_enforcement: Literal["warn", "strict"] = "warn"
+    embedding_source_rollout_enforcement: Literal["warn", "strict"] = "warn"
     startup_schema_mode: Literal["migrate", "create_tables"] = "migrate"
     production_policy_enforcement: Literal["warn", "strict"] = "warn"
     reflection_runtime_mode: Literal["in_process", "deferred"] = "in_process"
