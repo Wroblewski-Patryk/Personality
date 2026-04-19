@@ -114,6 +114,13 @@ The live runtime no longer depends on a strict latest-five memory fetch:
   topical overlap, affective relevance, and importance
 - final context memory hint remains compressed to the top relevant items
 
+Repository memory-layer API vocabulary is now explicit in code:
+
+- `get_recent_episodic_memory(...)`
+- `get_conclusions_for_layer(..., layer=\"semantic|affective|operational\")`
+- `get_operational_memory_view(...)`
+- `conclusion_memory_layer(kind)` classification helper
+
 ### Event API behavior
 
 `POST /event` currently returns:
@@ -163,6 +170,13 @@ Today the runtime can already:
 - update task status from explicit progress signals
 - refresh returned goal and task state after action-layer writes
 
+Current intent-ownership boundary:
+
+- planning emits explicit `domain_intents` (goal/task/task-status plus
+  preference intents, or `noop`)
+- action executes those typed intents and no longer reparses raw user text for
+  durable domain writes
+
 Reflection also derives lightweight operational signals such as:
 
 - `preferred_role`
@@ -194,6 +208,56 @@ Current behavior:
 - reflection updates conclusions, theta, and lightweight goal-progress signals
 
 This is more advanced than a purely conceptual background loop, but still lighter than the long-term architecture could become.
+
+---
+
+## Planned Coordination Direction (Not Yet Live)
+
+The current repository does not yet implement the next coordination layer that
+recent planning now describes.
+
+The intended supplemental direction is:
+
+- one explicit attention inbox for user turns, scheduler wakeups, and
+  subconscious proposals
+- turn assembly for bursty chat traffic so multiple rapid user messages can be
+  answered as one conscious turn instead of one reply per raw message
+- subconscious-to-conscious proposal handoff instead of direct subconscious
+  messaging
+- explicit attention gating before proactive delivery
+- conscious wakeups and subconscious cadence treated as separate runtime
+  concerns
+
+Important non-live notes:
+
+- subconscious runtime is still not allowed to communicate with the user
+  directly
+- subconscious runtime may eventually use read-only research or retrieval tools
+  without gaining direct side-effect authority
+- conscious runtime remains the only owner of user-visible delivery and other
+  external side effects
+
+This coordination model is planned through `PRJ-085..PRJ-092`.
+
+---
+
+## Internal Planning State vs External Systems (Planned)
+
+Goals and tasks are treated as integral internal planning state of the
+personality, not as a detached external plugin.
+
+Planned clarification:
+
+- internal goals/tasks remain part of cognition, motivation, planning, and
+  reflection
+- connected external systems such as calendars, task apps, and cloud drives
+  are treated as authorized integration surfaces, not as replacements for
+  internal planning state
+- future connector support should project or synchronize internal planning into
+  user-authorized external systems only through explicit action-layer
+  boundaries
+
+This boundary is planned through `PRJ-087` and `PRJ-093..PRJ-097`.
 
 ---
 

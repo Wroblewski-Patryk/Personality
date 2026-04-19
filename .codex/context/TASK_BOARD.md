@@ -15,37 +15,30 @@ Last updated: 2026-04-19
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue now extends through `PRJ-084`.
-- The next executable slice is `PRJ-061`.
+- The planning queue now extends through `PRJ-097`.
+- The next executable slice is `PRJ-069`.
 - Additional architecture-alignment work should be appended after that queue so
   the backlog stays explicitly open for later discovery instead of pretending
   the plan is complete.
 
 ## READY
 
-- [ ] PRJ-061 Formalize memory-layer contracts in docs and repository APIs
+- [ ] PRJ-069 Define the LangGraph migration boundary and compatibility contract
   - Status: READY
-  - Group: Scoped Memory And Retrieval Depth
-  - Owner: Product Docs
-  - Depends on: PRJ-060
+  - Group: Graph Orchestration Adoption
+  - Owner: Planner
+  - Depends on: PRJ-068
   - Priority: P1
   - Result:
-    - docs and code contracts distinguish episodic, semantic, affective, and
-      operational memory views with one shared vocabulary
-    - repository/runtime boundary for memory retrieval and persistence is explicit
-      and test-covered
+    - docs and runtime contracts define an explicit state/compatibility boundary
+      between the current orchestrator and target LangGraph graph state
+    - migration can proceed incrementally with contract-pinned adapters instead
+      of a big-bang rewrite
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_context_agent.py tests/test_runtime_pipeline.py`
+    - doc-and-contract sync plus targeted runtime-state model tests
 
 ## BACKLOG
 
-- [ ] PRJ-062 Add explicit domain action intents to the planning and action contract
-- [ ] PRJ-063 Move durable domain writes from text parsing to explicit intents
-- [ ] PRJ-064 Add contract tests for planning-owned intent and action-owned execution
-- [ ] PRJ-065 Split reflection into smaller concern-owned modules
-- [ ] PRJ-066 Add anti-self-reinforcement rules for adaptive signals
-- [ ] PRJ-067 Audit and prune low-leverage milestone heuristics
-- [ ] PRJ-068 Add multi-goal-aware reflection and planning tests
 - [ ] PRJ-069 Define the LangGraph migration boundary and compatibility contract
 - [ ] PRJ-070 Introduce graph-compatible state adapters around current stage modules
 - [ ] PRJ-071 Migrate the foreground runtime orchestration to LangGraph
@@ -62,6 +55,19 @@ Last updated: 2026-04-19
 - [ ] PRJ-082 Add scheduled reflection and maintenance cadence
 - [ ] PRJ-083 Add a proactive decision engine with interruption guardrails
 - [ ] PRJ-084 Add proactive delivery controls, throttling, and regression coverage
+- [ ] PRJ-085 Define the attention inbox, turn-assembly contract, and proposal handoff model
+- [ ] PRJ-086 Implement message burst coalescing and pending-turn ownership
+- [ ] PRJ-087 Define internal planning-state ownership and external productivity boundaries
+- [ ] PRJ-088 Add subconscious proposal persistence and conscious promotion rules
+- [ ] PRJ-089 Add read-only tool and research policy for subconscious execution
+- [ ] PRJ-090 Add an attention gate for proactive delivery
+- [ ] PRJ-091 Separate conscious wakeups from subconscious cadence
+- [ ] PRJ-092 Add regression coverage for dual-loop coordination and batched conversation handling
+- [ ] PRJ-093 Define the external connector contract, capability model, and permission gates
+- [ ] PRJ-094 Add calendar integration boundary and scheduling-intent contract
+- [ ] PRJ-095 Add external task-system adapter contracts for connected task apps
+- [ ] PRJ-096 Add connected-drive access contracts for cloud files and documents
+- [ ] PRJ-097 Add connector expansion and capability-discovery proposals
 
 ## FUTURE
 
@@ -80,6 +86,116 @@ Last updated: 2026-04-19
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-065 Split reflection into smaller concern-owned modules
+  - Status: DONE
+  - Group: Adaptive Signal Governance And Heuristic Reduction
+  - Owner: Backend Builder
+  - Depends on: PRJ-064
+  - Priority: P1
+  - Result:
+    - reflection logic was split into concern-owned modules:
+      `app/reflection/goal_conclusions.py`,
+      `app/reflection/adaptive_signals.py`,
+      `app/reflection/affective_signals.py`
+    - `app/reflection/worker.py` now focuses on orchestration and persistence
+      flow instead of owning all inference details
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
+- [x] PRJ-066 Add anti-self-reinforcement rules for adaptive signals
+  - Status: DONE
+  - Group: Adaptive Signal Governance And Heuristic Reduction
+  - Owner: Backend Builder
+  - Depends on: PRJ-065
+  - Priority: P1
+  - Result:
+    - adaptive inference now requires outcome evidence (domain/preference update
+      markers plus successful action), reducing self-reinforcement loops from
+      role-only traces
+    - collaboration-preference fallback now prefers explicit user-visible cues
+      from recent events over plan-step self-feedback
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_role_agent.py tests/test_motivation_engine.py tests/test_expression_agent.py`
+- [x] PRJ-067 Audit and prune low-leverage milestone heuristics
+  - Status: DONE
+  - Group: Adaptive Signal Governance And Heuristic Reduction
+  - Owner: Backend Builder
+  - Depends on: PRJ-066
+  - Priority: P1
+  - Result:
+    - milestone pressure heuristics were pruned to phase-consistency signals and
+      arc/transition evidence, removing low-leverage pure time-window drift
+      triggers
+    - regression now pins that stale time alone does not create lingering
+      completion pressure
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_context_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py`
+- [x] PRJ-068 Add multi-goal-aware reflection and planning tests
+  - Status: DONE
+  - Group: Adaptive Signal Governance And Heuristic Reduction
+  - Owner: QA/Test
+  - Depends on: PRJ-067
+  - Priority: P1
+  - Result:
+    - reflection tests now pin goal-conclusion scope selection against recent
+      turn hints when multiple active goals coexist
+    - planning tests now pin event-to-goal matching across multiple active goals
+      and task sets
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+
+- [x] PRJ-061 Formalize memory-layer contracts in docs and repository APIs
+  - Status: DONE
+  - Group: Scoped Memory And Retrieval Depth
+  - Owner: Product Docs
+  - Depends on: PRJ-060
+  - Priority: P1
+  - Result:
+    - docs and repository contracts now share explicit layer vocabulary
+      (`episodic`, `semantic`, `affective`, `operational`)
+    - repository now exposes layer-aware APIs and classification helpers for
+      episodic retrieval, conclusion-layer reads, and operational view reads
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_context_agent.py tests/test_runtime_pipeline.py`
+- [x] PRJ-062 Add explicit domain action intents to the planning and action contract
+  - Status: DONE
+  - Group: Planning And Action Intent Hardening
+  - Owner: Backend Builder
+  - Depends on: PRJ-061
+  - Priority: P1
+  - Result:
+    - planning output now carries explicit typed `domain_intents` for
+      goal/task/task-status and preference updates, plus `noop`
+    - contracts/docs/runtime reality now define planning-owned intent and
+      action-owned execution boundary explicitly
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+- [x] PRJ-063 Move durable domain writes from text parsing to explicit intents
+  - Status: DONE
+  - Group: Planning And Action Intent Hardening
+  - Owner: Backend Builder
+  - Depends on: PRJ-062
+  - Priority: P1
+  - Result:
+    - action no longer reparses raw event text for goal/task/task-status or
+      preference durable updates
+    - action executes only explicit `plan.domain_intents` and persists
+      resulting intent outcomes in episodic payload metadata
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_memory_repository.py`
+- [x] PRJ-064 Add contract tests for planning-owned intent and action-owned execution
+  - Status: DONE
+  - Group: Planning And Action Intent Hardening
+  - Owner: QA/Test
+  - Depends on: PRJ-063
+  - Priority: P1
+  - Result:
+    - planning, action, and runtime tests now pin typed intent emission,
+      no-intent no-write behavior, and end-to-end plan->action ownership
+    - regressions that reintroduce action-side raw-text domain parsing now fail
+      through contract-level tests
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
 
 - [x] PRJ-029 Split canonical architecture docs from transitional runtime reality
   - Status: DONE

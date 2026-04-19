@@ -94,6 +94,14 @@ Last updated: 2026-04-19
 - 2026-04-19: runtime memory retrieval now loads deeper context
   (`MEMORY_LOAD_LIMIT=12`) and ranks memory candidates with affective relevance
   in addition to language, layer mode, topical overlap, and importance.
+- 2026-04-19: repository and docs now share explicit memory-layer vocabulary
+  (`episodic`, `semantic`, `affective`, `operational`) with layer-aware
+  repository APIs for episodic retrieval, conclusion filtering, and operational
+  memory reads.
+- 2026-04-19: planning now emits explicit typed `domain_intents`
+  (`upsert_goal`, `upsert_task`, `update_task_status`,
+  `update_response_style`, `update_collaboration_preference`, `noop`), and
+  action now executes only those intents for durable domain writes.
 - 2026-04-19: documentation now explicitly separates canonical architecture in
   `docs/architecture/` from transitional implementation reality in
   `docs/implementation/runtime-reality.md`, so human-oriented design intent can
@@ -154,12 +162,20 @@ Last updated: 2026-04-19
   explicit without regressing current runtime behavior, then deepen the runtime
   toward affective understanding, scoped memory, and stronger action intent
   ownership
-- Active execution queue now extends through `PRJ-084`.
+- Active execution queue now extends through `PRJ-097`.
 - Top blockers:
-  - memory-layer contracts are now implemented in code, but still need explicit
-    formalization in canonical docs and repository API guidance (`PRJ-061`)
-  - action still reparses user text for some durable writes instead of relying
-    on explicit typed intents from planning
+  - reflection subsystem is still concentrated in `app/reflection/worker.py`
+    and needs concern-owned module split (`PRJ-065`)
+  - adaptive signals still risk self-reinforcement loops without stronger
+    evidence thresholds (`PRJ-066`)
+  - conscious/subconscious coordination still lacks explicit attention inbox,
+    proposal handoff, and burst-message coalescing, so rapid conversations and
+    proactive wakeups can drift into duplicate or poorly gated behavior
+    (`PRJ-085..PRJ-092`)
+  - external productivity integrations (calendar, task providers, cloud drives)
+    still need explicit connector contracts, permission gates, and action
+    boundaries before the personality can safely operate across user systems
+    (`PRJ-093..PRJ-097`)
   - architecture-level stack directions (`LangGraph`, `pgvector`, scheduler,
     relation system, proactive runtime) still are not implemented in the live
     runtime and now require explicit rollout groups
@@ -171,6 +187,20 @@ Last updated: 2026-04-19
     slice
 
 ## Recent Progress
+
+- 2026-04-19: planning and execution context now extend through `PRJ-097`,
+  adding explicit follow-up groups for dual-loop coordination, attention
+  gating, batched conversation handling, subconscious proposal handoff, and
+  future external productivity connector boundaries.
+- 2026-04-19: supplemental docs outside `docs/architecture/` now describe the
+  planned attention inbox, turn assembly, subconscious proposal handoff, and
+  internal-planning-vs-connector boundary so near-term direction is documented
+  without rewriting canonical architecture files.
+- 2026-04-19: `PRJ-061..PRJ-064` are complete: memory-layer contracts are
+  formalized in docs/repository APIs, planning now owns explicit typed domain
+  intents, action executes only explicit intents for durable writes, and
+  contract tests now pin the planning-owned intent / action-owned execution
+  boundary end to end.
 
 - 2026-04-17: release smoke helper now covers health plus event verification,
   including optional UTF-8 payload and debug-response checks.

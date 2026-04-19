@@ -52,7 +52,11 @@ These files describe the intended long-term shape of the system:
 These files describe what is implemented today, including transitional runtime details:
 
 - `implementation/runtime-reality.md`
+- `implementation/dual-loop-coordination.md`
 - `overview.md`
+
+They also carry supplemental non-canonical notes when the repo needs to record
+near-term coordination direction without rewriting the canonical architecture.
 
 ## Governance
 
@@ -68,6 +72,10 @@ These files describe what is implemented today, including transitional runtime d
 
 - `planning/open-decisions.md`
 - `planning/next-iteration-plan.md`
+
+Use these files for explicit follow-up on dual-loop coordination, attention
+gating, batched conversation handling, and future external productivity
+connector boundaries before those decisions become live runtime behavior.
 
 ## Operations
 

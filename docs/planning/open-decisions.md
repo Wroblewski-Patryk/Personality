@@ -227,15 +227,14 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 10a. Action Intent Ownership
 
 - Current repo fact:
-  - action still reparses raw user text to infer some durable writes such as
-    goal, task, task-status, and preference updates.
-  - this keeps side effects inside action, but it weakens the architectural
-    rule that planning should own what domain changes are intended.
+  - planning now emits explicit typed `domain_intents` for goal/task/task-status
+    and preference updates, plus `noop` when no domain write should occur.
+  - action now executes only explicit intents and no longer reparses raw user
+    text for durable domain writes.
 - Decision needed:
-  - should durable domain writes move to explicit plan/action intents before
-    further behavioral complexity is added?
-  - which writes are safe to keep as local action inference, and which must
-    require explicit typed intent?
+  - should additional future writes (for example relation updates or proactive
+    scheduling state) also be blocked behind explicit typed intents from
+    planning?
 
 ### 10b. Adaptive Signal Governance
 
@@ -271,3 +270,52 @@ The current repo already works as an MVP slice, but several architecture-level d
     include richer warnings, encouragement, and insights from the start?
   - should scheduled reflection stay in-process first, or move directly toward
     dedicated worker execution?
+
+### 12a. Attention Inbox And Turn Assembly
+
+- Current repo fact:
+  - the live runtime still processes one normalized event at a time and does
+    not yet expose an explicit attention inbox or burst-message coalescing
+    layer.
+  - planning now includes follow-up slices for attention inbox, proposal
+    handoff, and batched conversation handling (`PRJ-085..PRJ-086`,
+    `PRJ-092`).
+- Decision needed:
+  - what should be the canonical ownership of turn assembly, pending-turn
+    state, and burst-message coalescing?
+  - how long should the runtime wait before treating a rapid message burst as
+    one conscious turn instead of many independent replies?
+
+### 12b. Conscious vs Subconscious Coordination Boundary
+
+- Current repo fact:
+  - the architecture already states that subconscious processing does not
+    communicate directly with the user, but the live runtime does not yet model
+    a first-class proposal handoff between subconscious and conscious paths.
+  - planning now includes explicit proposal persistence, conscious promotion
+    rules, read-only subconscious tool policy, and separate wakeup/cadence
+    slices (`PRJ-088..PRJ-091`).
+- Decision needed:
+  - which subconscious outputs should become durable proposals rather than
+    immediate behavior?
+  - which proposal types should conscious runtime be allowed to merge, defer,
+    discard, or escalate into user-visible action?
+  - should subconscious research stay read-only forever, or ever gain more
+    than retrieval-only authority?
+
+### 12c. Internal Planning State And External Connector Boundary
+
+- Current repo fact:
+  - internal goals/tasks already influence cognition and action, but the repo
+    does not yet define a connector contract for calendar, task-system, or
+    cloud-drive integrations.
+  - planning now includes explicit connector and permission-gate slices
+    (`PRJ-087`, `PRJ-093..PRJ-097`).
+- Decision needed:
+  - where should the system draw the line between internal planning state and
+    user-authorized external productivity systems?
+  - which connector operations should default to read-only, which should be
+    suggestion-only, and which are safe to execute directly once the user opted
+    in?
+  - how should the personality propose new capabilities or connectors without
+    self-authorizing access to outside systems?

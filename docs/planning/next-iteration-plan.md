@@ -70,6 +70,13 @@ Completed on 2026-04-18:
 - `PRJ-058` refactored runtime consumers to use goal-scoped reflection state with global fallback, closing cross-goal leakage in context/motivation/planning paths.
 - `PRJ-059` added an affective memory layer in episodic payloads plus reflection-derived affective conclusions reusable across turns.
 - `PRJ-060` expanded runtime retrieval depth and affective-aware ranking/compression beyond the previous latest-five loading strategy.
+- `PRJ-061` formalized memory-layer contracts (`episodic`, `semantic`,
+  `affective`, `operational`) in canonical docs and repository APIs.
+- `PRJ-062..PRJ-063` introduced explicit planning-owned `domain_intents` and
+  moved durable goal/task/task-status/preference writes away from action-side
+  raw-text parsing.
+- `PRJ-064` added contract regressions that pin planning-owned intent and
+  action-owned execution boundaries in planning/action/runtime tests.
 
 ## Highest-Risk Gaps
 
@@ -381,14 +388,14 @@ goal-specific reflection signals.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_context_agent.py tests/test_runtime_pipeline.py`
 
-- `PRJ-061` Formalize memory-layer contracts in docs and repository APIs.
+- `PRJ-061` is complete.
   - Result:
     - docs explicitly distinguish episodic, semantic, affective, and
       operational memory views
-    - repository and runtime code share one vocabulary for retrieval and
-      persistence boundaries
+    - repository now exposes layer-aware APIs and classification helpers for
+      episodic retrieval, conclusion-layer filtering, and operational reads
   - Validation:
-    - doc-and-context sync plus targeted repository contract tests
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_context_agent.py tests/test_runtime_pipeline.py`
 
 ## Group 9 - Planning And Action Intent Hardening
 
@@ -396,15 +403,15 @@ This group restores the architectural rule that planning proposes domain
 changes and action executes explicit intents instead of reparsing user text
 inside the action layer.
 
-- `PRJ-062` Add explicit domain action intents to the planning and action contract.
+- `PRJ-062` is complete.
   - Result:
     - plans can carry typed intents for goal creation, task creation, task
       status update, preference update, or no-op
-    - action no longer needs to infer durable writes from raw user text alone
+    - planning now explicitly owns the domain-change contract passed to action
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
 
-- `PRJ-063` Move durable domain writes from text parsing to explicit intents.
+- `PRJ-063` is complete.
   - Result:
     - `ActionExecutor` executes structured intents instead of re-running
       keyword extraction over the original event text
@@ -412,13 +419,13 @@ inside the action layer.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_memory_repository.py`
 
-- `PRJ-064` Add contract tests for planning-owned intent and action-owned execution.
+- `PRJ-064` is complete.
   - Result:
     - architectural regressions on domain side-effect ownership fail quickly
     - runtime smoke tests prove that message delivery and durable writes both
       happen only from explicit action inputs
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_action_executor.py tests/test_logging.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
 
 ## Group 10 - Adaptive Signal Governance And Heuristic Reduction
 
@@ -615,10 +622,145 @@ time rather than only react to incoming events.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_action_executor.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
 
+## Group 15 - Attention Gating And Dual-Loop Coordination
+
+This group clarifies how conscious and subconscious runtime cooperate without
+collapsing their boundaries, while also preventing message-by-message reply
+spam during bursty user conversations.
+
+- `PRJ-085` Define the attention inbox, turn-assembly contract, and proposal handoff model.
+  - Result:
+    - architecture and runtime contracts define one explicit inbox for
+      user-originated events, scheduler ticks, and subconscious proposals
+    - conversational turn assembly has one contract owner instead of ad hoc
+      per-message handling
+    - subconscious outputs are modeled as proposals for conscious evaluation,
+      not direct user-visible actions
+  - Validation:
+    - doc-and-contract sync plus targeted runtime-state model tests
+
+- `PRJ-086` Implement message burst coalescing and pending-turn ownership.
+  - Result:
+    - rapid inbound user messages can be coalesced into one conscious turn
+      instead of producing one reply per raw message
+    - pending/claimed/answered turn state prevents duplicate foreground
+      replies during short burst windows
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_event_normalization.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+- `PRJ-087` Define internal planning-state ownership and external productivity boundaries.
+  - Result:
+    - architecture and repository vocabulary keep goals/tasks as integral
+      internal planning state of the personality rather than a detached
+      subsystem
+    - docs define where internal planning ends and connected external systems
+      (calendar, task apps, file drives) begin, so connector rollout does not
+      blur cognitive ownership
+  - Validation:
+    - doc-and-contract sync plus targeted repository model tests
+
+- `PRJ-088` Add subconscious proposal persistence and conscious promotion rules.
+  - Result:
+    - subconscious runtime can persist proposals such as `ask_user`,
+      `research_topic`, `suggest_goal`, or `nudge_user` without executing them
+      directly
+    - conscious runtime becomes the only owner that can accept, defer, merge,
+      or discard those proposals before action
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
+
+- `PRJ-089` Add read-only tool and research policy for subconscious execution.
+  - Result:
+    - subconscious runtime can use explicit read-only retrieval or research
+      tools without gaining direct side-effect authority
+    - tool boundaries are documented and testable so subconscious exploration
+      cannot bypass conscious action ownership
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_runtime_pipeline.py tests/test_logging.py`
+
+- `PRJ-090` Add an attention gate for proactive delivery.
+  - Result:
+    - proactive delivery evaluates quiet hours, interruption cost, cooldown,
+      recent outbound count, and unanswered proactive count before messaging
+    - user availability and anti-spam posture become explicit runtime inputs
+      instead of implicit heuristics
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+
+- `PRJ-091` Separate conscious wakeups from subconscious cadence.
+  - Result:
+    - conscious runtime can wake on assembled conversation turns, scheduler
+      attention events, or accepted subconscious proposals
+    - subconscious cadence remains periodic and non-user-facing instead of
+      acting as a second direct messaging loop
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_config.py`
+
+- `PRJ-092` Add regression coverage for dual-loop coordination and batched conversation handling.
+  - Result:
+    - repo gains end-to-end regression coverage for burst-message coalescing,
+      proposal handoff, and gated proactive delivery
+    - architecture drift on conscious/subconscious separation or duplicate
+      reply prevention fails quickly
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_reflection_worker.py tests/test_action_executor.py`
+
+## Group 16 - External Productivity Connectors
+
+This group lets the personality use connected user systems such as calendar,
+task platforms, and cloud drives without turning those integrations into
+implicit or uncontrolled side effects.
+
+- `PRJ-093` Define the external connector contract, capability model, and permission gates.
+  - Result:
+    - runtime has one explicit connector contract for user-authorized external
+      systems and their capabilities
+    - permission, opt-in, and confirmation rules are documented for read,
+      suggest, and mutate operations against connected tools
+  - Validation:
+    - doc-and-contract sync plus targeted runtime-state model tests
+
+- `PRJ-094` Add calendar integration boundary and scheduling-intent contract.
+  - Result:
+    - runtime contracts define how internal planning can read availability,
+      create scheduling suggestions, and execute calendar changes when the user
+      authorized that behavior
+    - calendar awareness becomes usable for productivity support without
+      bypassing action ownership or proactive guardrails
+  - Validation:
+    - doc-and-contract sync plus targeted action/runtime tests
+
+- `PRJ-095` Add external task-system adapter contracts for connected task apps.
+  - Result:
+    - repo gains a generic task-provider contract that can back ClickUp,
+      Trello, or future task tools behind one internal planning surface
+    - internal goals/tasks can synchronize with authorized external systems
+      without making any one provider the architectural core
+  - Validation:
+    - doc-and-contract sync plus targeted repository/action tests
+
+- `PRJ-096` Add connected-drive access contracts for cloud files and documents.
+  - Result:
+    - runtime defines guarded access patterns for Google Drive, OneDrive, and
+      similar file providers
+    - file and document access becomes an explicit capability that planning,
+      context, and action can consume without ad hoc tool coupling
+  - Validation:
+    - doc-and-contract sync plus targeted runtime/action tests
+
+- `PRJ-097` Add connector expansion and capability-discovery proposals.
+  - Result:
+    - the personality can notice repeated unmet needs and propose connector or
+      capability expansion without self-authorizing new external access
+    - user-facing extension suggestions become explicit, bounded outputs of the
+      runtime instead of hidden side effects
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_planning_agent.py tests/test_action_executor.py`
+
 ## Next Derived Slice
 
-The planning queue is now extended through `PRJ-084`.
-The next execution-ready slice is `PRJ-061`, with later groups staying ordered
+The planning queue is now extended through `PRJ-097`.
+The next execution-ready slice is `PRJ-065`, with later groups staying ordered
 behind it.
 
 ## Parallel-Ready Lanes
@@ -641,17 +783,17 @@ After those finished:
 
 ## Recommended Execution Order
 
-1. `PRJ-061` Formalize memory-layer contracts in docs and repository APIs
-2. `PRJ-062..PRJ-064` Planning and action intent hardening
-3. `PRJ-065..PRJ-068` Adaptive signal governance and heuristic reduction
-4. `PRJ-069..PRJ-072` Graph orchestration adoption
-5. `PRJ-073..PRJ-076` Semantic retrieval infrastructure
-6. `PRJ-077..PRJ-079` Relation system
-7. `PRJ-080..PRJ-084` Scheduled and proactive runtime
+1. `PRJ-065..PRJ-068` Adaptive signal governance and heuristic reduction
+2. `PRJ-069..PRJ-072` Graph orchestration adoption
+3. `PRJ-073..PRJ-076` Semantic retrieval infrastructure
+4. `PRJ-077..PRJ-079` Relation system
+5. `PRJ-080..PRJ-084` Scheduled and proactive runtime
+6. `PRJ-085..PRJ-092` Attention gating and dual-loop coordination
+7. `PRJ-093..PRJ-097` External productivity connectors
 
 The queue should still be treated as intentionally open after those items.
 Additional small architecture-alignment slices may still be discovered while
-executing Groups 4 through 14.
+executing Groups 4 through 16.
 
 ## Handoff Rules For Execution Agents
 

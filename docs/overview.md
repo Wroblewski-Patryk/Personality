@@ -75,6 +75,17 @@ What is still planned or intentionally deferred:
 - external orchestration layer
 - separate reflection worker process
 - proactive loops, richer relation systems, and fuller autonomous behavior
+- attention inbox and burst-message turn assembly for rapid conversation
+  handling
+- subconscious proposal handoff and explicit proactive attention gating
+- user-authorized productivity connectors such as calendar, task systems, and
+  cloud drives
+
+Near-term planning now also makes two coordination boundaries explicit:
+
+- internal goals/tasks remain integral planning state of the personality
+- external productivity systems are future authorized connector surfaces rather
+  than replacements for internal planning state
 
 ## Documentation Intent
 
