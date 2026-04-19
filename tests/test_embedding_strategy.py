@@ -13,6 +13,12 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
     assert snapshot["semantic_embedding_posture"] == "ready"
     assert snapshot["semantic_embedding_source_coverage_state"] == "full_for_current_retrieval_path"
     assert snapshot["semantic_embedding_source_coverage_hint"] == "semantic_and_affective_sources_enabled"
+    assert snapshot["semantic_embedding_source_rollout_state"] == "semantic_affective_baseline"
+    assert snapshot["semantic_embedding_source_rollout_hint"] == "high_signal_sources_active"
+    assert (
+        snapshot["semantic_embedding_source_rollout_recommendation"]
+        == "add_relation_source_after_baseline_stabilizes"
+    )
     assert snapshot["semantic_embedding_warning_state"] == "no_warning"
     assert snapshot["semantic_embedding_warning_hint"] == "embedding_strategy_ready"
     assert snapshot["semantic_embedding_provider_ownership_state"] == "deterministic_baseline_owner"
@@ -60,6 +66,12 @@ def test_embedding_strategy_snapshot_marks_vectors_disabled_warning_state() -> N
     assert snapshot["semantic_retrieval_mode"] == "lexical_only"
     assert snapshot["semantic_embedding_source_coverage_state"] == "vectors_disabled"
     assert snapshot["semantic_embedding_source_coverage_hint"] == "not_applicable_vectors_disabled"
+    assert snapshot["semantic_embedding_source_rollout_state"] == "vectors_disabled"
+    assert snapshot["semantic_embedding_source_rollout_hint"] == "enable_vectors_before_source_rollout"
+    assert (
+        snapshot["semantic_embedding_source_rollout_recommendation"]
+        == "defer_source_rollout_until_vectors_enabled"
+    )
     assert snapshot["semantic_embedding_warning_state"] == "vectors_disabled"
     assert (
         snapshot["semantic_embedding_warning_hint"]
@@ -159,6 +171,40 @@ def test_embedding_strategy_snapshot_marks_missing_source_coverage_when_semantic
         snapshot["semantic_embedding_source_coverage_hint"]
         == "enable_semantic_or_affective_source_for_vector_hits"
     )
+    assert snapshot["semantic_embedding_source_rollout_state"] == "foundational_sources_only"
+    assert snapshot["semantic_embedding_source_rollout_hint"] == "semantic_and_affective_sources_missing"
+    assert (
+        snapshot["semantic_embedding_source_rollout_recommendation"]
+        == "enable_semantic_then_affective_sources"
+    )
+
+
+def test_embedding_strategy_snapshot_marks_semantic_only_source_rollout_phase() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="deterministic",
+        model="deterministic-v1",
+        dimensions=32,
+        source_kinds=("episodic", "semantic"),
+    )
+
+    assert snapshot["semantic_embedding_source_rollout_state"] == "semantic_only_phase"
+    assert snapshot["semantic_embedding_source_rollout_hint"] == "affective_source_missing"
+    assert snapshot["semantic_embedding_source_rollout_recommendation"] == "enable_affective_source_next"
+
+
+def test_embedding_strategy_snapshot_marks_affective_only_source_rollout_phase() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="deterministic",
+        model="deterministic-v1",
+        dimensions=32,
+        source_kinds=("episodic", "affective"),
+    )
+
+    assert snapshot["semantic_embedding_source_rollout_state"] == "affective_only_phase"
+    assert snapshot["semantic_embedding_source_rollout_hint"] == "semantic_source_missing"
+    assert snapshot["semantic_embedding_source_rollout_recommendation"] == "enable_semantic_source_next"
 
 
 def test_embedding_strategy_snapshot_marks_manual_refresh_posture_when_manual_mode_is_requested() -> None:

@@ -187,11 +187,14 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
         "missing_for_current_retrieval_path",
     }:
         logger.warning(
-            "embedding_source_coverage_warning semantic_vector_enabled=%s source_kinds=%s coverage_state=%s hint=%s recommendation=enable_semantic_and_affective_sources_for_vector_hits",
+            "embedding_source_coverage_warning semantic_vector_enabled=%s source_kinds=%s coverage_state=%s hint=%s rollout_state=%s rollout_hint=%s rollout_recommendation=%s recommendation=enable_semantic_and_affective_sources_for_vector_hits",
             bool(snapshot["semantic_vector_enabled"]),
             ",".join(str(item) for item in snapshot["semantic_embedding_source_kinds"]),
             str(snapshot["semantic_embedding_source_coverage_state"]),
             str(snapshot["semantic_embedding_source_coverage_hint"]),
+            str(snapshot["semantic_embedding_source_rollout_state"]),
+            str(snapshot["semantic_embedding_source_rollout_hint"]),
+            str(snapshot["semantic_embedding_source_rollout_recommendation"]),
         )
     if str(snapshot["semantic_embedding_refresh_state"]) == "manual_refresh_required":
         logger.warning(

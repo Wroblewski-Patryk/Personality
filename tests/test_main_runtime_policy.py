@@ -492,6 +492,7 @@ def test_startup_logs_embedding_source_coverage_warning_when_semantic_and_affect
     messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
     assert any("embedding_source_coverage_warning" in message for message in messages)
     assert any("coverage_state=missing_for_current_retrieval_path" in message for message in messages)
+    assert any("rollout_state=foundational_sources_only" in message for message in messages)
 
 
 def test_startup_skips_embedding_source_coverage_warning_when_semantic_and_affective_sources_are_enabled(caplog) -> None:

@@ -297,6 +297,11 @@ The current repo already works as an MVP slice, but several architecture-level d
     `semantic_embedding_owner_strategy_hint`,
     `semantic_embedding_owner_strategy_recommendation`) so provider+refresh
     ownership strategy is machine-visible in health and startup diagnostics.
+  - source-rollout recommendation posture is now explicit through shared
+    diagnostics (`semantic_embedding_source_rollout_state`,
+    `semantic_embedding_source_rollout_hint`,
+    `semantic_embedding_source_rollout_recommendation`) so next memory-family
+    rollout step is machine-visible in health and startup diagnostics.
 - Decision needed:
   - which embedding provider and refresh strategy should own semantic memory
     vectors?

@@ -15,7 +15,7 @@ Last updated: 2026-04-19
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-244`.
+- The planning queue is complete through `PRJ-245`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,27 @@ Last updated: 2026-04-19
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-245 Add embedding source-rollout recommendation posture in shared diagnostics
+  - Status: DONE
+  - Group: Embedding Strategy Posture
+  - Owner: Backend Builder + QA/Test + Product Docs
+  - Depends on: PRJ-244
+  - Priority: P2
+  - Result:
+    - shared embedding strategy helper now exposes source-rollout recommendation
+      posture through
+      `semantic_embedding_source_rollout_state`,
+      `semantic_embedding_source_rollout_hint`, and
+      `semantic_embedding_source_rollout_recommendation`
+    - `/health.memory_retrieval` now surfaces source-rollout posture for
+      vectors-disabled, semantic+affective baseline, semantic-only,
+      affective-only, and foundational-only source sets
+    - startup source-coverage warning now includes shared source-rollout
+      diagnostics for operator rollout guidance
+    - docs/context/planning are synchronized through `PRJ-245`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
 
 - [x] PRJ-244 Add embedding owner-strategy recommendation posture in shared diagnostics
   - Status: DONE

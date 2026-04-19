@@ -94,6 +94,9 @@ retrieval posture:
 - `semantic_embedding_source_kinds`
 - `semantic_embedding_source_coverage_state`
 - `semantic_embedding_source_coverage_hint`
+- `semantic_embedding_source_rollout_state`
+- `semantic_embedding_source_rollout_hint`
+- `semantic_embedding_source_rollout_recommendation`
 - `semantic_embedding_refresh_mode`
 - `semantic_embedding_refresh_interval_seconds`
 - `semantic_embedding_refresh_state`
@@ -123,7 +126,8 @@ posture is aligned.
 When semantic vectors are enabled but embedding source coverage excludes both
 `semantic` and `affective`, startup emits `embedding_source_coverage_warning`
 so operators can see that vector retrieval path is configured without
-high-signal vector source families.
+high-signal vector source families, with explicit source-rollout diagnostics
+for next-step guidance.
 
 When semantic vectors are enabled and `EMBEDDING_REFRESH_MODE=manual`, startup
 also emits `embedding_refresh_warning` so operators can confirm that a separate

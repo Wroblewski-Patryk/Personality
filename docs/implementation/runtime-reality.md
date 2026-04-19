@@ -219,6 +219,11 @@ Current limitation:
   `semantic_embedding_owner_strategy_hint`,
   `semantic_embedding_owner_strategy_recommendation`) for vectors-disabled,
   deterministic baseline/manual, and fallback provider ownership states.
+- source-rollout recommendation posture is now explicit through helper-owned
+  diagnostics (`semantic_embedding_source_rollout_state`,
+  `semantic_embedding_source_rollout_hint`,
+  `semantic_embedding_source_rollout_recommendation`) for semantic+affective
+  baseline, single-source rollout phases, and foundational-only source sets.
 
 ### Event API behavior
 

@@ -191,6 +191,12 @@ Last updated: 2026-04-19
   `semantic_embedding_owner_strategy_hint`,
   `semantic_embedding_owner_strategy_recommendation`) reused by
   `/health.memory_retrieval` and startup fallback warning flow.
+- 2026-04-19: embedding source-rollout recommendation posture is now explicit
+  through shared diagnostics
+  (`semantic_embedding_source_rollout_state`,
+  `semantic_embedding_source_rollout_hint`,
+  `semantic_embedding_source_rollout_recommendation`) reused by
+  `/health.memory_retrieval` and startup source-coverage warning flow.
 - 2026-04-19: relation memory is now a first-class subsystem (`aion_relation`)
   with scoped repository APIs; reflection derives relation updates and runtime
   stages now consume high-confidence relation cues across context, role,

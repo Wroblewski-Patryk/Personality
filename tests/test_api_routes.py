@@ -481,6 +481,9 @@ def test_health_endpoint_returns_ok() -> None:
             "semantic_embedding_source_kinds": ["episodic", "semantic", "affective"],
             "semantic_embedding_source_coverage_state": "full_for_current_retrieval_path",
             "semantic_embedding_source_coverage_hint": "semantic_and_affective_sources_enabled",
+            "semantic_embedding_source_rollout_state": "semantic_affective_baseline",
+            "semantic_embedding_source_rollout_hint": "high_signal_sources_active",
+            "semantic_embedding_source_rollout_recommendation": "add_relation_source_after_baseline_stabilizes",
             "semantic_embedding_refresh_mode": "on_write",
             "semantic_embedding_refresh_interval_seconds": 21600,
             "semantic_embedding_refresh_state": "on_write_refresh_active",
@@ -588,6 +591,9 @@ def test_health_endpoint_exposes_lexical_only_memory_retrieval_mode_when_semanti
         "semantic_embedding_source_kinds": ["episodic", "semantic", "affective"],
         "semantic_embedding_source_coverage_state": "vectors_disabled",
         "semantic_embedding_source_coverage_hint": "not_applicable_vectors_disabled",
+        "semantic_embedding_source_rollout_state": "vectors_disabled",
+        "semantic_embedding_source_rollout_hint": "enable_vectors_before_source_rollout",
+        "semantic_embedding_source_rollout_recommendation": "defer_source_rollout_until_vectors_enabled",
         "semantic_embedding_refresh_mode": "on_write",
         "semantic_embedding_refresh_interval_seconds": 21600,
         "semantic_embedding_refresh_state": "vectors_disabled",
@@ -635,6 +641,9 @@ def test_health_endpoint_exposes_embedding_provider_fallback_posture_when_non_de
         "semantic_embedding_source_kinds": ["episodic", "semantic", "affective"],
         "semantic_embedding_source_coverage_state": "full_for_current_retrieval_path",
         "semantic_embedding_source_coverage_hint": "semantic_and_affective_sources_enabled",
+        "semantic_embedding_source_rollout_state": "semantic_affective_baseline",
+        "semantic_embedding_source_rollout_hint": "high_signal_sources_active",
+        "semantic_embedding_source_rollout_recommendation": "add_relation_source_after_baseline_stabilizes",
         "semantic_embedding_refresh_mode": "on_write",
         "semantic_embedding_refresh_interval_seconds": 21600,
         "semantic_embedding_refresh_state": "on_write_refresh_active",
@@ -654,6 +663,11 @@ def test_health_endpoint_exposes_configured_embedding_source_kinds() -> None:
     assert (
         body["memory_retrieval"]["semantic_embedding_source_coverage_hint"]
         == "enable_semantic_or_affective_source_for_vector_hits"
+    )
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_state"] == "foundational_sources_only"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_recommendation"]
+        == "enable_semantic_then_affective_sources"
     )
 
 

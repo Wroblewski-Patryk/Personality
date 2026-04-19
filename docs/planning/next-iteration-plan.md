@@ -241,6 +241,12 @@ Completed on 2026-04-18:
   `semantic_embedding_owner_strategy_hint`,
   `semantic_embedding_owner_strategy_recommendation`) and startup fallback
   warning enrichment.
+- `PRJ-245` is complete: embedding source-rollout recommendation posture is now
+  explicit through shared helper diagnostics
+  (`semantic_embedding_source_rollout_state`,
+  `semantic_embedding_source_rollout_hint`,
+  `semantic_embedding_source_rollout_recommendation`) and startup
+  source-coverage warning enrichment.
 
 ## Highest-Risk Gaps
 
@@ -931,7 +937,7 @@ implicit or uncontrolled side effects.
 
 ## Next Derived Slice
 
-The planning queue is complete through `PRJ-244`.
+The planning queue is complete through `PRJ-245`.
 There is currently no execution-ready PRJ slice in the board.
 Before the next implementation slice:
 

@@ -77,6 +77,27 @@ def embedding_strategy_snapshot(
         source_coverage_hint = "enable_semantic_or_affective_source_for_vector_hits"
 
     if not semantic_vector_enabled:
+        source_rollout_state = "vectors_disabled"
+        source_rollout_hint = "enable_vectors_before_source_rollout"
+        source_rollout_recommendation = "defer_source_rollout_until_vectors_enabled"
+    elif semantic_ready and affective_ready:
+        source_rollout_state = "semantic_affective_baseline"
+        source_rollout_hint = "high_signal_sources_active"
+        source_rollout_recommendation = "add_relation_source_after_baseline_stabilizes"
+    elif semantic_ready:
+        source_rollout_state = "semantic_only_phase"
+        source_rollout_hint = "affective_source_missing"
+        source_rollout_recommendation = "enable_affective_source_next"
+    elif affective_ready:
+        source_rollout_state = "affective_only_phase"
+        source_rollout_hint = "semantic_source_missing"
+        source_rollout_recommendation = "enable_semantic_source_next"
+    else:
+        source_rollout_state = "foundational_sources_only"
+        source_rollout_hint = "semantic_and_affective_sources_missing"
+        source_rollout_recommendation = "enable_semantic_then_affective_sources"
+
+    if not semantic_vector_enabled:
         warning_state = "vectors_disabled"
         warning_hint = "enable_semantic_vectors_to_activate_embedding_strategy"
     elif provider_ready:
@@ -214,6 +235,9 @@ def embedding_strategy_snapshot(
         "semantic_embedding_source_kinds": list(normalized_source_kinds),
         "semantic_embedding_source_coverage_state": source_coverage_state,
         "semantic_embedding_source_coverage_hint": source_coverage_hint,
+        "semantic_embedding_source_rollout_state": source_rollout_state,
+        "semantic_embedding_source_rollout_hint": source_rollout_hint,
+        "semantic_embedding_source_rollout_recommendation": source_rollout_recommendation,
         "semantic_embedding_warning_state": warning_state,
         "semantic_embedding_warning_hint": warning_hint,
         "semantic_embedding_refresh_mode": normalized_refresh_mode,

@@ -326,6 +326,9 @@ Allowed values:
 - `semantic_embedding_source_kinds`
 - `semantic_embedding_source_coverage_state`
 - `semantic_embedding_source_coverage_hint`
+- `semantic_embedding_source_rollout_state`
+- `semantic_embedding_source_rollout_hint`
+- `semantic_embedding_source_rollout_recommendation`
 - `semantic_embedding_refresh_mode`
 - `semantic_embedding_refresh_interval_seconds`
 - `semantic_embedding_refresh_state`
