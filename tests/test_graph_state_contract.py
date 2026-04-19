@@ -188,6 +188,7 @@ def test_graph_state_to_runtime_result_requires_completed_state() -> None:
 
     missing = graph_state_missing_runtime_fields(state)
     assert "identity" in missing
+    assert "action_delivery" in missing
     assert "action_result" in missing
 
     with pytest.raises(ValueError, match="graph state is not complete"):

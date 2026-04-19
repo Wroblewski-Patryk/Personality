@@ -194,14 +194,14 @@ class GraphStageAdapters:
             theta=theta if isinstance(theta, dict) else None,
             relations=list(state.relations),
         )
-        return state.model_copy(update={"expression": expression})
+        delivery = expression_to_action_delivery(event=state.event, expression=expression)
+        return state.model_copy(update={"expression": expression, "action_delivery": delivery})
 
     async def run_action(self, state: GraphRuntimeState) -> GraphRuntimeState:
-        self._require(state, "plan", "expression")
+        self._require(state, "plan", "action_delivery")
         plan = state.plan
-        expression = state.expression
+        delivery = state.action_delivery
         assert plan is not None
-        assert expression is not None
-        delivery = expression_to_action_delivery(event=state.event, expression=expression)
+        assert delivery is not None
         action_result = await self.action_executor.execute(plan=plan, delivery=delivery)
         return state.model_copy(update={"action_delivery": delivery, "action_result": action_result})

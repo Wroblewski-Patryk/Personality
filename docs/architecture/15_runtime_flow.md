@@ -220,6 +220,7 @@ It decides:
 - channel adaptation
 
 Expression answers "what and how to communicate."
+It also emits the explicit response-execution handoff consumed by action.
 
 ### Step 12. Action
 
@@ -235,6 +236,7 @@ Examples:
 - call an external integration
 
 Action answers "what is executed in the world or in durable state."
+Action consumes the explicit response-execution handoff as its delivery input.
 
 ### Step 13. Episodic Memory Write
 

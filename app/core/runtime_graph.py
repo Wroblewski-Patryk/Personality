@@ -4,7 +4,7 @@ from typing import Any, Awaitable, Callable, TypeVar
 from langgraph.graph import END, START, StateGraph
 
 from app.core.graph_adapters import GraphStageAdapters
-from app.core.graph_state import GraphRuntimeState, expression_to_action_delivery
+from app.core.graph_state import GraphRuntimeState
 from app.core.logging import RuntimeStageLogger
 
 T = TypeVar("T")
@@ -271,7 +271,8 @@ class ForegroundLangGraphRunner:
             operation=lambda: self.adapters.run_expression(graph_state),
             output_summary=lambda result: (
                 f"tone={result.expression.tone} language={result.expression.language} "
-                f"channel={result.expression.channel} message_len={len(result.expression.message)}"
+                f"channel={result.expression.channel} message_len={len(result.expression.message)} "
+                f"handoff_channel={result.action_delivery.channel}"
             ),
         )
         return {"graph_state": updated, "_runtime": runtime_ctx}
@@ -282,18 +283,17 @@ class ForegroundLangGraphRunner:
         stage_timings_ms = runtime_ctx["stage_timings_ms"]
         graph_state = self._graph_state(state)
         plan = graph_state.plan
-        expression = graph_state.expression
+        delivery = graph_state.action_delivery
         assert plan is not None
-        assert expression is not None
-        preview_delivery = expression_to_action_delivery(event=graph_state.event, expression=expression)
+        assert delivery is not None
         updated = await self._run_async_stage(
             stage_logger=stage_logger,
             stage_timings_ms=stage_timings_ms,
             stage="action",
             input_summary=(
                 f"needs_action={plan.needs_action} "
-                f"channel={preview_delivery.channel} "
-                f"has_chat_id={self._present_label(preview_delivery.chat_id)}"
+                f"channel={delivery.channel} "
+                f"has_chat_id={self._present_label(delivery.chat_id)}"
             ),
             operation=lambda: self.adapters.run_action(graph_state),
             output_summary=lambda result: (

@@ -40,7 +40,7 @@ The current runtime uses an explicit delivery handoff between expression and act
 Current implementation details:
 
 - `ExpressionAgent` produces message, tone, language, and channel-oriented output
-- runtime materializes an `ActionDelivery` object after expression
+- expression stage materializes an explicit `ActionDelivery` handoff contract
 - `ActionExecutor` consumes that delivery object
 - `DeliveryRouter` owns the channel-specific dispatch behavior
 

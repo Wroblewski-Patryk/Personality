@@ -7,7 +7,7 @@ from app.agents.perception import PerceptionAgent
 from app.agents.planning import PlanningAgent
 from app.agents.role import RoleAgent
 from app.core.action import ActionExecutor
-from app.core.contracts import Event, EventMeta
+from app.core.contracts import ActionDelivery, Event, EventMeta, PlanOutput
 from app.core.graph_adapters import GraphStageAdapters
 from app.core.graph_state import GraphMemoryState, build_graph_state_seed
 from app.expression.generator import ExpressionAgent
@@ -107,6 +107,8 @@ async def test_graph_stage_adapters_run_existing_modules_with_graph_state() -> N
     state = adapters.run_role(state)
     state = adapters.run_planning(state)
     state = await adapters.run_expression(state)
+    assert state.action_delivery is not None
+    assert state.action_delivery.channel == "api"
     state = await adapters.run_action(state)
 
     assert state.perception is not None
@@ -117,6 +119,45 @@ async def test_graph_stage_adapters_run_existing_modules_with_graph_state() -> N
     assert state.expression is not None
     assert state.action_delivery is not None
     assert state.action_delivery.channel == "api"
+    assert state.action_result is not None
+    assert state.action_result.status == "success"
+
+
+@pytest.mark.asyncio
+async def test_graph_stage_adapters_action_consumes_explicit_delivery_handoff() -> None:
+    adapters = GraphStageAdapters(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=_FakeOpenAIClient()),
+        action_executor=ActionExecutor(
+            memory_repository=_NoopMemoryRepository(),
+            telegram_client=_FakeTelegramClient(),
+        ),
+    )
+    state = build_graph_state_seed(_event()).model_copy(
+        update={
+            "plan": PlanOutput(
+                goal="reply",
+                steps=["prepare_response"],
+                needs_action=True,
+                needs_response=True,
+            ),
+            "action_delivery": ActionDelivery(
+                message="handoff message",
+                tone="supportive",
+                channel="api",
+                language="en",
+                chat_id=None,
+            ),
+        }
+    )
+    state = state.model_copy(update={"expression": None})
+    state = await adapters.run_action(state)
+
+    assert state.action_delivery is not None
     assert state.action_result is not None
     assert state.action_result.status == "success"
 
@@ -138,3 +179,32 @@ def test_graph_stage_adapters_validate_required_state_fields() -> None:
 
     with pytest.raises(ValueError, match="missing graph state fields: identity, perception"):
         adapters.run_context(state)
+
+
+@pytest.mark.asyncio
+async def test_graph_stage_adapters_action_requires_explicit_delivery_handoff() -> None:
+    adapters = GraphStageAdapters(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=_FakeOpenAIClient()),
+        action_executor=ActionExecutor(
+            memory_repository=_NoopMemoryRepository(),
+            telegram_client=_FakeTelegramClient(),
+        ),
+    )
+    state = build_graph_state_seed(_event()).model_copy(
+        update={
+            "plan": PlanOutput(
+                goal="noop",
+                steps=[],
+                needs_action=True,
+                needs_response=True,
+            )
+        }
+    )
+
+    with pytest.raises(ValueError, match="missing graph state fields: action_delivery"):
+        await adapters.run_action(state)

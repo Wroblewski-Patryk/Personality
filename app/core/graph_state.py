@@ -239,6 +239,7 @@ def graph_state_missing_runtime_fields(state: GraphRuntimeState) -> list[str]:
         "role",
         "plan",
         "expression",
+        "action_delivery",
         "action_result",
         "duration_ms",
     )

@@ -487,6 +487,34 @@ Form the outward communication of the turn.
 
 ---
 
+## Response-Execution Handoff Contract
+
+Expression produces an explicit execution handoff consumed by action.
+
+Minimum handoff fields:
+
+```json
+{
+  "response_execution_handoff": {
+    "message": "...",
+    "tone": "...",
+    "channel": "api|telegram",
+    "language": "en",
+    "chat_id": 123456
+  }
+}
+```
+
+Rules:
+
+1. expression owns wording, tone, and language in the handoff payload
+2. action consumes the handoff contract instead of rebuilding delivery details
+   from implicit expression coupling
+3. handoff creation is side-effect-free; action remains the only execution
+   owner
+
+---
+
 ## Action Layer Contract
 
 ### Purpose
@@ -499,7 +527,7 @@ Execute the required side effects.
 {
   "event": {},
   "plan": {},
-  "expression": {},
+  "response_execution_handoff": {},
   "domain_intents": []
 }
 ```
