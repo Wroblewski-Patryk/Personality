@@ -78,6 +78,7 @@ retrieval posture:
 - `semantic_embedding_dimensions`
 - `semantic_embedding_warning_state`
 - `semantic_embedding_warning_hint`
+- `semantic_embedding_source_kinds`
 
 When semantic vectors are enabled and a non-implemented provider is requested
 (for example `EMBEDDING_PROVIDER=openai` today), startup emits
@@ -149,6 +150,9 @@ Recommended when Telegram webhooks are enabled:
   requested embedding model posture
 - `EMBEDDING_DIMENSIONS` (optional, default `32`) to control embedding/query
   vector dimensions
+- `EMBEDDING_SOURCE_KINDS` (optional, default
+  `episodic,semantic,affective`) to control which memory families persist
+  embedding records (`episodic|semantic|affective|relation`)
 - `PRODUCTION_DEBUG_TOKEN_REQUIRED` (`true|false`, default `true`) to require
   a configured debug token for production debug payload access when debug
   exposure is enabled

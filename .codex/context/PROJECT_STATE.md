@@ -152,6 +152,10 @@ Last updated: 2026-04-19
   across startup logging and `/health.memory_retrieval` through one helper,
   with explicit warning fields
   (`semantic_embedding_warning_state`, `semantic_embedding_warning_hint`).
+- 2026-04-19: embedding persistence scope is now explicit through
+  `EMBEDDING_SOURCE_KINDS`; action/repository embedding writes respect enabled
+  source families, and `/health.memory_retrieval` exposes configured source
+  kinds for operator visibility.
 - 2026-04-19: relation memory is now a first-class subsystem (`aion_relation`)
   with scoped repository APIs; reflection derives relation updates and runtime
   stages now consume high-confidence relation cues across context, role,
@@ -290,7 +294,7 @@ Last updated: 2026-04-19
   explicit without regressing current runtime behavior, then deepen the runtime
   toward affective understanding, scoped memory, and stronger action intent
   ownership
-- Active `PRJ` execution queue is complete through `PRJ-235`; the next slice
+- Active `PRJ` execution queue is complete through `PRJ-236`; the next slice
   should be derived from `docs/planning/open-decisions.md` and registered as
   `READY` before implementation.
 - Top blockers:
@@ -305,6 +309,13 @@ Last updated: 2026-04-19
 
 ## Recent Progress
 
+- 2026-04-19: `PRJ-236` is complete: embedding source-family scope is now
+  configurable (`EMBEDDING_SOURCE_KINDS`), runtime embedding writes are gated
+  by enabled families, and `/health.memory_retrieval` now exposes effective
+  source-kind posture.
+- 2026-04-19: `PRJ-236` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_config.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_main_lifespan_policy.py`
+  passed with `151 passed`.
 - 2026-04-19: `PRJ-235` is complete: embedding strategy warning-state semantics
   are now shared between startup logging and `/health.memory_retrieval`, and
   health exposes explicit warning-state/hint fields for operators.

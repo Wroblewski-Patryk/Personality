@@ -169,6 +169,20 @@ Embedding vector dimensions used by deterministic baseline and query vectors.
 
 Default: `32` (must be at least `1`).
 
+`EMBEDDING_SOURCE_KINDS`
+
+Comma-separated list of memory source families that should persist embedding
+records.
+
+Allowed kinds:
+
+- `episodic`
+- `semantic`
+- `affective`
+- `relation`
+
+Default: `episodic,semantic,affective`.
+
 `PRODUCTION_DEBUG_TOKEN_REQUIRED`
 
 Controls whether production debug payload access requires a configured debug
@@ -255,6 +269,7 @@ Allowed values:
 - `semantic_embedding_dimensions`
 - `semantic_embedding_warning_state`
 - `semantic_embedding_warning_hint`
+- `semantic_embedding_source_kinds`
 
 Compatibility route `POST /event?debug=true` also emits:
 

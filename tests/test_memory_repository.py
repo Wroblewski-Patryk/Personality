@@ -230,6 +230,45 @@ async def test_memory_repository_upsert_conclusion_uses_effective_embedding_post
     await engine.dispose()
 
 
+async def test_memory_repository_upsert_conclusion_skips_embedding_shell_when_source_kind_is_disabled(tmp_path) -> None:
+    database_path = tmp_path / "memory-conclusion-embedding-source-kind-disabled.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(
+        session_factory=session_factory,
+        embedding_source_kinds=("episodic",),
+    )
+    await repository.create_tables(engine)
+
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="custom_semantic_fact",
+        content="deployment blockers require dependency sequencing",
+        confidence=0.72,
+        source="background_reflection",
+        supporting_event_id="evt-semantic-no-shell",
+    )
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="affective_support_pattern",
+        content="recurring_distress",
+        confidence=0.81,
+        source="background_reflection",
+        supporting_event_id="evt-affective-no-shell",
+    )
+
+    async with session_factory() as session:
+        rows = (
+            await session.execute(
+                select(AionSemanticEmbedding).order_by(AionSemanticEmbedding.id.asc())
+            )
+        ).scalars().all()
+
+    assert rows == []
+
+    await engine.dispose()
+
+
 async def test_memory_repository_builds_hybrid_memory_bundle_with_vector_and_lexical_diagnostics(tmp_path) -> None:
     database_path = tmp_path / "memory-hybrid-bundle.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")

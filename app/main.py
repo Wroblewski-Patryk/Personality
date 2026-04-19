@@ -131,6 +131,7 @@ async def lifespan(app: FastAPI):
         embedding_provider=str(getattr(settings, "embedding_provider", "deterministic")),
         embedding_model=str(getattr(settings, "embedding_model", "deterministic-v1")),
         embedding_dimensions=int(getattr(settings, "embedding_dimensions", 32)),
+        embedding_source_kinds=tuple(getattr(settings, "get_embedding_source_kinds", lambda: ("episodic", "semantic", "affective"))()),
     )
     if settings.startup_schema_mode == "create_tables":
         await memory_repository.create_tables(database.engine)
@@ -156,6 +157,7 @@ async def lifespan(app: FastAPI):
         embedding_provider=str(getattr(settings, "embedding_provider", "deterministic")),
         embedding_model=str(getattr(settings, "embedding_model", "deterministic-v1")),
         embedding_dimensions=int(getattr(settings, "embedding_dimensions", 32)),
+        embedding_source_kinds=tuple(getattr(settings, "get_embedding_source_kinds", lambda: ("episodic", "semantic", "affective"))()),
     )
     reflection_worker = ReflectionWorker(memory_repository=memory_repository)
     scheduler_worker = SchedulerWorker(

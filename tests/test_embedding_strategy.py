@@ -1,4 +1,4 @@
-from app.memory.embeddings import embedding_strategy_snapshot
+from app.memory.embeddings import embedding_strategy_snapshot, normalize_embedding_source_kinds
 
 
 def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provider_is_ready() -> None:
@@ -48,3 +48,12 @@ def test_embedding_strategy_snapshot_marks_provider_fallback_warning_state() -> 
         snapshot["semantic_embedding_warning_hint"]
         == "provider_not_implemented_using_deterministic_fallback"
     )
+
+
+def test_normalize_embedding_source_kinds_returns_defaults_when_missing() -> None:
+    assert normalize_embedding_source_kinds(None) == ("episodic", "semantic", "affective")
+    assert normalize_embedding_source_kinds("") == ("episodic", "semantic", "affective")
+
+
+def test_normalize_embedding_source_kinds_normalizes_order_and_uniqueness() -> None:
+    assert normalize_embedding_source_kinds("relation,episodic,episodic") == ("episodic", "relation")

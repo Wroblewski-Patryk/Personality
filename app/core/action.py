@@ -22,7 +22,11 @@ from app.core.contracts import (
 )
 from app.integrations.delivery_router import DeliveryRouter
 from app.integrations.telegram.client import TelegramClient
-from app.memory.embeddings import deterministic_embedding, resolve_embedding_posture
+from app.memory.embeddings import (
+    deterministic_embedding,
+    normalize_embedding_source_kinds,
+    resolve_embedding_posture,
+)
 from app.memory.episodic import build_episode_summary
 from app.memory.repository import MemoryRepository
 
@@ -40,11 +44,16 @@ class ActionExecutor:
         embedding_provider: str = "deterministic",
         embedding_model: str = "deterministic-v1",
         embedding_dimensions: int = 32,
+        embedding_source_kinds: tuple[str, ...] | None = None,
     ):
         self.memory_repository = memory_repository
         self.delivery_router = DeliveryRouter(telegram_client=telegram_client)
         self.semantic_vector_enabled = semantic_vector_enabled
         self.embedding_dimensions = max(1, int(embedding_dimensions))
+        if embedding_source_kinds is None:
+            self.embedding_source_kinds = set(normalize_embedding_source_kinds(None))
+        else:
+            self.embedding_source_kinds = {str(item).strip().lower() for item in embedding_source_kinds if str(item).strip()}
         self.embedding_posture = resolve_embedding_posture(
             provider=embedding_provider,
             model=embedding_model,
@@ -128,7 +137,11 @@ class ActionExecutor:
             payload=payload,
             importance=motivation.importance,
         )
-        if self.semantic_vector_enabled and hasattr(self.memory_repository, "upsert_semantic_embedding"):
+        if (
+            self.semantic_vector_enabled
+            and "episodic" in self.embedding_source_kinds
+            and hasattr(self.memory_repository, "upsert_semantic_embedding")
+        ):
             episode_embedding = deterministic_embedding(
                 f"{payload['event']} {payload['context']} {payload['expression']}",
                 dimensions=self.embedding_dimensions,

@@ -252,6 +252,9 @@ The current repo already works as an MVP slice, but several architecture-level d
     posture owner; `/health.memory_retrieval` exposes
     `semantic_embedding_warning_state` and
     `semantic_embedding_warning_hint` for machine-readable fallback posture.
+  - embedding persistence scope is now explicit through
+    `EMBEDDING_SOURCE_KINDS`, so runtime can limit which memory families
+    (`episodic|semantic|affective|relation`) persist embedding records.
   - provider ownership, refresh cadence, and embedding model governance are
     still open.
 - Decision needed:

@@ -192,6 +192,9 @@ Completed on 2026-04-18:
   between startup logging and `/health.memory_retrieval`, with explicit
   warning posture fields (`semantic_embedding_warning_state`,
   `semantic_embedding_warning_hint`) for operator diagnostics.
+- `PRJ-236` is complete: embedding source-family scope is now explicit through
+  `EMBEDDING_SOURCE_KINDS`, runtime embedding writes respect enabled families,
+  and `/health.memory_retrieval` exposes effective configured source kinds.
 
 ## Highest-Risk Gaps
 
@@ -882,7 +885,7 @@ implicit or uncontrolled side effects.
 
 ## Next Derived Slice
 
-The planning queue is complete through `PRJ-235`.
+The planning queue is complete through `PRJ-236`.
 There is currently no execution-ready PRJ slice in the board.
 Before the next implementation slice:
 

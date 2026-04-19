@@ -15,7 +15,7 @@ Last updated: 2026-04-19
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-235`.
+- The planning queue is complete through `PRJ-236`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,23 @@ Last updated: 2026-04-19
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-236 Add explicit embedding source-family scope configuration and runtime gating
+  - Status: DONE
+  - Group: Embedding Strategy Posture
+  - Owner: Backend Builder + QA/Test + Product Docs
+  - Depends on: PRJ-235
+  - Priority: P2
+  - Result:
+    - runtime config now exposes `EMBEDDING_SOURCE_KINDS` with validation and
+      explicit allowed family set (`episodic|semantic|affective|relation`)
+    - action and memory repository embedding writes now respect enabled source
+      families, so embedding persistence scope is explicit instead of implicit
+    - `/health.memory_retrieval` now exposes effective configured embedding
+      source kinds for operator visibility
+    - docs/context/planning are synchronized through `PRJ-236`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_config.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_main_lifespan_policy.py`
 
 - [x] PRJ-235 Unify embedding warning posture semantics across health and startup logging
   - Status: DONE

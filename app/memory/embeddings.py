@@ -5,6 +5,8 @@ import math
 
 DEFAULT_EMBEDDING_PROVIDER = "deterministic"
 DEFAULT_EMBEDDING_MODEL = "deterministic-v1"
+EMBEDDING_SOURCE_KIND_ORDER = ("episodic", "semantic", "affective", "relation")
+DEFAULT_EMBEDDING_SOURCE_KINDS = ("episodic", "semantic", "affective")
 
 
 def resolve_embedding_posture(
@@ -66,6 +68,26 @@ def embedding_strategy_snapshot(
         "semantic_embedding_warning_state": warning_state,
         "semantic_embedding_warning_hint": warning_hint,
     }
+
+
+def normalize_embedding_source_kinds(value: str | None) -> tuple[str, ...]:
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return DEFAULT_EMBEDDING_SOURCE_KINDS
+
+    requested = [item.strip().lower() for item in raw.split(",") if item.strip()]
+    if not requested:
+        return DEFAULT_EMBEDDING_SOURCE_KINDS
+
+    allowed = set(EMBEDDING_SOURCE_KIND_ORDER)
+    unknown = sorted({item for item in requested if item not in allowed})
+    if unknown:
+        joined = ", ".join(unknown)
+        raise ValueError(f"EMBEDDING_SOURCE_KINDS contains unknown kinds: {joined}")
+
+    requested_set = set(requested)
+    ordered = tuple(item for item in EMBEDDING_SOURCE_KIND_ORDER if item in requested_set)
+    return ordered or DEFAULT_EMBEDDING_SOURCE_KINDS
 
 
 def deterministic_embedding(text: str, *, dimensions: int = 32) -> list[float]:

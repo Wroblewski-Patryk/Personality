@@ -18,6 +18,8 @@ def test_settings_default_to_migration_first_startup_mode() -> None:
     assert settings.embedding_provider == "deterministic"
     assert settings.embedding_model == "deterministic-v1"
     assert settings.embedding_dimensions == 32
+    assert settings.embedding_source_kinds == "episodic,semantic,affective"
+    assert settings.get_embedding_source_kinds() == ("episodic", "semantic", "affective")
     assert settings.reflection_runtime_mode == "in_process"
     assert settings.scheduler_enabled is False
     assert settings.reflection_interval == 900
@@ -152,6 +154,15 @@ def test_settings_allow_explicit_embedding_provider_model_and_dimensions() -> No
     assert settings.embedding_provider == "openai"
     assert settings.embedding_model == "text-embedding-3-small"
     assert settings.embedding_dimensions == 1536
+
+
+def test_settings_allow_explicit_embedding_source_kinds() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        embedding_source_kinds="episodic,relation",
+    )
+
+    assert settings.get_embedding_source_kinds() == ("episodic", "relation")
 
 
 def test_settings_allow_strict_production_policy_enforcement_mode() -> None:
@@ -341,3 +352,17 @@ def test_settings_reject_empty_embedding_model() -> None:
         assert "EMBEDDING_MODEL" in str(exc)
     else:  # pragma: no cover - defensive fallback
         raise AssertionError("Expected Settings validation to reject empty embedding model.")
+
+
+def test_settings_reject_unknown_embedding_source_kind() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        embedding_source_kinds="episodic,unknown_kind",
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "EMBEDDING_SOURCE_KINDS" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected Settings validation to reject unknown embedding source kind.")

@@ -4,7 +4,11 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.core.contracts import MemoryLayerKind
-from app.memory.embeddings import cosine_similarity, resolve_embedding_posture
+from app.memory.embeddings import (
+    cosine_similarity,
+    normalize_embedding_source_kinds,
+    resolve_embedding_posture,
+)
 from app.memory.models import (
     AionConclusion,
     AionGoal,
@@ -64,9 +68,14 @@ class MemoryRepository:
         embedding_provider: str = "deterministic",
         embedding_model: str = "deterministic-v1",
         embedding_dimensions: int = 32,
+        embedding_source_kinds: tuple[str, ...] | None = None,
     ):
         self.session_factory = session_factory
         self.embedding_dimensions = max(1, int(embedding_dimensions))
+        if embedding_source_kinds is None:
+            self.embedding_source_kinds = set(normalize_embedding_source_kinds(None))
+        else:
+            self.embedding_source_kinds = {str(item).strip().lower() for item in embedding_source_kinds if str(item).strip()}
         self.embedding_posture = resolve_embedding_posture(
             provider=embedding_provider,
             model=embedding_model,
@@ -1301,9 +1310,22 @@ class MemoryRepository:
 
         conclusion_layer = self.conclusion_memory_layer(kind)
         if conclusion_layer in {self.MEMORY_LAYER_SEMANTIC, self.MEMORY_LAYER_AFFECTIVE}:
+            source_kind = "semantic" if conclusion_layer == self.MEMORY_LAYER_SEMANTIC else "affective"
+            if source_kind not in self.embedding_source_kinds:
+                return {
+                    "user_id": row.user_id,
+                    "kind": row.kind,
+                    "content": row.content,
+                    "confidence": row.confidence,
+                    "source": row.source,
+                    "supporting_event_id": row.supporting_event_id,
+                    "scope_type": row.scope_type,
+                    "scope_key": row.scope_key,
+                    "updated_at": row.updated_at,
+                }
             await self.upsert_semantic_embedding(
                 user_id=user_id,
-                source_kind="semantic" if conclusion_layer == self.MEMORY_LAYER_SEMANTIC else "affective",
+                source_kind=source_kind,
                 source_id=f"conclusion:{row.id}",
                 source_event_id=supporting_event_id,
                 scope_type=normalized_scope_type,

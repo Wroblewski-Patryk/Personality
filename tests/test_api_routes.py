@@ -182,6 +182,7 @@ class FakeSettings:
         embedding_provider: str = "deterministic",
         embedding_model: str = "deterministic-v1",
         embedding_dimensions: int = 32,
+        embedding_source_kinds: str = "episodic,semantic,affective",
         startup_schema_mode: str = "migrate",
         production_policy_enforcement: str = "warn",
         reflection_runtime_mode: str = "in_process",
@@ -201,6 +202,7 @@ class FakeSettings:
         self.embedding_provider = embedding_provider
         self.embedding_model = embedding_model
         self.embedding_dimensions = embedding_dimensions
+        self.embedding_source_kinds = embedding_source_kinds
         self.startup_schema_mode = startup_schema_mode
         self.production_policy_enforcement = production_policy_enforcement
         self.reflection_runtime_mode = reflection_runtime_mode
@@ -314,6 +316,7 @@ def _client(
     embedding_provider: str = "deterministic",
     embedding_model: str = "deterministic-v1",
     embedding_dimensions: int = 32,
+    embedding_source_kinds: str = "episodic,semantic,affective",
     startup_schema_mode: str = "migrate",
     production_policy_enforcement: str = "warn",
     reflection_runtime_mode: str = "in_process",
@@ -351,6 +354,7 @@ def _client(
         embedding_provider=embedding_provider,
         embedding_model=embedding_model,
         embedding_dimensions=embedding_dimensions,
+        embedding_source_kinds=embedding_source_kinds,
         startup_schema_mode=startup_schema_mode,
         production_policy_enforcement=production_policy_enforcement,
         reflection_runtime_mode=reflection_runtime_mode,
@@ -445,6 +449,7 @@ def test_health_endpoint_returns_ok() -> None:
             "semantic_embedding_dimensions": 32,
             "semantic_embedding_warning_state": "no_warning",
             "semantic_embedding_warning_hint": "embedding_strategy_ready",
+            "semantic_embedding_source_kinds": ["episodic", "semantic", "affective"],
         },
         "scheduler": {
             "healthy": True,
@@ -532,6 +537,7 @@ def test_health_endpoint_exposes_lexical_only_memory_retrieval_mode_when_semanti
         "semantic_embedding_dimensions": 32,
         "semantic_embedding_warning_state": "vectors_disabled",
         "semantic_embedding_warning_hint": "enable_semantic_vectors_to_activate_embedding_strategy",
+        "semantic_embedding_source_kinds": ["episodic", "semantic", "affective"],
     }
 
 
@@ -559,7 +565,18 @@ def test_health_endpoint_exposes_embedding_provider_fallback_posture_when_non_de
         "semantic_embedding_dimensions": 1536,
         "semantic_embedding_warning_state": "provider_fallback_active",
         "semantic_embedding_warning_hint": "provider_not_implemented_using_deterministic_fallback",
+        "semantic_embedding_source_kinds": ["episodic", "semantic", "affective"],
     }
+
+
+def test_health_endpoint_exposes_configured_embedding_source_kinds() -> None:
+    client, _, _ = _client(embedding_source_kinds="episodic,relation")
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["memory_retrieval"]["semantic_embedding_source_kinds"] == ["episodic", "relation"]
 
 
 def test_health_endpoint_marks_scheduler_unhealthy_when_enabled_but_not_running() -> None:

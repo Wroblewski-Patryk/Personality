@@ -363,6 +363,29 @@ async def test_persist_episode_falls_back_to_deterministic_embedding_when_non_de
     assert update["metadata"]["embedding_model_effective"] == "deterministic-v1"
 
 
+async def test_persist_episode_skips_episodic_embedding_when_source_kind_is_not_enabled() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(
+        memory_repository=memory_repository,
+        telegram_client=FakeTelegramClient(),
+        semantic_vector_enabled=True,
+        embedding_source_kinds=("semantic", "affective"),
+    )
+
+    await executor.persist_episode(
+        event=_event("deploy the fix"),
+        perception=_perception(["general", "deploy"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=_plan(),
+        action_result=await executor.execute(_plan(), _delivery()),
+        expression=_expression(),
+    )
+
+    assert memory_repository.semantic_embedding_updates == []
+
+
 async def test_persist_episode_skips_profile_update_for_derived_language_signal() -> None:
     memory_repository = FakeMemoryRepository()
     executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())

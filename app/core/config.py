@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.memory.embeddings import normalize_embedding_source_kinds
+
 
 class Settings(BaseSettings):
     openai_api_key: str | None = None
@@ -23,6 +25,7 @@ class Settings(BaseSettings):
     embedding_provider: Literal["deterministic", "openai"] = "deterministic"
     embedding_model: str = "deterministic-v1"
     embedding_dimensions: int = 32
+    embedding_source_kinds: str = "episodic,semantic,affective"
     startup_schema_mode: Literal["migrate", "create_tables"] = "migrate"
     production_policy_enforcement: Literal["warn", "strict"] = "warn"
     reflection_runtime_mode: Literal["in_process", "deferred"] = "in_process"
@@ -81,6 +84,7 @@ class Settings(BaseSettings):
             raise ValueError("EMBEDDING_DIMENSIONS must be at least 1.")
         if not str(self.embedding_model).strip():
             raise ValueError("EMBEDDING_MODEL must be a non-empty string.")
+        normalize_embedding_source_kinds(self.embedding_source_kinds)
 
     def is_event_debug_enabled(self) -> bool:
         if self.event_debug_enabled is not None:
@@ -91,6 +95,9 @@ class Settings(BaseSettings):
         if self.event_debug_query_compat_enabled is not None:
             return self.event_debug_query_compat_enabled
         return self.app_env.lower() != "production"
+
+    def get_embedding_source_kinds(self) -> tuple[str, ...]:
+        return normalize_embedding_source_kinds(self.embedding_source_kinds)
 
 
 @lru_cache(maxsize=1)

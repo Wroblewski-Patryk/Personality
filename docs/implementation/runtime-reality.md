@@ -179,6 +179,9 @@ Current limitation:
 - `/health.memory_retrieval` now exposes explicit warning posture fields
   (`semantic_embedding_warning_state`, `semantic_embedding_warning_hint`) and
   startup warning logs reuse the same warning-state semantics.
+- embedding persistence scope is now explicitly configurable through
+  `EMBEDDING_SOURCE_KINDS` (`episodic|semantic|affective|relation`), and
+  health exposes effective configured source families.
 
 ### Event API behavior
 

@@ -41,6 +41,9 @@
   embedding model posture for runtime visibility
 - `EMBEDDING_DIMENSIONS` (optional, default `32`) to tune embedding/query
   vector dimensions
+- `EMBEDDING_SOURCE_KINDS` (optional, default
+  `episodic,semantic,affective`) to control which memory families persist
+  embedding records (`episodic|semantic|affective|relation`)
 - `PRODUCTION_DEBUG_TOKEN_REQUIRED` (optional, default `true`) to enforce
   debug-token configuration for production debug payload access
 - `ATTENTION_BURST_WINDOW_MS` (optional) to tune Telegram burst coalescing
