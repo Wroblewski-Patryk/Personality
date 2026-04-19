@@ -86,6 +86,29 @@ def test_context_summary_includes_affective_support_pattern_from_conclusions() -
     assert "Stable user preferences: recent turns show recurring stress signals and benefit from supportive pacing." in result.summary
 
 
+def test_context_summary_includes_relation_cues_when_confident_relations_exist() -> None:
+    result = ContextAgent().run(
+        event=_event("how should we proceed"),
+        perception=_perception(),
+        recent_memory=[],
+        relations=[
+            {
+                "relation_type": "collaboration_dynamic",
+                "relation_value": "guided",
+                "confidence": 0.78,
+            },
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "high_trust",
+                "confidence": 0.74,
+            },
+        ],
+    )
+
+    assert "Relation cues: current collaboration flow is guided and step-oriented" in result.summary
+    assert "interaction trust is high when concrete delivery is proposed" in result.summary
+
+
 def test_context_summary_can_include_identity_stance() -> None:
     result = ContextAgent().run(
         event=_event("how should we proceed"),

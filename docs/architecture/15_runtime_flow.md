@@ -97,6 +97,9 @@ At minimum, the state should contain:
 - adaptive state such as theta
 - working placeholders for perception, context, motivation, role, plan, expression, and action
 
+The initialized state should remain orchestration-agnostic so the same contract
+can run in a direct orchestrator or a graph runtime.
+
 ### Step 4. Identity and State Baseline Load
 
 Before deeper cognition, AION loads the stable baseline needed for interpretation.
@@ -135,10 +138,10 @@ The runtime retrieves relevant memory for the event.
 
 Typical retrieval layers:
 
-1. recent temporal context
-2. relevant episodic memory
-3. relevant conclusions
-4. relevant goals and tasks
+1. episodic layer (recent turns and payload traces)
+2. semantic layer (stable conclusions)
+3. affective layer (support patterns and affective continuity signals)
+4. operational layer (runtime preferences, active goals, active tasks, milestone state)
 
 Retrieved memory must be filtered and compressed.
 
@@ -198,6 +201,9 @@ Planning should answer:
 - what ordered steps make sense?
 - is response needed?
 - is side-effect execution needed?
+- which subconscious proposals are accepted, deferred, merged, or discarded?
+- which connector permission gates apply to proposed external operations?
+- which explicit domain intents (if any) should action execute?
 
 Planning proposes. It does not execute.
 
@@ -222,7 +228,8 @@ Action performs the actual side effects.
 Examples:
 
 - send the prepared response
-- persist state changes
+- execute explicit domain intents from planning
+- enforce proactive attention-gate and connector permission-gate outcomes
 - create or update tasks
 - trigger background work
 - call an external integration

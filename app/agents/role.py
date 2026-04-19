@@ -11,6 +11,7 @@ class RoleAgent:
         perception: PerceptionOutput,
         context: ContextOutput,
         user_preferences: dict | None = None,
+        relations: list[dict] | None = None,
         theta: dict | None = None,
     ) -> RoleOutput:
         text = str(event.payload.get("text", "")).strip()
@@ -20,6 +21,16 @@ class RoleAgent:
         preferred_role = str((user_preferences or {}).get("preferred_role", "")).strip().lower()
         preferred_role_confidence = float((user_preferences or {}).get("preferred_role_confidence", 0.0) or 0.0)
         collaboration_preference = str((user_preferences or {}).get("collaboration_preference", "")).strip().lower()
+        relation_collaboration = self._relation_value(
+            relations=relations or [],
+            relation_type="collaboration_dynamic",
+            min_confidence=0.7,
+        )
+        relation_support = self._relation_value(
+            relations=relations or [],
+            relation_type="support_intensity_preference",
+            min_confidence=0.68,
+        )
 
         analysis_keywords = {
             "analyze",
@@ -57,6 +68,8 @@ class RoleAgent:
 
         if affective_needs_support or affective_label == "support_distress":
             return RoleOutput(selected="friend", confidence=0.74)
+        if relation_support == "high_support" and perception.event_type == "question":
+            return RoleOutput(selected="mentor", confidence=0.68)
 
         if perception.topic == "planning" or any(keyword in lowered for keyword in analysis_keywords):
             return RoleOutput(selected="analyst", confidence=0.82)
@@ -76,6 +89,13 @@ class RoleAgent:
                 return RoleOutput(selected=collaboration_role, confidence=0.71)
             if perception.topic == "general":
                 return RoleOutput(selected=collaboration_role, confidence=0.66)
+
+        relation_role = self._collaboration_role(relation_collaboration or "")
+        if relation_role is not None:
+            if perception.event_type == "question" or perception.intent == "request_help":
+                return RoleOutput(selected=relation_role, confidence=0.69)
+            if perception.topic == "general":
+                return RoleOutput(selected=relation_role, confidence=0.64)
 
         theta_role = self._theta_role(theta)
         if theta_role is not None:
@@ -114,4 +134,16 @@ class RoleAgent:
             return "executor"
         if collaboration_preference == "guided":
             return "mentor"
+        return None
+
+    def _relation_value(self, *, relations: list[dict], relation_type: str, min_confidence: float) -> str | None:
+        for relation in relations:
+            if str(relation.get("relation_type", "")).strip().lower() != relation_type:
+                continue
+            confidence = float(relation.get("confidence", 0.0) or 0.0)
+            if confidence < min_confidence:
+                continue
+            value = str(relation.get("relation_value", "")).strip().lower()
+            if value:
+                return value
         return None

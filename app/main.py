@@ -9,11 +9,14 @@ from app.agents.planning import PlanningAgent
 from app.agents.role import RoleAgent
 from app.api.routes import router
 from app.core.action import ActionExecutor
+from app.core.attention import AttentionTurnCoordinator
 from app.core.config import get_settings
 from app.core.database import Database
+from app.core.debug_compat import DebugQueryCompatTelemetry
 from app.core.logging import get_logger, setup_logging
 from app.core.runtime_policy import (
     app_environment,
+    production_debug_token_required,
     production_policy_mismatches,
     runtime_policy_snapshot,
     strict_startup_blocked,
@@ -25,6 +28,7 @@ from app.integrations.telegram.client import TelegramClient
 from app.memory.repository import MemoryRepository
 from app.motivation.engine import MotivationEngine
 from app.reflection.worker import ReflectionWorker
+from app.workers.scheduler import SchedulerWorker
 
 
 def _log_runtime_policy_warnings(*, settings, logger) -> None:
@@ -37,11 +41,27 @@ def _log_runtime_policy_warnings(*, settings, logger) -> None:
             policy["event_debug_enabled"],
             policy["event_debug_source"],
         )
-        if not policy["event_debug_token_required"]:
+        if policy["event_debug_query_compat_enabled"]:
+            logger.warning(
+                "runtime_policy_warning env=%s event_debug_query_compat_enabled=%s recommendation=disable_event_debug_query_compat_in_production",
+                settings.app_env,
+                policy["event_debug_query_compat_enabled"],
+            )
+        if not policy["event_debug_token_required"] and production_debug_token_required(settings):
             logger.warning(
                 "runtime_policy_warning env=%s event_debug_token_required=%s recommendation=configure_event_debug_token_when_debug_enabled",
                 settings.app_env,
                 policy["event_debug_token_required"],
+            )
+        if (
+            not policy["event_debug_token_required"]
+            and not production_debug_token_required(settings)
+            and app_environment(settings) == "production"
+        ):
+            logger.warning(
+                "runtime_policy_warning env=%s production_debug_token_required=%s recommendation=enable_production_debug_token_requirement_or_configure_event_debug_token",
+                settings.app_env,
+                policy["production_debug_token_required"],
             )
     if "startup_schema_mode=create_tables" in violations:
         logger.warning(
@@ -108,7 +128,33 @@ async def lifespan(app: FastAPI):
         telegram_client=telegram_client,
     )
     reflection_worker = ReflectionWorker(memory_repository=memory_repository)
-    await reflection_worker.start()
+    scheduler_worker = SchedulerWorker(
+        memory_repository=memory_repository,
+        reflection_worker=reflection_worker,
+        enabled=settings.scheduler_enabled,
+        reflection_runtime_mode=settings.reflection_runtime_mode,
+        reflection_interval_seconds=settings.reflection_interval,
+        maintenance_interval_seconds=settings.maintenance_interval,
+    )
+    runtime_reflection_worker = reflection_worker
+    if settings.reflection_runtime_mode == "in_process":
+        await reflection_worker.start()
+    else:
+        runtime_reflection_worker = None
+        logger.info(
+            "reflection_runtime mode=%s action=defer_background_worker note=enqueue_only_for_out_of_process_execution",
+            settings.reflection_runtime_mode,
+        )
+    if settings.scheduler_enabled:
+        await scheduler_worker.start()
+        logger.info(
+            "scheduler_runtime enabled=%s reflection_interval=%s maintenance_interval=%s",
+            settings.scheduler_enabled,
+            settings.reflection_interval,
+            settings.maintenance_interval,
+        )
+    else:
+        logger.info("scheduler_runtime enabled=%s", settings.scheduler_enabled)
 
     runtime = RuntimeOrchestrator(
         perception_agent=PerceptionAgent(),
@@ -119,8 +165,13 @@ async def lifespan(app: FastAPI):
         expression_agent=ExpressionAgent(openai_client=openai_client),
         action_executor=action_executor,
         memory_repository=memory_repository,
-        reflection_worker=reflection_worker,
+        reflection_worker=runtime_reflection_worker,
         affective_assessor=AffectiveAssessor(classifier_client=openai_client),
+    )
+    attention_turn_coordinator = AttentionTurnCoordinator(
+        burst_window_ms=settings.attention_burst_window_ms,
+        answered_ttl_seconds=settings.attention_answered_ttl_seconds,
+        stale_turn_seconds=settings.attention_stale_turn_seconds,
     )
 
     app.state.settings = settings
@@ -128,18 +179,27 @@ async def lifespan(app: FastAPI):
     app.state.memory_repository = memory_repository
     app.state.telegram_client = telegram_client
     app.state.reflection_worker = reflection_worker
+    app.state.scheduler_worker = scheduler_worker
+    app.state.reflection_runtime_mode = settings.reflection_runtime_mode
+    app.state.attention_turn_coordinator = attention_turn_coordinator
+    app.state.debug_query_compat_telemetry = DebugQueryCompatTelemetry(
+        recent_window_size=settings.event_debug_query_compat_recent_window
+    )
     app.state.runtime = runtime
 
     logger.info(
-        "AION started env=%s port=%s openai_enabled=%s telegram_enabled=%s",
+        "AION started env=%s port=%s openai_enabled=%s telegram_enabled=%s reflection_runtime_mode=%s scheduler_enabled=%s",
         settings.app_env,
         settings.app_port,
         bool(settings.openai_api_key),
         bool(settings.telegram_bot_token),
+        settings.reflection_runtime_mode,
+        settings.scheduler_enabled,
     )
     try:
         yield
     finally:
+        await scheduler_worker.stop()
         await reflection_worker.stop()
         await telegram_client.close()
         await database.dispose()

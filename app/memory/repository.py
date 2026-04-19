@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app.core.contracts import MemoryLayerKind
+from app.memory.embeddings import cosine_similarity
 from app.memory.models import (
     AionConclusion,
     AionGoal,
@@ -11,7 +13,10 @@ from app.memory.models import (
     AionGoalProgress,
     AionMemory,
     AionProfile,
+    AionRelation,
     AionReflectionTask,
+    AionSemanticEmbedding,
+    AionSubconsciousProposal,
     AionTask,
     AionTheta,
     Base,
@@ -22,6 +27,33 @@ class MemoryRepository:
     ACTIVE_GOAL_STATUSES = ("active",)
     ACTIVE_TASK_STATUSES = ("todo", "in_progress", "blocked")
     ACTIVE_MILESTONE_STATUSES = ("active",)
+    MEMORY_LAYER_EPISODIC: MemoryLayerKind = "episodic"
+    MEMORY_LAYER_SEMANTIC: MemoryLayerKind = "semantic"
+    MEMORY_LAYER_AFFECTIVE: MemoryLayerKind = "affective"
+    MEMORY_LAYER_OPERATIONAL: MemoryLayerKind = "operational"
+    SEMANTIC_SOURCE_KINDS = frozenset({"episodic", "semantic", "affective", "relation"})
+    AFFECTIVE_CONCLUSION_KINDS = frozenset({"affective_support_pattern", "affective_support_sensitivity"})
+    RELATION_CONFIDENCE_THRESHOLD = 0.65
+    OPERATIONAL_CONCLUSION_KINDS = frozenset(
+        {
+            "response_style",
+            "preferred_role",
+            "collaboration_preference",
+            "goal_execution_state",
+            "goal_progress_score",
+            "goal_progress_trend",
+            "goal_progress_arc",
+            "goal_milestone_transition",
+            "goal_milestone_state",
+            "goal_milestone_arc",
+            "goal_milestone_pressure",
+            "goal_milestone_dependency_state",
+            "goal_milestone_due_state",
+            "goal_milestone_due_window",
+            "goal_milestone_risk",
+            "goal_completion_criteria",
+        }
+    )
     GLOBAL_SCOPE_TYPE = "global"
     GLOBAL_SCOPE_KEY = "global"
 
@@ -31,6 +63,469 @@ class MemoryRepository:
     async def create_tables(self, engine: AsyncEngine) -> None:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+
+    def memory_layer_vocabulary(self) -> tuple[MemoryLayerKind, ...]:
+        return (
+            self.MEMORY_LAYER_EPISODIC,
+            self.MEMORY_LAYER_SEMANTIC,
+            self.MEMORY_LAYER_AFFECTIVE,
+            self.MEMORY_LAYER_OPERATIONAL,
+        )
+
+    def conclusion_memory_layer(self, kind: str) -> MemoryLayerKind:
+        normalized_kind = str(kind).strip().lower()
+        if normalized_kind in self.AFFECTIVE_CONCLUSION_KINDS:
+            return self.MEMORY_LAYER_AFFECTIVE
+        if normalized_kind in self.OPERATIONAL_CONCLUSION_KINDS:
+            return self.MEMORY_LAYER_OPERATIONAL
+        return self.MEMORY_LAYER_SEMANTIC
+
+    async def get_recent_episodic_memory(self, user_id: str, limit: int = 5) -> list[dict]:
+        return await self.get_recent_for_user(user_id=user_id, limit=limit)
+
+    async def get_conclusions_for_layer(
+        self,
+        *,
+        user_id: str,
+        layer: MemoryLayerKind,
+        limit: int = 5,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        include_global: bool = False,
+    ) -> list[dict]:
+        if layer not in {
+            self.MEMORY_LAYER_SEMANTIC,
+            self.MEMORY_LAYER_AFFECTIVE,
+            self.MEMORY_LAYER_OPERATIONAL,
+        }:
+            return []
+
+        rows = await self.get_user_conclusions(
+            user_id=user_id,
+            limit=max(limit * 3, limit),
+            scope_type=scope_type,
+            scope_key=scope_key,
+            include_global=include_global,
+        )
+        filtered = [item for item in rows if self.conclusion_memory_layer(str(item.get("kind", ""))) == layer]
+        return filtered[:limit]
+
+    async def get_operational_memory_view(
+        self,
+        *,
+        user_id: str,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        include_global: bool = True,
+    ) -> dict:
+        return await self.get_user_runtime_preferences(
+            user_id=user_id,
+            scope_type=scope_type,
+            scope_key=scope_key,
+            include_global=include_global,
+        )
+
+    async def upsert_relation(
+        self,
+        *,
+        user_id: str,
+        relation_type: str,
+        relation_value: str,
+        confidence: float,
+        source: str,
+        supporting_event_id: str | None = None,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        evidence_count: int = 1,
+        decay_rate: float = 0.02,
+    ) -> dict:
+        normalized_scope_type, normalized_scope_key = self._normalize_conclusion_scope(
+            scope_type=scope_type,
+            scope_key=scope_key,
+        )
+        normalized_relation_type = str(relation_type).strip().lower()[:32]
+        normalized_relation_value = str(relation_value).strip().lower()[:128]
+        async with self.session_factory() as session:
+            statement = (
+                select(AionRelation)
+                .where(
+                    AionRelation.user_id == user_id,
+                    AionRelation.relation_type == normalized_relation_type,
+                    AionRelation.scope_type == normalized_scope_type,
+                    AionRelation.scope_key == normalized_scope_key,
+                )
+                .limit(1)
+            )
+            result = await session.execute(statement)
+            row = result.scalar_one_or_none()
+
+            if row is None:
+                row = AionRelation(
+                    user_id=user_id,
+                    relation_type=normalized_relation_type,
+                    relation_value=normalized_relation_value,
+                    confidence=max(0.0, min(1.0, float(confidence))),
+                    source=source[:32],
+                    supporting_event_id=supporting_event_id,
+                    scope_type=normalized_scope_type,
+                    scope_key=normalized_scope_key,
+                    evidence_count=max(1, int(evidence_count)),
+                    decay_rate=max(0.0, min(1.0, float(decay_rate))),
+                )
+                session.add(row)
+            else:
+                row.relation_value = normalized_relation_value
+                row.confidence = max(0.0, min(1.0, float(confidence)))
+                row.source = source[:32]
+                row.supporting_event_id = supporting_event_id
+                row.evidence_count = max(1, int(evidence_count))
+                row.decay_rate = max(0.0, min(1.0, float(decay_rate)))
+                row.last_observed_at = datetime.now(timezone.utc)
+
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_relation(row)
+
+    async def get_user_relations(
+        self,
+        *,
+        user_id: str,
+        min_confidence: float | None = None,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        include_global: bool = True,
+        limit: int = 8,
+    ) -> list[dict]:
+        where_clauses = [AionRelation.user_id == user_id]
+        threshold = self.RELATION_CONFIDENCE_THRESHOLD if min_confidence is None else float(min_confidence)
+        where_clauses.append(AionRelation.confidence >= max(0.0, min(1.0, threshold)))
+
+        if scope_type is not None or scope_key is not None:
+            normalized_scope_type, normalized_scope_key = self._normalize_conclusion_scope(
+                scope_type=scope_type,
+                scope_key=scope_key,
+            )
+            scoped_clause = and_(
+                AionRelation.scope_type == normalized_scope_type,
+                AionRelation.scope_key == normalized_scope_key,
+            )
+            if include_global and (
+                normalized_scope_type != self.GLOBAL_SCOPE_TYPE
+                or normalized_scope_key != self.GLOBAL_SCOPE_KEY
+            ):
+                where_clauses.append(
+                    or_(
+                        scoped_clause,
+                        and_(
+                            AionRelation.scope_type == self.GLOBAL_SCOPE_TYPE,
+                            AionRelation.scope_key == self.GLOBAL_SCOPE_KEY,
+                        ),
+                    )
+                )
+            else:
+                where_clauses.append(scoped_clause)
+
+        async with self.session_factory() as session:
+            statement = (
+                select(AionRelation)
+                .where(*where_clauses)
+                .order_by(AionRelation.confidence.desc(), AionRelation.updated_at.desc(), AionRelation.id.desc())
+                .limit(limit)
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+        return [self._serialize_relation(row) for row in rows]
+
+    async def upsert_semantic_embedding(
+        self,
+        *,
+        user_id: str,
+        source_kind: str,
+        source_id: str,
+        content: str,
+        embedding: list[float] | None,
+        embedding_model: str,
+        embedding_dimensions: int,
+        source_event_id: str | None = None,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        metadata: dict | None = None,
+    ) -> dict:
+        normalized_source_kind = str(source_kind).strip().lower()
+        if normalized_source_kind not in self.SEMANTIC_SOURCE_KINDS:
+            normalized_source_kind = "semantic"
+        normalized_scope_type, normalized_scope_key = self._normalize_conclusion_scope(
+            scope_type=scope_type,
+            scope_key=scope_key,
+        )
+        async with self.session_factory() as session:
+            statement = (
+                select(AionSemanticEmbedding)
+                .where(
+                    AionSemanticEmbedding.user_id == user_id,
+                    AionSemanticEmbedding.source_kind == normalized_source_kind,
+                    AionSemanticEmbedding.source_id == source_id,
+                )
+                .limit(1)
+            )
+            result = await session.execute(statement)
+            row = result.scalar_one_or_none()
+
+            if row is None:
+                row = AionSemanticEmbedding(
+                    user_id=user_id,
+                    source_kind=normalized_source_kind,
+                    source_id=source_id[:96],
+                    source_event_id=source_event_id,
+                    scope_type=normalized_scope_type,
+                    scope_key=normalized_scope_key,
+                    content=content[:5000],
+                    embedding=embedding,
+                    embedding_model=embedding_model[:64],
+                    embedding_dimensions=max(1, int(embedding_dimensions)),
+                    metadata_json=metadata,
+                )
+                session.add(row)
+            else:
+                row.source_event_id = source_event_id
+                row.scope_type = normalized_scope_type
+                row.scope_key = normalized_scope_key
+                row.content = content[:5000]
+                row.embedding = embedding
+                row.embedding_model = embedding_model[:64]
+                row.embedding_dimensions = max(1, int(embedding_dimensions))
+                row.metadata_json = metadata
+
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_semantic_embedding(row)
+
+    async def get_semantic_embeddings(
+        self,
+        *,
+        user_id: str,
+        source_kinds: list[str] | None = None,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        include_global: bool = True,
+        limit: int = 32,
+    ) -> list[dict]:
+        where_clauses = [AionSemanticEmbedding.user_id == user_id]
+        normalized_source_kinds = [
+            str(kind).strip().lower()
+            for kind in (source_kinds or [])
+            if str(kind).strip().lower() in self.SEMANTIC_SOURCE_KINDS
+        ]
+        if normalized_source_kinds:
+            where_clauses.append(AionSemanticEmbedding.source_kind.in_(normalized_source_kinds))
+
+        if scope_type is not None or scope_key is not None:
+            normalized_scope_type, normalized_scope_key = self._normalize_conclusion_scope(
+                scope_type=scope_type,
+                scope_key=scope_key,
+            )
+            scoped_clause = and_(
+                AionSemanticEmbedding.scope_type == normalized_scope_type,
+                AionSemanticEmbedding.scope_key == normalized_scope_key,
+            )
+            if include_global and (
+                normalized_scope_type != self.GLOBAL_SCOPE_TYPE
+                or normalized_scope_key != self.GLOBAL_SCOPE_KEY
+            ):
+                where_clauses.append(
+                    or_(
+                        scoped_clause,
+                        and_(
+                            AionSemanticEmbedding.scope_type == self.GLOBAL_SCOPE_TYPE,
+                            AionSemanticEmbedding.scope_key == self.GLOBAL_SCOPE_KEY,
+                        ),
+                    )
+                )
+            else:
+                where_clauses.append(scoped_clause)
+
+        async with self.session_factory() as session:
+            statement = (
+                select(AionSemanticEmbedding)
+                .where(*where_clauses)
+                .order_by(AionSemanticEmbedding.updated_at.desc(), AionSemanticEmbedding.id.desc())
+                .limit(limit)
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+        return [self._serialize_semantic_embedding(row) for row in rows]
+
+    async def query_semantic_similarity(
+        self,
+        *,
+        user_id: str,
+        query_embedding: list[float],
+        source_kinds: list[str] | None = None,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        include_global: bool = True,
+        limit: int = 8,
+    ) -> list[dict]:
+        if not query_embedding:
+            return []
+
+        candidates = await self.get_semantic_embeddings(
+            user_id=user_id,
+            source_kinds=source_kinds,
+            scope_type=scope_type,
+            scope_key=scope_key,
+            include_global=include_global,
+            limit=max(limit * 4, limit),
+        )
+        scored: list[tuple[dict, float]] = []
+        for item in candidates:
+            embedding = item.get("embedding")
+            if not isinstance(embedding, list) or not embedding:
+                continue
+            score = cosine_similarity(
+                [float(value) for value in query_embedding],
+                [float(value) for value in embedding],
+            )
+            scored.append((item, score))
+
+        ranked = sorted(
+            scored,
+            key=lambda pair: (pair[1], str(pair[0].get("updated_at", ""))),
+            reverse=True,
+        )
+        return [
+            {
+                **item,
+                "similarity": round(float(score), 6),
+            }
+            for item, score in ranked[:limit]
+        ]
+
+    async def get_hybrid_memory_bundle(
+        self,
+        *,
+        user_id: str,
+        query_text: str,
+        query_embedding: list[float] | None = None,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        include_global: bool = True,
+        episodic_limit: int = 12,
+        conclusion_limit: int = 8,
+    ) -> dict:
+        episodic_candidates = await self.get_recent_for_user(
+            user_id=user_id,
+            limit=max(episodic_limit * 2, episodic_limit),
+        )
+        conclusion_candidates = await self.get_user_conclusions(
+            user_id=user_id,
+            limit=max(conclusion_limit * 3, conclusion_limit),
+            scope_type=scope_type,
+            scope_key=scope_key,
+            include_global=include_global,
+        )
+        affective_conclusions = [
+            item
+            for item in conclusion_candidates
+            if self.conclusion_memory_layer(str(item.get("kind", ""))) == self.MEMORY_LAYER_AFFECTIVE
+        ]
+        semantic_conclusions = [
+            item
+            for item in conclusion_candidates
+            if self.conclusion_memory_layer(str(item.get("kind", ""))) == self.MEMORY_LAYER_SEMANTIC
+        ]
+
+        query_tokens = self._hybrid_tokens(query_text)
+        episodic_scored = sorted(
+            (
+                (
+                    item,
+                    self._hybrid_episodic_score(item=item, query_tokens=query_tokens),
+                )
+                for item in episodic_candidates
+            ),
+            key=lambda pair: pair[1],
+            reverse=True,
+        )
+        episodic = [item for item, _ in episodic_scored[:episodic_limit]]
+        lexical_hit_count = len([score for _, score in episodic_scored if score > 0.0])
+
+        vector_hits: list[dict] = []
+        if query_embedding:
+            vector_hits = await self.query_semantic_similarity(
+                user_id=user_id,
+                query_embedding=query_embedding,
+                source_kinds=["semantic", "affective"],
+                scope_type=scope_type,
+                scope_key=scope_key,
+                include_global=include_global,
+                limit=conclusion_limit,
+            )
+
+        vector_by_kind_content = {
+            (
+                str(hit.get("source_kind", "")),
+                str(hit.get("content", "")).strip().lower(),
+            ): float(hit.get("similarity", 0.0) or 0.0)
+            for hit in vector_hits
+        }
+        semantic_scored = sorted(
+            (
+                (
+                    item,
+                    self._hybrid_semantic_score(
+                        item=item,
+                        query_tokens=query_tokens,
+                        vector_similarity=vector_by_kind_content.get(
+                            ("semantic", str(item.get("content", "")).strip().lower()),
+                            0.0,
+                        ),
+                    ),
+                )
+                for item in semantic_conclusions
+            ),
+            key=lambda pair: pair[1],
+            reverse=True,
+        )
+        affective_scored = sorted(
+            (
+                (
+                    item,
+                    self._hybrid_semantic_score(
+                        item=item,
+                        query_tokens=query_tokens,
+                        vector_similarity=vector_by_kind_content.get(
+                            ("affective", str(item.get("content", "")).strip().lower()),
+                            0.0,
+                        ),
+                    ),
+                )
+                for item in affective_conclusions
+            ),
+            key=lambda pair: pair[1],
+            reverse=True,
+        )
+
+        semantic = [item for item, _ in semantic_scored[:conclusion_limit]]
+        affective = [item for item, _ in affective_scored[:conclusion_limit]]
+        return {
+            "episodic": episodic,
+            "semantic": semantic,
+            "affective": affective,
+            "diagnostics": {
+                "query_tokens": len(query_tokens),
+                "episodic_candidates": len(episodic_candidates),
+                "semantic_candidates": len(semantic_conclusions),
+                "affective_candidates": len(affective_conclusions),
+                "episodic_lexical_hits": lexical_hit_count,
+                "vector_hits": len(vector_hits),
+                "semantic_selected": len(semantic),
+                "affective_selected": len(affective),
+            },
+        }
 
     async def write_episode(
         self,
@@ -792,6 +1287,26 @@ class MemoryRepository:
             await session.commit()
             await session.refresh(row)
 
+        conclusion_layer = self.conclusion_memory_layer(kind)
+        if conclusion_layer in {self.MEMORY_LAYER_SEMANTIC, self.MEMORY_LAYER_AFFECTIVE}:
+            await self.upsert_semantic_embedding(
+                user_id=user_id,
+                source_kind="semantic" if conclusion_layer == self.MEMORY_LAYER_SEMANTIC else "affective",
+                source_id=f"conclusion:{row.id}",
+                source_event_id=supporting_event_id,
+                scope_type=normalized_scope_type,
+                scope_key=normalized_scope_key,
+                content=content,
+                embedding=None,
+                embedding_model="pending",
+                embedding_dimensions=0,
+                metadata={
+                    "kind": kind,
+                    "confidence": confidence,
+                    "source": source,
+                },
+            )
+
         return {
             "user_id": row.user_id,
             "kind": row.kind,
@@ -915,6 +1430,104 @@ class MemoryRepository:
             await session.refresh(row)
 
         return self._serialize_reflection_task(row)
+
+    async def upsert_subconscious_proposal(
+        self,
+        *,
+        user_id: str,
+        proposal_type: str,
+        summary: str,
+        payload: dict | None = None,
+        confidence: float = 0.0,
+        source_event_id: str | None = None,
+        research_policy: str = "read_only",
+        allowed_tools: list[str] | None = None,
+    ) -> dict:
+        normalized_type = str(proposal_type).strip().lower()[:32]
+        normalized_summary = str(summary).strip()
+        normalized_tools = [str(item).strip().lower() for item in (allowed_tools or []) if str(item).strip()]
+        async with self.session_factory() as session:
+            statement = (
+                select(AionSubconsciousProposal)
+                .where(
+                    AionSubconsciousProposal.user_id == user_id,
+                    AionSubconsciousProposal.proposal_type == normalized_type,
+                    AionSubconsciousProposal.summary == normalized_summary,
+                    AionSubconsciousProposal.status == "pending",
+                )
+                .order_by(AionSubconsciousProposal.id.desc())
+                .limit(1)
+            )
+            result = await session.execute(statement)
+            row = result.scalar_one_or_none()
+            if row is None:
+                row = AionSubconsciousProposal(
+                    user_id=user_id,
+                    proposal_type=normalized_type,
+                    summary=normalized_summary[:1000],
+                    payload=dict(payload or {}),
+                    confidence=max(0.0, min(1.0, float(confidence))),
+                    source_event_id=source_event_id,
+                    status="pending",
+                    research_policy=str(research_policy or "read_only").strip().lower()[:16] or "read_only",
+                    allowed_tools_json=normalized_tools,
+                )
+                session.add(row)
+            else:
+                row.payload = dict(payload or row.payload or {})
+                row.confidence = max(row.confidence, max(0.0, min(1.0, float(confidence))))
+                row.source_event_id = source_event_id or row.source_event_id
+                row.research_policy = str(research_policy or row.research_policy or "read_only").strip().lower()[:16]
+                row.allowed_tools_json = normalized_tools or list(row.allowed_tools_json or [])
+            await session.commit()
+            await session.refresh(row)
+        return self._serialize_subconscious_proposal(row)
+
+    async def get_pending_subconscious_proposals(self, *, user_id: str, limit: int = 8) -> list[dict]:
+        async with self.session_factory() as session:
+            statement = (
+                select(AionSubconsciousProposal)
+                .where(
+                    AionSubconsciousProposal.user_id == user_id,
+                    AionSubconsciousProposal.status == "pending",
+                )
+                .order_by(
+                    AionSubconsciousProposal.confidence.desc(),
+                    AionSubconsciousProposal.created_at.asc(),
+                    AionSubconsciousProposal.id.asc(),
+                )
+                .limit(limit)
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+        return [self._serialize_subconscious_proposal(row) for row in rows]
+
+    async def resolve_subconscious_proposal(
+        self,
+        *,
+        proposal_id: int,
+        decision: str,
+        reason: str = "",
+    ) -> dict | None:
+        status_map = {
+            "accept": "accepted",
+            "merge": "merged",
+            "defer": "deferred",
+            "discard": "discarded",
+        }
+        next_status = status_map.get(str(decision).strip().lower())
+        if next_status is None:
+            return None
+        async with self.session_factory() as session:
+            row = await session.get(AionSubconsciousProposal, proposal_id)
+            if row is None:
+                return None
+            row.status = next_status
+            row.decision_reason = str(reason or "").strip()[:1000]
+            row.decided_at = datetime.now(timezone.utc)
+            await session.commit()
+            await session.refresh(row)
+        return self._serialize_subconscious_proposal(row)
 
     async def get_reflection_task_stats(
         self,
@@ -1139,6 +1752,60 @@ class MemoryRepository:
             "created_at": row.created_at,
         }
 
+    def _serialize_semantic_embedding(self, row: AionSemanticEmbedding) -> dict:
+        return {
+            "id": row.id,
+            "user_id": row.user_id,
+            "source_kind": row.source_kind,
+            "source_id": row.source_id,
+            "source_event_id": row.source_event_id,
+            "scope_type": row.scope_type,
+            "scope_key": row.scope_key,
+            "content": row.content,
+            "embedding": list(row.embedding or []),
+            "embedding_model": row.embedding_model,
+            "embedding_dimensions": row.embedding_dimensions,
+            "metadata": row.metadata_json or {},
+            "updated_at": row.updated_at,
+            "created_at": row.created_at,
+        }
+
+    def _serialize_relation(self, row: AionRelation) -> dict:
+        return {
+            "id": row.id,
+            "user_id": row.user_id,
+            "relation_type": row.relation_type,
+            "relation_value": row.relation_value,
+            "confidence": row.confidence,
+            "source": row.source,
+            "scope_type": row.scope_type,
+            "scope_key": row.scope_key,
+            "supporting_event_id": row.supporting_event_id,
+            "evidence_count": row.evidence_count,
+            "decay_rate": row.decay_rate,
+            "last_observed_at": row.last_observed_at,
+            "updated_at": row.updated_at,
+            "created_at": row.created_at,
+        }
+
+    def _serialize_subconscious_proposal(self, row: AionSubconsciousProposal) -> dict:
+        return {
+            "proposal_id": row.id,
+            "user_id": row.user_id,
+            "proposal_type": row.proposal_type,
+            "summary": row.summary,
+            "payload": row.payload or {},
+            "confidence": row.confidence,
+            "source_event_id": row.source_event_id,
+            "status": row.status,
+            "decision_reason": row.decision_reason,
+            "research_policy": row.research_policy,
+            "allowed_tools": list(row.allowed_tools_json or []),
+            "decided_at": row.decided_at,
+            "updated_at": row.updated_at,
+            "created_at": row.created_at,
+        }
+
     def _goal_priority_rank(self, priority: str) -> int:
         return {
             "low": 1,
@@ -1168,6 +1835,33 @@ class MemoryRepository:
             "recovery_phase": 3,
             "completion_window": 4,
         }.get(phase, 0)
+
+    def _hybrid_tokens(self, value: str) -> set[str]:
+        canonical = "".join(char if char.isalnum() or char.isspace() else " " for char in str(value).strip().lower())
+        return {token for token in canonical.split() if len(token) >= 3}
+
+    def _hybrid_overlap_score(self, text: str, query_tokens: set[str]) -> float:
+        if not query_tokens:
+            return 0.0
+        tokens = self._hybrid_tokens(text)
+        if not tokens:
+            return 0.0
+        overlap = len(tokens.intersection(query_tokens))
+        return float(overlap) / float(max(1, len(query_tokens)))
+
+    def _hybrid_episodic_score(self, *, item: dict, query_tokens: set[str]) -> float:
+        summary = str(item.get("summary", ""))
+        payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+        content = f"{summary} {payload.get('event', '')} {' '.join(payload.get('memory_topics', []) if isinstance(payload.get('memory_topics'), list) else [])}"
+        lexical = self._hybrid_overlap_score(content, query_tokens)
+        importance = float(item.get("importance", 0.0) or 0.0)
+        return lexical * 1.25 + importance * 0.35
+
+    def _hybrid_semantic_score(self, *, item: dict, query_tokens: set[str], vector_similarity: float) -> float:
+        content = str(item.get("content", ""))
+        lexical = self._hybrid_overlap_score(content, query_tokens)
+        confidence = float(item.get("confidence", 0.0) or 0.0)
+        return lexical * 0.8 + float(vector_similarity) * 1.6 + confidence * 0.2
 
     def _normalize_match_text(self, value: str) -> str:
         lowered = " ".join(value.strip().lower().split())

@@ -3,10 +3,16 @@ from typing import Any
 from uuid import uuid4
 
 from app.core.contracts import Event, EventMeta
+from app.core.scheduler_contracts import (
+    SCHEDULER_SOURCE,
+    normalize_scheduler_payload,
+    normalize_scheduler_subsource,
+)
 
 MAX_EVENT_TEXT_LENGTH = 4000
 MAX_META_ID_LENGTH = 64
 ANONYMOUS_USER_ID = "anonymous"
+SCHEDULER_USER_ID = "scheduler"
 
 
 def looks_like_telegram_update(raw: dict[str, Any]) -> bool:
@@ -68,10 +74,44 @@ def normalize_event(
     )
 
 
+def build_scheduler_event(
+    *,
+    subsource: str | None = None,
+    payload: dict[str, Any] | None = None,
+    user_id: str | None = None,
+    trace_id: str | None = None,
+) -> Event:
+    normalized_subsource = normalize_scheduler_subsource(subsource)
+    normalized_payload = normalize_scheduler_payload(payload, subsource=normalized_subsource)
+    return Event(
+        event_id=str(uuid4()),
+        source=SCHEDULER_SOURCE,
+        subsource=normalized_subsource,
+        timestamp=datetime.now(timezone.utc),
+        payload=normalized_payload,
+        meta=EventMeta(
+            user_id=_normalize_user_id(user_id or SCHEDULER_USER_ID),
+            trace_id=_normalize_trace_id(trace_id),
+        ),
+    )
+
+
 def _normalize_text(value: object) -> str:
     text = str(value) if value is not None else ""
     normalized = " ".join(text.split())
     return normalized[:MAX_EVENT_TEXT_LENGTH]
+
+
+def coalesce_turn_text(parts: list[str], *, separator: str = "\n") -> str:
+    normalized_parts: list[str] = []
+    for part in parts:
+        normalized = _normalize_text(part)
+        if normalized:
+            normalized_parts.append(normalized)
+    if not normalized_parts:
+        return ""
+    merged = separator.join(normalized_parts)
+    return merged[:MAX_EVENT_TEXT_LENGTH]
 
 
 def _normalize_user_id(value: object) -> str:

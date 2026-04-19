@@ -1,4 +1,10 @@
-from app.core.events import MAX_EVENT_TEXT_LENGTH, looks_like_telegram_update, normalize_event
+from app.core.events import (
+    MAX_EVENT_TEXT_LENGTH,
+    build_scheduler_event,
+    coalesce_turn_text,
+    looks_like_telegram_update,
+    normalize_event,
+)
 
 
 def test_normalize_api_event() -> None:
@@ -59,6 +65,19 @@ def test_normalize_api_event_normalizes_meta_field_lengths() -> None:
     assert len(event.meta.trace_id) == 64
 
 
+def test_coalesce_turn_text_normalizes_and_skips_empty_parts() -> None:
+    merged = coalesce_turn_text(["  hello   there  ", "\n", "  second   line  "])
+
+    assert merged == "hello there\nsecond line"
+
+
+def test_coalesce_turn_text_applies_max_length_limit() -> None:
+    merged = coalesce_turn_text(["x" * MAX_EVENT_TEXT_LENGTH, "y" * 25])
+
+    assert len(merged) == MAX_EVENT_TEXT_LENGTH
+    assert merged == "x" * MAX_EVENT_TEXT_LENGTH
+
+
 def test_normalize_api_event_uses_default_user_id_when_meta_user_id_is_missing() -> None:
     event = normalize_event(
         {"text": "hello"},
@@ -101,3 +120,60 @@ def test_normalize_telegram_event() -> None:
 def test_looks_like_telegram_update_requires_message_shape() -> None:
     assert looks_like_telegram_update({"update_id": 1, "message": {"text": "ping"}}) is True
     assert looks_like_telegram_update({"text": "hello"}) is False
+
+
+def test_build_scheduler_event_normalizes_source_cadence_and_runtime_boundary() -> None:
+    event = build_scheduler_event(
+        subsource="maintenance_tick",
+        payload={
+            "text": "  maintenance   pass  ",
+            "cadence_interval_seconds": 120,
+        },
+    )
+
+    assert event.source == "scheduler"
+    assert event.subsource == "maintenance_tick"
+    assert event.meta.user_id == "scheduler"
+    assert event.payload["text"] == "maintenance pass"
+    assert event.payload["cadence_kind"] == "maintenance_tick"
+    assert event.payload["cadence_interval_seconds"] == 900
+    assert event.payload["runtime_boundary"] == {
+        "background_only": True,
+        "user_visible_delivery": False,
+    }
+
+
+def test_build_scheduler_event_normalizes_proactive_payload_contract() -> None:
+    event = build_scheduler_event(
+        subsource="proactive_tick",
+        payload={
+            "text": "check progress",
+            "chat_id": 123456,
+            "proactive_trigger": "goal_stagnation",
+            "importance": 0.81,
+            "urgency": 0.67,
+            "user_context": {
+                "quiet_hours": True,
+                "focus_mode": True,
+                "recent_user_activity": "idle",
+                "recent_outbound_count": 3,
+                "unanswered_proactive_count": 2,
+            },
+        },
+    )
+
+    assert event.source == "scheduler"
+    assert event.subsource == "proactive_tick"
+    assert event.payload["chat_id"] == 123456
+    assert event.payload["proactive"] == {
+        "trigger": "goal_stagnation",
+        "importance": 0.81,
+        "urgency": 0.67,
+        "user_context": {
+            "quiet_hours": True,
+            "focus_mode": True,
+            "recent_user_activity": "idle",
+            "recent_outbound_count": 3,
+            "unanswered_proactive_count": 2,
+        },
+    }

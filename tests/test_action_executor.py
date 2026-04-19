@@ -3,14 +3,25 @@ from datetime import datetime, timezone
 from app.core.action import ActionExecutor
 from app.core.contracts import (
     ActionDelivery,
+    CalendarSchedulingIntentDomainIntent,
+    ConnectedDriveAccessDomainIntent,
+    ConnectorCapabilityDiscoveryDomainIntent,
     ContextOutput,
     Event,
     EventMeta,
     ExpressionOutput,
+    ExternalTaskSyncDomainIntent,
     MotivationOutput,
+    NoopDomainIntent,
     PerceptionOutput,
     PlanOutput,
+    ProactiveDeliveryGuardOutput,
     RoleOutput,
+    UpdateCollaborationPreferenceDomainIntent,
+    UpdateResponseStyleDomainIntent,
+    UpdateTaskStatusDomainIntent,
+    UpsertGoalDomainIntent,
+    UpsertTaskDomainIntent,
 )
 
 
@@ -101,8 +112,15 @@ def _motivation() -> MotivationOutput:
     )
 
 
-def _plan() -> PlanOutput:
-    return PlanOutput(goal="reply", steps=["reply"], needs_action=False, needs_response=True)
+def _plan(*, domain_intents=None, proactive_delivery_guard: ProactiveDeliveryGuardOutput | None = None) -> PlanOutput:
+    return PlanOutput(
+        goal="reply",
+        steps=["reply"],
+        needs_action=False,
+        needs_response=True,
+        domain_intents=domain_intents if domain_intents is not None else [NoopDomainIntent()],
+        proactive_delivery_guard=proactive_delivery_guard,
+    )
 
 
 def _expression() -> ExpressionOutput:
@@ -165,6 +183,27 @@ async def test_execute_fails_when_telegram_delivery_contract_has_no_chat_id() ->
     assert result.status == "fail"
     assert result.actions == []
     assert "chat_id is missing" in result.notes
+    assert telegram_client.calls == []
+
+
+async def test_execute_defers_when_proactive_delivery_guard_disallows_outreach() -> None:
+    memory_repository = FakeMemoryRepository()
+    telegram_client = FakeTelegramClient()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=telegram_client)
+
+    result = await executor.execute(
+        _plan(
+            proactive_delivery_guard=ProactiveDeliveryGuardOutput(
+                allowed=False,
+                reason="opt_in_required",
+            )
+        ),
+        _delivery(channel="telegram", chat_id=123456),
+    )
+
+    assert result.status == "noop"
+    assert result.actions == []
+    assert "opt_in_required" in result.notes
     assert telegram_client.calls == []
 
 
@@ -260,14 +299,15 @@ async def test_persist_episode_marks_explicit_response_style_preference_for_refl
     memory_repository = FakeMemoryRepository()
     executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
 
+    plan = _plan(domain_intents=[UpdateResponseStyleDomainIntent(style="concise")])
     record = await executor.persist_episode(
         event=_event("Please answer briefly from now on."),
         perception=_perception(["general"]),
         context=_context(),
         motivation=_motivation(),
         role=_role(),
-        plan=_plan(),
-        action_result=await executor.execute(_plan(), _delivery()),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
         expression=_expression(),
     )
 
@@ -278,32 +318,43 @@ async def test_persist_episode_marks_explicit_collaboration_preference_for_refle
     memory_repository = FakeMemoryRepository()
     executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
 
+    plan = _plan(domain_intents=[UpdateCollaborationPreferenceDomainIntent(preference="guided")])
     record = await executor.persist_episode(
         event=_event("Can you walk me through this step by step?"),
         perception=_perception(["general"]),
         context=_context(),
         motivation=_motivation(),
         role=_role(),
-        plan=_plan(),
-        action_result=await executor.execute(_plan(), _delivery()),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
         expression=_expression(),
     )
 
     assert record.payload["collaboration_update"] == "guided"
 
 
-async def test_persist_episode_upserts_explicit_goal_signal() -> None:
+async def test_persist_episode_upserts_goal_from_domain_intent() -> None:
     memory_repository = FakeMemoryRepository()
     executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
 
+    plan = _plan(
+        domain_intents=[
+            UpsertGoalDomainIntent(
+                name="ship the MVP this week",
+                description="User-declared goal: ship the MVP this week",
+                priority="high",
+                goal_type="operational",
+            )
+        ]
+    )
     record = await executor.persist_episode(
         event=_event("My goal is to ship the MVP this week."),
         perception=_perception(["general", "mvp"]),
         context=_context(),
         motivation=_motivation(),
         role=_role(),
-        plan=_plan(),
-        action_result=await executor.execute(_plan(), _delivery()),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
         expression=_expression(),
     )
 
@@ -312,7 +363,7 @@ async def test_persist_episode_upserts_explicit_goal_signal() -> None:
     assert memory_repository.goal_updates[0]["priority"] == "high"
 
 
-async def test_persist_episode_upserts_task_signal_and_links_matching_goal() -> None:
+async def test_persist_episode_upserts_task_from_domain_intent_and_links_matching_goal() -> None:
     memory_repository = FakeMemoryRepository()
     memory_repository.active_goals = [
         {
@@ -327,14 +378,24 @@ async def test_persist_episode_upserts_task_signal_and_links_matching_goal() -> 
     ]
     executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
 
+    plan = _plan(
+        domain_intents=[
+            UpsertTaskDomainIntent(
+                name="ship the MVP deployment blocker",
+                description="User-declared task: ship the MVP deployment blocker",
+                priority="high",
+                status="blocked",
+            )
+        ]
+    )
     record = await executor.persist_episode(
         event=_event("I need to ship the MVP deployment blocker."),
         perception=_perception(["general", "mvp", "deploy"]),
         context=_context(),
         motivation=_motivation(),
         role=_role(),
-        plan=_plan(),
-        action_result=await executor.execute(_plan(), _delivery()),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
         expression=_expression(),
     )
 
@@ -344,7 +405,7 @@ async def test_persist_episode_upserts_task_signal_and_links_matching_goal() -> 
     assert memory_repository.task_updates[0]["status"] == "blocked"
 
 
-async def test_persist_episode_updates_matching_task_status_from_explicit_progress_signal() -> None:
+async def test_persist_episode_updates_matching_task_status_from_domain_intent() -> None:
     memory_repository = FakeMemoryRepository()
     memory_repository.active_tasks = [
         {
@@ -359,16 +420,146 @@ async def test_persist_episode_updates_matching_task_status_from_explicit_progre
     ]
     executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
 
+    plan = _plan(
+        domain_intents=[
+            UpdateTaskStatusDomainIntent(
+                status="done",
+                task_hint="deployment blocker",
+            )
+        ]
+    )
     record = await executor.persist_episode(
         event=_event("I fixed the deployment blocker."),
         perception=_perception(["general", "deploy"]),
         context=_context(),
         motivation=_motivation(),
         role=_role(),
-        plan=_plan(),
-        action_result=await executor.execute(_plan(), _delivery()),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
         expression=_expression(),
     )
 
     assert record.payload["task_status_update"] == "fix deployment blocker:done"
     assert memory_repository.task_status_updates == [{"task_id": 5, "status": "done"}]
+
+
+async def test_persist_episode_does_not_infer_domain_updates_without_domain_intents() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    plan = _plan(domain_intents=[NoopDomainIntent()])
+    record = await executor.persist_episode(
+        event=_event("My goal is to ship the MVP this week."),
+        perception=_perception(["general", "mvp"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
+        expression=_expression(),
+    )
+
+    assert record.payload["goal_update"] == ""
+    assert record.payload["task_update"] == ""
+    assert record.payload["task_status_update"] == ""
+    assert memory_repository.goal_updates == []
+    assert memory_repository.task_updates == []
+    assert memory_repository.task_status_updates == []
+
+
+async def test_persist_episode_tracks_calendar_and_external_task_connector_intents() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    plan = _plan(
+        domain_intents=[
+            CalendarSchedulingIntentDomainIntent(
+                operation="create_event",
+                provider_hint="google_calendar",
+                mode="mutate_with_confirmation",
+                title_hint="team sync",
+                time_hint="tomorrow 10:00",
+            ),
+            ExternalTaskSyncDomainIntent(
+                operation="create_task",
+                provider_hint="clickup",
+                mode="mutate_with_confirmation",
+                task_hint="deploy rollback checklist",
+            ),
+        ]
+    )
+    record = await executor.persist_episode(
+        event=_event("Please schedule it on calendar and create task in ClickUp."),
+        perception=_perception(["general", "calendar", "task_sync"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role("executor"),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
+        expression=_expression(),
+    )
+
+    assert record.payload["calendar_connector_update"] == "create_event:mutate_with_confirmation:google_calendar"
+    assert record.payload["task_connector_update"] == "create_task:mutate_with_confirmation:clickup"
+    assert record.payload["domain_intents"] == [
+        "calendar_scheduling_intent",
+        "external_task_sync_intent",
+    ]
+
+
+async def test_persist_episode_tracks_connected_drive_connector_intent() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    plan = _plan(
+        domain_intents=[
+            ConnectedDriveAccessDomainIntent(
+                operation="upload_file",
+                provider_hint="google_drive",
+                mode="mutate_with_confirmation",
+                file_hint="release-notes.md",
+            )
+        ]
+    )
+    record = await executor.persist_episode(
+        event=_event("Upload release notes to Google Drive."),
+        perception=_perception(["general", "drive"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role("executor"),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
+        expression=_expression(),
+    )
+
+    assert record.payload["drive_connector_update"] == "upload_file:mutate_with_confirmation:google_drive"
+    assert record.payload["domain_intents"] == ["connected_drive_access_intent"]
+
+
+async def test_persist_episode_tracks_connector_capability_discovery_intent() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    plan = _plan(
+        domain_intents=[
+            ConnectorCapabilityDiscoveryDomainIntent(
+                connector_kind="task_system",
+                provider_hint="clickup",
+                requested_capability="task_sync",
+                evidence="repeated_unmet_need",
+            )
+        ]
+    )
+    record = await executor.persist_episode(
+        event=_event("Can we connect ClickUp for task sync?"),
+        perception=_perception(["general", "connectors"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role("analyst"),
+        plan=plan,
+        action_result=await executor.execute(plan, _delivery()),
+        expression=_expression(),
+    )
+
+    assert record.payload["connector_expansion_update"] == "task_system:clickup:task_sync"
+    assert record.payload["domain_intents"] == ["connector_capability_discovery_intent"]

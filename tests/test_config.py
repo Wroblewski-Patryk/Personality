@@ -10,7 +10,21 @@ def test_settings_default_to_migration_first_startup_mode() -> None:
     assert settings.production_policy_enforcement == "warn"
     assert settings.event_debug_enabled is None
     assert settings.event_debug_token is None
+    assert settings.production_debug_token_required is True
+    assert settings.event_debug_query_compat_enabled is None
+    assert settings.event_debug_query_compat_recent_window == 20
+    assert settings.event_debug_query_compat_stale_after_seconds == 86400
+    assert settings.reflection_runtime_mode == "in_process"
+    assert settings.scheduler_enabled is False
+    assert settings.reflection_interval == 900
+    assert settings.maintenance_interval == 3600
+    assert settings.proactive_enabled is False
+    assert settings.proactive_interval == 1800
+    assert settings.attention_burst_window_ms == 120
+    assert settings.attention_answered_ttl_seconds == 5.0
+    assert settings.attention_stale_turn_seconds == 30.0
     assert settings.is_event_debug_enabled() is True
+    assert settings.is_event_debug_query_compat_enabled() is True
 
 
 def test_settings_allow_explicit_compatibility_create_tables_mode() -> None:
@@ -52,6 +66,8 @@ def test_settings_default_to_debug_payload_disabled_in_production() -> None:
 
     assert settings.event_debug_enabled is None
     assert settings.is_event_debug_enabled() is False
+    assert settings.event_debug_query_compat_enabled is None
+    assert settings.is_event_debug_query_compat_enabled() is False
 
 
 def test_settings_allow_explicit_debug_payload_enablement_in_production() -> None:
@@ -74,6 +90,44 @@ def test_settings_allow_optional_event_debug_token() -> None:
     assert settings.event_debug_token == "debug-secret"
 
 
+def test_settings_allow_explicit_debug_query_compat_enablement() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        app_env="production",
+        event_debug_query_compat_enabled=True,
+    )
+
+    assert settings.event_debug_query_compat_enabled is True
+    assert settings.is_event_debug_query_compat_enabled() is True
+
+
+def test_settings_allow_disabling_production_debug_token_requirement() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        production_debug_token_required=False,
+    )
+
+    assert settings.production_debug_token_required is False
+
+
+def test_settings_allow_explicit_debug_query_compat_recent_window() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        event_debug_query_compat_recent_window=7,
+    )
+
+    assert settings.event_debug_query_compat_recent_window == 7
+
+
+def test_settings_allow_explicit_debug_query_compat_stale_after_seconds() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        event_debug_query_compat_stale_after_seconds=300,
+    )
+
+    assert settings.event_debug_query_compat_stale_after_seconds == 300
+
+
 def test_settings_allow_strict_production_policy_enforcement_mode() -> None:
     settings = Settings(
         database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
@@ -81,6 +135,15 @@ def test_settings_allow_strict_production_policy_enforcement_mode() -> None:
     )
 
     assert settings.production_policy_enforcement == "strict"
+
+
+def test_settings_allow_deferred_reflection_runtime_mode() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        reflection_runtime_mode="deferred",
+    )
+
+    assert settings.reflection_runtime_mode == "deferred"
 
 
 def test_settings_reject_unknown_production_policy_enforcement_mode() -> None:
@@ -93,3 +156,134 @@ def test_settings_reject_unknown_production_policy_enforcement_mode() -> None:
         assert "production_policy_enforcement" in str(exc)
     else:  # pragma: no cover - defensive fallback
         raise AssertionError("Expected Settings validation to reject unknown production policy enforcement mode.")
+
+
+def test_settings_reject_unknown_reflection_runtime_mode() -> None:
+    try:
+        Settings(
+            database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+            reflection_runtime_mode="legacy",  # type: ignore[arg-type]
+        )
+    except ValidationError as exc:
+        assert "reflection_runtime_mode" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected Settings validation to reject unknown reflection runtime mode.")
+
+
+def test_settings_reject_too_low_reflection_interval() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        reflection_interval=120,
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "REFLECTION_INTERVAL" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected Settings validation to reject too-low reflection interval.")
+
+
+def test_settings_reject_too_low_maintenance_interval() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        maintenance_interval=300,
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "MAINTENANCE_INTERVAL" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected Settings validation to reject too-low maintenance interval.")
+
+
+def test_settings_reject_too_low_proactive_interval() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        proactive_interval=300,
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "PROACTIVE_INTERVAL" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected Settings validation to reject too-low proactive interval.")
+
+
+def test_settings_reject_negative_attention_burst_window_ms() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        attention_burst_window_ms=-1,
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "ATTENTION_BURST_WINDOW_MS" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected Settings validation to reject negative attention burst window.")
+
+
+def test_settings_reject_too_low_attention_answered_ttl_seconds() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        attention_answered_ttl_seconds=0.1,
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "ATTENTION_ANSWERED_TTL_SECONDS" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected Settings validation to reject too-low attention answered ttl.")
+
+
+def test_settings_reject_attention_stale_turn_seconds_lower_than_answered_ttl() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        attention_answered_ttl_seconds=3.0,
+        attention_stale_turn_seconds=2.0,
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "ATTENTION_STALE_TURN_SECONDS" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError(
+            "Expected Settings validation to reject attention stale-turn threshold lower than answered ttl."
+        )
+
+
+def test_settings_reject_too_low_event_debug_query_compat_recent_window() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        event_debug_query_compat_recent_window=0,
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError(
+            "Expected Settings validation to reject too-low debug query compat recent window."
+        )
+
+
+def test_settings_reject_too_low_event_debug_query_compat_stale_after_seconds() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        event_debug_query_compat_stale_after_seconds=0,
+    )
+
+    try:
+        settings.validate_required()
+    except ValueError as exc:
+        assert "EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError(
+            "Expected Settings validation to reject too-low debug query compat stale threshold."
+        )

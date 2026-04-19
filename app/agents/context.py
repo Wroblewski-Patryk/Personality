@@ -136,6 +136,50 @@ class ContextAgent:
 
         return " Stable user preferences: " + " | ".join(summarized) + "."
 
+    def _summarize_relations(self, relations: list[dict] | None) -> str:
+        if not relations:
+            return ""
+
+        relation_parts: list[str] = []
+        seen: set[str] = set()
+        for relation in relations:
+            confidence = float(relation.get("confidence", 0.0) or 0.0)
+            if confidence < 0.65:
+                continue
+            relation_type = str(relation.get("relation_type", "")).strip().lower()
+            relation_value = str(relation.get("relation_value", "")).strip().lower()
+            summary = self._summarize_relation(relation_type=relation_type, relation_value=relation_value)
+            if not summary or summary in seen:
+                continue
+            seen.add(summary)
+            relation_parts.append(summary)
+            if len(relation_parts) >= 2:
+                break
+
+        if not relation_parts:
+            return ""
+        return " Relation cues: " + ". ".join(relation_parts) + "."
+
+    def _summarize_relation(self, *, relation_type: str, relation_value: str) -> str:
+        if relation_type == "collaboration_dynamic":
+            if relation_value == "guided":
+                return "current collaboration flow is guided and step-oriented"
+            if relation_value == "hands_on":
+                return "current collaboration flow prefers direct execution support"
+        if relation_type == "support_intensity_preference":
+            if relation_value == "high_support":
+                return "relationship context benefits from explicit supportive framing"
+            if relation_value == "balanced_support":
+                return "relationship context benefits from balanced support and execution"
+        if relation_type == "delivery_reliability":
+            if relation_value == "high_trust":
+                return "interaction trust is high when concrete delivery is proposed"
+            if relation_value == "medium_trust":
+                return "interaction trust improves with explicit next-step delivery"
+        if relation_type == "goal_execution_trust":
+            return "goal-focused trust is currently " + relation_value.replace("_", " ")
+        return ""
+
     def _summarize_conclusion(self, kind: str, content: str) -> str:
         if kind != "response_style":
             if kind == "collaboration_preference":
@@ -681,6 +725,7 @@ class ContextAgent:
         perception: PerceptionOutput,
         recent_memory: list[dict],
         conclusions: list[dict] | None = None,
+        relations: list[dict] | None = None,
         identity: IdentityOutput | None = None,
         active_goals: list[dict] | None = None,
         active_tasks: list[dict] | None = None,
@@ -733,6 +778,7 @@ class ContextAgent:
             self._select_goal_milestone_history(goal_milestone_history or [], selected_goals=selected_goals)
         )
         conclusion_hint = self._summarize_conclusions(conclusions)
+        relation_hint = self._summarize_relations(relations)
         memory_hint = ""
         if recent_memory:
             selected_memory = self._select_memory_items(
@@ -759,6 +805,7 @@ class ContextAgent:
             + milestone_history_hint
             + goal_history_hint
             + conclusion_hint
+            + relation_hint
             + memory_hint
         )
         risk_level = 0.1 if text else 0.4

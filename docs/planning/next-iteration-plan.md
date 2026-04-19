@@ -11,7 +11,7 @@ The goal is to make the current AION runtime more correct, more inspectable, and
 
 Confirmed on 2026-04-19:
 
-- `.\.venv\Scripts\python -m pytest -q` passes with `342 passed`
+- `.\.venv\Scripts\python -m pytest -q` passes with `425 passed`
 - the live runtime already covers:
   - event normalization
   - state load
@@ -77,6 +77,100 @@ Completed on 2026-04-18:
   raw-text parsing.
 - `PRJ-064` added contract regressions that pin planning-owned intent and
   action-owned execution boundaries in planning/action/runtime tests.
+- `PRJ-065..PRJ-068` completed adaptive-governance hardening by splitting
+  reflection into concern-owned modules, adding anti-self-reinforcement guards,
+  pruning low-leverage milestone pressure drift heuristics, and extending
+  multi-goal reflection/planning coverage.
+- `PRJ-069..PRJ-070` established the LangGraph migration boundary with explicit
+  graph-compatible runtime state contracts and stage adapters around current
+  modules, so migration can proceed incrementally without changing foreground
+  behavior first.
+- `PRJ-071` migrated foreground stage orchestration onto LangGraph while
+  preserving stage-level contracts, logging visibility, and runtime pipeline
+  behavior under regression coverage.
+- `PRJ-072..PRJ-080` are complete: optional LangChain prompt wrappers landed,
+  semantic retrieval contracts plus pgvector scaffold are now in place, hybrid
+  retrieval diagnostics are observable, relation memory/reflection/runtime
+  influence is implemented, and scheduler event/cadence contracts are now
+  explicit in runtime/config surfaces.
+- `PRJ-081` is complete: reflection enqueue is now durable even without active
+  in-process worker ownership, reflection runtime mode is explicit
+  (`in_process|deferred`), and reflection worker now supports one-shot pending
+  queue execution for external scheduler/worker integration.
+- `PRJ-087..PRJ-095` are complete: internal planning-state ownership is now
+  explicitly separated from external connector projections; subconscious
+  proposals are persisted with conscious handoff decisions and read-only
+  research policy boundaries; proactive scheduler flow now applies an explicit
+  attention gate; and connector contracts now include permission gates plus
+  typed calendar/task synchronization intents.
+- `PRJ-096` is complete: connected-drive access now has explicit planning and
+  action contracts (`connected_drive_access_intent`), cloud-drive permission
+  gates, and action-layer payload traceability without direct provider side
+  effects.
+- `PRJ-097` is complete: reflection now derives repeated unmet-connector
+  expansion proposals, planning promotes accepted proposals into explicit
+  capability-discovery intents, and action persists bounded
+  `connector_expansion_update` traces with no self-authorized external access.
+- `PRJ-098` is complete: runtime now exposes explicit `POST /event/debug` for
+  internal full-runtime payload inspection with the same debug policy/token
+  guardrails as `POST /event?debug=true`, while public `POST /event` responses
+  remain compact by default.
+- `PRJ-099..PRJ-110` are complete: debug compatibility hints are explicit on
+  `POST /event?debug=true`, `/health` exposes attention posture, attention
+  timing controls are now first-class runtime settings, and docs/context are
+  synchronized for attention observability hardening.
+- `PRJ-111..PRJ-120` are complete: production debug-token requirement is now an
+  explicit policy surface (`PRODUCTION_DEBUG_TOKEN_REQUIRED`) with route-level
+  enforcement, runtime-policy visibility, regression coverage, and
+  synchronized ops/config docs.
+- `PRJ-121..PRJ-130` are complete: runtime policy now emits explicit
+  `debug_access_posture` and `debug_token_policy_hint` signals, startup logs
+  include relaxed-token-requirement warnings for production debug mode, and
+  health/runtime docs are synchronized with the new posture semantics.
+- `PRJ-131..PRJ-140` are complete: strict rollout mismatch handling now includes
+  `event_debug_token_missing=true` when production debug token policy requires
+  a configured token, with aligned tests and synchronized ops/architecture/docs
+  posture.
+- `PRJ-141..PRJ-150` are complete: production debug query-compat hardening now
+  has explicit shared mismatch ownership, stricter startup/API regression
+  coverage, and synchronized env/ops/planning/runtime-reality docs for
+  `EVENT_DEBUG_QUERY_COMPAT_ENABLED` posture.
+- `PRJ-151..PRJ-160` are complete: compat-route sunset readiness now includes
+  in-process usage telemetry (`event_debug_query_compat_telemetry`),
+  explicit deprecation response header contract, and synchronized canonical
+  docs/context coverage.
+- `PRJ-161..PRJ-170` are complete: compat-route sunset recommendation signals
+  (`event_debug_query_compat_allow_rate`,
+  `event_debug_query_compat_block_rate`,
+  `event_debug_query_compat_recommendation`) are now explicit in health
+  contracts with aligned tests/docs/context.
+- `PRJ-171..PRJ-180` are complete: compat-route sunset now exposes explicit
+  machine-readable readiness fields
+  (`event_debug_query_compat_sunset_ready`,
+  `event_debug_query_compat_sunset_reason`), and recommendation logic now
+  treats any observed compat attempts as migration-needed.
+- `PRJ-181..PRJ-190` are complete: compat telemetry now includes rolling-window
+  counters and health policy now exposes recent compat trend fields
+  (`event_debug_query_compat_recent_attempts_total`,
+  `event_debug_query_compat_recent_allow_rate`,
+  `event_debug_query_compat_recent_block_rate`,
+  `event_debug_query_compat_recent_state`).
+- `PRJ-191..PRJ-200` are complete: compat rolling-trend refinement is now
+  synchronized across health contracts, tests, and docs/context with explicit
+  release-window trend semantics and attempt-based migration posture.
+- `PRJ-201..PRJ-210` are complete: compat telemetry rolling-window size is now
+  configurable (`EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW`) with bounded config
+  validation and lifecycle/API wiring coverage.
+- `PRJ-211..PRJ-220` are complete: `/health.runtime_policy` now exposes
+  compat-route freshness posture (stale threshold, last-attempt age, and
+  freshness state) with config-driven stale threshold
+  (`EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS`) and synchronized
+  config/telemetry/API/docs context coverage.
+- `PRJ-221..PRJ-230` are complete: `/health.runtime_policy` now exposes
+  compat-route activity posture (`event_debug_query_compat_activity_state`,
+  `event_debug_query_compat_activity_hint`) to separate
+  disabled/no-attempt/stale-history/recent-traffic migration states while
+  preserving existing sunset-ready contract semantics.
 
 ## Highest-Risk Gaps
 
@@ -433,7 +527,7 @@ This group reduces code growth by splitting oversized modules, pruning
 low-leverage heuristics, and adding anti-feedback-loop rules for adaptive
 signals such as theta, role preference, and collaboration preference.
 
-- `PRJ-065` Split reflection into smaller concern-owned modules.
+- `PRJ-065` is complete.
   - Result:
     - reflection logic is separated into preference, progress, affective, and
       adaptive-state concern owners
@@ -442,7 +536,7 @@ signals such as theta, role preference, and collaboration preference.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
 
-- `PRJ-066` Add anti-self-reinforcement rules for adaptive signals.
+- `PRJ-066` is complete.
   - Result:
     - `preferred_role`, `theta`, and `collaboration_preference` require
       stronger evidence and outcome-aware updates
@@ -451,7 +545,7 @@ signals such as theta, role preference, and collaboration preference.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_role_agent.py tests/test_motivation_engine.py tests/test_expression_agent.py`
 
-- `PRJ-067` Audit and prune low-leverage milestone heuristics.
+- `PRJ-067` is complete.
   - Result:
     - milestone arc/pressure/due-window heuristics are reviewed for actual
       downstream effect
@@ -460,7 +554,7 @@ signals such as theta, role preference, and collaboration preference.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_context_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py`
 
-- `PRJ-068` Add multi-goal-aware reflection and planning tests.
+- `PRJ-068` is complete.
   - Result:
     - regression coverage explicitly proves that one active goal does not leak
       reflected state into another
@@ -473,55 +567,55 @@ signals such as theta, role preference, and collaboration preference.
 This group aligns the runtime with the architecture-level stack direction
 without forcing a big-bang rewrite of the current working orchestrator.
 
-- `PRJ-069` Define the LangGraph migration boundary and compatibility contract.
+- `PRJ-069` is complete.
   - Result:
     - docs and runtime contracts describe which current orchestrator fields map
       directly into graph state
     - migration can proceed incrementally instead of rewriting all stages at
       once
   - Validation:
-    - doc-and-contract sync plus targeted runtime-state model tests
+    - `.\.venv\Scripts\python -m pytest -q tests/test_graph_state_contract.py tests/test_runtime_pipeline.py`
 
-- `PRJ-070` Introduce graph-compatible state adapters around current stage modules.
+- `PRJ-070` is complete.
   - Result:
     - current perception, context, motivation, role, planning, expression, and
       action modules can be called through graph-ready adapters
     - repo preserves current behavior while preparing the LangGraph runtime
       shape
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_logging.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_graph_stage_adapters.py tests/test_runtime_pipeline.py`
 
-- `PRJ-071` Migrate the foreground runtime orchestration to LangGraph.
+- `PRJ-071` is complete.
   - Result:
     - the main foreground pipeline runs through LangGraph while preserving
       existing stage boundaries, logs, and response contracts
     - current runtime behavior stays regression-covered during the migration
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_logging.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_logging.py tests/test_graph_state_contract.py tests/test_graph_stage_adapters.py`
 
-- `PRJ-072` Add optional LangChain utility wrappers only where they reduce code.
+- `PRJ-072` is complete.
   - Result:
     - LangChain is used narrowly for prompt templates, retrievers, or parsing
       where it materially reduces boilerplate
     - the repo avoids turning LangChain into the architectural core
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_expression_agent.py tests/test_runtime_pipeline.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_openai_prompting.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
 
 ## Group 12 - Semantic Retrieval Infrastructure
 
 This group upgrades memory retrieval from heuristics-only ranking to a hybrid
 system that can use embeddings and pgvector where that improves relevance.
 
-- `PRJ-073` Define the embedding and semantic retrieval contract.
+- `PRJ-073` is complete.
   - Result:
     - repo has one explicit contract for embeddings, vectorized records, and
       similarity retrieval inputs/outputs
     - semantic retrieval can evolve without leaking provider-specific details
       into stage logic
   - Validation:
-    - doc-and-contract sync plus targeted repository model tests
+    - `.\.venv\Scripts\python -m pytest -q tests/test_semantic_contracts.py tests/test_memory_repository.py tests/test_schema_baseline.py`
 
-- `PRJ-074` Add pgvector-backed storage and migration scaffolding.
+- `PRJ-074` is complete.
   - Result:
     - PostgreSQL gains pgvector-compatible schema and indexes for semantic
       retrieval
@@ -530,7 +624,7 @@ system that can use embeddings and pgvector where that improves relevance.
     - `.\.venv\Scripts\python -m pytest -q tests/test_schema_baseline.py tests/test_memory_repository.py`
     - `.\.venv\Scripts\python -m alembic upgrade head --sql`
 
-- `PRJ-075` Implement hybrid retrieval across episodic, semantic, and affective memory.
+- `PRJ-075` is complete.
   - Result:
     - runtime can rank memory using recency, explicit scope, lexical overlap,
       and vector similarity
@@ -539,13 +633,13 @@ system that can use embeddings and pgvector where that improves relevance.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_context_agent.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`
 
-- `PRJ-076` Add semantic retrieval evaluation and observability.
+- `PRJ-076` is complete.
   - Result:
     - logs and tests show when vector retrieval helps, misses, or conflicts
       with lexical ranking
     - retrieval quality becomes measurable instead of anecdotal
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_context_agent.py tests/test_logging.py tests/test_runtime_pipeline.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_context_agent.py tests/test_logging.py tests/test_runtime_pipeline.py tests/test_memory_repository.py`
 
 ## Group 13 - Relation System
 
@@ -553,15 +647,16 @@ This group adds the user-specific relation layer described in architecture so
 the personality can accumulate durable interpersonal understanding, not only
 generic conclusions and task state.
 
-- `PRJ-077` Define the relation data model, scopes, and repository surface.
+- `PRJ-077` is complete.
   - Result:
     - repo gets an explicit relation model with confidence, scope, and decay
       semantics
     - relation storage is separated from generic conclusions
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_schema_baseline.py`
+    - `.\.venv\Scripts\python -m alembic upgrade head --sql`
 
-- `PRJ-078` Extend reflection to derive and maintain relation updates.
+- `PRJ-078` is complete.
   - Result:
     - subconscious processing can derive relation hypotheses from repeated
       interactions and update them gradually
@@ -569,7 +664,7 @@ generic conclusions and task state.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
 
-- `PRJ-079` Make runtime relation-aware in retrieval, context, role, planning, and expression.
+- `PRJ-079` is complete.
   - Result:
     - runtime can retrieve relevant high-confidence relations per turn
     - relation signals influence behavior in a controlled, testable way
@@ -582,31 +677,36 @@ This group adds the missing background cadence and proactive behavior described
 in architecture so the personality can initiate helpful, bounded actions over
 time rather than only react to incoming events.
 
-- `PRJ-080` Define scheduler events, cadence rules, and runtime boundaries.
+- `PRJ-080` is complete.
   - Result:
     - scheduler-originated events become a first-class documented input source
     - reflection cadence, maintenance cadence, and proactive cadence have one
       contract owner
   - Validation:
-    - doc-and-contract sync plus targeted event normalization tests
+    - `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_event_normalization.py tests/test_scheduler_contracts.py`
 
-- `PRJ-081` Make the reflection runtime ready for scheduled and out-of-process execution.
+- `PRJ-081` is complete.
   - Result:
     - reflection ownership no longer assumes only in-process wakeups
     - runtime can move toward a dedicated worker or scheduled execution without
       rewriting reflection logic again
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_lifespan_policy.py`
 
-- `PRJ-082` Add scheduled reflection and maintenance cadence.
+- `PRJ-082` is complete.
   - Result:
-    - scheduler can trigger periodic reflection, cleanup, or maintenance
-      workflows
-    - the background loop no longer depends only on post-event enqueue
+    - in-process scheduler cadence now executes reflection and maintenance
+      routines without requiring user-event turns
+    - reflection cadence dispatch is mode-aware (`in_process|deferred`) to
+      avoid duplicate in-process worker ownership while still supporting
+      deferred queue draining
+    - `/health` now exposes scheduler runtime posture and latest tick summaries
+      for operator-visible cadence wiring
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_api_routes.py tests/test_config.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_scheduler_contracts.py tests/test_api_routes.py tests/test_config.py tests/test_reflection_worker.py tests/test_main_lifespan_policy.py`
+    - `.\.venv\Scripts\python -m pytest -q`
 
-- `PRJ-083` Add a proactive decision engine with interruption guardrails.
+- `PRJ-083` is complete.
   - Result:
     - proactive suggestions, reminders, warnings, or encouragement can be
       selected from explicit triggers and bounded decision rules
@@ -614,7 +714,7 @@ time rather than only react to incoming events.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
 
-- `PRJ-084` Add proactive delivery controls, throttling, and regression coverage.
+- `PRJ-084` is complete.
   - Result:
     - proactive outputs obey frequency limits, opt-in guards, and delivery
       constraints
@@ -628,7 +728,7 @@ This group clarifies how conscious and subconscious runtime cooperate without
 collapsing their boundaries, while also preventing message-by-message reply
 spam during bursty user conversations.
 
-- `PRJ-085` Define the attention inbox, turn-assembly contract, and proposal handoff model.
+- `PRJ-085` is complete.
   - Result:
     - architecture and runtime contracts define one explicit inbox for
       user-originated events, scheduler ticks, and subconscious proposals
@@ -637,14 +737,15 @@ spam during bursty user conversations.
     - subconscious outputs are modeled as proposals for conscious evaluation,
       not direct user-visible actions
   - Validation:
-    - doc-and-contract sync plus targeted runtime-state model tests
+    - `.\.venv\Scripts\python -m pytest -q tests/test_graph_state_contract.py`
 
-- `PRJ-086` Implement message burst coalescing and pending-turn ownership.
+- `PRJ-086` is complete.
   - Result:
-    - rapid inbound user messages can be coalesced into one conscious turn
-      instead of producing one reply per raw message
-    - pending/claimed/answered turn state prevents duplicate foreground
-      replies during short burst windows
+    - Telegram burst messages now coalesce into one assembled conscious turn
+      through shared pending-turn ownership in the API ingress path
+    - pending/claimed/answered state now prevents duplicate runtime runs during
+      short burst windows by returning queued no-op metadata for non-owner
+      events
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_event_normalization.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
 
@@ -748,20 +849,26 @@ implicit or uncontrolled side effects.
   - Validation:
     - doc-and-contract sync plus targeted runtime/action tests
 
-- `PRJ-097` Add connector expansion and capability-discovery proposals.
+- `PRJ-097` is complete.
   - Result:
     - the personality can notice repeated unmet needs and propose connector or
       capability expansion without self-authorizing new external access
     - user-facing extension suggestions become explicit, bounded outputs of the
       runtime instead of hidden side effects
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_planning_agent.py tests/test_action_executor.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_reflection_worker.py`
+    - `.\.venv\Scripts\python -m pytest -q`
 
 ## Next Derived Slice
 
-The planning queue is now extended through `PRJ-097`.
-The next execution-ready slice is `PRJ-065`, with later groups staying ordered
-behind it.
+The planning queue is complete through `PRJ-230`.
+There is currently no execution-ready PRJ slice in the board.
+Before the next implementation slice:
+
+- derive the next smallest architecture-alignment task from
+  `docs/planning/open-decisions.md`
+- register it as `READY` in `.codex/context/TASK_BOARD.md`
+- keep the implementation scope bounded to one reversible slice
 
 ## Parallel-Ready Lanes
 
@@ -783,13 +890,9 @@ After those finished:
 
 ## Recommended Execution Order
 
-1. `PRJ-065..PRJ-068` Adaptive signal governance and heuristic reduction
-2. `PRJ-069..PRJ-072` Graph orchestration adoption
-3. `PRJ-073..PRJ-076` Semantic retrieval infrastructure
-4. `PRJ-077..PRJ-079` Relation system
-5. `PRJ-080..PRJ-084` Scheduled and proactive runtime
-6. `PRJ-085..PRJ-092` Attention gating and dual-loop coordination
-7. `PRJ-093..PRJ-097` External productivity connectors
+1. `PRJ-083..PRJ-084` Scheduled and proactive runtime
+2. `PRJ-085..PRJ-092` Attention gating and dual-loop coordination
+3. `PRJ-093..PRJ-097` External productivity connectors
 
 The queue should still be treated as intentionally open after those items.
 Additional small architecture-alignment slices may still be discovered while

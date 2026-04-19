@@ -9,6 +9,7 @@ class FakeMemoryRepository:
         self.recent_memory = recent_memory
         self.conclusion_updates: list[dict] = []
         self.raw_conclusion_updates: list[dict] = []
+        self.relation_updates: list[dict] = []
         self.theta_updates: list[dict] = []
         self.runtime_preferences: dict = {}
         self.goal_progress_history: list[dict] = []
@@ -22,6 +23,7 @@ class FakeMemoryRepository:
         self.active_goals: list[dict] = []
         self.active_tasks: list[dict] = []
         self.goal_milestones: list[dict] = []
+        self.subconscious_proposals: list[dict] = []
 
     async def get_recent_for_user(self, user_id: str, limit: int = 8) -> list[dict]:
         return self.recent_memory[:limit]
@@ -66,6 +68,19 @@ class FakeMemoryRepository:
     async def upsert_theta(self, **kwargs) -> dict:
         self.theta_updates.append(kwargs)
         return kwargs
+
+    async def upsert_relation(self, **kwargs) -> dict:
+        self.relation_updates.append(dict(kwargs))
+        return kwargs
+
+    async def upsert_subconscious_proposal(self, **kwargs) -> dict:
+        payload = {
+            "proposal_id": len(self.subconscious_proposals) + 1,
+            "status": "pending",
+            **kwargs,
+        }
+        self.subconscious_proposals.append(payload)
+        return payload
 
     async def get_active_goals(self, user_id: str, limit: int = 5) -> list[dict]:
         return self.active_goals[:limit]
@@ -211,12 +226,83 @@ async def test_reflection_worker_reads_structured_episode_payload_before_legacy_
     ]
 
 
+async def test_reflection_worker_derives_read_only_subconscious_proposals_from_recent_memory() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {
+                "summary": (
+                    "event=Can you research deployment rollback options?; "
+                    "task_status_update=deploy blocker:blocked; action=success; expression=Noted."
+                )
+            }
+        ]
+    )
+    repository.active_tasks = [
+        {
+            "id": 9,
+            "goal_id": 2,
+            "name": "fix deploy blocker",
+            "priority": "high",
+            "status": "blocked",
+        }
+    ]
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-subconscious-proposals")
+
+    assert result is True
+    assert len(repository.subconscious_proposals) >= 3
+    proposal_types = {item["proposal_type"] for item in repository.subconscious_proposals}
+    assert "nudge_user" in proposal_types
+    assert "ask_user" in proposal_types
+    assert "research_topic" in proposal_types
+    research_proposal = next(item for item in repository.subconscious_proposals if item["proposal_type"] == "research_topic")
+    assert research_proposal["research_policy"] == "read_only"
+    assert research_proposal["allowed_tools"] == [
+        "memory_retrieval",
+        "knowledge_search",
+        "calendar_availability_read",
+        "task_provider_read",
+    ]
+
+
+async def test_reflection_worker_derives_connector_expansion_proposal_from_repeated_unmet_connector_needs() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {
+                "summary": (
+                    "event=Can you sync my backlog with ClickUp?; "
+                    "action=noop; expression=I can suggest steps but I cannot sync yet."
+                )
+            },
+            {
+                "summary": (
+                    "event=Please connect this with ClickUp and create task there.; "
+                    "action=success; expression=Noted."
+                )
+            },
+        ]
+    )
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-connector-expansion")
+
+    assert result is True
+    connector_proposal = next(
+        item for item in repository.subconscious_proposals if item["proposal_type"] == "suggest_connector_expansion"
+    )
+    assert connector_proposal["payload"]["connector_kind"] == "task_system"
+    assert connector_proposal["payload"]["provider_hint"] == "clickup"
+    assert connector_proposal["payload"]["requested_capability"] == "task_sync"
+    assert connector_proposal["research_policy"] == "read_only"
+
+
 async def test_reflection_worker_infers_preferred_role_from_repeated_role_usage() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[
-            {"summary": "role=executor; action=success; expression=Done one."},
-            {"summary": "role=executor; action=success; expression=Done two."},
-            {"summary": "role=executor; action=success; expression=Done three."},
+            {"summary": "role=executor; task_status_update=deploy blocker:done; action=success; expression=Done one."},
+            {"summary": "role=executor; task_status_update=release smoke:done; action=success; expression=Done two."},
+            {"summary": "role=executor; task_status_update=docs update:done; action=success; expression=Done three."},
             {"summary": "role=mentor; action=success; expression=Different path."},
         ]
     )
@@ -280,10 +366,10 @@ async def test_reflection_worker_skips_when_recent_memory_has_no_consistent_sign
 async def test_reflection_worker_updates_theta_from_mixed_recent_roles() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[
-            {"summary": "role=analyst; action=success; expression=One."},
-            {"summary": "role=analyst; action=success; expression=Two."},
-            {"summary": "role=executor; action=success; expression=Three."},
-            {"summary": "role=friend; action=success; expression=Four."},
+            {"summary": "role=analyst; task_status_update=analyze issue:done; action=success; expression=One."},
+            {"summary": "role=analyst; task_status_update=verify issue:done; action=success; expression=Two."},
+            {"summary": "role=executor; task_status_update=apply fix:done; action=success; expression=Three."},
+            {"summary": "role=friend; task_status_update=support checkin:done; action=success; expression=Four."},
         ]
     )
     worker = ReflectionWorker(memory_repository=repository)
@@ -304,10 +390,10 @@ async def test_reflection_worker_updates_theta_from_mixed_recent_roles() -> None
 async def test_reflection_worker_infers_guided_collaboration_preference() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[
-            {"summary": "motivation=analyze; role=analyst; plan_steps=interpret_event,review_context,break_down_problem,highlight_next_step,prepare_response; action=success; expression=One."},
-            {"summary": "motivation=analyze; role=analyst; plan_steps=interpret_event,review_context,break_down_problem,highlight_next_step,prepare_response; action=success; expression=Two."},
-            {"summary": "motivation=respond; role=mentor; plan_steps=interpret_event,review_context,offer_guidance,prepare_response; action=success; expression=Three."},
-            {"summary": "motivation=support; role=friend; plan_steps=interpret_event,review_context,reduce_pressure,prepare_response; action=success; expression=Four."},
+            {"summary": "event=Please walk me through this step by step.; task_status_update=doc outline:done; action=success; expression=One."},
+            {"summary": "event=Can you explain this step by step?; task_status_update=test outline:done; action=success; expression=Two."},
+            {"summary": "event=Guide me through this release checklist.; goal_update=ship the MVP this week; action=success; expression=Three."},
+            {"summary": "event=Walk me through it step by step please.; task_update=final review checklist; action=success; expression=Four."},
         ]
     )
     worker = ReflectionWorker(memory_repository=repository)
@@ -328,10 +414,10 @@ async def test_reflection_worker_infers_guided_collaboration_preference() -> Non
 async def test_reflection_worker_infers_hands_on_collaboration_preference() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[
-            {"summary": "motivation=execute; role=executor; plan_steps=interpret_event,review_context,identify_requested_change,propose_execution_step,prepare_response; action=success; expression=One."},
-            {"summary": "motivation=execute; role=executor; plan_steps=interpret_event,review_context,identify_requested_change,propose_execution_step,prepare_response; action=success; expression=Two."},
-            {"summary": "motivation=execute; role=executor; plan_steps=interpret_event,review_context,identify_requested_change,propose_execution_step,prepare_response; action=success; expression=Three."},
-            {"summary": "motivation=respond; role=advisor; plan_steps=interpret_event,review_context,favor_concrete_next_step,prepare_response; action=success; expression=Four."},
+            {"summary": "event=Just do it for me and ship it.; task_status_update=deploy prep:done; action=success; expression=One."},
+            {"summary": "event=Take care of it and handle it for me.; task_status_update=smoke prep:done; action=success; expression=Two."},
+            {"summary": "event=Please do it for me.; goal_update=ship the MVP this week; action=success; expression=Three."},
+            {"summary": "event=Handle it and just ship it.; task_update=release handoff; action=success; expression=Four."},
         ]
     )
     worker = ReflectionWorker(memory_repository=repository)
@@ -371,6 +457,79 @@ async def test_reflection_worker_prefers_explicit_guided_collaboration_update() 
         "source": "background_reflection",
         "supporting_event_id": "evt-explicit-guided",
     } in repository.conclusion_updates
+
+
+async def test_reflection_worker_derives_relation_updates_from_recent_memory() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "collaboration_update=guided; affect_needs_support=true; action=success; expression=One."},
+            {"summary": "collaboration_update=guided; affect_needs_support=true; action=success; expression=Two."},
+            {"summary": "action=success; expression=Three."},
+            {"summary": "action=success; expression=Four."},
+        ]
+    )
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-relations")
+
+    assert result is True
+    assert {
+        "user_id": "u-1",
+        "relation_type": "delivery_reliability",
+        "relation_value": "high_trust",
+        "confidence": 0.74,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-relations",
+        "scope_type": "global",
+        "scope_key": "global",
+        "evidence_count": 4,
+        "decay_rate": 0.02,
+    } in repository.relation_updates
+    assert {
+        "user_id": "u-1",
+        "relation_type": "collaboration_dynamic",
+        "relation_value": "guided",
+        "confidence": 0.78,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-relations",
+        "scope_type": "global",
+        "scope_key": "global",
+        "evidence_count": 2,
+        "decay_rate": 0.04,
+    } in repository.relation_updates
+    assert {
+        "user_id": "u-1",
+        "relation_type": "support_intensity_preference",
+        "relation_value": "high_support",
+        "confidence": 0.76,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-relations",
+        "scope_type": "global",
+        "scope_key": "global",
+        "evidence_count": 2,
+        "decay_rate": 0.03,
+    } in repository.relation_updates
+
+
+async def test_reflection_worker_avoids_adaptive_inference_without_outcome_evidence() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "role=executor; action=success; expression=This is a longer response that should not be treated as concise output for adaptive updates."},
+            {"summary": "role=executor; action=success; expression=This is another longer response that keeps adaptive inference from style-only feedback loops."},
+            {"summary": "role=analyst; action=success; expression=This is a detailed explanatory response without explicit domain update markers."},
+            {"summary": "role=executor; action=success; expression=This is still a long response without any explicit goal or task update evidence."},
+        ]
+    )
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-no-adaptive-evidence")
+
+    assert result is True
+    assert repository.theta_updates == []
+    assert not any(
+        update.get("kind") in {"preferred_role", "collaboration_preference"}
+        for update in repository.conclusion_updates
+    )
 
 
 async def test_reflection_worker_derives_recurring_distress_affective_pattern() -> None:
@@ -858,6 +1017,40 @@ async def test_reflection_worker_derives_lingering_completion_milestone_pressure
     } in repository.conclusion_updates
 
 
+async def test_reflection_worker_prunes_time_only_lingering_completion_pressure_signal() -> None:
+    now = datetime.now(timezone.utc)
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "goal_update=ship the MVP this week; action=success; expression=One."},
+        ]
+    )
+    repository.active_goals = [
+        {"id": 1, "name": "ship the MVP this week", "priority": "high", "status": "active", "goal_type": "operational"}
+    ]
+    repository.active_tasks = []
+    repository.runtime_preferences = {"goal_progress_score": 0.82}
+    repository.goal_progress_history = [
+        {"id": 11, "goal_id": 1, "score": 0.82, "execution_state": "advancing", "progress_trend": "steady"}
+    ]
+    repository.goal_milestone_history = [
+        {
+            "id": 1,
+            "goal_id": 1,
+            "milestone_name": "Drive goal to closure",
+            "phase": "completion_window",
+            "risk_level": "ready_to_close",
+            "completion_criteria": "confirm_goal_completion",
+            "created_at": now - timedelta(hours=36),
+        }
+    ]
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-pruned-milestone-pressure")
+
+    assert result is True
+    assert not any(update.get("kind") == "goal_milestone_pressure" for update in repository.conclusion_updates)
+
+
 async def test_reflection_worker_derives_multi_step_milestone_dependency_state() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[
@@ -1037,6 +1230,34 @@ async def test_reflection_worker_infers_recovering_goal_execution_state_after_re
         "source": "background_reflection",
         "supporting_event_id": "evt-goal-recovering",
     } in repository.conclusion_updates
+
+
+async def test_reflection_worker_scopes_goal_conclusions_to_goal_matched_by_recent_turn_hints() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "event=I fixed invoice import for tax filing.; task_status_update=prepare tax documents:done; action=success; expression=One."},
+            {"summary": "event=Need to close tax filing soon.; task_update=prepare tax documents; action=success; expression=Two."},
+        ]
+    )
+    repository.active_goals = [
+        {"id": 1, "name": "ship the MVP this week", "priority": "high", "status": "active", "goal_type": "operational"},
+        {"id": 2, "name": "close tax filing", "priority": "medium", "status": "active", "goal_type": "operational"},
+    ]
+    repository.active_tasks = [
+        {"id": 5, "goal_id": 2, "name": "prepare tax documents", "priority": "high", "status": "todo"},
+    ]
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-goal-scope-match")
+
+    assert result is True
+    goal_execution_updates = [
+        update
+        for update in repository.raw_conclusion_updates
+        if update.get("kind") == "goal_execution_state"
+    ]
+    assert any(update.get("scope_type") == "goal" and update.get("scope_key") == "2" for update in goal_execution_updates)
+    assert not any(update.get("scope_type") == "goal" and update.get("scope_key") == "1" for update in goal_execution_updates)
 
 
 async def test_reflection_worker_infers_advancing_goal_execution_state_from_in_progress_task() -> None:
@@ -1306,12 +1527,66 @@ async def test_reflection_worker_enqueue_persists_durable_task() -> None:
     ]
 
 
+async def test_reflection_worker_enqueue_can_skip_in_process_dispatch() -> None:
+    repository = FakeMemoryRepository(recent_memory=[])
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.enqueue(user_id="u-1", event_id="evt-queued-deferred", dispatch=False)
+
+    assert result is True
+    assert repository.created_tasks == [
+        {
+            "id": 1,
+            "user_id": "u-1",
+            "event_id": "evt-queued-deferred",
+            "status": "pending",
+            "attempts": 0,
+            "last_error": None,
+        }
+    ]
+    assert worker.queue.qsize() == 0
+
+
+async def test_reflection_worker_run_pending_once_processes_ready_tasks_without_start_loop() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "role=analyst; task_status_update=analysis pass:done; action=success; expression=One."},
+            {"summary": "role=analyst; task_status_update=analysis followup:done; action=success; expression=Two."},
+            {"summary": "role=executor; task_status_update=execution handoff:done; action=success; expression=Three."},
+        ]
+    )
+    repository.pending_tasks = [
+        {
+            "id": 13,
+            "user_id": "u-1",
+            "event_id": "evt-drain-once",
+            "status": "pending",
+            "attempts": 0,
+            "last_error": None,
+        }
+    ]
+    worker = ReflectionWorker(memory_repository=repository, queue_size=5)
+
+    summary = await worker.run_pending_once(limit=5)
+
+    assert summary == {
+        "scanned": 1,
+        "processed": 1,
+        "completed": 1,
+        "failed": 0,
+        "skipped_not_ready": 0,
+    }
+    assert repository.processing_marks == [13]
+    assert repository.completed_marks == [13]
+    assert repository.failed_marks == []
+
+
 async def test_reflection_worker_recovers_pending_tasks_on_start() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[
-            {"summary": "role=analyst; action=success; expression=One."},
-            {"summary": "role=analyst; action=success; expression=Two."},
-            {"summary": "role=executor; action=success; expression=Three."},
+            {"summary": "role=analyst; task_status_update=analysis pass:done; action=success; expression=One."},
+            {"summary": "role=analyst; task_status_update=analysis followup:done; action=success; expression=Two."},
+            {"summary": "role=executor; task_status_update=execution handoff:done; action=success; expression=Three."},
         ]
     )
     repository.pending_tasks = [
@@ -1346,9 +1621,9 @@ async def test_reflection_worker_recovers_pending_tasks_on_start() -> None:
 async def test_reflection_worker_retries_failed_task_after_backoff_window() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[
-            {"summary": "role=analyst; action=success; expression=One."},
-            {"summary": "role=analyst; action=success; expression=Two."},
-            {"summary": "role=executor; action=success; expression=Three."},
+            {"summary": "role=analyst; task_status_update=analysis pass:done; action=success; expression=One."},
+            {"summary": "role=analyst; task_status_update=analysis followup:done; action=success; expression=Two."},
+            {"summary": "role=executor; task_status_update=execution handoff:done; action=success; expression=Three."},
         ]
     )
     repository.pending_tasks = [

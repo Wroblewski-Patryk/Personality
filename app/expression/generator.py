@@ -33,16 +33,23 @@ class ExpressionAgent:
         identity: IdentityOutput | None = None,
         user_preferences: dict | None = None,
         theta: dict | None = None,
+        relations: list[dict] | None = None,
     ) -> ExpressionOutput:
         text = str(event.payload.get("text", "")).strip()
         response_style = preferred_response_style(user_preferences)
         collaboration_preference = preferred_collaboration_preference(user_preferences)
+        relation_support_intensity = self._relation_value(
+            relations=relations or [],
+            relation_type="support_intensity_preference",
+            min_confidence=0.68,
+        )
         tone = self._select_tone(
             affective=perception.affective,
             motivation=motivation,
             role=role,
             theta=theta,
             collaboration_preference=collaboration_preference,
+            relation_support_intensity=relation_support_intensity,
         )
         message: str
         if not text:
@@ -56,6 +63,7 @@ class ExpressionAgent:
                 response_style=response_style,
                 theta=theta,
                 collaboration_preference=collaboration_preference,
+                relation_support_intensity=relation_support_intensity,
             )
         else:
             llm_reply = await self.openai_client.generate_reply(
@@ -80,9 +88,15 @@ class ExpressionAgent:
                 response_style=response_style,
                 theta=theta,
                 collaboration_preference=collaboration_preference,
+                relation_support_intensity=relation_support_intensity,
             )
 
-        channel = "telegram" if event.source == "telegram" else "api"
+        if event.source == "telegram":
+            channel = "telegram"
+        elif event.source == "scheduler" and isinstance(event.payload.get("chat_id"), (int, str)):
+            channel = "telegram"
+        else:
+            channel = "api"
         return ExpressionOutput(
             message=message,
             tone=tone,
@@ -101,6 +115,7 @@ class ExpressionAgent:
         response_style: str | None = None,
         theta: dict | None = None,
         collaboration_preference: str | None = None,
+        relation_support_intensity: str | None = None,
     ) -> str:
         if motivation.mode == "clarify":
             return apply_response_style(
@@ -108,7 +123,12 @@ class ExpressionAgent:
                 response_style,
             )
 
-        if role.selected == "friend" or motivation.valence <= -0.3 or self._needs_support(affective):
+        if (
+            role.selected == "friend"
+            or motivation.valence <= -0.3
+            or self._needs_support(affective)
+            or relation_support_intensity == "high_support"
+        ):
             return apply_response_style(
                 fallback_message(perception.language, "support", plan.goal),
                 response_style,
@@ -164,8 +184,14 @@ class ExpressionAgent:
         role: RoleOutput,
         theta: dict | None = None,
         collaboration_preference: str | None = None,
+        relation_support_intensity: str | None = None,
     ) -> str:
-        if role.selected == "friend" or motivation.valence <= -0.3 or self._needs_support(affective):
+        if (
+            role.selected == "friend"
+            or motivation.valence <= -0.3
+            or self._needs_support(affective)
+            or relation_support_intensity == "high_support"
+        ):
             return "supportive"
         if motivation.mode == "execute" or role.selected == "executor":
             return "action-oriented"
@@ -230,3 +256,15 @@ class ExpressionAgent:
     def _needs_support(self, affective: AffectiveAssessmentOutput) -> bool:
         label = str(affective.affect_label).strip().lower()
         return bool(affective.needs_support) or label == "support_distress"
+
+    def _relation_value(self, *, relations: list[dict], relation_type: str, min_confidence: float) -> str | None:
+        for relation in relations:
+            if str(relation.get("relation_type", "")).strip().lower() != relation_type:
+                continue
+            confidence = float(relation.get("confidence", 0.0) or 0.0)
+            if confidence < min_confidence:
+                continue
+            value = str(relation.get("relation_value", "")).strip().lower()
+            if value:
+                return value
+        return None

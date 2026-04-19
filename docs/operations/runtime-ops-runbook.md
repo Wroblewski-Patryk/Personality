@@ -21,22 +21,65 @@ This runbook covers the currently implemented AION MVP service, not the full lon
 
 `GET /health` now includes a `runtime_policy` object with non-secret active
 runtime flags (for example `startup_schema_mode`, `event_debug_enabled`, and
-`event_debug_source`) plus strict-rollout readiness signals
+`event_debug_source`) plus debug-route posture markers
+(`event_debug_token_required`, `production_debug_token_required`,
+`event_debug_query_compat_enabled`, `event_debug_query_compat_source`,
+`event_debug_query_compat_telemetry`,
+`event_debug_query_compat_allow_rate`,
+`event_debug_query_compat_block_rate`,
+`event_debug_query_compat_recommendation`,
+`event_debug_query_compat_sunset_ready`,
+`event_debug_query_compat_sunset_reason`,
+`event_debug_query_compat_recent_attempts_total`,
+`event_debug_query_compat_recent_allow_rate`,
+`event_debug_query_compat_recent_block_rate`,
+`event_debug_query_compat_recent_state`,
+`event_debug_query_compat_stale_after_seconds`,
+`event_debug_query_compat_last_attempt_age_seconds`,
+`event_debug_query_compat_last_attempt_state`,
+`event_debug_query_compat_activity_state`,
+`event_debug_query_compat_activity_hint`, `debug_access_posture`,
+`debug_token_policy_hint`) plus
+strict-rollout readiness signals
 (`production_policy_mismatches`, `production_policy_mismatch_count`,
 `strict_startup_blocked`, and `strict_rollout_ready`) plus rollout guidance
 signals (`recommended_production_policy_enforcement`, `strict_rollout_hint`),
 so operators can verify active policy posture, detect strict-mode startup
-risks, and assess strict-rollout readiness during incident triage and release
-smoke.
+risks, assess strict-rollout readiness, and track compatibility-route sunset
+readiness during incident triage and release smoke.
+Observed compat attempts now always keep sunset recommendation in
+`migrate_clients_before_disabling_compat` until clients are moved away from
+`POST /event?debug=true`.
+Compat activity posture fields now distinguish disabled/no-traffic/stale-history
+vs recent traffic so migration windows can separate historical noise from active
+compat dependency.
+
+`GET /health` also includes a `scheduler` object with cadence posture
+(`enabled`, `running`, interval settings) and latest reflection/maintenance
+tick summaries.
+
+`GET /health` now also includes an `attention` object with burst-turn assembly
+posture (`burst_window_ms`, `answered_ttl_seconds`, `stale_turn_seconds`) and
+live turn counters (`pending`, `claimed`, `answered`) to support burst-message
+triage and operator verification of attention gate behavior.
 
 On startup, production now emits an explicit warning when
 `EVENT_DEBUG_ENABLED=true`. Treat this warning as a release-hardening signal:
 disable debug payload exposure in production unless there is a short-lived,
 intentional incident-debug window.
 
-When production debug payload exposure is enabled without `EVENT_DEBUG_TOKEN`,
-startup also emits a warning recommending token configuration for debug access
-hardening.
+When production debug payload exposure is enabled without `EVENT_DEBUG_TOKEN`
+and `PRODUCTION_DEBUG_TOKEN_REQUIRED=true`, startup emits a warning
+recommending token configuration for debug access hardening.
+
+When production debug payload exposure is enabled with
+`PRODUCTION_DEBUG_TOKEN_REQUIRED=false`, startup also emits a warning so
+relaxed debug-token hardening posture is explicit to operators.
+
+When production debug payload exposure is enabled and compatibility
+`POST /event?debug=true` route is also explicitly enabled
+(`EVENT_DEBUG_QUERY_COMPAT_ENABLED=true`), startup emits a warning to keep
+compatibility-surface hardening visible.
 
 On startup, production also emits an explicit warning when
 `STARTUP_SCHEMA_MODE=create_tables`. Treat this as a temporary compatibility
@@ -45,6 +88,9 @@ path warning: production should normally run migration-first startup mode.
 `PRODUCTION_POLICY_ENFORCEMENT` controls whether these production-policy
 mismatches are warning-only (`warn`, default) or startup-blocking (`strict`).
 Use `strict` when production hardening requires fail-fast policy enforcement.
+Current debug-related mismatch examples include
+`event_debug_enabled=true`, `event_debug_query_compat_enabled=true`, and
+`event_debug_token_missing=true`.
 
 ## Required Environment Variables
 
@@ -61,13 +107,27 @@ Production-only required in practice:
 Recommended when Telegram webhooks are enabled:
 
 - `TELEGRAM_WEBHOOK_SECRET`
-- `EVENT_DEBUG_ENABLED` to control whether `POST /event?debug=true` can expose
+- `EVENT_DEBUG_ENABLED` to control whether debug payload routes
+  (`POST /event/debug` and compatibility `POST /event?debug=true`) can expose
   full internal runtime payloads (production default is disabled unless
   explicitly enabled)
 - `EVENT_DEBUG_TOKEN` (optional) to require `X-AION-Debug-Token` for
-  `POST /event?debug=true` access
+  debug payload route access
+- `EVENT_DEBUG_QUERY_COMPAT_ENABLED` (optional) to explicitly enable or disable
+  compatibility `POST /event?debug=true` route (production default is disabled)
+- `EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW` (optional, default `20`) to control
+  rolling-window size used by compat-route trend telemetry
+- `EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS` (optional, default `86400`)
+  to control stale-age threshold used by compat-route freshness telemetry
+- `PRODUCTION_DEBUG_TOKEN_REQUIRED` (`true|false`, default `true`) to require
+  a configured debug token for production debug payload access when debug
+  exposure is enabled
 - `PRODUCTION_POLICY_ENFORCEMENT` (`warn|strict`) to decide whether production
   policy mismatches remain warning-only or block startup
+- `ATTENTION_BURST_WINDOW_MS` (optional) to tune burst-message coalescing
+  latency and aggregation behavior
+- `ATTENTION_ANSWERED_TTL_SECONDS` and `ATTENTION_STALE_TURN_SECONDS` (optional)
+  to tune in-memory turn lifecycle cleanup behavior
 
 ## Common Operator Flows
 
@@ -108,11 +168,23 @@ Optional debug payload:
 Optional debug payload with token:
 
 ```powershell
+curl -X POST "http://localhost:8000/event/debug" `
+  -H "Content-Type: application/json" `
+  -H "X-AION-Debug-Token: <token>" `
+  -d "{\"text\":\"debug check\"}"
+```
+
+Compatibility debug payload with token:
+
+```powershell
 curl -X POST "http://localhost:8000/event?debug=true" `
   -H "Content-Type: application/json" `
   -H "X-AION-Debug-Token: <token>" `
   -d "{\"text\":\"debug check\"}"
 ```
+
+When compat route is accepted, response includes compatibility/deprecation
+headers that point to `POST /event/debug` as the preferred internal path.
 
 ### Run Health Check
 
@@ -145,7 +217,8 @@ with a webhook URL and optional secret token.
 ## Known Operational Limits
 
 - there is no background queue or worker isolation yet
-- reflection is durable but still app-local, not isolated into a separate worker process yet
+- reflection is durable and scheduler cadence is now available in-process, but
+  neither reflection nor scheduler is isolated into a separate worker process yet
 - startup now defaults to migration-first schema ownership; `create_tables()` remains only as a compatibility path behind `STARTUP_SCHEMA_MODE=create_tables`
 - runtime logging is present, but there is no external observability stack yet
 - proactive systems are still architectural intent, not live ops surfaces

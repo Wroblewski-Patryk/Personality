@@ -17,12 +17,20 @@ class EventRuntimeResponse(BaseModel):
     reflection_triggered: bool
 
 
+class EventQueueResponse(BaseModel):
+    queued: bool
+    reason: str
+    turn_id: str | None = None
+    source_count: int | None = None
+
+
 class EventResponse(BaseModel):
     event_id: str
     trace_id: str
     source: str
-    reply: EventReplyResponse
-    runtime: EventRuntimeResponse
+    reply: EventReplyResponse | None = None
+    runtime: EventRuntimeResponse | None = None
+    queue: EventQueueResponse | None = None
     debug: RuntimeResult | None = None
 
 

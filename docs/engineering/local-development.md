@@ -24,7 +24,21 @@
   - default in local/non-production is enabled
   - production default is disabled unless explicitly enabled
 - `EVENT_DEBUG_TOKEN` (optional) to require `X-AION-Debug-Token` for
-  `POST /event?debug=true`
+  debug payload routes (`POST /event/debug` and `POST /event?debug=true`)
+- `EVENT_DEBUG_QUERY_COMPAT_ENABLED` (optional) to control compatibility
+  `POST /event?debug=true` route:
+  - default in local/non-production is enabled
+  - production default is disabled unless explicitly enabled
+- `EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW` (optional, default `20`) to tune
+  rolling-window size for compat-route trend telemetry in `/health`
+- `EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS` (optional, default `86400`)
+  to tune when last compat-route attempt is marked as stale in `/health`
+- `PRODUCTION_DEBUG_TOKEN_REQUIRED` (optional, default `true`) to enforce
+  debug-token configuration for production debug payload access
+- `ATTENTION_BURST_WINDOW_MS` (optional) to tune Telegram burst coalescing
+  latency
+- `ATTENTION_ANSWERED_TTL_SECONDS` and `ATTENTION_STALE_TURN_SECONDS`
+  (optional) to tune in-memory turn lifecycle cleanup behavior
 
 3. Run tests:
 
@@ -112,7 +126,16 @@ curl -X POST http://localhost:8000/event `
   -d "{\"text\":\"hello AION\"}"
 ```
 
-- Sample debug event with token (when `EVENT_DEBUG_TOKEN` is configured):
+- Sample explicit debug event with token (when `EVENT_DEBUG_TOKEN` is configured):
+
+```powershell
+curl -X POST "http://localhost:8000/event/debug" `
+  -H "Content-Type: application/json" `
+  -H "X-AION-Debug-Token: your-debug-token" `
+  -d "{\"text\":\"debug hello\"}"
+```
+
+- Compatibility debug event with token (same policy gate):
 
 ```powershell
 curl -X POST "http://localhost:8000/event?debug=true" `
@@ -120,6 +143,12 @@ curl -X POST "http://localhost:8000/event?debug=true" `
   -H "X-AION-Debug-Token: your-debug-token" `
   -d "{\"text\":\"debug hello\"}"
 ```
+
+Compat responses include headers that mark migration posture:
+`X-AION-Debug-Compat`, `X-AION-Debug-Compat-Deprecated`, and `Link`.
+
+In production, `POST /event?debug=true` is disabled by default; set
+`EVENT_DEBUG_QUERY_COMPAT_ENABLED=true` only for short-lived migration windows.
 
 ## Troubleshooting
 

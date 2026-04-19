@@ -8,10 +8,15 @@ from app.agents.perception import PerceptionAgent
 from app.agents.planning import PlanningAgent
 from app.agents.role import RoleAgent
 from app.core.action import ActionExecutor
+from app.core.attention_gate import evaluate_proactive_attention_gate
 from app.core.contracts import ActionDelivery, Event, ExpressionOutput, RuntimeResult
+from app.core.graph_adapters import GraphStageAdapters
+from app.core.graph_state import GraphMemoryState, build_graph_state_seed, expression_to_action_delivery
 from app.core.logging import RuntimeLogContext, RuntimeStageLogger, get_logger
+from app.core.runtime_graph import ForegroundLangGraphRunner
 from app.expression.generator import ExpressionAgent
 from app.identity.service import IdentityService
+from app.memory.embeddings import deterministic_embedding
 from app.memory.repository import MemoryRepository
 from app.motivation.engine import MotivationEngine
 from app.reflection.worker import ReflectionWorker
@@ -47,22 +52,24 @@ class RuntimeOrchestrator:
         self.reflection_worker = reflection_worker
         self.identity_service = identity_service or IdentityService()
         self.affective_assessor = affective_assessor or AffectiveAssessor()
+        self.graph_stage_adapters = GraphStageAdapters(
+            perception_agent=self.perception_agent,
+            context_agent=self.context_agent,
+            motivation_engine=self.motivation_engine,
+            role_agent=self.role_agent,
+            planning_agent=self.planning_agent,
+            expression_agent=self.expression_agent,
+            action_executor=self.action_executor,
+            affective_assessor=self.affective_assessor,
+        )
+        self.foreground_graph_runner = ForegroundLangGraphRunner(adapters=self.graph_stage_adapters)
         self.logger = get_logger("aion.runtime")
 
     def _present_label(self, value: object | None) -> str:
         return "yes" if value else "no"
 
     def _build_action_delivery(self, *, event: Event, expression: ExpressionOutput) -> ActionDelivery:
-        channel = expression.channel if expression.channel in {"api", "telegram"} else "api"
-        raw_chat_id = event.payload.get("chat_id") if channel == "telegram" else None
-        chat_id = raw_chat_id if isinstance(raw_chat_id, (int, str)) else None
-        return ActionDelivery(
-            message=expression.message,
-            tone=expression.tone,
-            channel=channel,
-            language=expression.language,
-            chat_id=chat_id,
-        )
+        return expression_to_action_delivery(event=event, expression=expression)
 
     def _run_stage(
         self,
@@ -179,7 +186,42 @@ class RuntimeOrchestrator:
             enriched.append(item)
         return enriched
 
+    def _relation_preferences(self, relations: list[dict]) -> dict:
+        preferences: dict[str, object] = {}
+        for relation in relations:
+            relation_type = str(relation.get("relation_type", "")).strip().lower()
+            relation_value = relation.get("relation_value")
+            confidence = float(relation.get("confidence", 0.0) or 0.0)
+            if not relation_type:
+                continue
+            if relation_type == "collaboration_dynamic":
+                preferences.setdefault("collaboration_preference", relation_value)
+                preferences.setdefault("collaboration_preference_confidence", confidence)
+                continue
+            if relation_type == "support_intensity_preference":
+                preferences.setdefault("relation_support_intensity", relation_value)
+                preferences.setdefault("relation_support_intensity_confidence", confidence)
+                continue
+            if relation_type == "delivery_reliability":
+                preferences.setdefault("relation_delivery_reliability", relation_value)
+                preferences.setdefault("relation_delivery_reliability_confidence", confidence)
+                continue
+            preferences.setdefault(f"relation_{relation_type}", relation_value)
+            preferences.setdefault(f"relation_{relation_type}_confidence", confidence)
+        return preferences
+
     async def run(self, event: Event) -> RuntimeResult:
+        attention_gate = evaluate_proactive_attention_gate(event)
+        if attention_gate is not None:
+            event = event.model_copy(
+                update={
+                    "payload": {
+                        **event.payload,
+                        "attention_gate": attention_gate,
+                    }
+                }
+            )
+
         started = perf_counter()
         stage_timings_ms: dict[str, int] = {}
         log_context = RuntimeLogContext(
@@ -191,11 +233,7 @@ class RuntimeOrchestrator:
         self.logger.info("start event_id=%s trace_id=%s source=%s", event.event_id, event.meta.trace_id, event.source)
 
         async def load_memory_bundle():
-            memory, user_profile, user_theta, active_goals = await asyncio.gather(
-                self.memory_repository.get_recent_for_user(
-                    user_id=event.meta.user_id,
-                    limit=self.MEMORY_LOAD_LIMIT,
-                ),
+            user_profile, user_theta, active_goals = await asyncio.gather(
                 self.memory_repository.get_user_profile(user_id=event.meta.user_id),
                 self.memory_repository.get_user_theta(user_id=event.meta.user_id),
                 self.memory_repository.get_active_goals(user_id=event.meta.user_id, limit=5),
@@ -216,7 +254,7 @@ class RuntimeOrchestrator:
                     "scope_key": scope_key,
                     "include_global": True,
                 }
-            user_preferences, user_conclusions = await asyncio.gather(
+            user_preferences, fallback_conclusions = await asyncio.gather(
                 self.memory_repository.get_user_runtime_preferences(
                     user_id=event.meta.user_id,
                     **preference_kwargs,
@@ -226,16 +264,68 @@ class RuntimeOrchestrator:
                     **conclusion_kwargs,
                 ),
             )
+            relations: list[dict] = []
+            if hasattr(self.memory_repository, "get_user_relations"):
+                relations = await self.memory_repository.get_user_relations(
+                    user_id=event.meta.user_id,
+                    scope_type=conclusion_kwargs.get("scope_type"),
+                    scope_key=conclusion_kwargs.get("scope_key"),
+                    include_global=bool(conclusion_kwargs.get("include_global", False)),
+                    limit=6,
+                )
+            merged_user_preferences = dict(user_preferences)
+            for key, value in self._relation_preferences(relations).items():
+                merged_user_preferences.setdefault(key, value)
+            memory: list[dict]
+            user_conclusions: list[dict]
+            affective_conclusions: list[dict] = []
+            hybrid_diagnostics: dict[str, int] = {}
+            pending_subconscious_proposals: list[dict] = []
+            query_text = str(event.payload.get("text", "")).strip()
+            if hasattr(self.memory_repository, "get_hybrid_memory_bundle"):
+                query_embedding = deterministic_embedding(query_text, dimensions=32) if query_text else []
+                hybrid_bundle = await self.memory_repository.get_hybrid_memory_bundle(
+                    user_id=event.meta.user_id,
+                    query_text=query_text,
+                    query_embedding=query_embedding,
+                    scope_type=conclusion_kwargs.get("scope_type"),
+                    scope_key=conclusion_kwargs.get("scope_key"),
+                    include_global=bool(conclusion_kwargs.get("include_global", False)),
+                    episodic_limit=self.MEMORY_LOAD_LIMIT,
+                    conclusion_limit=8,
+                )
+                memory = list(hybrid_bundle.get("episodic", []))
+                semantic_conclusions = list(hybrid_bundle.get("semantic", []))
+                affective_conclusions = list(hybrid_bundle.get("affective", []))
+                user_conclusions = [*semantic_conclusions, *affective_conclusions]
+                diagnostics = hybrid_bundle.get("diagnostics", {})
+                if isinstance(diagnostics, dict):
+                    hybrid_diagnostics = {str(key): int(value) for key, value in diagnostics.items() if isinstance(value, int)}
+            else:
+                memory = await self.memory_repository.get_recent_for_user(
+                    user_id=event.meta.user_id,
+                    limit=self.MEMORY_LOAD_LIMIT,
+                )
+                user_conclusions = fallback_conclusions
+            if hasattr(self.memory_repository, "get_pending_subconscious_proposals"):
+                pending_subconscious_proposals = await self.memory_repository.get_pending_subconscious_proposals(
+                    user_id=event.meta.user_id,
+                    limit=8,
+                )
             return (
                 memory,
                 user_profile,
-                user_preferences,
+                merged_user_preferences,
                 user_conclusions,
+                affective_conclusions,
+                relations,
                 user_theta,
                 active_goals,
+                hybrid_diagnostics,
+                pending_subconscious_proposals,
             )
 
-        memory, user_profile, user_preferences, user_conclusions, user_theta, active_goals = await self._run_async_stage(
+        memory, user_profile, user_preferences, user_conclusions, affective_conclusions, relations, user_theta, active_goals, hybrid_diagnostics, pending_subconscious_proposals = await self._run_async_stage(
             stage_logger=stage_logger,
             stage_timings_ms=stage_timings_ms,
             stage="memory_load",
@@ -244,7 +334,11 @@ class RuntimeOrchestrator:
             output_summary=lambda result: (
                 "memory="
                 f"{len(result[0])} profile={self._present_label(result[1])} preferences={len(result[2])} "
-                f"conclusions={len(result[3])} theta={self._present_label(result[4])} goals={len(result[5])}"
+                f"conclusions={len(result[3])} affective={len(result[4])} relations={len(result[5])} "
+                f"theta={self._present_label(result[6])} goals={len(result[7])} "
+                f"hybrid_vector_hits={result[8].get('vector_hits', 0)} "
+                f"hybrid_lexical_hits={result[8].get('episodic_lexical_hits', 0)} "
+                f"pending_proposals={len(result[9])}"
             ),
         )
 
@@ -327,170 +421,63 @@ class RuntimeOrchestrator:
         )
 
         text = str(event.payload.get("text", "")).strip()
-        perception = self._run_stage(
+        graph_state_seed = build_graph_state_seed(event).model_copy(
+            update={
+                "memory": GraphMemoryState(
+                    episodic=list(memory),
+                    semantic=list(user_conclusions),
+                    affective=list(affective_conclusions),
+                    operational={
+                        "user_profile": user_profile,
+                        "user_preferences": user_preferences,
+                        "user_theta": user_theta,
+                        "hybrid_retrieval_diagnostics": hybrid_diagnostics,
+                    },
+                ),
+                "conclusions": list(user_conclusions),
+                "relations": list(relations),
+                "user_preferences": dict(user_preferences),
+                "theta": user_theta,
+                "identity": identity,
+                "active_goals": list(active_goals),
+                "active_tasks": list(active_tasks),
+                "active_goal_milestones": list(active_goal_milestones),
+                "goal_milestone_history": list(goal_milestone_history),
+                "goal_progress_history": list(goal_progress_history),
+                "subconscious_proposals": list(pending_subconscious_proposals),
+                "stage_timings_ms": stage_timings_ms,
+            }
+        )
+        graph_state = await self.foreground_graph_runner.run(
+            graph_state=graph_state_seed,
             stage_logger=stage_logger,
             stage_timings_ms=stage_timings_ms,
-            stage="perception",
-            input_summary=(
-                f"text_len={len(text)} recent_memory={len(memory)} profile={self._present_label(user_profile)}"
-            ),
-            operation=lambda: self.perception_agent.run(event, recent_memory=memory, user_profile=user_profile),
-            output_summary=lambda result: (
-                f"topic={result.topic} intent={result.intent} language={result.language} "
-                f"affect={result.affective.affect_label} ambiguity={result.ambiguity}"
-            ),
+            text=text,
+            user_profile=user_profile,
         )
-        affective = await self._run_async_stage(
-            stage_logger=stage_logger,
-            stage_timings_ms=stage_timings_ms,
-            stage="affective_assessment",
-            input_summary=(
-                f"text_len={len(text)} language={perception.language} "
-                f"fallback={perception.affective.affect_label}"
-            ),
-            operation=lambda: self.affective_assessor.assess(
-                user_text=text,
-                response_language=perception.language,
-                fallback=perception.affective,
-            ),
-            output_summary=lambda result: (
-                f"label={result.affect_label} support={result.needs_support} "
-                f"source={result.source} confidence={result.confidence}"
-            ),
-        )
-        perception = perception.model_copy(update={"affective": affective})
+        if graph_state.perception is None:  # pragma: no cover - defensive path
+            raise ValueError("langgraph foreground run did not produce perception output")
+        if graph_state.context is None:  # pragma: no cover - defensive path
+            raise ValueError("langgraph foreground run did not produce context output")
+        if graph_state.motivation is None:  # pragma: no cover - defensive path
+            raise ValueError("langgraph foreground run did not produce motivation output")
+        if graph_state.role is None:  # pragma: no cover - defensive path
+            raise ValueError("langgraph foreground run did not produce role output")
+        if graph_state.plan is None:  # pragma: no cover - defensive path
+            raise ValueError("langgraph foreground run did not produce planning output")
+        if graph_state.expression is None:  # pragma: no cover - defensive path
+            raise ValueError("langgraph foreground run did not produce expression output")
+        if graph_state.action_result is None:  # pragma: no cover - defensive path
+            raise ValueError("langgraph foreground run did not produce action output")
 
-        context = self._run_stage(
-            stage_logger=stage_logger,
-            stage_timings_ms=stage_timings_ms,
-            stage="context",
-            input_summary=(
-                f"memory={len(memory)} conclusions={len(user_conclusions)} goals={len(active_goals)} "
-                f"tasks={len(active_tasks)} milestones={len(active_goal_milestones)}"
-            ),
-            operation=lambda: self.context_agent.run(
-                event=event,
-                perception=perception,
-                recent_memory=memory,
-                conclusions=user_conclusions,
-                identity=identity,
-                active_goals=active_goals,
-                active_tasks=active_tasks,
-                active_goal_milestones=active_goal_milestones,
-                goal_milestone_history=goal_milestone_history,
-                goal_progress_history=goal_progress_history,
-            ),
-            output_summary=lambda result: (
-                f"related_goals={len(result.related_goals)} tags={len(result.related_tags)} "
-                f"risk={result.risk_level}"
-            ),
-        )
-
-        motivation = self._run_stage(
-            stage_logger=stage_logger,
-            stage_timings_ms=stage_timings_ms,
-            stage="motivation",
-            input_summary=(
-                f"intent={perception.intent} risk={context.risk_level} preferences={len(user_preferences)}"
-            ),
-            operation=lambda: self.motivation_engine.run(
-                event=event,
-                context=context,
-                perception=perception,
-                user_preferences=user_preferences,
-                theta=user_theta,
-                active_goals=active_goals,
-                active_tasks=active_tasks,
-                goal_milestone_history=goal_milestone_history,
-                goal_progress_history=goal_progress_history,
-            ),
-            output_summary=lambda result: (
-                f"mode={result.mode} importance={result.importance} urgency={result.urgency} "
-                f"valence={result.valence}"
-            ),
-        )
-
-        role = self._run_stage(
-            stage_logger=stage_logger,
-            stage_timings_ms=stage_timings_ms,
-            stage="role",
-            input_summary=(
-                f"topic={perception.topic} intent={perception.intent} preferences={len(user_preferences)}"
-            ),
-            operation=lambda: self.role_agent.run(
-                event=event,
-                perception=perception,
-                context=context,
-                user_preferences=user_preferences,
-                theta=user_theta,
-            ),
-            output_summary=lambda result: f"selected={result.selected} confidence={result.confidence}",
-        )
-
-        plan = self._run_stage(
-            stage_logger=stage_logger,
-            stage_timings_ms=stage_timings_ms,
-            stage="planning",
-            input_summary=(
-                f"mode={motivation.mode} role={role.selected} goals={len(active_goals)} "
-                f"tasks={len(active_tasks)}"
-            ),
-            operation=lambda: self.planning_agent.run(
-                event=event,
-                context=context,
-                motivation=motivation,
-                role=role,
-                user_preferences=user_preferences,
-                theta=user_theta,
-                active_goals=active_goals,
-                active_tasks=active_tasks,
-                active_goal_milestones=active_goal_milestones,
-                goal_milestone_history=goal_milestone_history,
-                goal_progress_history=goal_progress_history,
-            ),
-            output_summary=lambda result: (
-                f"steps={len(result.steps)} needs_action={result.needs_action} "
-                f"needs_response={result.needs_response}"
-            ),
-        )
-
-        expression = await self._run_async_stage(
-            stage_logger=stage_logger,
-            stage_timings_ms=stage_timings_ms,
-            stage="expression",
-            input_summary=(
-                f"language={perception.language} mode={motivation.mode} role={role.selected} "
-                f"needs_response={plan.needs_response}"
-            ),
-            operation=lambda: self.expression_agent.run(
-                event=event,
-                perception=perception,
-                context=context,
-                plan=plan,
-                role=role,
-                motivation=motivation,
-                identity=identity,
-                user_preferences=user_preferences,
-                theta=user_theta,
-            ),
-            output_summary=lambda result: (
-                f"tone={result.tone} language={result.language} channel={result.channel} "
-                f"message_len={len(result.message)}"
-            ),
-        )
-        action_delivery = self._build_action_delivery(event=event, expression=expression)
-
-        action_result = await self._run_async_stage(
-            stage_logger=stage_logger,
-            stage_timings_ms=stage_timings_ms,
-            stage="action",
-            input_summary=(
-                f"needs_action={plan.needs_action} channel={action_delivery.channel} "
-                f"has_chat_id={self._present_label(action_delivery.chat_id)}"
-            ),
-            operation=lambda: self.action_executor.execute(plan=plan, delivery=action_delivery),
-            output_summary=lambda result: f"status={result.status} actions={len(result.actions)}",
-        )
+        perception = graph_state.perception
+        affective = graph_state.affective or perception.affective
+        context = graph_state.context
+        motivation = graph_state.motivation
+        role = graph_state.role
+        plan = graph_state.plan
+        expression = graph_state.expression
+        action_result = graph_state.action_result
 
         memory_record = None
         reflection_triggered = False
@@ -502,6 +489,27 @@ class RuntimeOrchestrator:
         result_active_goal_milestones = active_goal_milestones
         result_goal_milestone_history = goal_milestone_history
         try:
+            if plan.proposal_handoffs and hasattr(self.memory_repository, "resolve_subconscious_proposal"):
+                async def resolve_subconscious_proposals() -> int:
+                    resolved = 0
+                    for handoff in plan.proposal_handoffs:
+                        await self.memory_repository.resolve_subconscious_proposal(
+                            proposal_id=int(handoff.proposal_id),
+                            decision=handoff.decision,
+                            reason=handoff.reason,
+                        )
+                        resolved += 1
+                    return resolved
+
+                await self._run_async_stage(
+                    stage_logger=stage_logger,
+                    stage_timings_ms=stage_timings_ms,
+                    stage="proposal_handoff",
+                    input_summary=f"handoffs={len(plan.proposal_handoffs)}",
+                    operation=resolve_subconscious_proposals,
+                    output_summary=lambda result: f"resolved={result}",
+                )
+
             memory_record = await self._run_async_stage(
                 stage_logger=stage_logger,
                 stage_timings_ms=stage_timings_ms,
@@ -521,16 +529,36 @@ class RuntimeOrchestrator:
                 ),
                 output_summary=lambda result: f"memory_id={result.id or 'none'} importance={result.importance}",
             )
+
+            async def enqueue_reflection_task() -> bool:
+                if self.reflection_worker is not None:
+                    return await self.reflection_worker.enqueue(
+                        user_id=event.meta.user_id,
+                        event_id=event.event_id,
+                        dispatch=self.reflection_worker.is_running(),
+                    )
+                await self.memory_repository.enqueue_reflection_task(
+                    user_id=event.meta.user_id,
+                    event_id=event.event_id,
+                )
+                return True
+
             if self.reflection_worker is not None:
                 reflection_triggered = await self._run_async_stage(
                     stage_logger=stage_logger,
                     stage_timings_ms=stage_timings_ms,
                     stage="reflection_enqueue",
                     input_summary=f"worker={self._present_label(self.reflection_worker)}",
-                    operation=lambda: self.reflection_worker.enqueue(
-                        user_id=event.meta.user_id,
-                        event_id=event.event_id,
-                    ),
+                    operation=enqueue_reflection_task,
+                    output_summary=lambda result: f"triggered={result}",
+                )
+            else:
+                reflection_triggered = await self._run_async_stage(
+                    stage_logger=stage_logger,
+                    stage_timings_ms=stage_timings_ms,
+                    stage="reflection_enqueue",
+                    input_summary="worker=no",
+                    operation=enqueue_reflection_task,
                     output_summary=lambda result: f"triggered={result}",
                 )
 

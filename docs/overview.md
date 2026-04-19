@@ -33,10 +33,14 @@ The implemented foreground path is:
 Important current-runtime notes:
 
 - identity, profile, conclusions, theta, goals, tasks, milestones, and recent histories are loaded before deeper reasoning
+- foreground stage execution from `perception` through `action` now runs through
+  LangGraph while preserving current stage contracts
 - role selection is dynamic and can use heuristics, reflected preferences, and theta bias
 - language is chosen per event and can fall back to recent memory or profile state for ambiguous turns
 - reflection runs through a durable Postgres-backed queue and updates conclusions, theta, and lightweight goal-manager signals in the background
-- `POST /event` returns a compact public response by default; `debug=true` is policy-gated
+- `POST /event` returns a compact public response by default;
+  `POST /event/debug` (and compatibility `POST /event?debug=true`) are
+  policy-gated for full runtime payload inspection
 
 ## Runtime Stage Ownership
 
@@ -46,6 +50,7 @@ This map is the fast architecture-to-code traceability surface for the live runt
 | --- | --- | --- |
 | Event normalization | `app/core/events.py`, `app/api/routes.py` | `tests/test_event_normalization.py`, `tests/test_api_routes.py` |
 | State load and identity | `app/core/runtime.py`, `app/identity/service.py` | `tests/test_runtime_pipeline.py` |
+| Foreground graph orchestration | `app/core/runtime_graph.py`, `app/core/graph_adapters.py` | `tests/test_runtime_pipeline.py`, `tests/test_graph_stage_adapters.py`, `tests/test_graph_state_contract.py` |
 | Perception | `app/agents/perception.py` | `tests/test_perception_agent.py`, `tests/test_runtime_pipeline.py` |
 | Context | `app/agents/context.py` | `tests/test_context_agent.py`, `tests/test_runtime_pipeline.py` |
 | Motivation | `app/motivation/engine.py` | `tests/test_motivation_engine.py`, `tests/test_runtime_pipeline.py` |
@@ -64,22 +69,38 @@ What is already live:
 - lightweight identity snapshot
 - heuristic but state-aware role selection
 - semantic preference memory
+- semantic embedding contract plus pgvector-ready storage scaffolding
+- hybrid memory retrieval across episodic, semantic, and affective layers
+- relation persistence and reflection-driven relation updates
+- relation-aware context, role, planning, and expression behavior
 - durable reflection with retry and health observability
 - lightweight goal, task, progress, and milestone management
 - migration-first startup by default with explicit compatibility fallback
 - explicit expression-to-action delivery handoff in the runtime implementation
+- explicit graph-compatibility boundary (`GraphRuntimeState` and stage adapters)
+  around current stage modules, preparing incremental LangGraph migration
+- LangGraph foreground orchestration now active for `perception -> ... -> action`
+- scheduler event normalization/cadence contracts in runtime and config
+- in-process scheduler reflection and maintenance cadence with `/health`
+  scheduler visibility
+- proactive scheduler decision engine with interruption-cost guardrails and
+  typed proactive planning/motivation outputs
+- proactive delivery guardrails with opt-in, throttle limits, and delivery-target
+  checks before outreach
+- explicit attention inbox and proposal-handoff runtime-state contracts
+- subconscious proposal persistence with conscious handoff resolution and
+  read-only research/tool policy boundaries
+- proactive scheduler attention-gate checks before delivery planning
+- connector capability and permission-gate planning contracts with typed
+  calendar/task/drive synchronization intents
 
 What is still planned or intentionally deferred:
 
-- vector retrieval or embeddings
-- external orchestration layer
+- provider-owned embedding strategy and retrieval tuning beyond deterministic fallback
+- finishing migration leftovers around orchestration boundaries
 - separate reflection worker process
-- proactive loops, richer relation systems, and fuller autonomous behavior
-- attention inbox and burst-message turn assembly for rapid conversation
-  handling
-- subconscious proposal handoff and explicit proactive attention gating
-- user-authorized productivity connectors such as calendar, task systems, and
-  cloud drives
+- provider-backed execution adapters for calendar/task/drive connectors
+- connector capability-expansion proposals
 
 Near-term planning now also makes two coordination boundaries explicit:
 

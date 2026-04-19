@@ -5,8 +5,31 @@ from collections.abc import Sequence
 from app.core.logging import get_logger
 from app.memory.episodic import extract_episode_fields
 from app.memory.repository import MemoryRepository
+from app.reflection.adaptive_signals import (
+    derive_collaboration_preference,
+    derive_preferred_role,
+    derive_theta,
+    has_outcome_evidence,
+)
+from app.reflection.affective_signals import derive_affective_conclusions
+from app.reflection.goal_conclusions import (
+    derive_goal_completion_criteria,
+    derive_goal_execution_state,
+    derive_goal_milestone_arc,
+    derive_goal_milestone_dependency_state,
+    derive_goal_milestone_due_state,
+    derive_goal_milestone_due_window,
+    derive_goal_milestone_pressure,
+    derive_goal_milestone_risk,
+    derive_goal_milestone_state,
+    derive_goal_milestone_transition,
+    derive_goal_progress_arc,
+    derive_goal_progress_score,
+    derive_goal_progress_trend,
+)
+from app.reflection.relation_signals import derive_relation_updates
+from app.reflection.proposals import derive_subconscious_proposals
 from app.utils.goal_task_selection import priority_rank as shared_priority_rank
-from app.utils.progress_signals import goal_milestone_arc_signal as shared_goal_milestone_arc_signal
 
 
 class ReflectionWorker:
@@ -32,6 +55,9 @@ class ReflectionWorker:
         await self._schedule_pending_tasks(limit=self.queue.maxsize or 100)
         self._task = asyncio.create_task(self._run_loop(), name="aion-reflection-worker")
 
+    def is_running(self) -> bool:
+        return self._task is not None and not self._task.done()
+
     async def stop(self) -> None:
         if not self._task:
             return
@@ -39,9 +65,11 @@ class ReflectionWorker:
         await self._task
         self._task = None
 
-    async def enqueue(self, user_id: str, event_id: str) -> bool:
+    async def enqueue(self, user_id: str, event_id: str, *, dispatch: bool = True) -> bool:
         task = await self.memory_repository.enqueue_reflection_task(user_id=user_id, event_id=event_id)
         if str(task.get("status")) == "completed":
+            return True
+        if not dispatch:
             return True
         queued = self._schedule_task(task)
         if not queued:
@@ -58,7 +86,11 @@ class ReflectionWorker:
         runtime_preferences = await self.memory_repository.get_user_runtime_preferences(user_id=user_id)
         active_goals = await self.memory_repository.get_active_goals(user_id=user_id, limit=5)
         active_tasks = await self.memory_repository.get_active_tasks(user_id=user_id, limit=8)
-        primary_goal = self._select_primary_goal(active_goals)
+        primary_goal = self._select_primary_goal(
+            active_goals,
+            recent_memory=recent_memory,
+            active_tasks=active_tasks,
+        )
         recent_goal_progress = []
         recent_goal_milestone_history = []
         if primary_goal is not None and primary_goal.get("id") is not None:
@@ -83,11 +115,18 @@ class ReflectionWorker:
             recent_goal_progress=recent_goal_progress,
             recent_goal_milestone_history=recent_goal_milestone_history,
         )
-        theta = self._derive_theta(recent_memory)
-        if not conclusions:
+        theta = derive_theta(recent_memory, extract_memory_fields=self._extract_memory_fields)
+        subconscious_proposals: list[dict] = []
+        if hasattr(self.memory_repository, "upsert_subconscious_proposal"):
+            subconscious_proposals = derive_subconscious_proposals(
+                recent_memory,
+                active_goals=active_goals,
+                active_tasks=active_tasks,
+                extract_memory_fields=self._extract_memory_fields,
+            )
+        if not conclusions and theta is None and not subconscious_proposals:
             self.logger.info("reflection_noop user_id=%s event_id=%s", user_id, event_id)
-            if theta is None:
-                return False
+            return False
 
         for conclusion in conclusions:
             scope_type, scope_key = self._conclusion_scope(kind=str(conclusion["kind"]), primary_goal=primary_goal)
@@ -112,6 +151,62 @@ class ReflectionWorker:
                 scope_type,
                 scope_key,
             )
+        relation_updates = derive_relation_updates(
+            recent_memory,
+            extract_memory_fields=self._extract_memory_fields,
+        )
+        for relation in relation_updates:
+            relation_scope_type, relation_scope_key = self._relation_scope(
+                relation_type=str(relation["relation_type"]),
+                primary_goal=primary_goal,
+            )
+            await self.memory_repository.upsert_relation(
+                user_id=user_id,
+                relation_type=str(relation["relation_type"]),
+                relation_value=str(relation["relation_value"]),
+                confidence=float(relation["confidence"]),
+                source=str(relation["source"]),
+                supporting_event_id=event_id,
+                scope_type=relation_scope_type,
+                scope_key=relation_scope_key,
+                evidence_count=int(relation.get("evidence_count", 1)),
+                decay_rate=float(relation.get("decay_rate", 0.02)),
+            )
+            self.logger.info(
+                "reflection_relation_updated user_id=%s event_id=%s relation_type=%s relation_value=%s confidence=%.2f scope_type=%s scope_key=%s",
+                user_id,
+                event_id,
+                relation["relation_type"],
+                relation["relation_value"],
+                relation["confidence"],
+                relation_scope_type,
+                relation_scope_key,
+            )
+        if hasattr(self.memory_repository, "upsert_subconscious_proposal"):
+            for proposal in subconscious_proposals:
+                stored_proposal = await self.memory_repository.upsert_subconscious_proposal(
+                    user_id=user_id,
+                    proposal_type=str(proposal.get("proposal_type", "nudge_user")),
+                    summary=str(proposal.get("summary", "")),
+                    payload=proposal.get("payload") if isinstance(proposal.get("payload"), dict) else {},
+                    confidence=float(proposal.get("confidence", 0.0) or 0.0),
+                    source_event_id=event_id,
+                    research_policy=str(proposal.get("research_policy", "read_only")),
+                    allowed_tools=[
+                        str(item)
+                        for item in proposal.get("allowed_tools", [])
+                        if isinstance(item, str)
+                    ],
+                )
+                self.logger.info(
+                    "reflection_subconscious_proposal_upserted user_id=%s event_id=%s proposal_id=%s type=%s confidence=%.2f status=%s",
+                    user_id,
+                    event_id,
+                    stored_proposal["proposal_id"],
+                    stored_proposal["proposal_type"],
+                    stored_proposal["confidence"],
+                    stored_proposal["status"],
+                )
         synced_milestone: dict | None = None
         if primary_goal is not None and primary_goal.get("id") is not None:
             goal_milestone_state = next(
@@ -218,19 +313,32 @@ class ReflectionWorker:
 
             task_id = int(item["id"])
             self._queued_task_ids.discard(task_id)
-            completed = False
             try:
-                await self.memory_repository.mark_reflection_task_processing(task_id=task_id)
-                await self.reflect_user(user_id=str(item["user_id"]), event_id=str(item["event_id"]))
-                completed = True
-            except Exception as exc:  # pragma: no cover - defensive worker path
-                await self.memory_repository.mark_reflection_task_failed(task_id=task_id, error=str(exc))
-                self.logger.exception("reflection_failed user_id=%s event_id=%s error=%s", item["user_id"], item["event_id"], exc)
+                await self._process_task(item)
             finally:
-                if completed:
-                    await self.memory_repository.mark_reflection_task_completed(task_id=task_id)
                 self.queue.task_done()
                 await self._schedule_pending_tasks(limit=1)
+
+    async def run_pending_once(self, *, limit: int = 10) -> dict[str, int]:
+        pending_tasks = await self.memory_repository.get_pending_reflection_tasks(limit=max(1, limit))
+        summary = {
+            "scanned": len(pending_tasks),
+            "processed": 0,
+            "completed": 0,
+            "failed": 0,
+            "skipped_not_ready": 0,
+        }
+        for task in pending_tasks:
+            if not self._is_task_ready(task):
+                summary["skipped_not_ready"] += 1
+                continue
+            summary["processed"] += 1
+            completed = await self._process_task(task)
+            if completed:
+                summary["completed"] += 1
+            else:
+                summary["failed"] += 1
+        return summary
 
     async def _schedule_pending_tasks(self, limit: int = 10) -> int:
         capacity = self._queue_capacity()
@@ -300,6 +408,21 @@ class ReflectionWorker:
         index = min(attempts - 1, len(self.RETRY_BACKOFF_SECONDS) - 1)
         return self.RETRY_BACKOFF_SECONDS[index]
 
+    async def _process_task(self, item: dict) -> bool:
+        task_id = int(item["id"])
+        completed = False
+        try:
+            await self.memory_repository.mark_reflection_task_processing(task_id=task_id)
+            await self.reflect_user(user_id=str(item["user_id"]), event_id=str(item["event_id"]))
+            completed = True
+        except Exception as exc:  # pragma: no cover - defensive worker path
+            await self.memory_repository.mark_reflection_task_failed(task_id=task_id, error=str(exc))
+            self.logger.exception("reflection_failed user_id=%s event_id=%s error=%s", item["user_id"], item["event_id"], exc)
+        finally:
+            if completed:
+                await self.memory_repository.mark_reflection_task_completed(task_id=task_id)
+        return completed
+
     def _derive_conclusions(
         self,
         recent_memory: Sequence[dict],
@@ -321,9 +444,12 @@ class ReflectionWorker:
         role_counts: dict[str, int] = {}
         task_done_updates = 0
         task_in_progress_updates = 0
+        outcome_evidence_count = 0
 
         for memory_item in recent_memory:
             fields = self._extract_memory_fields(memory_item)
+            if has_outcome_evidence(fields):
+                outcome_evidence_count += 1
             preference_update = fields.get("preference_update", "")
             if preference_update.startswith("response_style:"):
                 explicit_updates.append(preference_update.split(":", 1)[1].strip().lower())
@@ -386,7 +512,11 @@ class ReflectionWorker:
                     }
                 )
 
-        preferred_role = self._derive_preferred_role(role_counts=role_counts, total=len(recent_memory))
+        preferred_role = derive_preferred_role(
+            role_counts=role_counts,
+            total=len(recent_memory),
+            outcome_evidence_count=outcome_evidence_count,
+        )
         if preferred_role is not None:
             conclusions.append(preferred_role)
 
@@ -401,66 +531,77 @@ class ReflectionWorker:
                 }
             )
 
-        collaboration_preference = self._derive_collaboration_preference(recent_memory)
+        collaboration_preference = derive_collaboration_preference(
+            recent_memory,
+            extract_memory_fields=self._extract_memory_fields,
+        )
         if collaboration_preference is not None:
             conclusions.append(collaboration_preference)
 
-        affective_conclusions = self._derive_affective_conclusions(recent_memory)
+        affective_conclusions = derive_affective_conclusions(
+            recent_memory,
+            extract_memory_fields=self._extract_memory_fields,
+        )
         if affective_conclusions:
             conclusions.extend(affective_conclusions)
 
-        goal_execution_state = self._derive_goal_execution_state(
+        goal_execution_state = derive_goal_execution_state(
             recent_memory=recent_memory,
             active_goals=active_goals or [],
             active_tasks=active_tasks or [],
             task_done_updates=task_done_updates,
             task_in_progress_updates=task_in_progress_updates,
+            extract_memory_fields=self._extract_memory_fields,
         )
         if goal_execution_state is not None:
             conclusions.append(goal_execution_state)
-        goal_progress_score = self._derive_goal_progress_score(
+        goal_progress_score = derive_goal_progress_score(
             active_goals=active_goals or [],
             active_tasks=active_tasks or [],
             task_done_updates=task_done_updates,
         )
         if goal_progress_score is not None:
             conclusions.append(goal_progress_score)
-        goal_progress_trend = self._derive_goal_progress_trend(
+        goal_progress_trend = derive_goal_progress_trend(
             current_goal_progress_score=goal_progress_score,
             previous_goal_progress_score=previous_goal_progress_score,
+            coerce_progress_score=self._coerce_progress_score,
         )
         if goal_progress_trend is not None:
             conclusions.append(goal_progress_trend)
-        goal_progress_arc = self._derive_goal_progress_arc(
+        goal_progress_arc = derive_goal_progress_arc(
             recent_goal_progress=recent_goal_progress or [],
             current_goal_progress_score=goal_progress_score,
             goal_execution_state=goal_execution_state,
             goal_progress_trend=goal_progress_trend,
+            coerce_progress_score=self._coerce_progress_score,
         )
         if goal_progress_arc is not None:
             conclusions.append(goal_progress_arc)
-        goal_milestone_state = self._derive_goal_milestone_state(
+        goal_milestone_state = derive_goal_milestone_state(
             has_active_goal=bool(active_goals),
             current_goal_progress_score=goal_progress_score,
             goal_execution_state=goal_execution_state,
             goal_progress_arc=goal_progress_arc,
+            coerce_progress_score=self._coerce_progress_score,
         )
         if goal_milestone_state is not None:
             conclusions.append(goal_milestone_state)
-        goal_milestone_transition = self._derive_goal_milestone_transition(
+        goal_milestone_transition = derive_goal_milestone_transition(
             current_goal_progress_score=goal_progress_score,
             previous_goal_progress_score=previous_goal_progress_score,
+            coerce_progress_score=self._coerce_progress_score,
         )
         if goal_milestone_transition is not None:
             conclusions.append(goal_milestone_transition)
-        goal_milestone_arc = self._derive_goal_milestone_arc(
+        goal_milestone_arc = derive_goal_milestone_arc(
             recent_goal_milestone_history=recent_goal_milestone_history or [],
             goal_milestone_state=goal_milestone_state,
             goal_milestone_transition=goal_milestone_transition,
         )
         if goal_milestone_arc is not None:
             conclusions.append(goal_milestone_arc)
-        goal_milestone_pressure = self._derive_goal_milestone_pressure(
+        goal_milestone_pressure = derive_goal_milestone_pressure(
             recent_goal_milestone_history=recent_goal_milestone_history or [],
             goal_milestone_state=goal_milestone_state,
             goal_milestone_arc=goal_milestone_arc,
@@ -468,14 +609,14 @@ class ReflectionWorker:
         )
         if goal_milestone_pressure is not None:
             conclusions.append(goal_milestone_pressure)
-        goal_milestone_dependency_state = self._derive_goal_milestone_dependency_state(
+        goal_milestone_dependency_state = derive_goal_milestone_dependency_state(
             active_tasks=active_tasks or [],
             goal_milestone_state=goal_milestone_state,
             goal_execution_state=goal_execution_state,
         )
         if goal_milestone_dependency_state is not None:
             conclusions.append(goal_milestone_dependency_state)
-        goal_milestone_risk = self._derive_goal_milestone_risk(
+        goal_milestone_risk = derive_goal_milestone_risk(
             active_tasks=active_tasks or [],
             goal_execution_state=goal_execution_state,
             goal_progress_arc=goal_progress_arc,
@@ -484,7 +625,7 @@ class ReflectionWorker:
         )
         if goal_milestone_risk is not None:
             conclusions.append(goal_milestone_risk)
-        goal_completion_criteria = self._derive_goal_completion_criteria(
+        goal_completion_criteria = derive_goal_completion_criteria(
             active_tasks=active_tasks or [],
             goal_execution_state=goal_execution_state,
             goal_milestone_state=goal_milestone_state,
@@ -492,7 +633,7 @@ class ReflectionWorker:
         )
         if goal_completion_criteria is not None:
             conclusions.append(goal_completion_criteria)
-        goal_milestone_due_state = self._derive_goal_milestone_due_state(
+        goal_milestone_due_state = derive_goal_milestone_due_state(
             goal_milestone_state=goal_milestone_state,
             goal_milestone_pressure=goal_milestone_pressure,
             goal_milestone_dependency_state=goal_milestone_dependency_state,
@@ -500,7 +641,7 @@ class ReflectionWorker:
         )
         if goal_milestone_due_state is not None:
             conclusions.append(goal_milestone_due_state)
-        goal_milestone_due_window = self._derive_goal_milestone_due_window(
+        goal_milestone_due_window = derive_goal_milestone_due_window(
             goal_milestone_due_state=goal_milestone_due_state,
             goal_milestone_pressure=goal_milestone_pressure,
             goal_milestone_arc=goal_milestone_arc,
@@ -519,815 +660,68 @@ class ReflectionWorker:
             deduped.append(conclusion)
         return deduped
 
-    def _derive_goal_execution_state(
+    def _select_primary_goal(
         self,
+        active_goals: Sequence[dict],
         *,
         recent_memory: Sequence[dict],
-        active_goals: Sequence[dict],
         active_tasks: Sequence[dict],
-        task_done_updates: int,
-        task_in_progress_updates: int,
     ) -> dict | None:
         if not active_goals:
             return None
 
-        blocked_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() == "blocked"
-        ]
-        in_progress_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() == "in_progress"
-        ]
-        remaining_active_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() in {"todo", "in_progress"}
-        ]
-
-        if blocked_tasks:
-            return {
-                "kind": "goal_execution_state",
-                "content": "blocked",
-                "confidence": 0.82,
-                "source": "background_reflection",
-            }
-
-        if task_done_updates >= 1 and remaining_active_tasks:
-            return {
-                "kind": "goal_execution_state",
-                "content": "recovering",
-                "confidence": 0.77,
-                "source": "background_reflection",
-            }
-
-        if in_progress_tasks or task_in_progress_updates >= 1:
-            return {
-                "kind": "goal_execution_state",
-                "content": "advancing",
-                "confidence": 0.75,
-                "source": "background_reflection",
-            }
-
-        if task_done_updates >= 1:
-            return {
-                "kind": "goal_execution_state",
-                "content": "progressing",
-                "confidence": 0.76,
-                "source": "background_reflection",
-            }
-
-        if self._goal_stagnation_signal_count(recent_memory) >= 3:
-            return {
-                "kind": "goal_execution_state",
-                "content": "stagnating",
-                "confidence": 0.72,
-                "source": "background_reflection",
-            }
-
-        return None
-
-    def _derive_goal_progress_score(
-        self,
-        *,
-        active_goals: Sequence[dict],
-        active_tasks: Sequence[dict],
-        task_done_updates: int,
-    ) -> dict | None:
-        if not active_goals:
-            return None
-
-        signal_count = len(active_tasks) + task_done_updates
-        if signal_count <= 0:
-            return None
-
-        weighted_progress = float(task_done_updates)
-        for task in active_tasks:
-            status = str(task.get("status", "")).strip().lower()
-            weighted_progress += {
-                "blocked": 0.1,
-                "todo": 0.3,
-                "in_progress": 0.65,
-            }.get(status, 0.0)
-
-        score = min(0.99, max(0.0, round(weighted_progress / signal_count, 2)))
-        confidence = 0.74 if signal_count >= 2 else 0.7
-        return {
-            "kind": "goal_progress_score",
-            "content": f"{score:.2f}",
-            "confidence": confidence,
-            "source": "background_reflection",
-        }
-
-    def _derive_goal_progress_trend(
-        self,
-        *,
-        current_goal_progress_score: dict | None,
-        previous_goal_progress_score: float | None,
-    ) -> dict | None:
-        current_score = self._coerce_progress_score(
-            current_goal_progress_score.get("content") if current_goal_progress_score else None
-        )
-        if current_score is None or previous_goal_progress_score is None:
-            return None
-
-        delta = round(current_score - previous_goal_progress_score, 2)
-        if delta >= 0.12:
-            return {
-                "kind": "goal_progress_trend",
-                "content": "improving",
-                "confidence": 0.73,
-                "source": "background_reflection",
-            }
-        if delta <= -0.12:
-            return {
-                "kind": "goal_progress_trend",
-                "content": "slipping",
-                "confidence": 0.75,
-                "source": "background_reflection",
-            }
-        if abs(delta) <= 0.05 and current_score > 0.0:
-            return {
-                "kind": "goal_progress_trend",
-                "content": "steady",
-                "confidence": 0.7,
-                "source": "background_reflection",
-            }
-        return None
-
-    def _derive_goal_progress_arc(
-        self,
-        *,
-        recent_goal_progress: Sequence[dict],
-        current_goal_progress_score: dict | None,
-        goal_execution_state: dict | None,
-        goal_progress_trend: dict | None,
-    ) -> dict | None:
-        current_score = self._coerce_progress_score(
-            current_goal_progress_score.get("content") if current_goal_progress_score else None
-        )
-        if current_score is None:
-            return None
-
-        ordered_history = list(reversed(recent_goal_progress))
-        scores: list[float] = []
-        states: list[str] = []
-        for item in ordered_history:
-            score = self._coerce_progress_score(item.get("score"))
-            if score is None:
-                continue
-            scores.append(score)
-            states.append(str(item.get("execution_state", "")).strip().lower())
-
-        scores.append(current_score)
-        states.append(str(goal_execution_state.get("content", "")).strip().lower() if goal_execution_state is not None else "")
-
-        if len(scores) < 2:
-            return None
-
-        start = round(scores[0], 2)
-        end = round(scores[-1], 2)
-        delta = round(end - start, 2)
-        span = round(max(scores) - min(scores), 2)
-        trend = str(goal_progress_trend.get("content", "")).strip().lower() if goal_progress_trend is not None else ""
-        has_recovery_state = any(state in {"blocked", "recovering"} for state in states)
-
-        if has_recovery_state and trend == "improving" and end >= 0.5:
-            return {
-                "kind": "goal_progress_arc",
-                "content": "recovery_gaining_traction",
-                "confidence": 0.76,
-                "source": "background_reflection",
-            }
-        if trend == "improving" and delta >= 0.35 and end >= 0.75:
-            return {
-                "kind": "goal_progress_arc",
-                "content": "breakthrough_momentum",
-                "confidence": 0.77,
-                "source": "background_reflection",
-            }
-        if span >= 0.35 and abs(delta) < 0.15:
-            return {
-                "kind": "goal_progress_arc",
-                "content": "unstable_progress",
-                "confidence": 0.74,
-                "source": "background_reflection",
-            }
-        if trend == "slipping" and delta <= -0.2 and end <= 0.35:
-            return {
-                "kind": "goal_progress_arc",
-                "content": "falling_behind",
-                "confidence": 0.78,
-                "source": "background_reflection",
-            }
-        if trend == "steady" and start >= 0.45 and end >= 0.45:
-            return {
-                "kind": "goal_progress_arc",
-                "content": "holding_pattern",
-                "confidence": 0.71,
-                "source": "background_reflection",
-            }
-        return None
-
-    def _derive_goal_milestone_transition(
-        self,
-        *,
-        current_goal_progress_score: dict | None,
-        previous_goal_progress_score: float | None,
-    ) -> dict | None:
-        current_score = self._coerce_progress_score(
-            current_goal_progress_score.get("content") if current_goal_progress_score else None
-        )
-        if current_score is None or previous_goal_progress_score is None:
-            return None
-
-        previous_score = round(previous_goal_progress_score, 2)
-        current_score = round(current_score, 2)
-
-        if previous_score >= 0.75 and current_score < 0.75:
-            return {
-                "kind": "goal_milestone_transition",
-                "content": "slipped_from_completion_window",
-                "confidence": 0.78,
-                "source": "background_reflection",
-            }
-        if previous_score < 0.75 and current_score >= 0.75:
-            return {
-                "kind": "goal_milestone_transition",
-                "content": "entered_completion_window",
-                "confidence": 0.77,
-                "source": "background_reflection",
-            }
-        if previous_score >= 0.35 and current_score < 0.35:
-            return {
-                "kind": "goal_milestone_transition",
-                "content": "dropped_back_to_early_stage",
-                "confidence": 0.76,
-                "source": "background_reflection",
-            }
-        if previous_score < 0.35 and current_score >= 0.35:
-            return {
-                "kind": "goal_milestone_transition",
-                "content": "entered_execution_phase",
-                "confidence": 0.74,
-                "source": "background_reflection",
-            }
-        return None
-
-    def _derive_goal_milestone_state(
-        self,
-        *,
-        has_active_goal: bool,
-        current_goal_progress_score: dict | None,
-        goal_execution_state: dict | None,
-        goal_progress_arc: dict | None,
-    ) -> dict | None:
-        if not has_active_goal:
-            return None
-        current_score = self._coerce_progress_score(
-            current_goal_progress_score.get("content") if current_goal_progress_score else None
-        )
-        if current_score is None:
-            return {
-                "kind": "goal_milestone_state",
-                "content": "early_stage",
-                "confidence": 0.7,
-                "source": "background_reflection",
-            }
-        if current_score <= 0.0:
-            return None
-
-        execution_state = str(goal_execution_state.get("content", "")).strip().lower() if goal_execution_state is not None else ""
-        progress_arc = str(goal_progress_arc.get("content", "")).strip().lower() if goal_progress_arc is not None else ""
-
-        if current_score >= 0.75:
-            return {
-                "kind": "goal_milestone_state",
-                "content": "completion_window",
-                "confidence": 0.8,
-                "source": "background_reflection",
-            }
-        if execution_state == "recovering" or progress_arc == "recovery_gaining_traction":
-            return {
-                "kind": "goal_milestone_state",
-                "content": "recovery_phase",
-                "confidence": 0.76,
-                "source": "background_reflection",
-            }
-        if current_score >= 0.35:
-            return {
-                "kind": "goal_milestone_state",
-                "content": "execution_phase",
-                "confidence": 0.74,
-                "source": "background_reflection",
-            }
-        return {
-            "kind": "goal_milestone_state",
-            "content": "early_stage",
-            "confidence": 0.72,
-            "source": "background_reflection",
-        }
-
-    def _derive_goal_milestone_arc(
-        self,
-        *,
-        recent_goal_milestone_history: Sequence[dict],
-        goal_milestone_state: dict | None,
-        goal_milestone_transition: dict | None,
-    ) -> dict | None:
-        current_phase = str(goal_milestone_state.get("content", "")).strip().lower() if goal_milestone_state is not None else ""
-        if not current_phase:
-            return None
-
-        transition = (
-            str(goal_milestone_transition.get("content", "")).strip().lower()
-            if goal_milestone_transition is not None
-            else ""
-        )
-        content = shared_goal_milestone_arc_signal(
-            list(recent_goal_milestone_history),
-            current_phase=current_phase,
-            transition=transition,
-            require_transition_for_reentry=True,
-        )
-        if not content:
-            return None
-
-        confidence = {
-            "reentered_completion_window": 0.79,
-            "recovery_backslide": 0.78,
-            "milestone_whiplash": 0.77,
-            "closure_momentum": 0.76,
-            "steady_closure": 0.75,
-        }.get(content, 0.74)
-        return {
-            "kind": "goal_milestone_arc",
-            "content": content,
-            "confidence": confidence,
-            "source": "background_reflection",
-        }
-
-    def _derive_goal_milestone_pressure(
-        self,
-        *,
-        recent_goal_milestone_history: Sequence[dict],
-        goal_milestone_state: dict | None,
-        goal_milestone_arc: dict | None,
-        goal_milestone_transition: dict | None,
-    ) -> dict | None:
-        current_phase = str(goal_milestone_state.get("content", "")).strip().lower() if goal_milestone_state is not None else ""
-        latest_history_phase = ""
-        if recent_goal_milestone_history:
-            latest_history_phase = str(recent_goal_milestone_history[0].get("phase", "")).strip().lower()
-        if (not current_phase or current_phase == "early_stage") and latest_history_phase:
-            current_phase = latest_history_phase
-        if not current_phase:
-            return None
-
-        milestone_arc = str(goal_milestone_arc.get("content", "")).strip().lower() if goal_milestone_arc is not None else ""
-        transition = (
-            str(goal_milestone_transition.get("content", "")).strip().lower()
-            if goal_milestone_transition is not None
-            else ""
-        )
-
-        ordered_history = list(reversed(recent_goal_milestone_history))
-        consecutive_same_phase = 1
-        latest_timestamp = datetime.now(timezone.utc)
-        oldest_same_phase_timestamp = latest_timestamp
-        found_current_phase = False
-
-        for item in reversed(ordered_history):
-            phase = str(item.get("phase", "")).strip().lower()
-            if phase != current_phase:
-                if found_current_phase:
-                    break
-                continue
-
-            found_current_phase = True
-            consecutive_same_phase += 1
-            item_timestamp = item.get("created_at")
-            if isinstance(item_timestamp, datetime):
-                normalized_timestamp = (
-                    item_timestamp if item_timestamp.tzinfo is not None else item_timestamp.replace(tzinfo=timezone.utc)
-                )
-                oldest_same_phase_timestamp = min(oldest_same_phase_timestamp, normalized_timestamp)
-
-        same_phase_hours = max(0.0, (latest_timestamp - oldest_same_phase_timestamp).total_seconds() / 3600.0)
-
-        if current_phase == "completion_window":
-            if consecutive_same_phase >= 4 or same_phase_hours >= 12:
-                return {
-                    "kind": "goal_milestone_pressure",
-                    "content": "lingering_completion",
-                    "confidence": 0.8,
-                    "source": "background_reflection",
-                }
-            if milestone_arc in {"closure_momentum", "reentered_completion_window"} or transition == "entered_completion_window":
-                return {
-                    "kind": "goal_milestone_pressure",
-                    "content": "building_closure_pressure",
-                    "confidence": 0.74,
-                    "source": "background_reflection",
-                }
-            return None
-
-        if current_phase == "recovery_phase" and (consecutive_same_phase >= 3 or same_phase_hours >= 8):
-            return {
-                "kind": "goal_milestone_pressure",
-                "content": "dragging_recovery",
-                "confidence": 0.78,
-                "source": "background_reflection",
-            }
-
-        if current_phase == "execution_phase" and (consecutive_same_phase >= 4 or same_phase_hours >= 12):
-            return {
-                "kind": "goal_milestone_pressure",
-                "content": "stale_execution",
-                "confidence": 0.75,
-                "source": "background_reflection",
-            }
-
-        if current_phase == "early_stage" and (consecutive_same_phase >= 4 or same_phase_hours >= 12):
-            return {
-                "kind": "goal_milestone_pressure",
-                "content": "lingering_setup",
-                "confidence": 0.74,
-                "source": "background_reflection",
-            }
-
-        return None
-
-    def _derive_goal_milestone_dependency_state(
-        self,
-        *,
-        active_tasks: Sequence[dict],
-        goal_milestone_state: dict | None,
-        goal_execution_state: dict | None,
-    ) -> dict | None:
-        milestone_state = str(goal_milestone_state.get("content", "")).strip().lower() if goal_milestone_state is not None else ""
-        execution_state = str(goal_execution_state.get("content", "")).strip().lower() if goal_execution_state is not None else ""
-        blocked_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() == "blocked"
-        ]
-        remaining_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() in {"todo", "in_progress", "blocked"}
-        ]
-
-        if blocked_tasks or execution_state == "blocked":
-            return {
-                "kind": "goal_milestone_dependency_state",
-                "content": "blocked_dependency",
-                "confidence": 0.83,
-                "source": "background_reflection",
-            }
-        if len(remaining_tasks) >= 2:
-            return {
-                "kind": "goal_milestone_dependency_state",
-                "content": "multi_step_dependency",
-                "confidence": 0.76,
-                "source": "background_reflection",
-            }
-        if len(remaining_tasks) == 1:
-            return {
-                "kind": "goal_milestone_dependency_state",
-                "content": "single_step_dependency",
-                "confidence": 0.74,
-                "source": "background_reflection",
-            }
-        if milestone_state == "completion_window":
-            return {
-                "kind": "goal_milestone_dependency_state",
-                "content": "clear_to_close",
-                "confidence": 0.79,
-                "source": "background_reflection",
-            }
-        return None
-
-    def _derive_goal_milestone_due_state(
-        self,
-        *,
-        goal_milestone_state: dict | None,
-        goal_milestone_pressure: dict | None,
-        goal_milestone_dependency_state: dict | None,
-        goal_completion_criteria: dict | None,
-    ) -> dict | None:
-        milestone_state = str(goal_milestone_state.get("content", "")).strip().lower() if goal_milestone_state is not None else ""
-        pressure = str(goal_milestone_pressure.get("content", "")).strip().lower() if goal_milestone_pressure is not None else ""
-        dependency_state = (
-            str(goal_milestone_dependency_state.get("content", "")).strip().lower()
-            if goal_milestone_dependency_state is not None
-            else ""
-        )
-        completion_criteria = (
-            str(goal_completion_criteria.get("content", "")).strip().lower()
-            if goal_completion_criteria is not None
-            else ""
-        )
-
-        if milestone_state == "completion_window":
-            if dependency_state == "clear_to_close" or completion_criteria == "confirm_goal_completion":
-                return {
-                    "kind": "goal_milestone_due_state",
-                    "content": "closure_due_now",
-                    "confidence": 0.82,
-                    "source": "background_reflection",
-                }
-            if dependency_state in {"blocked_dependency", "single_step_dependency", "multi_step_dependency"}:
-                return {
-                    "kind": "goal_milestone_due_state",
-                    "content": "dependency_due_next",
-                    "confidence": 0.79,
-                    "source": "background_reflection",
-                }
-            return None
-
-        if milestone_state == "recovery_phase" and pressure == "dragging_recovery":
-            return {
-                "kind": "goal_milestone_due_state",
-                "content": "recovery_due_attention",
-                "confidence": 0.77,
-                "source": "background_reflection",
-            }
-
-        if milestone_state == "execution_phase" and pressure == "stale_execution":
-            return {
-                "kind": "goal_milestone_due_state",
-                "content": "execution_due_attention",
-                "confidence": 0.75,
-                "source": "background_reflection",
-            }
-
-        if milestone_state == "early_stage" and pressure == "lingering_setup":
-            return {
-                "kind": "goal_milestone_due_state",
-                "content": "setup_due_start",
-                "confidence": 0.74,
-                "source": "background_reflection",
-            }
-
-        return None
-
-    def _derive_goal_milestone_due_window(
-        self,
-        *,
-        goal_milestone_due_state: dict | None,
-        goal_milestone_pressure: dict | None,
-        goal_milestone_arc: dict | None,
-        goal_milestone_transition: dict | None,
-    ) -> dict | None:
-        due_state = str(goal_milestone_due_state.get("content", "")).strip().lower() if goal_milestone_due_state is not None else ""
-        pressure = str(goal_milestone_pressure.get("content", "")).strip().lower() if goal_milestone_pressure is not None else ""
-        milestone_arc = str(goal_milestone_arc.get("content", "")).strip().lower() if goal_milestone_arc is not None else ""
-        transition = (
-            str(goal_milestone_transition.get("content", "")).strip().lower()
-            if goal_milestone_transition is not None
-            else ""
-        )
-
-        if not due_state:
-            return None
-        if milestone_arc == "reentered_completion_window":
-            return {
-                "kind": "goal_milestone_due_window",
-                "content": "reopened_due_window",
-                "confidence": 0.8,
-                "source": "background_reflection",
-            }
-        if pressure in {"lingering_completion", "dragging_recovery", "stale_execution", "lingering_setup"}:
-            return {
-                "kind": "goal_milestone_due_window",
-                "content": "overdue_due_window",
-                "confidence": 0.82,
-                "source": "background_reflection",
-            }
-        if transition == "entered_completion_window" or pressure == "building_closure_pressure":
-            return {
-                "kind": "goal_milestone_due_window",
-                "content": "fresh_due_window",
-                "confidence": 0.76,
-                "source": "background_reflection",
-            }
-        return {
-            "kind": "goal_milestone_due_window",
-            "content": "active_due_window",
-            "confidence": 0.73,
-            "source": "background_reflection",
-        }
-
-    def _derive_goal_milestone_risk(
-        self,
-        *,
-        active_tasks: Sequence[dict],
-        goal_execution_state: dict | None,
-        goal_progress_arc: dict | None,
-        goal_milestone_state: dict | None,
-        goal_milestone_transition: dict | None,
-    ) -> dict | None:
-        execution_state = str(goal_execution_state.get("content", "")).strip().lower() if goal_execution_state is not None else ""
-        progress_arc = str(goal_progress_arc.get("content", "")).strip().lower() if goal_progress_arc is not None else ""
-        milestone_state = str(goal_milestone_state.get("content", "")).strip().lower() if goal_milestone_state is not None else ""
-        milestone_transition = (
-            str(goal_milestone_transition.get("content", "")).strip().lower()
-            if goal_milestone_transition is not None
-            else ""
-        )
-        blocked_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() == "blocked"
-        ]
-
-        if blocked_tasks or execution_state == "blocked" or progress_arc == "falling_behind":
-            return {
-                "kind": "goal_milestone_risk",
-                "content": "at_risk",
-                "confidence": 0.81,
-                "source": "background_reflection",
-            }
-        if milestone_transition == "slipped_from_completion_window" or progress_arc == "unstable_progress":
-            return {
-                "kind": "goal_milestone_risk",
-                "content": "watch",
-                "confidence": 0.75,
-                "source": "background_reflection",
-            }
-        if milestone_state == "completion_window":
-            return {
-                "kind": "goal_milestone_risk",
-                "content": "ready_to_close",
-                "confidence": 0.79,
-                "source": "background_reflection",
-            }
-        if milestone_state == "recovery_phase" or progress_arc == "recovery_gaining_traction":
-            return {
-                "kind": "goal_milestone_risk",
-                "content": "stabilizing",
-                "confidence": 0.74,
-                "source": "background_reflection",
-            }
-        if milestone_state in {"execution_phase", "early_stage"} or execution_state in {"advancing", "progressing"}:
-            return {
-                "kind": "goal_milestone_risk",
-                "content": "on_track",
-                "confidence": 0.71,
-                "source": "background_reflection",
-            }
-        return None
-
-    def _derive_goal_completion_criteria(
-        self,
-        *,
-        active_tasks: Sequence[dict],
-        goal_execution_state: dict | None,
-        goal_milestone_state: dict | None,
-        goal_milestone_risk: dict | None,
-    ) -> dict | None:
-        milestone_state = str(goal_milestone_state.get("content", "")).strip().lower() if goal_milestone_state is not None else ""
-        execution_state = str(goal_execution_state.get("content", "")).strip().lower() if goal_execution_state is not None else ""
-        milestone_risk = str(goal_milestone_risk.get("content", "")).strip().lower() if goal_milestone_risk is not None else ""
-        blocked_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() == "blocked"
-        ]
-        in_progress_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() == "in_progress"
-        ]
-        todo_tasks = [
-            task
-            for task in active_tasks
-            if str(task.get("status", "")).strip().lower() == "todo"
-        ]
-
-        if milestone_state == "completion_window":
-            if blocked_tasks:
-                return {
-                    "kind": "goal_completion_criteria",
-                    "content": "resolve_remaining_blocker",
-                    "confidence": 0.82,
-                    "source": "background_reflection",
-                }
-            if in_progress_tasks or todo_tasks:
-                return {
-                    "kind": "goal_completion_criteria",
-                    "content": "finish_remaining_active_work",
-                    "confidence": 0.8,
-                    "source": "background_reflection",
-                }
-            return {
-                "kind": "goal_completion_criteria",
-                "content": "confirm_goal_completion",
-                "confidence": 0.79,
-                "source": "background_reflection",
-            }
-
-        if blocked_tasks:
-            return {
-                "kind": "goal_completion_criteria",
-                "content": "resolve_remaining_blocker",
-                "confidence": 0.82,
-                "source": "background_reflection",
-            }
-
-        if milestone_state == "recovery_phase" or execution_state == "recovering" or milestone_risk == "stabilizing":
-            return {
-                "kind": "goal_completion_criteria",
-                "content": "stabilize_remaining_work",
-                "confidence": 0.76,
-                "source": "background_reflection",
-            }
-
-        if milestone_state == "early_stage":
-            return {
-                "kind": "goal_completion_criteria",
-                "content": "define_first_execution_step",
-                "confidence": 0.72,
-                "source": "background_reflection",
-            }
-
-        if milestone_state == "execution_phase":
-            return {
-                "kind": "goal_completion_criteria",
-                "content": "advance_next_task",
-                "confidence": 0.74,
-                "source": "background_reflection",
-            }
-
-        return None
-
-    def _goal_stagnation_signal_count(self, recent_memory: Sequence[dict]) -> int:
-        planning_heavy_steps = {
-            "align_with_active_goal",
-            "break_down_problem",
-            "highlight_next_step",
-            "offer_guidance",
-            "favor_guided_walkthrough",
-            "review_context",
-        }
-        execution_steps = {
-            "identify_requested_change",
-            "propose_execution_step",
-            "advance_active_task",
-            "unblock_active_task",
-            "recover_goal_progress",
-            "preserve_goal_momentum",
-            "favor_concrete_next_step",
-        }
-
-        stagnation_signals = 0
-        for memory_item in recent_memory:
+        hints: list[str] = []
+        for memory_item in list(recent_memory)[:3]:
             fields = self._extract_memory_fields(memory_item)
-            if fields.get("action", "").strip().lower() != "success":
-                continue
-            if fields.get("task_status_update", "").strip():
-                continue
-            if fields.get("task_update", "").strip():
-                continue
+            hints.extend(
+                [
+                    fields.get("event", ""),
+                    fields.get("goal_update", ""),
+                    fields.get("task_update", ""),
+                    fields.get("task_status_update", "").split(":", 1)[0],
+                ]
+            )
+        hint_tokens = self._text_tokens(" ".join(hints))
 
-            plan_steps = {
-                step.strip().lower()
-                for step in fields.get("plan_steps", "").split(",")
-                if step.strip()
-            }
-            if "align_with_active_goal" not in plan_steps:
-                continue
-            if plan_steps.intersection(execution_steps):
-                continue
-            if not plan_steps.intersection(planning_heavy_steps):
-                continue
-            stagnation_signals += 1
+        if hint_tokens:
+            task_by_goal: dict[int, list[str]] = {}
+            for task in active_tasks:
+                goal_id = task.get("goal_id")
+                if goal_id is None:
+                    continue
+                task_by_goal.setdefault(int(goal_id), []).append(
+                    f"{task.get('name', '')} {task.get('description', '')}"
+                )
 
-        return stagnation_signals
-
-    def _derive_preferred_role(self, role_counts: dict[str, int], total: int) -> dict | None:
-        if total < 4 or not role_counts:
-            return None
-
-        preferred_role, count = max(role_counts.items(), key=lambda item: item[1])
-        if count < 3:
-            return None
-        if count / total < 0.6:
-            return None
-
-        return {
-            "kind": "preferred_role",
-            "content": preferred_role,
-            "confidence": 0.76,
-            "source": "background_reflection",
-        }
-
-    def _select_primary_goal(self, active_goals: Sequence[dict]) -> dict | None:
-        if not active_goals:
-            return None
+            ranked_by_hint = sorted(
+                active_goals,
+                key=lambda goal: (
+                    len(
+                        hint_tokens.intersection(
+                            self._text_tokens(
+                                " ".join(
+                                    [
+                                        str(goal.get("name", "")),
+                                        str(goal.get("description", "")),
+                                        " ".join(task_by_goal.get(int(goal.get("id", 0) or 0), [])),
+                                    ]
+                                )
+                            )
+                        )
+                    ),
+                    self._goal_priority_rank(str(goal.get("priority", ""))),
+                    str(goal.get("updated_at", "")),
+                    int(goal.get("id", 0) or 0),
+                ),
+                reverse=True,
+            )
+            if ranked_by_hint:
+                top = ranked_by_hint[0]
+                top_tokens = self._text_tokens(
+                    f"{top.get('name', '')} {top.get('description', '')}"
+                )
+                if hint_tokens.intersection(top_tokens):
+                    return top
 
         ranked = sorted(
             active_goals,
@@ -1339,173 +733,6 @@ class ReflectionWorker:
             reverse=True,
         )
         return ranked[0]
-
-    def _derive_theta(self, recent_memory: Sequence[dict]) -> dict | None:
-        if len(recent_memory) < 3:
-            return None
-
-        role_map = {
-            "friend": "support_bias",
-            "analyst": "analysis_bias",
-            "executor": "execution_bias",
-        }
-        totals = {
-            "support_bias": 0,
-            "analysis_bias": 0,
-            "execution_bias": 0,
-        }
-        counted = 0
-
-        for memory_item in recent_memory:
-            fields = self._extract_memory_fields(memory_item)
-            role = fields.get("role", "").strip().lower()
-            key = role_map.get(role)
-            if key is None:
-                continue
-            totals[key] += 1
-            counted += 1
-
-        if counted < 3:
-            return None
-
-        return {
-            "support_bias": round(totals["support_bias"] / counted, 2),
-            "analysis_bias": round(totals["analysis_bias"] / counted, 2),
-            "execution_bias": round(totals["execution_bias"] / counted, 2),
-        }
-
-    def _derive_collaboration_preference(self, recent_memory: Sequence[dict]) -> dict | None:
-        if len(recent_memory) < 4:
-            return None
-
-        guided_count = 0
-        hands_on_count = 0
-        sample_size = 0
-
-        for memory_item in recent_memory:
-            fields = self._extract_memory_fields(memory_item)
-            role = fields.get("role", "").strip().lower()
-            motivation = fields.get("motivation", "").strip().lower()
-            plan_steps = {
-                step.strip().lower()
-                for step in fields.get("plan_steps", "").split(",")
-                if step.strip()
-            }
-
-            if not role and not motivation and not plan_steps:
-                continue
-            sample_size += 1
-
-            if (
-                role == "executor"
-                or motivation == "execute"
-                or {"propose_execution_step", "identify_requested_change", "favor_concrete_next_step"}.intersection(plan_steps)
-            ):
-                hands_on_count += 1
-                continue
-
-            if (
-                role in {"analyst", "mentor", "friend"}
-                or motivation in {"analyze", "support"}
-                or {"break_down_problem", "offer_guidance", "favor_guided_walkthrough", "highlight_next_step"}.intersection(plan_steps)
-            ):
-                guided_count += 1
-
-        if sample_size < 4:
-            return None
-
-        if hands_on_count >= 3 and hands_on_count / sample_size >= 0.7:
-            return {
-                "kind": "collaboration_preference",
-                "content": "hands_on",
-                "confidence": 0.73,
-                "source": "background_reflection",
-            }
-
-        if guided_count >= 3 and guided_count / sample_size >= 0.7:
-            return {
-                "kind": "collaboration_preference",
-                "content": "guided",
-                "confidence": 0.73,
-                "source": "background_reflection",
-            }
-
-        return None
-
-    def _derive_affective_conclusions(self, recent_memory: Sequence[dict]) -> list[dict]:
-        if len(recent_memory) < 3:
-            return []
-
-        sample_size = 0
-        support_hits = 0
-        distress_hits = 0
-        positive_hits = 0
-
-        for memory_item in recent_memory:
-            fields = self._extract_memory_fields(memory_item)
-            action = fields.get("action", "").strip().lower()
-            if action and action != "success":
-                continue
-
-            affect_label = fields.get("affect_label", "").strip().lower()
-            needs_support = fields.get("affect_needs_support", "").strip().lower() in {"1", "true", "yes"}
-            if not affect_label and not fields.get("affect_needs_support", "").strip():
-                continue
-
-            sample_size += 1
-            if needs_support or affect_label == "support_distress":
-                support_hits += 1
-            if affect_label == "support_distress":
-                distress_hits += 1
-            if affect_label == "positive_engagement":
-                positive_hits += 1
-
-        if sample_size < 3:
-            return []
-
-        support_ratio = support_hits / sample_size
-        positive_ratio = positive_hits / sample_size
-        conclusions: list[dict] = []
-
-        if distress_hits >= 2 and support_ratio >= 0.5:
-            conclusions.append(
-                {
-                    "kind": "affective_support_pattern",
-                    "content": "recurring_distress",
-                    "confidence": 0.76,
-                    "source": "background_reflection",
-                }
-            )
-        elif positive_hits >= 2 and positive_ratio >= 0.5 and distress_hits <= 1:
-            conclusions.append(
-                {
-                    "kind": "affective_support_pattern",
-                    "content": "confidence_recovery",
-                    "confidence": 0.74,
-                    "source": "background_reflection",
-                }
-            )
-
-        if support_ratio >= 0.6:
-            conclusions.append(
-                {
-                    "kind": "affective_support_sensitivity",
-                    "content": "high",
-                    "confidence": 0.78,
-                    "source": "background_reflection",
-                }
-            )
-        elif support_ratio >= 0.35:
-            conclusions.append(
-                {
-                    "kind": "affective_support_sensitivity",
-                    "content": "moderate",
-                    "confidence": 0.72,
-                    "source": "background_reflection",
-                }
-            )
-
-        return conclusions
 
     def _extract_fields(self, raw_summary: str) -> dict[str, str]:
         return extract_episode_fields({"summary": raw_summary})
@@ -1524,10 +751,23 @@ class ReflectionWorker:
         except (TypeError, ValueError):
             return None
 
+    def _text_tokens(self, value: str) -> set[str]:
+        canonical = "".join(char if char.isalnum() or char.isspace() else " " for char in value.strip().lower())
+        return {token for token in canonical.split() if len(token) >= 3}
+
     def _goal_priority_rank(self, priority: str) -> int:
         return shared_priority_rank(priority)
 
     def _conclusion_scope(self, *, kind: str, primary_goal: dict | None) -> tuple[str, str]:
         if kind.startswith("goal_") and primary_goal is not None and primary_goal.get("id") is not None:
+            return "goal", str(primary_goal["id"])
+        return "global", "global"
+
+    def _relation_scope(self, *, relation_type: str, primary_goal: dict | None) -> tuple[str, str]:
+        goal_scoped_types = {
+            "goal_execution_trust",
+            "goal_collaboration_flow",
+        }
+        if relation_type in goal_scoped_types and primary_goal is not None and primary_goal.get("id") is not None:
             return "goal", str(primary_goal["id"])
         return "global", "global"

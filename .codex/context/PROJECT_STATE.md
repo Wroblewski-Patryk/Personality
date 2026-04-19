@@ -102,10 +102,114 @@ Last updated: 2026-04-19
   (`upsert_goal`, `upsert_task`, `update_task_status`,
   `update_response_style`, `update_collaboration_preference`, `noop`), and
   action now executes only those intents for durable domain writes.
+- 2026-04-19: reflection logic is now split into concern-owned modules
+  (`goal_conclusions`, `adaptive_signals`, `affective_signals`), keeping
+  worker orchestration separate from inference ownership.
+- 2026-04-19: adaptive reflection signals (`preferred_role`, `theta`,
+  collaboration fallback) now require outcome evidence and user-visible cues,
+  reducing self-reinforcement loops from role-only traces.
+- 2026-04-19: milestone pressure heuristics now prefer phase consistency and
+  arc/transition evidence over pure time-window drift.
+- 2026-04-19: runtime now exposes an explicit graph migration boundary through
+  `GraphRuntimeState` contracts, runtime-result conversion helpers, and
+  graph-compatible stage adapters around current foreground modules.
+- 2026-04-19: foreground stage orchestration (`perception -> ... -> action`)
+  now runs through LangGraph `StateGraph` nodes while preserving stage-level
+  contracts, logs, and existing runtime/API behavior.
 - 2026-04-19: documentation now explicitly separates canonical architecture in
   `docs/architecture/` from transitional implementation reality in
   `docs/implementation/runtime-reality.md`, so human-oriented design intent can
   stay stable while runtime details remain searchable.
+- 2026-04-19: OpenAI prompt construction now supports optional LangChain
+  templates through a compatibility wrapper while preserving non-LangChain
+  fallback behavior.
+- 2026-04-19: semantic retrieval contracts and storage are now explicit:
+  embedding/retrieval contract types, pgvector-ready schema scaffolding, and
+  deterministic embedding fallback helpers are all first-class runtime surfaces.
+- 2026-04-19: runtime memory retrieval now supports hybrid lexical + vector
+  scoring across episodic, semantic, and affective memory layers, with
+  diagnostics emitted for retrieval observability.
+- 2026-04-19: relation memory is now a first-class subsystem (`aion_relation`)
+  with scoped repository APIs; reflection derives relation updates and runtime
+  stages now consume high-confidence relation cues across context, role,
+  planning, and expression.
+- 2026-04-19: scheduler-originated event contracts and cadence boundaries are
+  now explicit (`scheduler_enabled`, reflection/maintenance/proactive
+  intervals), preparing the runtime for scheduled and out-of-process execution.
+- 2026-04-19: reflection runtime mode is now explicit (`in_process|deferred`);
+  runtime persists reflection enqueue tasks even without in-process worker
+  ownership, and reflection worker now supports one-shot pending-task execution
+  for future scheduler/out-of-process drivers.
+- 2026-04-19: scheduler cadence is now live for reflection and maintenance;
+  scheduler runtime uses contract-bounded intervals, mode-aware reflection
+  dispatch guardrails, and `/health` scheduler visibility for operations.
+- 2026-04-19: subconscious proposal persistence and conscious handoff decisions
+  are now explicit runtime owners, including read-only subconscious research
+  policy/tool boundaries and proposal lifecycle tracking.
+- 2026-04-19: proactive scheduler flow now applies an explicit attention gate
+  before outreach planning, and connector-facing planning contracts now include
+  permission gates plus typed calendar/task synchronization intents.
+- 2026-04-19: `POST /event?debug=true` now emits explicit compatibility headers
+  (`X-AION-Debug-Compat`, `Link`) that point to `POST /event/debug`, keeping
+  migration intent machine-visible while preserving backward compatibility.
+- 2026-04-19: `/health` now exposes explicit attention turn-assembly posture
+  (`burst_window_ms`, turn TTLs, `pending|claimed|answered` counters), making
+  burst-coalescing diagnostics operator-visible without changing runtime turn
+  behavior.
+- 2026-04-19: attention turn-assembly timing is now explicitly configurable via
+  runtime env/config (`ATTENTION_BURST_WINDOW_MS`,
+  `ATTENTION_ANSWERED_TTL_SECONDS`, `ATTENTION_STALE_TURN_SECONDS`) with
+  bounded validation and startup wiring into the shared coordinator.
+- 2026-04-19: production debug payload access now supports explicit
+  token-requirement policy (`PRODUCTION_DEBUG_TOKEN_REQUIRED`, default `true`);
+  debug endpoints reject production access when debug exposure is enabled but no
+  token is configured under that policy mode.
+- 2026-04-19: runtime policy now exposes explicit debug hardening posture
+  (`debug_access_posture`, `debug_token_policy_hint`) across health and startup
+  policy logging, including dedicated warnings for relaxed
+  `PRODUCTION_DEBUG_TOKEN_REQUIRED=false` production debug mode.
+- 2026-04-19: strict production policy mismatch posture now includes
+  `event_debug_token_missing=true` when debug exposure is enabled, token
+  requirement mode is active, and no debug token is configured.
+- 2026-04-19: compatibility debug query route posture is now explicitly
+  hardening-oriented: `EVENT_DEBUG_QUERY_COMPAT_ENABLED` defaults to disabled
+  in production, startup warnings surface explicit production opt-in, and
+  strict mismatch previews include `event_debug_query_compat_enabled=true`
+  when compatibility route stays enabled in production.
+- 2026-04-19: compatibility `POST /event?debug=true` sunset readiness is now
+  operator-visible through in-process telemetry
+  (`event_debug_query_compat_telemetry`) and explicit compat deprecation
+  response header (`X-AION-Debug-Compat-Deprecated=true`).
+- 2026-04-19: `/health.runtime_policy` now includes compat sunset decision
+  signals (`event_debug_query_compat_allow_rate`,
+  `event_debug_query_compat_block_rate`,
+  `event_debug_query_compat_recommendation`) derived from telemetry outcomes.
+- 2026-04-19: `/health.runtime_policy` now also includes explicit compat sunset
+  decision fields (`event_debug_query_compat_sunset_ready`,
+  `event_debug_query_compat_sunset_reason`) for machine-readable
+  go/no-go posture.
+- 2026-04-19: `/health.runtime_policy` now also exposes rolling compat trend
+  signals (`event_debug_query_compat_recent_attempts_total`,
+  `event_debug_query_compat_recent_allow_rate`,
+  `event_debug_query_compat_recent_block_rate`,
+  `event_debug_query_compat_recent_state`) derived from telemetry snapshots.
+- 2026-04-19: compat recommendation and sunset posture now treat any observed
+  compat attempts as migration-needed, while rolling-window trend signals remain
+  explicit release-window diagnostics.
+- 2026-04-19: compat rolling-window size is now configurable via
+  `EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW` (default `20`, minimum `1`) and is
+  wired consistently across lifespan and request-level telemetry fallback.
+- 2026-04-19: compat-route freshness posture is now explicit in
+  `/health.runtime_policy`
+  (`event_debug_query_compat_stale_after_seconds`,
+  `event_debug_query_compat_last_attempt_age_seconds`,
+  `event_debug_query_compat_last_attempt_state`) with config-driven stale-age
+  threshold via `EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS`.
+- 2026-04-19: `/health.runtime_policy` now also exposes compat activity posture
+  fields (`event_debug_query_compat_activity_state`,
+  `event_debug_query_compat_activity_hint`) so operators can distinguish
+  disabled/no-attempt/stale-history/recent-traffic compat dependency states
+  without weakening existing sunset-ready contract semantics.
 
 ## Technical Baseline
 
@@ -117,8 +221,9 @@ Last updated: 2026-04-19
 - Hosting target: VPS deployment via Compose/Coolify-oriented runtime docs
 - Deployment shape: API-first runtime with app-local reflection worker behavior
 - Runtime services: FastAPI app, database, optional Telegram webhook path
-- Background jobs / workers: reflection currently runs in-process as an
-  app-local durable concern
+- Background jobs / workers: reflection runs as an app-local durable concern;
+  scheduler cadence can now trigger reflection/maintenance routines in-process,
+  and reflection runtime mode can be `in_process` or `deferred`
 - Persistent storage: PostgreSQL
 - Health / readiness checks: `GET /health`, `POST /event` smoke, optional
   Telegram webhook verification
@@ -162,23 +267,12 @@ Last updated: 2026-04-19
   explicit without regressing current runtime behavior, then deepen the runtime
   toward affective understanding, scoped memory, and stronger action intent
   ownership
-- Active execution queue now extends through `PRJ-097`.
+- Active `PRJ` execution queue is complete through `PRJ-230`; the next slice
+  should be derived from `docs/planning/open-decisions.md` and registered as
+  `READY` before implementation.
 - Top blockers:
-  - reflection subsystem is still concentrated in `app/reflection/worker.py`
-    and needs concern-owned module split (`PRJ-065`)
-  - adaptive signals still risk self-reinforcement loops without stronger
-    evidence thresholds (`PRJ-066`)
-  - conscious/subconscious coordination still lacks explicit attention inbox,
-    proposal handoff, and burst-message coalescing, so rapid conversations and
-    proactive wakeups can drift into duplicate or poorly gated behavior
-    (`PRJ-085..PRJ-092`)
-  - external productivity integrations (calendar, task providers, cloud drives)
-    still need explicit connector contracts, permission gates, and action
-    boundaries before the personality can safely operate across user systems
-    (`PRJ-093..PRJ-097`)
-  - architecture-level stack directions (`LangGraph`, `pgvector`, scheduler,
-    relation system, proactive runtime) still are not implemented in the live
-    runtime and now require explicit rollout groups
+  - runtime currently emits connector intents and permission gates but does not
+    yet execute provider-backed calendar/task/drive integrations
 - Success criteria for this phase:
   - shared goal and milestone signals keep one clear implementation owner
   - runtime stage decisions are observable through structured logs
@@ -188,6 +282,196 @@ Last updated: 2026-04-19
 
 ## Recent Progress
 
+- 2026-04-19: `PRJ-221..PRJ-230` are complete: compat activity posture is now
+  explicit in `/health.runtime_policy`, including stale-historical vs
+  recent-attempt migration states and action hints.
+- 2026-04-19: `PRJ-221..PRJ-230` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_debug_compat_telemetry.py tests/test_api_routes.py tests/test_runtime_policy.py tests/test_config.py`
+  passed with `92 passed`.
+- 2026-04-19: `PRJ-211..PRJ-220` are complete: compat-route freshness telemetry
+  is now policy-visible in `/health.runtime_policy` with config-bounded stale
+  threshold and regression coverage across config, telemetry helper, and API.
+- 2026-04-19: `PRJ-211..PRJ-220` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_debug_compat_telemetry.py tests/test_api_routes.py tests/test_runtime_policy.py tests/test_config.py`
+  passed with `87 passed`.
+- 2026-04-19: `PRJ-201..PRJ-210` are complete: compat telemetry recent-window
+  size is now config-driven with bounded validation and regression coverage
+  across config, telemetry, and API health contract behavior.
+- 2026-04-19: `PRJ-201..PRJ-210` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_debug_compat_telemetry.py tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_config.py`
+  passed with `94 passed`.
+- 2026-04-19: `PRJ-191..PRJ-200` are complete: compat rolling trend slice now
+  exposes recent-window counters and state mapping while preserving
+  attempt-based migration recommendation posture.
+- 2026-04-19: `PRJ-191..PRJ-200` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_debug_compat_telemetry.py tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_config.py`
+  passed with `89 passed`.
+- 2026-04-19: `PRJ-181..PRJ-190` are complete: compat telemetry now includes
+  rolling-window counters and `/health.runtime_policy` now exposes recent-trend
+  attempts/rates/state for migration-window observability.
+- 2026-04-19: `PRJ-181..PRJ-190` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_debug_compat_telemetry.py tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_config.py`
+  passed with `89 passed`.
+- 2026-04-19: `PRJ-171..PRJ-180` are complete: compat-route sunset posture now
+  includes explicit machine-readable readiness/reason signals, and recommendation
+  logic now treats any observed compat attempts as migration-needed.
+- 2026-04-19: `PRJ-171..PRJ-180` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_debug_compat_telemetry.py tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_config.py`
+  passed with `86 passed`.
+- 2026-04-19: `PRJ-161..PRJ-170` are complete: compat sunset recommendation
+  guidance is now explicit in `/health.runtime_policy` via allow/block rates
+  and recommendation hints derived from compat telemetry.
+- 2026-04-19: `PRJ-161..PRJ-170` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_debug_compat_telemetry.py tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_config.py`
+  passed with `85 passed`.
+- 2026-04-19: `PRJ-151..PRJ-160` are complete: compat debug-route sunset
+  readiness now includes explicit in-process telemetry counters, deprecation
+  response header contract, and synchronized docs/context coverage.
+- 2026-04-19: `PRJ-151..PRJ-160` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_debug_compat_telemetry.py tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_config.py`
+  passed with `82 passed`.
+- 2026-04-19: `PRJ-141..PRJ-150` are complete: production debug query-compat
+  hardening now has shared mismatch helper ownership, stricter startup/API
+  regression coverage, and synchronized docs/context for
+  `EVENT_DEBUG_QUERY_COMPAT_ENABLED` posture.
+- 2026-04-19: `PRJ-141..PRJ-150` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_api_routes.py tests/test_config.py`
+  passed with `79 passed`.
+- 2026-04-19: `PRJ-131..PRJ-140` are complete: strict rollout mismatch
+  handling now includes `event_debug_token_missing=true` for production
+  token-missing posture, and runtime-policy, startup-policy, API health tests,
+  and docs/context are synchronized.
+- 2026-04-19: `PRJ-131..PRJ-140` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_api_routes.py tests/test_config.py`
+  passed with `71 passed`.
+- 2026-04-19: `PRJ-121..PRJ-130` are complete: runtime policy now emits
+  explicit debug access posture/hint fields, startup policy logs warn when
+  production debug runs with relaxed token requirement, and docs/context are
+  synchronized for operator-visible debug hardening posture.
+- 2026-04-19: `PRJ-121..PRJ-130` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_api_routes.py tests/test_config.py`
+  passed with `71 passed`.
+- 2026-04-19: `PRJ-111..PRJ-120` are complete: production debug-token
+  requirement is now explicit (`PRODUCTION_DEBUG_TOKEN_REQUIRED`), debug route
+  access guard enforces production token posture when configured, runtime policy
+  snapshots expose the new signal, and ops/config/context docs are synchronized.
+- 2026-04-19: `PRJ-111..PRJ-120` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_api_routes.py`
+  passed with `68 passed`.
+- 2026-04-19: `PRJ-101..PRJ-110` are complete: attention timing controls are
+  now first-class settings, startup coordinator wiring is config-driven, config
+  defaults/validation are regression-covered, and architecture/ops/context docs
+  are synchronized for the attention hardening slice.
+- 2026-04-19: `PRJ-101..PRJ-110` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_main_lifespan_policy.py tests/test_api_routes.py`
+  passed with `48 passed`.
+- 2026-04-19: `PRJ-100` is complete: `GET /health` now returns an explicit
+  `attention` snapshot (`burst_window_ms`, `answered_ttl_seconds`,
+  `stale_turn_seconds`, `pending|claimed|answered`) so burst-turn posture is
+  visible in operations/debug workflows.
+- 2026-04-19: `PRJ-100` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py` passed with
+  `29 passed`.
+- 2026-04-19: `PRJ-099` is complete: `POST /event?debug=true` now adds explicit
+  compatibility headers (`X-AION-Debug-Compat`, `Link`) pointing to
+  `POST /event/debug` while preserving backward compatibility.
+- 2026-04-19: `PRJ-099` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py` passed with
+  `28 passed`.
+- 2026-04-19: `PRJ-098` is complete: API now exposes explicit
+  `POST /event/debug` for internal full-runtime payload inspection while
+  preserving `POST /event?debug=true` compatibility, both guarded by the same
+  debug policy/token access checks.
+- 2026-04-19: `PRJ-098` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py` passed with
+  `28 passed`; full suite also passes with `433 passed`.
+- 2026-04-19: `PRJ-097` is complete: reflection now derives
+  `suggest_connector_expansion` proposals from repeated unmet connector needs,
+  planning promotes accepted proposals into bounded
+  `connector_capability_discovery_intent` outputs, and action persists explicit
+  `connector_expansion_update` traces without connector side effects.
+- 2026-04-19: `PRJ-097` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_reflection_worker.py`
+  passed with `158 passed`; full suite also passes with `429 passed`.
+- 2026-04-19: `PRJ-096` is complete: planning and action contracts now include
+  connected-drive access intents with explicit `read_only|suggestion_only|mutate_with_confirmation`
+  modes, cloud-drive permission gates, and durable episode payload trace
+  (`drive_connector_update`) without bypassing action boundaries.
+- 2026-04-19: `PRJ-096` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_graph_state_contract.py`
+  passed with `116 passed`.
+- 2026-04-19: `PRJ-087..PRJ-095` are complete: internal planning ownership is
+  now explicitly separated from external connector projections, subconscious
+  proposals are persisted with conscious handoff resolution, read-only
+  subconscious research policy is contract-owned, proactive flow applies an
+  explicit attention gate, and connector contracts now expose permission gates
+  plus typed calendar/task synchronization intents.
+- 2026-04-19: validation for `PRJ-087..PRJ-095` is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_api_routes.py tests/test_config.py tests/test_graph_state_contract.py tests/test_schema_baseline.py`
+  passed with `269 passed`.
+- 2026-04-19: full regression remains green after dual-loop/connector contract
+  coverage expansion:
+  `.\.venv\Scripts\python -m pytest -q` passed with `425 passed`.
+- 2026-04-19: `PRJ-086` is complete: Telegram burst events now flow through a
+  shared attention-turn coordinator that coalesces rapid pending messages into
+  one assembled turn and enforces `pending|claimed|answered` ownership before
+  foreground runtime execution.
+- 2026-04-19: `PRJ-086` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_event_normalization.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+  passed with `85 passed`.
+- 2026-04-19: `PRJ-085` is complete: runtime graph-state contracts now define
+  explicit `attention_inbox`, `pending_turn`, `subconscious_proposals`, and
+  `proposal_handoffs` surfaces, and architecture/implementation docs now align
+  on one attention-inbox and proposal-handoff vocabulary.
+- 2026-04-19: `PRJ-085` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_graph_state_contract.py`
+  passed with `53 passed`.
+- 2026-04-19: `PRJ-084` is complete: proactive delivery now enforces explicit
+  user opt-in, outbound/unanswered throttle limits, and delivery-target checks
+  before outreach; proactive scheduler deliveries now route via Telegram when a
+  `chat_id` target is present.
+- 2026-04-19: `PRJ-084` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_action_executor.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+  passed with `82 passed`; extended proactive regression command also passes
+  with `177 passed`.
+- 2026-04-19: `PRJ-083` is complete: scheduler proactive payloads now normalize
+  trigger/importance/urgency plus user-context guardrails, a dedicated proactive
+  decision engine now computes interruption-aware outreach decisions, and
+  motivation/planning now consume typed proactive decisions for either defer or
+  proactive message plans.
+- 2026-04-19: `PRJ-083` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+  passed with `124 passed`.
+- 2026-04-19: `PRJ-082` is complete: an in-process scheduler worker now runs
+  reflection and maintenance cadence independently from user-event turns,
+  reflection dispatch is mode-aware (`in_process|deferred` guardrails), and
+  `/health` now exposes scheduler runtime posture and latest tick summaries.
+- 2026-04-19: `PRJ-082` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_scheduler_contracts.py tests/test_api_routes.py tests/test_config.py tests/test_reflection_worker.py tests/test_main_lifespan_policy.py`
+  passed with `89 passed`; full suite also passes with `395 passed`.
+- 2026-04-19: `PRJ-081` is complete: reflection enqueue no longer depends on an
+  active in-process worker, runtime now supports deferred reflection mode, and
+  reflection worker exposes one-shot queue drain execution for future
+  out-of-process/scheduler usage.
+- 2026-04-19: targeted `PRJ-081` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_lifespan_policy.py`
+  passed with `124 passed`.
+- 2026-04-19: `PRJ-072..PRJ-080` are complete: optional LangChain prompt
+  wrappers landed, semantic retrieval contracts plus pgvector scaffold were
+  added, hybrid retrieval diagnostics are now observable, relation storage and
+  reflection updates are live, runtime stages became relation-aware, and
+  scheduler/cadence contracts were formalized.
+- 2026-04-19: validation for the `PRJ-072..PRJ-080` slice is green:
+  `.\.venv\Scripts\python -m pytest -q` now passes with `382 passed`, and
+  `.\.venv\Scripts\python -m alembic upgrade head --sql` includes both new
+  revisions (`20260419_0004`, `20260419_0005`).
+- 2026-04-19: `PRJ-071` is complete: foreground stage execution now runs
+  through LangGraph with graph-compatible adapters and preserved runtime
+  contract behavior; regressions remain green.
+- 2026-04-19: `PRJ-069..PRJ-070` are complete: the repo now has an explicit
+  graph-compatible state contract (`GraphRuntimeState`), runtime-result
+  conversion helpers, and graph-ready adapters around current stage modules,
+  with targeted contract tests and runtime regressions passing.
 - 2026-04-19: planning and execution context now extend through `PRJ-097`,
   adding explicit follow-up groups for dual-loop coordination, attention
   gating, batched conversation handling, subconscious proposal handoff, and
@@ -201,6 +485,10 @@ Last updated: 2026-04-19
   intents, action executes only explicit intents for durable writes, and
   contract tests now pin the planning-owned intent / action-owned execution
   boundary end to end.
+- 2026-04-19: `PRJ-065..PRJ-068` are complete: reflection was split into
+  concern-owned modules, adaptive updates now require stronger outcome
+  evidence, low-leverage milestone pressure drift heuristics were pruned, and
+  multi-goal reflection/planning behavior is now regression-covered.
 
 - 2026-04-17: release smoke helper now covers health plus event verification,
   including optional UTF-8 payload and debug-response checks.

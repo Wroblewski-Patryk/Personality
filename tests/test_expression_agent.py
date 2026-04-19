@@ -187,6 +187,28 @@ async def test_expression_uses_supportive_fallback_for_affective_support_signal(
     assert result.tone == "supportive"
 
 
+async def test_expression_uses_supportive_tone_when_relation_prefers_high_support() -> None:
+    agent = ExpressionAgent(openai_client=NoReplyOpenAI())
+    result = await agent.run(
+        _event("Status update for today"),
+        _perception(language="en"),
+        _context(),
+        _plan(),
+        _role(selected="advisor"),
+        _motivation(mode="respond"),
+        relations=[
+            {
+                "relation_type": "support_intensity_preference",
+                "relation_value": "high_support",
+                "confidence": 0.76,
+            }
+        ],
+    )
+
+    assert "one step at a time" in result.message
+    assert result.tone == "supportive"
+
+
 @pytest.mark.parametrize("scenario", EMPATHY_SUPPORT_SCENARIOS, ids=lambda scenario: scenario.key)
 async def test_expression_uses_supportive_fallback_for_empathy_regression_scenarios(scenario) -> None:
     agent = ExpressionAgent(openai_client=NoReplyOpenAI())

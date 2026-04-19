@@ -9,7 +9,8 @@ from app.agents.perception import PerceptionAgent
 from app.agents.planning import PlanningAgent
 from app.agents.role import RoleAgent
 from app.core.action import ActionExecutor
-from app.core.contracts import Event, EventMeta
+from app.core.contracts import Event, EventMeta, NoopDomainIntent
+from app.core.events import build_scheduler_event
 from app.core.runtime import RuntimeOrchestrator
 from app.expression.generator import ExpressionAgent
 from app.motivation.engine import MotivationEngine
@@ -33,6 +34,9 @@ class FakeMemoryRepository:
         self.active_goal_milestones: list[dict] = []
         self.goal_milestone_history: list[dict] = []
         self.goal_progress_history: list[dict] = []
+        self.reflection_tasks: list[dict] = []
+        self.pending_subconscious_proposals: list[dict] = []
+        self.resolved_subconscious_proposals: list[dict] = []
 
     async def get_recent_for_user(self, user_id: str, limit: int = 5) -> list[dict]:
         self.recent_limits.append(limit)
@@ -107,6 +111,34 @@ class FakeMemoryRepository:
         if goal_ids:
             rows = [row for row in rows if row.get("goal_id") in set(goal_ids)]
         return rows[:limit]
+
+    async def get_pending_subconscious_proposals(self, user_id: str, limit: int = 8) -> list[dict]:
+        return self.pending_subconscious_proposals[:limit]
+
+    async def resolve_subconscious_proposal(
+        self,
+        *,
+        proposal_id: int,
+        decision: str,
+        reason: str,
+    ) -> dict | None:
+        payload = {
+            "proposal_id": proposal_id,
+            "decision": decision,
+            "reason": reason,
+        }
+        self.resolved_subconscious_proposals.append(payload)
+        for proposal in self.pending_subconscious_proposals:
+            if int(proposal.get("proposal_id", -1)) == proposal_id:
+                proposal["status"] = {
+                    "accept": "accepted",
+                    "merge": "merged",
+                    "defer": "deferred",
+                    "discard": "discarded",
+                }.get(decision, "pending")
+                proposal["decision_reason"] = reason
+                return dict(proposal)
+        return None
 
     async def get_recent_goal_progress(self, user_id: str, *, goal_ids: list[int] | None = None, limit: int = 6) -> list[dict]:
         rows = self.goal_progress_history[:]
@@ -212,10 +244,100 @@ class FakeMemoryRepository:
                 return task
         return None
 
+    async def enqueue_reflection_task(self, user_id: str, event_id: str) -> dict:
+        for task in self.reflection_tasks:
+            if task["event_id"] == event_id:
+                if task["status"] != "completed":
+                    task["user_id"] = user_id
+                    task["status"] = "pending"
+                    task["last_error"] = None
+                return dict(task)
+        task = {
+            "id": len(self.reflection_tasks) + 1,
+            "user_id": user_id,
+            "event_id": event_id,
+            "status": "pending",
+            "attempts": 0,
+            "last_error": None,
+        }
+        self.reflection_tasks.append(task)
+        return dict(task)
+
 
 class FailingWriteMemoryRepository(FakeMemoryRepository):
     async def write_episode(self, **kwargs) -> dict:
         raise RuntimeError("database unavailable")
+
+
+class FakeHybridMemoryRepository(FakeMemoryRepository):
+    def __init__(self, recent_memory: list[dict] | None = None, user_profile: dict | None = None):
+        super().__init__(recent_memory=recent_memory, user_profile=user_profile)
+        self.hybrid_calls: list[dict] = []
+        self.relations: list[dict] = []
+
+    async def get_hybrid_memory_bundle(
+        self,
+        *,
+        user_id: str,
+        query_text: str,
+        query_embedding: list[float] | None = None,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        include_global: bool = True,
+        episodic_limit: int = 12,
+        conclusion_limit: int = 8,
+    ) -> dict:
+        self.hybrid_calls.append(
+            {
+                "user_id": user_id,
+                "query_text": query_text,
+                "query_embedding_dimensions": len(query_embedding or []),
+                "scope_type": scope_type or "",
+                "scope_key": scope_key or "",
+                "include_global": include_global,
+                "episodic_limit": episodic_limit,
+                "conclusion_limit": conclusion_limit,
+            }
+        )
+        affective = [
+            row
+            for row in self.user_conclusions
+            if str(row.get("kind", "")).startswith("affective_")
+        ]
+        semantic = [
+            row
+            for row in self.user_conclusions
+            if row not in affective
+        ]
+        return {
+            "episodic": self.recent_memory[:episodic_limit],
+            "semantic": semantic[:conclusion_limit],
+            "affective": affective[:conclusion_limit],
+            "diagnostics": {
+                "query_tokens": len(query_text.split()),
+                "episodic_candidates": len(self.recent_memory),
+                "semantic_candidates": len(semantic),
+                "affective_candidates": len(affective),
+                "episodic_lexical_hits": len(self.recent_memory),
+                "vector_hits": 1,
+                "semantic_selected": len(semantic[:conclusion_limit]),
+                "affective_selected": len(affective[:conclusion_limit]),
+            },
+        }
+
+    async def get_user_relations(
+        self,
+        *,
+        user_id: str,
+        min_confidence: float | None = None,
+        scope_type: str | None = None,
+        scope_key: str | None = None,
+        include_global: bool = True,
+        limit: int = 8,
+    ) -> list[dict]:
+        threshold = 0.0 if min_confidence is None else float(min_confidence)
+        rows = [item for item in self.relations if float(item.get("confidence", 0.0) or 0.0) >= threshold]
+        return rows[:limit]
 
 
 class FakeTelegramClient:
@@ -276,12 +398,22 @@ class FakeAffectiveClassifierClient:
 
 
 class FakeReflectionWorker:
-    def __init__(self, enqueue_result: bool = True):
+    def __init__(self, enqueue_result: bool = True, running: bool = True):
         self.enqueue_result = enqueue_result
+        self.running = running
         self.calls: list[dict[str, str]] = []
 
-    async def enqueue(self, user_id: str, event_id: str) -> bool:
-        self.calls.append({"user_id": user_id, "event_id": event_id})
+    def is_running(self) -> bool:
+        return self.running
+
+    async def enqueue(self, user_id: str, event_id: str, *, dispatch: bool = True) -> bool:
+        self.calls.append(
+            {
+                "user_id": user_id,
+                "event_id": event_id,
+                "dispatch": "yes" if dispatch else "no",
+            }
+        )
         return self.enqueue_result
 
 
@@ -377,12 +509,202 @@ async def test_runtime_pipeline_api_source() -> None:
         "total",
     }
     assert result.stage_timings_ms["total"] == result.duration_ms
-    assert reflection.calls == [{"user_id": "u-1", "event_id": "evt-1"}]
+    assert reflection.calls == [{"user_id": "u-1", "event_id": "evt-1", "dispatch": "yes"}]
     assert memory.profile_updates == []
     assert openai.calls[0]["response_style"] == ""
     assert openai.calls[0]["response_tone"] == "supportive"
     assert openai.calls[0]["collaboration_preference"] == ""
     assert "constructive support" in openai.calls[0]["identity_summary"]
+
+
+async def test_runtime_pipeline_persists_reflection_task_without_in_process_worker() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=None,
+    )
+
+    event = Event(
+        event_id="evt-reflection-deferred",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "hello from deferred reflection mode"},
+        meta=EventMeta(user_id="u-1", trace_id="t-reflection-deferred"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.reflection_triggered is True
+    assert memory.reflection_tasks == [
+        {
+            "id": 1,
+            "user_id": "u-1",
+            "event_id": "evt-reflection-deferred",
+            "status": "pending",
+            "attempts": 0,
+            "last_error": None,
+        }
+    ]
+
+
+async def test_runtime_pipeline_invokes_langgraph_foreground_graph() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    class _GraphProxy:
+        def __init__(self, graph):
+            self.graph = graph
+            self.called = False
+
+        async def ainvoke(self, state):
+            self.called = True
+            return await self.graph.ainvoke(state)
+
+    proxy = _GraphProxy(runtime.foreground_graph_runner._graph)
+    runtime.foreground_graph_runner._graph = proxy
+
+    event = Event(
+        event_id="evt-langgraph",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "show me the next migration step"},
+        meta=EventMeta(user_id="u-1", trace_id="t-langgraph"),
+    )
+
+    result = await runtime.run(event)
+
+    assert proxy.called is True
+    assert "langgraph" in proxy.graph.__class__.__module__
+    assert result.action_result.status == "success"
+
+
+async def test_runtime_pipeline_uses_hybrid_memory_bundle_when_supported() -> None:
+    memory = FakeHybridMemoryRepository(
+        recent_memory=[
+            {
+                "id": 7,
+                "event_id": "evt-prev",
+                "summary": "event=deployment blocker; memory_kind=semantic; memory_topics=deploy,blocker; response_language=en; expression=Earlier deployment guidance",
+                "importance": 0.7,
+                "event_timestamp": datetime.now(timezone.utc),
+                "payload": {
+                    "event": "deployment blocker",
+                    "memory_topics": ["deploy", "blocker"],
+                    "memory_kind": "semantic",
+                },
+            }
+        ]
+    )
+    memory.user_conclusions = [
+        {
+            "kind": "custom_semantic_fact",
+            "content": "deployment blockers often need dependency sequencing",
+            "confidence": 0.74,
+            "source": "background_reflection",
+        },
+        {
+            "kind": "affective_support_pattern",
+            "content": "recurring_distress",
+            "confidence": 0.78,
+            "source": "background_reflection",
+        },
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    event = Event(
+        event_id="evt-hybrid",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "help me sequence this deploy blocker"},
+        meta=EventMeta(user_id="u-1", trace_id="t-hybrid"),
+    )
+
+    result = await runtime.run(event)
+
+    assert len(memory.hybrid_calls) == 1
+    assert memory.hybrid_calls[0]["query_text"] == "help me sequence this deploy blocker"
+    assert memory.hybrid_calls[0]["query_embedding_dimensions"] == 32
+    assert result.action_result.status == "success"
+    assert "deployment blocker" in result.context.summary
+
+
+async def test_runtime_pipeline_surfaces_relation_signals_in_context_and_planning() -> None:
+    memory = FakeHybridMemoryRepository(recent_memory=[])
+    memory.relations = [
+        {
+            "relation_type": "collaboration_dynamic",
+            "relation_value": "guided",
+            "confidence": 0.79,
+        },
+        {
+            "relation_type": "delivery_reliability",
+            "relation_value": "high_trust",
+            "confidence": 0.74,
+        },
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    event = Event(
+        event_id="evt-rel-runtime",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Can you help me with this next step?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-rel-runtime"),
+    )
+
+    result = await runtime.run(event)
+
+    assert "Relation cues: current collaboration flow is guided and step-oriented." in result.context.summary
+    assert "guided step by step" in result.plan.goal.lower()
+    assert any(
+        step in result.plan.steps for step in ("favor_guided_walkthrough", "break_down_problem")
+    )
+    assert "favor_concrete_next_step" in result.plan.steps
 
 
 async def test_runtime_pipeline_loads_memory_beyond_latest_five_and_surfaces_ranked_relevant_item() -> None:
@@ -1071,6 +1393,7 @@ async def test_runtime_pipeline_returns_refreshed_goal_and_task_state_after_expl
     )
     goal_result = await runtime.run(goal_event)
 
+    assert any(intent.intent_type == "upsert_goal" for intent in goal_result.plan.domain_intents)
     assert goal_result.active_goals[0].name == "ship the MVP this week"
 
     task_event = Event(
@@ -1083,6 +1406,7 @@ async def test_runtime_pipeline_returns_refreshed_goal_and_task_state_after_expl
     )
     task_result = await runtime.run(task_event)
 
+    assert any(intent.intent_type == "upsert_task" for intent in task_result.plan.domain_intents)
     assert task_result.active_tasks[0].name == "fix the deployment blocker"
     assert task_result.active_tasks[0].status == "blocked"
 
@@ -1096,9 +1420,49 @@ async def test_runtime_pipeline_returns_refreshed_goal_and_task_state_after_expl
     )
     done_result = await runtime.run(done_event)
 
+    assert any(intent.intent_type == "update_task_status" for intent in done_result.plan.domain_intents)
     assert done_result.active_goals[0].name == "ship the MVP this week"
     assert done_result.active_tasks == []
     assert done_result.stage_timings_ms["state_refresh"] >= 0
+
+
+async def test_runtime_pipeline_does_not_write_domain_state_without_planning_intents() -> None:
+    class NoDomainWritePlanningAgent(PlanningAgent):
+        def run(self, *args, **kwargs):  # type: ignore[override]
+            base = super().run(*args, **kwargs)
+            return base.model_copy(update={"domain_intents": [NoopDomainIntent(reason="contract_test")]})
+
+    memory = FakeMemoryRepository(recent_memory=[])
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=NoDomainWritePlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-no-domain-intent",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "My goal is to ship the MVP this week."},
+        meta=EventMeta(user_id="u-1", trace_id="t-no-domain-intent"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.plan.domain_intents[0].intent_type == "noop"
+    assert result.active_goals == []
+    assert result.memory_record is not None
+    assert result.memory_record.payload["goal_update"] == ""
 
 
 async def test_runtime_pipeline_uses_goal_milestone_transition_across_context_motivation_and_planning() -> None:
@@ -2536,3 +2900,335 @@ async def test_runtime_pipeline_uses_goal_milestone_due_window_across_context_mo
     assert result.motivation.importance >= 0.81
     assert "align_with_active_goal" in result.plan.steps
     assert "recover_overdue_window" in result.plan.steps
+
+
+async def test_runtime_pipeline_runs_proactive_warning_tick_with_response_enabled() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.user_preferences = {"proactive_opt_in": True}
+    memory.active_tasks = [
+        {
+            "id": 11,
+            "goal_id": 7,
+            "name": "fix deployment blocker",
+            "description": "Deploy is blocked by failing migration",
+            "priority": "high",
+            "status": "blocked",
+        }
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = build_scheduler_event(
+        subsource="proactive_tick",
+        payload={
+            "text": "check blocker urgency",
+            "chat_id": 123456,
+            "proactive_trigger": "task_blocked",
+            "importance": 0.88,
+            "urgency": 0.9,
+            "user_context": {
+                "quiet_hours": False,
+                "focus_mode": False,
+                "recent_user_activity": "active",
+                "recent_outbound_count": 0,
+                "unanswered_proactive_count": 0,
+            },
+        },
+    )
+
+    result = await runtime.run(event)
+
+    assert result.event.source == "scheduler"
+    assert result.event.subsource == "proactive_tick"
+    assert result.plan.proactive_decision is not None
+    assert result.plan.proactive_decision.output_type == "warning"
+    assert result.plan.proactive_decision.should_interrupt is True
+    assert result.plan.proactive_delivery_guard is not None
+    assert result.plan.proactive_delivery_guard.allowed is True
+    assert result.motivation.mode == "execute"
+    assert "compose_proactive_warning" in result.plan.steps
+    assert "send_telegram_message" in result.plan.steps
+    assert result.plan.needs_response is True
+    assert result.plan.needs_action is True
+    assert result.action_result.status == "success"
+    assert result.action_result.actions == ["send_telegram_message"]
+    assert result.reflection_triggered is True
+
+
+async def test_runtime_pipeline_defers_proactive_tick_when_interruption_cost_is_high() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.active_goals = [
+        {
+            "id": 9,
+            "user_id": "scheduler",
+            "name": "ship weekly milestone",
+            "description": "User-declared goal: ship weekly milestone",
+            "priority": "high",
+            "status": "active",
+            "goal_type": "operational",
+        }
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = build_scheduler_event(
+        subsource="proactive_tick",
+        payload={
+            "text": "quiet-hours check",
+            "proactive_trigger": "goal_stagnation",
+            "importance": 0.84,
+            "urgency": 0.72,
+            "user_context": {
+                "quiet_hours": True,
+                "focus_mode": True,
+                "recent_user_activity": "away",
+                "recent_outbound_count": 3,
+                "unanswered_proactive_count": 2,
+            },
+        },
+    )
+
+    result = await runtime.run(event)
+
+    assert result.plan.proactive_decision is not None
+    assert result.plan.proactive_decision.should_interrupt is False
+    assert result.plan.proactive_delivery_guard is None
+    assert result.motivation.mode == "ignore"
+    assert (
+        "defer_proactive_outreach" in result.plan.steps
+        or "respect_attention_gate" in result.plan.steps
+    )
+    assert result.plan.needs_response is False
+    assert result.action_result.status == "noop"
+    assert result.reflection_triggered is True
+
+
+async def test_runtime_pipeline_defers_proactive_tick_when_user_did_not_opt_in() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.active_tasks = [
+        {
+            "id": 11,
+            "goal_id": 7,
+            "name": "fix deployment blocker",
+            "description": "Deploy is blocked by failing migration",
+            "priority": "high",
+            "status": "blocked",
+        }
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = build_scheduler_event(
+        subsource="proactive_tick",
+        payload={
+            "text": "check blocker urgency",
+            "chat_id": 123456,
+            "proactive_trigger": "task_blocked",
+            "importance": 0.88,
+            "urgency": 0.9,
+            "user_context": {
+                "quiet_hours": False,
+                "focus_mode": False,
+                "recent_user_activity": "active",
+                "recent_outbound_count": 0,
+                "unanswered_proactive_count": 0,
+            },
+        },
+    )
+
+    result = await runtime.run(event)
+
+    assert result.plan.proactive_decision is not None
+    assert result.plan.proactive_decision.should_interrupt is True
+    assert result.plan.proactive_delivery_guard is not None
+    assert result.plan.proactive_delivery_guard.allowed is False
+    assert result.plan.proactive_delivery_guard.reason == "opt_in_required"
+    assert "respect_proactive_delivery_guardrails" in result.plan.steps
+    assert result.plan.needs_response is False
+    assert result.action_result.status == "noop"
+
+
+async def test_runtime_pipeline_promotes_and_resolves_pending_subconscious_proposals() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.pending_subconscious_proposals = [
+        {
+            "proposal_id": 41,
+            "proposal_type": "ask_user",
+            "summary": "Ask the user to clarify blocker scope.",
+            "payload": {"question_focus": "blocker scope"},
+            "confidence": 0.75,
+            "status": "pending",
+            "research_policy": "read_only",
+            "allowed_tools": ["memory_retrieval"],
+            "source_event_id": "evt-prop-41",
+        },
+        {
+            "proposal_id": 42,
+            "proposal_type": "nudge_user",
+            "summary": "Nudge user toward one unblock step.",
+            "payload": {"task_name": "deploy blocker"},
+            "confidence": 0.7,
+            "status": "pending",
+            "research_policy": "read_only",
+            "allowed_tools": [],
+            "source_event_id": "evt-prop-42",
+        },
+    ]
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient()),
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    event = Event(
+        event_id="evt-proposal-promotion",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Can you help me with this deploy blocker?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-proposal-promotion"),
+    )
+
+    result = await runtime.run(event)
+
+    assert len(result.plan.proposal_handoffs) == 2
+    assert result.plan.proposal_handoffs[0].decision == "accept"
+    assert len(result.plan.accepted_proposals) == 1
+    assert result.plan.accepted_proposals[0].proposal_id == 41
+    assert "ask_subconscious_clarifier" in result.plan.steps
+    assert len(memory.resolved_subconscious_proposals) == 2
+    assert "proposal_handoff" in result.stage_timings_ms
+
+
+async def test_runtime_pipeline_emits_connector_expansion_discovery_outputs_from_pending_proposal() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.pending_subconscious_proposals = [
+        {
+            "proposal_id": 77,
+            "proposal_type": "suggest_connector_expansion",
+            "summary": "Suggest connector expansion for clickup task_system capability 'task_sync'.",
+            "payload": {
+                "connector_kind": "task_system",
+                "provider_hint": "clickup",
+                "requested_capability": "task_sync",
+            },
+            "confidence": 0.79,
+            "status": "pending",
+            "research_policy": "read_only",
+            "allowed_tools": [],
+            "source_event_id": "evt-prop-77",
+        }
+    ]
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient()),
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    event = Event(
+        event_id="evt-connector-expansion",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "What could we improve in integrations?"},
+        meta=EventMeta(user_id="u-1", trace_id="t-connector-expansion"),
+    )
+
+    result = await runtime.run(event)
+
+    assert len(result.plan.proposal_handoffs) == 1
+    assert result.plan.proposal_handoffs[0].decision == "accept"
+    assert result.plan.proposal_handoffs[0].reason == "connector_capability_gap_detected"
+    assert "propose_connector_capability_expansion" in result.plan.steps
+    assert any(intent.intent_type == "connector_capability_discovery_intent" for intent in result.plan.domain_intents)
+    assert any(
+        gate.reason == "proposal_only_no_external_access"
+        and gate.operation == "discover_task_sync"
+        and gate.allowed is True
+        for gate in result.plan.connector_permission_gates
+    )
+    assert result.memory_record is not None
+    assert result.memory_record.payload["connector_expansion_update"] == "task_system:clickup:task_sync"
+    assert len(memory.resolved_subconscious_proposals) == 1
+
+
+async def test_runtime_pipeline_emits_connector_permission_gates_and_connector_payload_updates() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient()),
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    event = Event(
+        event_id="evt-connector-intents",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Create calendar meeting tomorrow, create task in ClickUp, and upload notes to Google Drive."},
+        meta=EventMeta(user_id="u-1", trace_id="t-connector-intents"),
+    )
+
+    result = await runtime.run(event)
+
+    assert len(result.plan.connector_permission_gates) == 3
+    assert {gate.connector_kind for gate in result.plan.connector_permission_gates} == {"calendar", "task_system", "cloud_drive"}
+    assert all(gate.allowed is False for gate in result.plan.connector_permission_gates)
+    assert result.memory_record is not None
+    assert result.memory_record.payload["calendar_connector_update"] == "create_event:mutate_with_confirmation:generic"
+    assert result.memory_record.payload["task_connector_update"] == "create_task:mutate_with_confirmation:clickup"
+    assert result.memory_record.payload["drive_connector_update"] == "upload_file:mutate_with_confirmation:google_drive"

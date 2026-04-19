@@ -10,6 +10,10 @@ class _StrictDebugMismatchSettings:
     event_debug_enabled = True
     startup_schema_mode = "migrate"
     production_policy_enforcement = "strict"
+    reflection_runtime_mode = "in_process"
+    attention_burst_window_ms = 120
+    attention_answered_ttl_seconds = 5.0
+    attention_stale_turn_seconds = 30.0
 
     @staticmethod
     def validate_required() -> None:
@@ -26,6 +30,10 @@ class _StrictSchemaMismatchSettings:
     event_debug_enabled = False
     startup_schema_mode = "create_tables"
     production_policy_enforcement = "strict"
+    reflection_runtime_mode = "in_process"
+    attention_burst_window_ms = 120
+    attention_answered_ttl_seconds = 5.0
+    attention_stale_turn_seconds = 30.0
 
     @staticmethod
     def validate_required() -> None:

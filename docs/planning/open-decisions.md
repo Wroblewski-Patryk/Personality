@@ -37,13 +37,76 @@ The current repo already works as an MVP slice, but several architecture-level d
 
 - Current repo fact:
   - `POST /event` now returns a smaller public response by default: event identifiers, reply payload, and a compact runtime summary.
-  - the full serialized runtime result is exposed through `POST /event?debug=true` and is guarded by explicit config (`EVENT_DEBUG_ENABLED`) with environment-aware defaults (enabled in non-production, disabled in production unless explicitly enabled).
+  - the full serialized runtime result is exposed through both
+    `POST /event/debug` (explicit internal debug path) and
+    `POST /event?debug=true` (compatibility path), guarded by explicit config
+    (`EVENT_DEBUG_ENABLED`) with environment-aware defaults (enabled in
+    non-production, disabled in production unless explicitly enabled).
+  - `POST /event?debug=true` now emits explicit compatibility headers
+    (`X-AION-Debug-Compat`, `Link`) that point operators to
+    `POST /event/debug` as the preferred internal debug route.
+  - compat-route responses now also emit
+    `X-AION-Debug-Compat-Deprecated=true` and runtime health now exposes
+    `event_debug_query_compat_telemetry` counters plus derived compat sunset
+    recommendation signals (`event_debug_query_compat_allow_rate`,
+    `event_debug_query_compat_block_rate`,
+    `event_debug_query_compat_recommendation`) plus explicit sunset posture
+    signals (`event_debug_query_compat_sunset_ready`,
+    `event_debug_query_compat_sunset_reason`) for migration tracking.
+  - compat recommendation logic now treats any observed compat attempts as
+    migration-needed (not only successful compat responses), so blocked
+    attempts still count as active migration work.
+  - health policy now also exposes rolling compat trend signals
+    (`event_debug_query_compat_recent_attempts_total`,
+    `event_debug_query_compat_recent_allow_rate`,
+    `event_debug_query_compat_recent_block_rate`,
+    `event_debug_query_compat_recent_state`) to support release-window
+    migration monitoring.
+  - rolling compat trend window size is now configurable via
+    `EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW` (default `20`).
+  - health policy now also exposes compat freshness posture
+    (`event_debug_query_compat_stale_after_seconds`,
+    `event_debug_query_compat_last_attempt_age_seconds`,
+    `event_debug_query_compat_last_attempt_state`) so migration decisions can
+    distinguish fresh usage from stale historical attempts.
+  - health policy now also exposes compat activity posture
+    (`event_debug_query_compat_activity_state`,
+    `event_debug_query_compat_activity_hint`) so operators can separate
+    disabled/no-attempt/stale-history/recent-traffic compatibility states
+    without changing the stricter sunset-ready decision contract.
+  - stale-age threshold for that freshness posture is configurable via
+    `EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS` (default `86400`).
+  - compatibility `POST /event?debug=true` route now has an explicit
+    environment-aware policy surface (`EVENT_DEBUG_QUERY_COMPAT_ENABLED`):
+    enabled by default outside production and disabled by default in
+    production unless explicitly enabled.
   - when `EVENT_DEBUG_TOKEN` is configured, `POST /event?debug=true` also requires `X-AION-Debug-Token`.
-  - `GET /health` now exposes `event_debug_enabled`, `event_debug_token_required`, `event_debug_source`, and `production_policy_enforcement` so operators can verify effective policy, token-gate posture, policy source, and enforcement mode.
+  - when `EVENT_DEBUG_TOKEN` is configured, `POST /event/debug` also requires
+    `X-AION-Debug-Token`.
+  - production can now enforce debug-token configuration through
+    `PRODUCTION_DEBUG_TOKEN_REQUIRED` (default `true`); when enabled and
+    production debug payload exposure is active without a configured token,
+    debug endpoints reject access.
+  - `GET /health` now exposes `event_debug_enabled`, `event_debug_token_required`,
+    `production_debug_token_required`, `debug_access_posture`,
+    `debug_token_policy_hint`, `event_debug_source`, and
+    `production_policy_enforcement` so operators can verify effective policy,
+    token-gate posture, policy source, and enforcement mode.
   - `/health` also exposes strict-rollout readiness and recommendation signals so operators can detect production-hardening mismatches before a strict-mode rollout and decide when to switch enforcement.
   - startup now emits a production warning when `EVENT_DEBUG_ENABLED=true` so the policy remains visible even before handling requests.
-  - startup also warns when production debug payload exposure is enabled without `EVENT_DEBUG_TOKEN`.
+  - startup warns when production debug payload exposure is enabled without
+    `EVENT_DEBUG_TOKEN` while `PRODUCTION_DEBUG_TOKEN_REQUIRED=true`.
+  - startup also warns when production debug payload exposure is enabled with
+    `PRODUCTION_DEBUG_TOKEN_REQUIRED=false`, making relaxed token-hardening
+    posture explicit.
   - startup can now hard-fail in production when debug payload exposure is enabled and strict enforcement mode is active.
+  - strict mismatch posture now also includes
+      `event_debug_token_missing=true` when debug exposure is enabled in
+      production, token requirement is enabled, and no debug token is
+      configured.
+  - strict mismatch posture also includes
+    `event_debug_query_compat_enabled=true` when production debug exposure
+    keeps compatibility query-debug route enabled.
   - strict-mode hard-fail behavior is test-covered at startup lifecycle level across both debug and schema mismatch paths, not only at helper-function level.
 - Decision needed:
   - should the full debug payload remain available on the same endpoint through `debug=true`, or should it move to a more clearly internal-only path before wider production use?
@@ -66,11 +129,19 @@ The current repo already works as an MVP slice, but several architecture-level d
 
 - Current repo fact:
   - architecture docs describe `LangGraph` as the intended orchestration layer,
-    but the current runtime still uses a hand-written Python orchestrator.
+    and foreground stage execution now runs through LangGraph `StateGraph`.
+  - baseline-state load plus memory/reflection follow-up still run outside graph
+    execution, keeping migration incremental.
+  - runtime now has an explicit graph-compatibility boundary
+    (`GraphRuntimeState`, conversion helpers, and stage adapters around current
+    modules), so migration can proceed incrementally.
   - `LangChain` is described as optional support, not the architectural core.
 - Decision needed:
-  - when should the repo migrate the foreground runtime onto LangGraph?
-  - which current stage contracts must stay stable during that migration?
+  - which non-stage runtime segments (baseline load, post-action persistence,
+    reflection enqueue) should remain outside graph execution vs move into
+    graph-owned nodes?
+  - which stage and observability contracts must remain fixed while the
+    remaining migration boundary is finalized?
   - where does LangChain actually reduce complexity, and where would it only
     add more framework surface?
 
@@ -143,20 +214,24 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 5d. Vector Retrieval Activation
 
 - Current repo fact:
-  - architecture docs name `pgvector` and semantic retrieval as part of the
-    target memory stack, but the current implementation does not yet use vector
-    search or embeddings.
+  - runtime now has a semantic embedding contract, deterministic embedding
+    fallback helpers, pgvector-ready schema/migration scaffolding, and hybrid
+    lexical-plus-vector retrieval APIs.
+  - runtime memory load now consumes hybrid retrieval diagnostics, but provider
+    embedding ownership and production retrieval posture are not finalized yet.
 - Decision needed:
-  - when should hybrid lexical plus vector retrieval become part of the live
-    runtime?
+  - should provider-backed embeddings become default, or stay optional while
+    deterministic fallback remains baseline?
   - should vector retrieval start as optional enrichment behind feature flags,
     or become part of the default retrieval path once it exists?
 
 ### 5e. Embedding Strategy
 
 - Current repo fact:
-  - architecture allows vector or embedding-based retrieval later, but current
-    code does not define embedding ownership, refresh rules, or provider scope.
+  - code now defines embedding contracts and deterministic fallback vectors for
+    episodic/semantic retrieval surfaces.
+  - provider ownership, refresh cadence, and embedding model governance are
+    still open.
 - Decision needed:
   - which embedding provider and refresh strategy should own semantic memory
     vectors?
@@ -205,14 +280,14 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 9a. Relation System Rollout
 
 - Current repo fact:
-  - architecture docs define a relation system with scoped, confidence-bearing
-    user-specific knowledge, but the current runtime does not yet persist or
-    retrieve relations as a first-class subsystem.
+  - runtime now persists scoped relation records (`aion_relation`) with
+    confidence/source/evidence fields and reflection-driven updates.
+  - runtime now loads high-confidence relations and applies relation cues in
+    context, role, planning, and expression paths.
 - Decision needed:
-  - when should relation storage and retrieval move from architecture intent
-    into the live runtime?
-  - which behavior layers should relations influence first: context,
-    expression, planning, role selection, or proactive behavior?
+  - which additional behavior layers should relations influence next (for
+    example proactive delivery, interruption cost, and attention gating)?
+  - what decay/revalidation policy should govern stale relation records?
 
 ### 10. Preference Influence Scope
 
@@ -239,8 +314,9 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 10b. Adaptive Signal Governance
 
 - Current repo fact:
-  - reflected `preferred_role`, `theta`, and `collaboration_preference` can be
-    learned partly from earlier runtime decisions, which risks feedback loops.
+  - reflection now requires outcome evidence and user-visible cues for
+    adaptive updates (`preferred_role`, `theta`, collaboration fallback) to
+    reduce feedback loops from role-only traces.
 - Decision needed:
   - what evidence threshold should be required before adaptive signals can
     influence future role, motivation, planning, or expression?
@@ -258,28 +334,41 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 12. Scheduler And Proactive Runtime
 
 - Current repo fact:
-  - architecture docs define scheduler-driven events, periodic reflection, and
-    proactive behavior, but the live runtime still depends mainly on reactive
-    event handling plus post-event reflection enqueue.
-  - config docs already reserve fields such as `REFLECTION_INTERVAL` and
-    `PROACTIVE_ENABLED`, but those subsystems are not fully implemented yet.
+  - scheduler event normalization contracts are now explicit, including cadence
+    and source/subsource runtime boundaries.
+  - runtime config now includes scheduler/reflection/maintenance/proactive
+    interval controls.
+  - an in-process scheduler worker can now run reflection and maintenance
+    cadence (`SCHEDULER_ENABLED`) and exposes scheduler posture/tick summaries
+    through `GET /health`.
+  - proactive scheduler ticks now run through a dedicated decision engine with
+    interruption-cost guardrails and typed plan/motivation outputs.
+  - proactive delivery now enforces baseline guardrails (user opt-in, outbound
+    and unanswered throttle checks, delivery-target requirement) before outreach.
 - Decision needed:
-  - when should scheduler-originated events become a real production runtime
-    path?
-  - should proactive behavior start with reminders and check-ins only, or
-    include richer warnings, encouragement, and insights from the start?
+  - should reflection/maintenance scheduler cadence remain app-local, or move
+    to a dedicated external scheduler/worker path?
+  - should proactive guardrails remain plan-local and event-context driven, or
+    move toward a dedicated attention-inbox gate shared with burst handling?
   - should scheduled reflection stay in-process first, or move directly toward
     dedicated worker execution?
 
 ### 12a. Attention Inbox And Turn Assembly
 
 - Current repo fact:
-  - the live runtime still processes one normalized event at a time and does
-    not yet expose an explicit attention inbox or burst-message coalescing
-    layer.
-  - planning now includes follow-up slices for attention inbox, proposal
-    handoff, and batched conversation handling (`PRJ-085..PRJ-086`,
-    `PRJ-092`).
+  - runtime contracts now expose explicit graph-state surfaces for
+    `attention_inbox`, `pending_turn`, `subconscious_proposals`, and
+    `proposal_handoffs`.
+  - `POST /event` now executes baseline Telegram burst-message coalescing with
+    `pending|claimed|answered` turn ownership; duplicate/non-owner burst events
+    are returned as queued no-op responses instead of running duplicate
+    foreground turns.
+  - `GET /health` now exposes an explicit `attention` snapshot with
+    `burst_window_ms`, turn TTL values, and `pending|claimed|answered`
+    counters, making burst-coalescing posture operator-visible.
+  - attention timing now has explicit runtime config controls:
+    `ATTENTION_BURST_WINDOW_MS`, `ATTENTION_ANSWERED_TTL_SECONDS`,
+    `ATTENTION_STALE_TURN_SECONDS`.
 - Decision needed:
   - what should be the canonical ownership of turn assembly, pending-turn
     state, and burst-message coalescing?
@@ -290,8 +379,11 @@ The current repo already works as an MVP slice, but several architecture-level d
 
 - Current repo fact:
   - the architecture already states that subconscious processing does not
-    communicate directly with the user, but the live runtime does not yet model
-    a first-class proposal handoff between subconscious and conscious paths.
+    communicate directly with the user, and runtime contracts now model a
+    first-class proposal handoff surface between subconscious and conscious
+    paths.
+  - proposal persistence/promotion behavior is still not implemented end to end
+    in live runtime execution.
   - planning now includes explicit proposal persistence, conscious promotion
     rules, read-only subconscious tool policy, and separate wakeup/cadence
     slices (`PRJ-088..PRJ-091`).

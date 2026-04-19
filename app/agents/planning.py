@@ -1,4 +1,28 @@
-from app.core.contracts import ContextOutput, Event, MotivationOutput, PlanOutput, RoleOutput
+from app.core.contracts import (
+    CalendarSchedulingIntentDomainIntent,
+    ConnectedDriveAccessDomainIntent,
+    ConnectorCapabilityDiscoveryDomainIntent,
+    ConnectorPermissionGateOutput,
+    ContextOutput,
+    DomainActionIntent,
+    Event,
+    ExternalTaskSyncDomainIntent,
+    MotivationOutput,
+    NoopDomainIntent,
+    PlanOutput,
+    ProposalHandoffDecisionOutput,
+    RoleOutput,
+    SubconsciousProposalRecord,
+    UpdateCollaborationPreferenceDomainIntent,
+    UpdateResponseStyleDomainIntent,
+    UpdateTaskStatusDomainIntent,
+    ProactiveDecisionOutput,
+    UpsertGoalDomainIntent,
+    UpsertTaskDomainIntent,
+)
+from app.proactive.engine import ProactiveDecisionEngine, ProactiveDeliveryGuard
+from app.utils.goal_task_signals import detect_goal_signal, detect_task_signal, detect_task_status_signal
+from app.utils.preferences import detect_collaboration_preference, detect_response_style_preference
 from app.utils.goal_task_selection import (
     priority_rank as shared_priority_rank,
     select_relevant_goal as shared_select_relevant_goal,
@@ -13,6 +37,14 @@ from app.utils.progress_signals import (
 
 
 class PlanningAgent:
+    def __init__(
+        self,
+        proactive_decision_engine: ProactiveDecisionEngine | None = None,
+        proactive_delivery_guard: ProactiveDeliveryGuard | None = None,
+    ):
+        self.proactive_decision_engine = proactive_decision_engine or ProactiveDecisionEngine()
+        self.proactive_delivery_guard = proactive_delivery_guard or ProactiveDeliveryGuard()
+
     def run(
         self,
         event: Event,
@@ -20,13 +52,16 @@ class PlanningAgent:
         motivation: MotivationOutput,
         role: RoleOutput,
         user_preferences: dict | None = None,
+        relations: list[dict] | None = None,
         theta: dict | None = None,
         active_goals: list[dict] | None = None,
         active_tasks: list[dict] | None = None,
         active_goal_milestones: list[dict] | None = None,
         goal_milestone_history: list[dict] | None = None,
         goal_progress_history: list[dict] | None = None,
+        subconscious_proposals: list[dict] | None = None,
     ) -> PlanOutput:
+        event_text = str(event.payload.get("text", ""))
         goal = "Provide a clear and useful response to the user event."
         steps = ["interpret_event", "review_context"]
         response_style = str((user_preferences or {}).get("response_style", "")).strip().lower()
@@ -44,8 +79,25 @@ class PlanningAgent:
         goal_milestone_transition = str((user_preferences or {}).get("goal_milestone_transition", "")).strip().lower()
         goal_milestone_risk = str((user_preferences or {}).get("goal_milestone_risk", "")).strip().lower()
         goal_completion_criteria = str((user_preferences or {}).get("goal_completion_criteria", "")).strip().lower()
+        relation_collaboration = self._relation_value(relations=relations or [], relation_type="collaboration_dynamic")
+        relation_support = self._relation_value(relations=relations or [], relation_type="support_intensity_preference")
+        relation_delivery = self._relation_value(relations=relations or [], relation_type="delivery_reliability")
         goal_milestone_arc_signal = goal_milestone_arc or self._goal_milestone_arc_signal(goal_milestone_history or [])
         goal_history_signal = self._goal_history_signal(goal_progress_history or [])
+        proactive_decision = self.proactive_decision_engine.decide(
+            event=event,
+            context=context,
+            user_preferences=user_preferences or {},
+            active_goals=active_goals or [],
+            active_tasks=active_tasks or [],
+        )
+        if proactive_decision is not None:
+            return self._build_proactive_plan(
+                event=event,
+                motivation=motivation,
+                proactive_decision=proactive_decision,
+                user_preferences=user_preferences or {},
+            )
 
         if motivation.mode == "clarify":
             goal = "Ask for the missing information needed to help."
@@ -90,6 +142,26 @@ class PlanningAgent:
         if collaboration_step is not None and collaboration_step not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, collaboration_step)
+        relation_collaboration_step = self._collaboration_plan_step(
+            collaboration_preference=relation_collaboration or "",
+            steps=steps,
+        )
+        if relation_collaboration_step is not None and relation_collaboration_step not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, relation_collaboration_step)
+            if not collaboration_preference:
+                goal = self._apply_collaboration_preference_goal(
+                    goal=goal,
+                    collaboration_preference=relation_collaboration or "",
+                    motivation=motivation,
+                    role=role,
+                )
+        if relation_support == "high_support" and "maintain_supportive_stance" not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, "maintain_supportive_stance")
+        if relation_delivery == "high_trust" and "favor_concrete_next_step" not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, "favor_concrete_next_step")
 
         theta_step = self._theta_plan_step(theta=theta, steps=steps)
         if theta_step is not None and theta_step not in steps:
@@ -222,13 +294,504 @@ class PlanningAgent:
         if goal_milestone_arc_step is not None and goal_milestone_arc_step not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, goal_milestone_arc_step)
+        proposal_handoffs, accepted_proposals, proposal_steps = self._evaluate_subconscious_proposals(
+            event=event,
+            motivation=motivation,
+            subconscious_proposals=subconscious_proposals or [],
+        )
+        for step in proposal_steps:
+            if step in steps:
+                continue
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, step)
+
+        domain_intents = self._build_domain_action_intents(event_text)
+        domain_intents.extend(self._build_connector_expansion_intents(accepted_proposals))
+        connector_permission_gates = self._build_connector_permission_gates(domain_intents)
 
         return PlanOutput(
             goal=goal,
             steps=steps,
             needs_action=needs_action,
             needs_response=needs_response,
+            domain_intents=domain_intents,
+            proposal_handoffs=proposal_handoffs,
+            accepted_proposals=accepted_proposals,
+            connector_permission_gates=connector_permission_gates,
         )
+
+    def _build_proactive_plan(
+        self,
+        *,
+        event: Event,
+        motivation: MotivationOutput,
+        proactive_decision: ProactiveDecisionOutput,
+        user_preferences: dict,
+    ) -> PlanOutput:
+        base_steps = ["evaluate_proactive_trigger", "assess_user_context"]
+        attention_gate = event.payload.get("attention_gate") if isinstance(event.payload, dict) else {}
+        if isinstance(attention_gate, dict) and not bool(attention_gate.get("allowed", True)):
+            return PlanOutput(
+                goal="Defer proactive outreach until attention-gate conditions are satisfied.",
+                steps=[*base_steps, "respect_attention_gate"],
+                needs_action=False,
+                needs_response=False,
+                domain_intents=[NoopDomainIntent()],
+                proactive_decision=proactive_decision,
+            )
+        if not proactive_decision.should_interrupt:
+            return PlanOutput(
+                goal="Defer proactive outreach until interruption cost becomes acceptable.",
+                steps=[*base_steps, "defer_proactive_outreach"],
+                needs_action=False,
+                needs_response=False,
+                domain_intents=[NoopDomainIntent()],
+                proactive_decision=proactive_decision,
+            )
+        delivery_guard = self.proactive_delivery_guard.evaluate(
+            event=event,
+            user_preferences=user_preferences,
+            proactive_decision=proactive_decision,
+        )
+        if delivery_guard is not None and not delivery_guard.allowed:
+            return PlanOutput(
+                goal="Defer proactive outreach until delivery guardrails pass.",
+                steps=[*base_steps, "respect_proactive_delivery_guardrails"],
+                needs_action=False,
+                needs_response=False,
+                domain_intents=[NoopDomainIntent()],
+                proactive_decision=proactive_decision,
+                proactive_delivery_guard=delivery_guard,
+            )
+
+        output_step_map = {
+            "suggestion": "compose_proactive_suggestion",
+            "reminder": "compose_proactive_reminder",
+            "question": "compose_proactive_question",
+            "warning": "compose_proactive_warning",
+            "encouragement": "compose_proactive_encouragement",
+            "insight": "compose_proactive_insight",
+        }
+        goal_map = {
+            "suggestion": "Deliver a proactive suggestion that helps the user move the current work forward.",
+            "reminder": "Deliver a proactive reminder linked to active commitments.",
+            "question": "Deliver a proactive clarification question before progress stalls.",
+            "warning": "Deliver a proactive warning with one clear immediate next step.",
+            "encouragement": "Deliver proactive encouragement tied to user momentum.",
+            "insight": "Deliver a proactive insight grounded in recurring patterns.",
+        }
+        output_type = str(proactive_decision.output_type)
+        steps = [*base_steps, output_step_map.get(output_type, "compose_proactive_suggestion")]
+        if proactive_decision.mode == "strong":
+            steps.append("mark_high_priority_proactive")
+        if motivation.mode == "execute":
+            steps.append("prioritize_immediate_attention")
+        steps.append("prepare_response")
+
+        needs_response = True
+        has_chat_id = isinstance(event.payload.get("chat_id"), (int, str))
+        needs_action = needs_response and (
+            event.source == "telegram"
+            or (event.source == "scheduler" and has_chat_id)
+        )
+        if needs_action:
+            steps.append("send_telegram_message")
+        return PlanOutput(
+            goal=goal_map.get(output_type, goal_map["suggestion"]),
+            steps=steps,
+            needs_action=needs_action,
+            needs_response=needs_response,
+            domain_intents=[NoopDomainIntent()],
+            proactive_decision=proactive_decision,
+            proactive_delivery_guard=delivery_guard,
+        )
+
+    def _build_domain_action_intents(self, event_text: str) -> list[DomainActionIntent]:
+        intents: list[DomainActionIntent] = []
+        lowered_text = event_text.strip().lower()
+
+        goal_signal = detect_goal_signal(event_text)
+        if goal_signal is not None:
+            intents.append(
+                UpsertGoalDomainIntent(
+                    name=goal_signal.name,
+                    description=goal_signal.description,
+                    priority=goal_signal.priority,
+                    goal_type=goal_signal.goal_type,
+                )
+            )
+
+        task_signal = detect_task_signal(event_text)
+        if task_signal is not None:
+            intents.append(
+                UpsertTaskDomainIntent(
+                    name=task_signal.name,
+                    description=task_signal.description,
+                    priority=task_signal.priority,
+                    status=task_signal.status,
+                )
+            )
+
+        task_status_signal = detect_task_status_signal(event_text)
+        if task_status_signal is not None:
+            intents.append(
+                UpdateTaskStatusDomainIntent(
+                    status=task_status_signal.status,
+                    task_hint=task_status_signal.task_hint,
+                )
+            )
+
+        style_preference = detect_response_style_preference(event_text)
+        if style_preference is not None:
+            intents.append(
+                UpdateResponseStyleDomainIntent(
+                    style=style_preference.style,
+                    source=style_preference.source,
+                )
+            )
+
+        collaboration_preference = detect_collaboration_preference(event_text)
+        if collaboration_preference is not None:
+            intents.append(
+                UpdateCollaborationPreferenceDomainIntent(
+                    preference=collaboration_preference.preference,
+                    source=collaboration_preference.source,
+                )
+            )
+
+        calendar_intent = self._calendar_scheduling_intent(lowered_text)
+        if calendar_intent is not None:
+            intents.append(calendar_intent)
+
+        external_task_intent = self._external_task_sync_intent(lowered_text)
+        if external_task_intent is not None:
+            intents.append(external_task_intent)
+
+        connected_drive_intent = self._connected_drive_access_intent(lowered_text)
+        if connected_drive_intent is not None:
+            intents.append(connected_drive_intent)
+
+        if not intents:
+            return [NoopDomainIntent()]
+        return intents
+
+    def _calendar_scheduling_intent(self, lowered_text: str) -> CalendarSchedulingIntentDomainIntent | None:
+        if not any(keyword in lowered_text for keyword in ("calendar", "kalendarz", "meeting", "spotkanie", "schedule")):
+            return None
+        if any(keyword in lowered_text for keyword in ("create", "utw", "zaplanuj", "book", "reserve")):
+            return CalendarSchedulingIntentDomainIntent(
+                operation="create_event",
+                mode="mutate_with_confirmation",
+                title_hint=lowered_text[:120],
+                time_hint=lowered_text[:120],
+            )
+        if any(keyword in lowered_text for keyword in ("availability", "free", "woln", "when can", "kiedy")):
+            return CalendarSchedulingIntentDomainIntent(
+                operation="read_availability",
+                mode="read_only",
+                title_hint=lowered_text[:120],
+                time_hint=lowered_text[:120],
+            )
+        return CalendarSchedulingIntentDomainIntent(
+            operation="suggest_slots",
+            mode="suggestion_only",
+            title_hint=lowered_text[:120],
+            time_hint=lowered_text[:120],
+        )
+
+    def _external_task_sync_intent(self, lowered_text: str) -> ExternalTaskSyncDomainIntent | None:
+        provider = None
+        for candidate in ("clickup", "trello", "asana", "jira"):
+            if candidate in lowered_text:
+                provider = candidate
+                break
+        if provider is None:
+            return None
+
+        if any(keyword in lowered_text for keyword in ("create", "utw", "add card", "create card", "create task")):
+            return ExternalTaskSyncDomainIntent(
+                operation="create_task",
+                provider_hint=provider,
+                mode="mutate_with_confirmation",
+                task_hint=lowered_text[:120],
+            )
+        if any(keyword in lowered_text for keyword in ("sync", "synchron", "export", "mirror", "link")):
+            return ExternalTaskSyncDomainIntent(
+                operation="suggest_sync",
+                provider_hint=provider,
+                mode="suggestion_only",
+                task_hint=lowered_text[:120],
+            )
+        return ExternalTaskSyncDomainIntent(
+            operation="list_tasks",
+            provider_hint=provider,
+            mode="read_only",
+            task_hint=lowered_text[:120],
+        )
+
+    def _connected_drive_access_intent(self, lowered_text: str) -> ConnectedDriveAccessDomainIntent | None:
+        provider = "generic"
+        for candidate, label in (
+            ("google drive", "google_drive"),
+            ("gdrive", "google_drive"),
+            ("onedrive", "onedrive"),
+            ("dropbox", "dropbox"),
+            ("box", "box"),
+        ):
+            if candidate in lowered_text:
+                provider = label
+                break
+
+        drive_keywords = (
+            "drive",
+            "document",
+            "doc",
+            "file",
+            "folder",
+            "plik",
+            "dokument",
+            "katalog",
+        )
+        if provider == "generic" and not any(keyword in lowered_text for keyword in drive_keywords):
+            return None
+
+        if any(keyword in lowered_text for keyword in ("delete", "remove", "usun", "skasuj")):
+            return ConnectedDriveAccessDomainIntent(
+                operation="delete_file",
+                provider_hint=provider,
+                mode="mutate_with_confirmation",
+                file_hint=lowered_text[:120],
+            )
+        if any(keyword in lowered_text for keyword in ("upload", "add file", "wrzu", "zaladuj")):
+            return ConnectedDriveAccessDomainIntent(
+                operation="upload_file",
+                provider_hint=provider,
+                mode="mutate_with_confirmation",
+                file_hint=lowered_text[:120],
+            )
+        if any(keyword in lowered_text for keyword in ("update", "edit", "modify", "zmien", "edyt")):
+            return ConnectedDriveAccessDomainIntent(
+                operation="update_document",
+                provider_hint=provider,
+                mode="mutate_with_confirmation",
+                file_hint=lowered_text[:120],
+            )
+        if any(keyword in lowered_text for keyword in ("search", "find", "szuk", "znajd")):
+            return ConnectedDriveAccessDomainIntent(
+                operation="search_documents",
+                provider_hint=provider,
+                mode="read_only",
+                file_hint=lowered_text[:120],
+            )
+        if any(keyword in lowered_text for keyword in ("read", "open", "preview", "otw", "pokaz")):
+            return ConnectedDriveAccessDomainIntent(
+                operation="read_document",
+                provider_hint=provider,
+                mode="read_only",
+                file_hint=lowered_text[:120],
+            )
+        if any(keyword in lowered_text for keyword in ("organize", "plan", "suggest", "uporzadkuj", "zaproponuj")):
+            return ConnectedDriveAccessDomainIntent(
+                operation="suggest_file_plan",
+                provider_hint=provider,
+                mode="suggestion_only",
+                file_hint=lowered_text[:120],
+            )
+        return ConnectedDriveAccessDomainIntent(
+            operation="list_files",
+            provider_hint=provider,
+            mode="read_only",
+            file_hint=lowered_text[:120],
+        )
+
+    def _build_connector_permission_gates(
+        self,
+        domain_intents: list[DomainActionIntent],
+    ) -> list[ConnectorPermissionGateOutput]:
+        gates: list[ConnectorPermissionGateOutput] = []
+        for intent in domain_intents:
+            if isinstance(intent, CalendarSchedulingIntentDomainIntent):
+                mutate = intent.mode == "mutate_with_confirmation"
+                gates.append(
+                    ConnectorPermissionGateOutput(
+                        connector_kind="calendar",
+                        provider_hint=intent.provider_hint,
+                        operation=intent.operation,
+                        mode=intent.mode,
+                        requires_opt_in=True,
+                        requires_confirmation=mutate,
+                        allowed=not mutate,
+                        reason=(
+                            "explicit_user_confirmation_required"
+                            if mutate
+                            else "suggestion_or_read_only_allowed"
+                        ),
+                    )
+                )
+            if isinstance(intent, ExternalTaskSyncDomainIntent):
+                mutate = intent.mode == "mutate_with_confirmation"
+                gates.append(
+                    ConnectorPermissionGateOutput(
+                        connector_kind="task_system",
+                        provider_hint=intent.provider_hint,
+                        operation=intent.operation,
+                        mode=intent.mode,
+                        requires_opt_in=True,
+                        requires_confirmation=mutate,
+                        allowed=not mutate,
+                        reason=(
+                            "explicit_user_confirmation_required"
+                            if mutate
+                            else "suggestion_or_read_only_allowed"
+                        ),
+                    )
+                )
+            if isinstance(intent, ConnectedDriveAccessDomainIntent):
+                mutate = intent.mode == "mutate_with_confirmation"
+                gates.append(
+                    ConnectorPermissionGateOutput(
+                        connector_kind="cloud_drive",
+                        provider_hint=intent.provider_hint,
+                        operation=intent.operation,
+                        mode=intent.mode,
+                        requires_opt_in=True,
+                        requires_confirmation=mutate,
+                        allowed=not mutate,
+                        reason=(
+                            "explicit_user_confirmation_required"
+                            if mutate
+                            else "suggestion_or_read_only_allowed"
+                        ),
+                    )
+                )
+            if isinstance(intent, ConnectorCapabilityDiscoveryDomainIntent):
+                gates.append(
+                    ConnectorPermissionGateOutput(
+                        connector_kind=intent.connector_kind,
+                        provider_hint=intent.provider_hint,
+                        operation=f"discover_{intent.requested_capability}",
+                        mode=intent.mode,
+                        requires_opt_in=False,
+                        requires_confirmation=False,
+                        allowed=True,
+                        reason="proposal_only_no_external_access",
+                    )
+                )
+        return gates
+
+    def _build_connector_expansion_intents(
+        self,
+        accepted_proposals: list[SubconsciousProposalRecord],
+    ) -> list[ConnectorCapabilityDiscoveryDomainIntent]:
+        intents: list[ConnectorCapabilityDiscoveryDomainIntent] = []
+        seen: set[tuple[str, str, str]] = set()
+        for proposal in accepted_proposals:
+            if proposal.proposal_type != "suggest_connector_expansion":
+                continue
+            payload = proposal.payload if isinstance(proposal.payload, dict) else {}
+            connector_kind = str(payload.get("connector_kind", "task_system")).strip().lower()
+            if connector_kind not in {"calendar", "task_system", "cloud_drive"}:
+                connector_kind = "task_system"
+            provider_hint = str(payload.get("provider_hint", "generic")).strip().lower() or "generic"
+            requested_capability = (
+                str(payload.get("requested_capability", "connector_access")).strip().lower() or "connector_access"
+            )
+            key = (connector_kind, provider_hint, requested_capability)
+            if key in seen:
+                continue
+            seen.add(key)
+            intents.append(
+                ConnectorCapabilityDiscoveryDomainIntent(
+                    connector_kind=connector_kind,  # type: ignore[arg-type]
+                    provider_hint=provider_hint,
+                    requested_capability=requested_capability,
+                    evidence="subconscious_repeated_unmet_need",
+                )
+            )
+        return intents
+
+    def _evaluate_subconscious_proposals(
+        self,
+        *,
+        event: Event,
+        motivation: MotivationOutput,
+        subconscious_proposals: list[dict],
+    ) -> tuple[list[ProposalHandoffDecisionOutput], list[SubconsciousProposalRecord], list[str]]:
+        if not subconscious_proposals:
+            return [], [], []
+
+        handoffs: list[ProposalHandoffDecisionOutput] = []
+        accepted: list[SubconsciousProposalRecord] = []
+        extra_steps: list[str] = []
+        normalized_text = str(event.payload.get("text", "")).strip().lower()
+
+        for raw in subconscious_proposals[:4]:
+            proposal_id_raw = raw.get("proposal_id")
+            try:
+                proposal_id = int(proposal_id_raw)
+            except (TypeError, ValueError):
+                continue
+            proposal = SubconsciousProposalRecord(
+                proposal_id=proposal_id,
+                proposal_type=str(raw.get("proposal_type", "nudge_user")),
+                summary=str(raw.get("summary", "")),
+                payload=raw.get("payload") if isinstance(raw.get("payload"), dict) else {},
+                confidence=float(raw.get("confidence", 0.0) or 0.0),
+                status=str(raw.get("status", "pending")),
+                source_event_id=str(raw.get("source_event_id", "") or "") or None,
+                research_policy=str(raw.get("research_policy", "read_only")),
+                allowed_tools=[
+                    str(item)
+                    for item in raw.get("allowed_tools", [])
+                    if isinstance(item, str)
+                ],
+            )
+
+            decision = "defer"
+            reason = "requires_conscious_confirmation"
+            if event.source in {"api", "telegram"} and motivation.mode != "ignore":
+                if proposal.proposal_type in {"ask_user", "nudge_user"} and not accepted:
+                    decision = "accept"
+                    reason = "conscious_turn_selected_single_proposal"
+                    accepted.append(proposal)
+                    if proposal.proposal_type == "ask_user":
+                        extra_steps.append("ask_subconscious_clarifier")
+                    else:
+                        extra_steps.append("integrate_subconscious_nudge")
+                elif proposal.proposal_type == "research_topic" and (
+                    "research" in normalized_text or "sprawd" in normalized_text
+                ):
+                    decision = "accept"
+                    reason = "read_only_research_confirmed_by_user_turn"
+                    accepted.append(proposal)
+                    extra_steps.append("queue_read_only_research")
+                elif proposal.proposal_type in {"ask_user", "nudge_user"} and accepted:
+                    decision = "merge"
+                    reason = "merged_into_primary_conscious_proposal"
+                elif proposal.proposal_type == "suggest_connector_expansion":
+                    expansion_cues = (
+                        "integrat",
+                        "connect",
+                        "connector",
+                        "sync",
+                        "plugin",
+                        "extension",
+                        "capability",
+                    )
+                    if any(cue in normalized_text for cue in expansion_cues) or not accepted:
+                        decision = "accept"
+                        reason = "connector_capability_gap_detected"
+                        accepted.append(proposal)
+                        extra_steps.append("propose_connector_capability_expansion")
+
+            handoffs.append(
+                ProposalHandoffDecisionOutput(
+                    proposal_id=proposal_id,
+                    decision=decision,  # type: ignore[arg-type]
+                    reason=reason,
+                )
+            )
+        return handoffs, accepted, extra_steps
 
     def _theta_plan_step(self, theta: dict | None, steps: list[str]) -> str | None:
         if not theta:
@@ -729,3 +1292,15 @@ class PlanningAgent:
 
     def _goal_milestone_arc_signal(self, goal_milestone_history: list[dict]) -> str:
         return shared_goal_milestone_arc_signal(goal_milestone_history)
+
+    def _relation_value(self, *, relations: list[dict], relation_type: str) -> str | None:
+        for relation in relations:
+            if str(relation.get("relation_type", "")).strip().lower() != relation_type:
+                continue
+            confidence = float(relation.get("confidence", 0.0) or 0.0)
+            if confidence < 0.68:
+                continue
+            value = str(relation.get("relation_value", "")).strip().lower()
+            if value:
+                return value
+        return None

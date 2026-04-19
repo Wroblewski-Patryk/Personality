@@ -26,6 +26,8 @@ Current implemented foreground order:
 Notes:
 
 - the runtime loads baseline state before deeper reasoning
+- foreground stage execution (`perception` through `action`) now runs through
+  LangGraph `StateGraph` nodes
 - expression currently prepares the outbound message before action executes delivery
 - action remains the only place where side effects occur
 
@@ -46,7 +48,44 @@ This is a runtime convenience and transport contract, not a replacement for the 
 
 ---
 
+## Graph Compatibility Boundary
+
+The runtime now defines an explicit compatibility layer for future LangGraph
+migration without changing foreground behavior first.
+
+Current implementation details:
+
+- `app/core/graph_state.py` defines `GraphRuntimeState` plus conversion helpers
+  between current `RuntimeResult` and graph-compatible state.
+- `app/core/graph_adapters.py` wraps existing stage modules
+  (`perception`, `affective_assessment`, `context`, `motivation`, `role`,
+  `planning`, `expression`, `action`) so they can be called with one shared
+  graph state contract.
+- `expression_to_action_delivery(...)` is now shared between the current
+  orchestrator and graph-ready adapters to keep delivery shaping semantics
+  consistent.
+
+Transition note:
+
+- the live foreground runtime now uses a hybrid orchestration model in
+  `app/core/runtime.py`: baseline load and post-action persistence remain in
+  Python orchestration, while cognitive foreground stages execute through
+  `app/core/runtime_graph.py`
+- this compatibility boundary exists to enable incremental migration instead of
+  a big-bang rewrite
+
+---
+
 ## Current Runtime Contracts
+
+### Optional LangChain prompt wrappers
+
+OpenAI prompt construction now supports an optional LangChain utility path:
+
+- `app/integrations/openai/prompting.py` wraps prompt assembly with
+  LangChain-compatible templates when available
+- runtime behavior remains fully functional without LangChain dependencies
+- LangChain remains a utility layer, not a runtime orchestration dependency
 
 ### Motivation modes
 
@@ -121,14 +160,33 @@ Repository memory-layer API vocabulary is now explicit in code:
 - `get_operational_memory_view(...)`
 - `conclusion_memory_layer(kind)` classification helper
 
+Hybrid retrieval surfaces are now also explicit:
+
+- semantic embeddings are stored in `aion_semantic_embedding`
+- `get_hybrid_memory_bundle(...)` merges episodic, semantic, and affective
+  candidates with lexical overlap plus vector similarity scoring
+- runtime logs and memory diagnostics now expose hybrid retrieval signals
+  (lexical/vector hit counts) for observability
+
+Current limitation:
+
+- deterministic fallback embeddings are live; provider-owned embedding lifecycle
+  and tuning are still planned follow-up work.
+
 ### Event API behavior
 
 `POST /event` currently returns:
 
 - a compact public response by default
-- an optional debug payload when `debug=true` and debug exposure is enabled by policy
+- an optional debug payload when `debug=true`, debug exposure is enabled by
+  policy, and compatibility query route is enabled
+- explicit internal debug route `POST /event/debug` remains available when
+  debug exposure is enabled
 - when API payload metadata omits `meta.user_id`, runtime can use
   `X-AION-User-Id` as a fallback identity key before defaulting to `anonymous`
+- for Telegram burst traffic, non-owner duplicate events can return a compact
+  queued response (`queue.queued=true` plus reason metadata) instead of running
+  duplicate foreground turns
 
 ### Health behavior
 
@@ -137,6 +195,94 @@ Repository memory-layer API vocabulary is now explicit in code:
 - app status
 - reflection worker queue snapshot
 - non-secret runtime policy flags
+- scheduler cadence posture and latest tick summaries
+- attention turn-assembly posture (`burst_window_ms`, turn TTLs, pending /
+  claimed / answered counters)
+
+Production debug access now also supports explicit token-requirement policy via
+`PRODUCTION_DEBUG_TOKEN_REQUIRED` (default `true`).
+Compatibility `POST /event?debug=true` route now supports explicit
+environment-aware policy via `EVENT_DEBUG_QUERY_COMPAT_ENABLED`
+(default `true` outside production, `false` in production).
+Runtime policy health output now also includes `debug_access_posture` and
+`debug_token_policy_hint` plus compat-route posture markers
+(`event_debug_query_compat_enabled`, `event_debug_query_compat_source`) and
+compat-route usage telemetry (`event_debug_query_compat_telemetry`) for
+operator-visible debug access hardening posture.
+Health output also exposes derived compat sunset signals:
+`event_debug_query_compat_allow_rate`, `event_debug_query_compat_block_rate`,
+`event_debug_query_compat_recommendation`,
+`event_debug_query_compat_sunset_ready`, and
+`event_debug_query_compat_sunset_reason`.
+Any observed compat attempts (even blocked ones) are treated as migration-needed
+for sunset recommendation until compat traffic disappears or compat route is
+already disabled.
+Health output now also includes rolling-window trend fields:
+`event_debug_query_compat_recent_attempts_total`,
+`event_debug_query_compat_recent_allow_rate`,
+`event_debug_query_compat_recent_block_rate`, and
+`event_debug_query_compat_recent_state`.
+Rolling-window size is now configurable via
+`EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW` (default `20`).
+Health output also includes compat freshness fields:
+`event_debug_query_compat_stale_after_seconds`,
+`event_debug_query_compat_last_attempt_age_seconds`, and
+`event_debug_query_compat_last_attempt_state` so operators can distinguish
+stale historical compat traffic from fresh migration-window usage.
+Freshness stale threshold is configurable via
+`EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS` (default `86400`).
+Health output now also includes activity posture fields:
+`event_debug_query_compat_activity_state` and
+`event_debug_query_compat_activity_hint`, which summarize
+disabled/no-attempt/stale-historical/recent-attempt states for migration
+decision support while keeping the stricter sunset-ready contract unchanged.
+Strict rollout mismatch previews now include
+`event_debug_token_missing=true` when production debug exposure is enabled
+without a configured token while token requirement mode is active.
+Strict mismatch previews also include `event_debug_query_compat_enabled=true`
+when production debug exposure keeps compatibility query route enabled.
+Compat-route accepted responses now include explicit deprecation headers:
+`X-AION-Debug-Compat`, `X-AION-Debug-Compat-Deprecated`, and `Link`.
+
+---
+
+## Relation Runtime Reality
+
+Relation memory is now a first-class live subsystem:
+
+- `aion_relation` stores scoped relation records with confidence, source,
+  evidence count, and decay metadata
+- reflection derives relation updates from recurring interaction signals and
+  persists them through repository-owned relation APIs
+- runtime now loads high-confidence relations and passes relation cues into
+  context, role, planning, and expression stage logic
+
+Current limitation:
+
+- proactive and scheduler-aware relation usage is still not implemented.
+
+---
+
+## Scheduler Contract Reality
+
+Scheduler-facing runtime contracts are now explicit:
+
+- scheduler events are normalized through dedicated contract helpers
+- source/subsource and payload shape checks are centralized in
+  `app/core/scheduler_contracts.py`
+- runtime config includes scheduler and cadence boundaries:
+  `SCHEDULER_ENABLED`, `REFLECTION_INTERVAL`, `MAINTENANCE_INTERVAL`,
+  `PROACTIVE_ENABLED`, `PROACTIVE_INTERVAL`
+- in-process scheduler cadence is now implemented through
+  `app/workers/scheduler.py` for reflection and maintenance routines
+- proactive ticks now have a live decision and delivery-guard path when a
+  scheduler proactive event is received
+- scheduler runtime posture and latest tick summaries are visible through
+  `GET /health`
+
+Current limitation:
+
+- autonomous proactive cadence loops are not yet live in scheduler worker.
 
 ---
 
@@ -147,7 +293,9 @@ The codebase currently persists these concrete tables:
 - `aion_memory`
 - `aion_profile`
 - `aion_conclusion`
+- `aion_semantic_embedding`
 - `aion_theta`
+- `aion_relation`
 - `aion_goal`
 - `aion_task`
 - `aion_goal_progress`
@@ -206,17 +354,26 @@ Current behavior:
 - failed tasks can be retried with bounded backoff
 - queue visibility is exposed through health reporting
 - reflection updates conclusions, theta, and lightweight goal-progress signals
+- reflection inference ownership is now split into concern modules:
+  - `app/reflection/goal_conclusions.py`
+  - `app/reflection/adaptive_signals.py`
+  - `app/reflection/affective_signals.py`
+- adaptive updates now require outcome evidence and user-visible cues so
+  `preferred_role`, `theta`, and collaboration fallback are less likely to
+  self-reinforce from role-only traces
+- milestone pressure heuristics now prefer phase consistency plus
+  arc/transition evidence over pure time-window drift
 
 This is more advanced than a purely conceptual background loop, but still lighter than the long-term architecture could become.
 
 ---
 
-## Planned Coordination Direction (Not Yet Live)
+## Coordination Direction (Live Baseline)
 
-The current repository does not yet implement the next coordination layer that
-recent planning now describes.
+The repository now includes a live conscious/subconscious coordination baseline
+and keeps additional expansion work explicitly queued.
 
-The intended supplemental direction is:
+The coordination direction remains:
 
 - one explicit attention inbox for user turns, scheduler wakeups, and
   subconscious proposals
@@ -228,16 +385,37 @@ The intended supplemental direction is:
 - conscious wakeups and subconscious cadence treated as separate runtime
   concerns
 
+What is already live:
+
+- runtime graph-state contracts now explicitly model `attention_inbox`,
+  `pending_turn`, `subconscious_proposals`, and `proposal_handoffs`
+- `POST /event` applies Telegram burst coalescing through one in-memory
+  attention-turn coordinator; rapid pending messages can assemble into one turn
+  and duplicate/non-owner burst events return queued metadata instead of
+  triggering duplicate runtime runs
+- attention turn timing is now runtime-configurable through
+  `ATTENTION_BURST_WINDOW_MS`, `ATTENTION_ANSWERED_TTL_SECONDS`, and
+  `ATTENTION_STALE_TURN_SECONDS`
+- reflection now derives and persists subconscious proposals with explicit
+  proposal lifecycle state (`pending|accepted|deferred|discarded`)
+- conscious planning/runtime now records proposal handoff decisions and resolves
+  persisted proposals only after conscious acceptance/defer/discard decisions
+- subconscious research proposals now carry explicit read-only policy/tool
+  bounds (`research_policy`, `allowed_tools`)
+- proactive scheduler events now pass through an explicit attention gate
+  (quiet-hours, cooldown, unanswered-backlog) before delivery planning
+- planning/action contracts now include connector permission-gate outputs plus
+  typed calendar/task/drive connector intents without direct provider side
+  effects
+
 Important non-live notes:
 
 - subconscious runtime is still not allowed to communicate with the user
   directly
-- subconscious runtime may eventually use read-only research or retrieval tools
-  without gaining direct side-effect authority
 - conscious runtime remains the only owner of user-visible delivery and other
   external side effects
 
-This coordination model is planned through `PRJ-085..PRJ-092`.
+This coordination model baseline is now implemented through `PRJ-092`.
 
 ---
 
@@ -257,7 +435,8 @@ Planned clarification:
   user-authorized external systems only through explicit action-layer
   boundaries
 
-This boundary is planned through `PRJ-087` and `PRJ-093..PRJ-097`.
+This boundary is now implemented through `PRJ-096`, with capability-discovery
+follow-up still queued in `PRJ-097`.
 
 ---
 

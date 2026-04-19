@@ -18,6 +18,25 @@ def _event(text: str) -> Event:
     )
 
 
+def _scheduler_event(payload: dict | None = None) -> Event:
+    return Event(
+        event_id="evt-scheduler",
+        source="scheduler",
+        subsource="proactive_tick",
+        timestamp=datetime.now(timezone.utc),
+        payload=payload or {
+            "text": "scheduler proactive tick",
+            "proactive": {
+                "trigger": "time_checkin",
+                "importance": 0.55,
+                "urgency": 0.45,
+                "user_context": {},
+            },
+        },
+        meta=EventMeta(user_id="scheduler", trace_id="t-scheduler"),
+    )
+
+
 def _context(risk_level: float = 0.1) -> ContextOutput:
     return ContextOutput(summary="ctx", related_goals=[], related_tags=["general"], risk_level=risk_level)
 
@@ -730,3 +749,61 @@ def test_motivation_engine_adds_pressure_for_unstable_goal_progress_arc() -> Non
     assert result.mode == "analyze"
     assert result.importance >= 0.76
     assert result.urgency >= 0.24
+
+
+def test_motivation_engine_defer_proactive_when_interruption_cost_is_high() -> None:
+    result = MotivationEngine().run(
+        event=_scheduler_event(
+            {
+                "text": "scheduler proactive tick",
+                "proactive": {
+                    "trigger": "goal_stagnation",
+                    "importance": 0.82,
+                    "urgency": 0.7,
+                    "user_context": {
+                        "quiet_hours": True,
+                        "focus_mode": True,
+                        "recent_user_activity": "away",
+                        "recent_outbound_count": 3,
+                        "unanswered_proactive_count": 2,
+                    },
+                },
+            }
+        ),
+        context=_context(),
+        perception=_perception(),
+        active_goals=[{"id": 1, "name": "ship the MVP this week", "status": "active"}],
+    )
+
+    assert result.mode == "ignore"
+    assert result.importance >= 0.8
+    assert result.urgency >= 0.6
+
+
+def test_motivation_engine_selects_execute_mode_for_high_signal_proactive_warning() -> None:
+    result = MotivationEngine().run(
+        event=_scheduler_event(
+            {
+                "text": "scheduler proactive tick",
+                "proactive": {
+                    "trigger": "task_blocked",
+                    "importance": 0.86,
+                    "urgency": 0.88,
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": "active",
+                        "recent_outbound_count": 0,
+                        "unanswered_proactive_count": 0,
+                    },
+                },
+            }
+        ),
+        context=_context(),
+        perception=_perception(),
+        active_tasks=[{"id": 11, "name": "fix deploy blocker", "status": "blocked"}],
+    )
+
+    assert result.mode == "execute"
+    assert result.importance >= 0.86
+    assert result.urgency >= 0.88

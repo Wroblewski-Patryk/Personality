@@ -25,6 +25,196 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-19 - Keep compat sunset decision separate from activity posture
+- Context:
+  - compat telemetry now exposes both strict sunset-ready outputs and
+    migration-window activity posture outputs.
+- Symptom:
+  - operators can lose clear go/no-go semantics when stale-vs-recent traffic
+    diagnostics overwrite strict sunset readiness fields.
+- Root cause:
+  - mixing decision fields and monitoring posture fields into one contract
+    surface.
+- Guardrail:
+  - keep sunset decision contract stable
+    (`event_debug_query_compat_sunset_ready|reason`) and expose activity as
+    separate posture fields
+    (`event_debug_query_compat_activity_state|hint`).
+- Preferred pattern:
+  - decision fields for automation gates
+  - activity posture fields for migration-window triage
+- Avoid:
+  - deriving strict disable readiness directly from fresh/stale posture fields.
+- Evidence:
+  - `app/core/debug_compat.py`
+  - `app/api/routes.py`
+  - `tests/test_debug_compat_telemetry.py`
+  - `tests/test_api_routes.py`
+
+### 2026-04-19 - Avoid `or` fallbacks when numeric config values can be zero
+- Context:
+  - request-level compat telemetry fallback reads configured rolling-window size
+    from app settings.
+- Symptom:
+  - invalid numeric config can be silently replaced by default and skip expected
+    validation failure paths.
+- Root cause:
+  - using `value or default` on numeric values treats `0` as missing.
+- Guardrail:
+  - read numeric config with explicit default at source (`getattr(..., default)`)
+    and pass value through validation logic without boolean coercion.
+- Preferred pattern:
+  - use explicit `int(getattr(settings, "field", default))`
+  - keep validation centralized in settings/model constructors
+- Avoid:
+  - `or default` for numeric config fallback paths.
+- Evidence:
+  - `app/api/routes.py`
+  - `app/core/config.py`
+  - `tests/test_config.py`
+
+### 2026-04-19 - Keep sunset readiness and rolling trend signals separate
+- Context:
+  - health policy now exposes both all-time compat sunset posture and
+    rolling-window compat trend diagnostics.
+- Symptom:
+  - rollout decisions can drift when rolling trend state is treated as
+    equivalent to sunset readiness.
+- Root cause:
+  - trend metrics describe recent behavior only, while readiness depends on
+    stricter migration posture rules.
+- Guardrail:
+  - keep separate fields for all-time sunset decision
+    (`event_debug_query_compat_sunset_ready|reason`) and rolling trend
+    diagnostics (`event_debug_query_compat_recent_*`).
+- Preferred pattern:
+  - use rolling trend for monitoring release windows
+  - use sunset readiness fields for go/no-go automation
+- Avoid:
+  - deriving disable decisions from recent trend state alone.
+- Evidence:
+  - `app/core/debug_compat.py`
+  - `app/api/routes.py`
+  - `tests/test_debug_compat_telemetry.py`
+  - `tests/test_api_routes.py`
+
+### 2026-04-19 - Compat sunset recommendations should be based on attempts, not successful responses
+- Context:
+  - runtime now uses compat-route telemetry to guide whether
+    `POST /event?debug=true` can be safely disabled.
+- Symptom:
+  - recommendation can incorrectly report "no compat traffic" when all observed
+    compat attempts were blocked (for example token/policy failures).
+- Root cause:
+  - recommendation logic depended on `allowed_total` instead of total attempts.
+- Guardrail:
+  - compatibility sunset recommendation must treat any observed compat attempts
+    as migration-needed, even if those attempts are blocked.
+- Preferred pattern:
+  - derive recommendation from `attempts_total` and compat-enabled posture;
+    keep allow/block rates as supporting diagnostics.
+- Avoid:
+  - using successful compat responses as the only signal of active compat usage.
+- Evidence:
+  - `app/core/debug_compat.py`
+  - `tests/test_debug_compat_telemetry.py`
+  - `tests/test_api_routes.py`
+
+### 2026-04-19 - Compat telemetry must record outcome after debug access validation
+- Context:
+  - `POST /event?debug=true` telemetry now tracks compat-route sunset readiness
+    through allowed/blocked counters.
+- Symptom:
+  - blocked debug calls (for example missing/invalid token) can be counted as
+    allowed if telemetry is updated before access checks finish.
+- Root cause:
+  - counter mutation happened before `_handle_event_request()` completed and
+    before debug-access HTTP exceptions were resolved.
+- Guardrail:
+  - for compat-route telemetry, increment `allowed_total` only after successful
+    handler completion; increment `blocked_total` for policy-denied and
+    access-denied exceptions.
+- Preferred pattern:
+  - wrap debug compat handler in `try/except HTTPException` and record outcome
+    in one place around the call.
+- Avoid:
+  - treating route admission as success before downstream debug policy gates.
+- Evidence:
+  - `app/api/routes.py`
+  - `tests/test_api_routes.py`
+
+### 2026-04-19 - Production debug compat-route policy can mask token-gate regressions
+- Context:
+  - API tests validate both production token-gate behavior and compatibility
+    debug query route behavior for `POST /event?debug=true`.
+- Symptom:
+  - token-related production assertions fail with compat-route denial message
+    before token policy checks run.
+- Root cause:
+  - production default now disables compatibility route unless
+    `EVENT_DEBUG_QUERY_COMPAT_ENABLED=true`, so tests expecting token-policy
+    outcomes must explicitly enable compat route.
+- Guardrail:
+  - for token-gate tests on `POST /event?debug=true` in production, set
+    `event_debug_query_compat_enabled=True` in fixtures.
+  - keep dedicated regressions for default compat-route denial and explicit
+    production opt-in behavior.
+- Preferred pattern:
+  - separate tests by responsibility:
+    compat-route access policy first, token-gate policy second.
+- Avoid:
+  - asserting production token-policy errors through compatibility route
+    fixtures that rely on default compat posture.
+- Evidence:
+  - `tests/test_api_routes.py`
+  - `tests/test_main_runtime_policy.py`
+  - `tests/test_runtime_policy.py`
+
+### 2026-04-19 - Graph-state list fields can contain raw dicts after model_copy updates
+- Context:
+  - runtime seeds graph state via `model_copy(update=...)` while loading
+    repository-backed proposal payloads.
+- Symptom:
+  - planning stage crashed with `'dict' object has no attribute 'model_dump'`
+    when adapter code assumed every subconscious proposal was a Pydantic model.
+- Root cause:
+  - `model_copy(update=...)` can keep nested list items as raw dict values
+    instead of coercing them into typed nested models.
+- Guardrail:
+  - graph adapters must defensively normalize list items and accept either
+    typed models or plain dict payloads for transitional/runtime-fed state.
+- Preferred pattern:
+  - check `hasattr(item, "model_dump")` first
+  - otherwise accept `dict` items with an explicit copy
+  - avoid hard assumptions about nested coercion after graph-state updates
+- Avoid:
+  - assuming typed list fields always contain model instances after
+    `model_copy(update=...)`
+- Evidence:
+  - `app/core/graph_adapters.py`
+  - `tests/test_runtime_pipeline.py`
+
+### 2026-04-19 - LangGraph nodes must re-emit auxiliary runtime keys
+- Context: foreground runtime migration to LangGraph while carrying stage logger
+  and timing objects as auxiliary execution context.
+- Symptom: only the first graph node worked; downstream nodes failed with
+  missing runtime context despite successful initial invocation.
+- Root cause: auxiliary keys not re-emitted by node outputs were dropped from
+  subsequent LangGraph state transitions.
+- Guardrail: when graph state includes non-domain auxiliary keys (for example
+  logger/timing context), each node must explicitly return those keys again or
+  encode them inside the persisted graph state contract.
+- Preferred pattern:
+  - keep domain state in `GraphRuntimeState`
+  - keep runtime-only helper context minimal
+  - re-emit runtime helper context in every node output when needed
+- Avoid:
+  - assuming initial invocation payload keys automatically persist through all
+    graph node transitions
+- Evidence:
+  - `app/core/runtime_graph.py`
+  - `tests/test_runtime_pipeline.py`
+
 ### 2026-04-19 - Prefer Select-String fallback when `rg` is unavailable in this shell
 - Context: execution slices that require fast test/file pattern scans in the
   Windows PowerShell runtime.

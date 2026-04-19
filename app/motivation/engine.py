@@ -1,4 +1,5 @@
 from app.core.contracts import ContextOutput, Event, MotivationOutput, PerceptionOutput
+from app.proactive.engine import ProactiveDecisionEngine
 from app.utils.goal_task_selection import (
     has_related_blocked_task as shared_has_related_blocked_task,
     priority_rank as shared_priority_rank,
@@ -13,6 +14,9 @@ from app.utils.progress_signals import (
 
 
 class MotivationEngine:
+    def __init__(self, proactive_decision_engine: ProactiveDecisionEngine | None = None):
+        self.proactive_decision_engine = proactive_decision_engine or ProactiveDecisionEngine()
+
     def run(
         self,
         event: Event,
@@ -31,6 +35,15 @@ class MotivationEngine:
         affective_label = str(affective.affect_label).strip().lower()
         affective_intensity = max(0.0, min(1.0, float(affective.intensity or 0.0)))
         affective_needs_support = bool(affective.needs_support)
+        proactive_decision = self.proactive_decision_engine.decide(
+            event=event,
+            context=context,
+            user_preferences=user_preferences or {},
+            active_goals=active_goals or [],
+            active_tasks=active_tasks or [],
+        )
+        if proactive_decision is not None:
+            return self._motivation_from_proactive_decision(proactive_decision)
 
         if not text:
             return MotivationOutput(
@@ -525,3 +538,38 @@ class MotivationEngine:
 
     def _goal_milestone_arc_signal(self, goal_milestone_history: list[dict]) -> str:
         return shared_goal_milestone_arc_signal(goal_milestone_history)
+
+    def _motivation_from_proactive_decision(self, proactive_decision) -> MotivationOutput:
+        if not proactive_decision.should_interrupt:
+            return MotivationOutput(
+                importance=self._clamp(proactive_decision.importance),
+                urgency=self._clamp(proactive_decision.urgency),
+                valence=0.0,
+                arousal=0.1,
+                mode="ignore",
+            )
+
+        mode_by_output = {
+            "suggestion": "respond",
+            "reminder": "respond",
+            "question": "clarify",
+            "warning": "execute",
+            "encouragement": "respond",
+            "insight": "analyze",
+        }
+        output_type = str(proactive_decision.output_type)
+        mode = mode_by_output.get(output_type, "respond")
+        valence = 0.05
+        if output_type == "warning":
+            valence = -0.15
+        elif output_type == "encouragement":
+            valence = 0.2
+
+        arousal = self._clamp(0.2 + (0.7 * float(proactive_decision.urgency)))
+        return MotivationOutput(
+            importance=self._clamp(max(float(proactive_decision.importance), float(proactive_decision.relevance))),
+            urgency=self._clamp(float(proactive_decision.urgency)),
+            valence=max(-1.0, min(1.0, valence)),
+            arousal=arousal,
+            mode=mode,
+        )

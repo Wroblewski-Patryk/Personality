@@ -17,6 +17,74 @@ def event_debug_token_required(settings: Any) -> bool:
     return bool(token)
 
 
+def production_debug_token_required(settings: Any) -> bool:
+    return bool(getattr(settings, "production_debug_token_required", True))
+
+
+def event_debug_query_compat_enabled(settings: Any) -> bool:
+    compat_toggle = getattr(settings, "is_event_debug_query_compat_enabled", None)
+    if callable(compat_toggle):
+        return bool(compat_toggle())
+    compat_explicit = getattr(settings, "event_debug_query_compat_enabled", None)
+    if compat_explicit is not None:
+        return bool(compat_explicit)
+    return app_environment(settings) != "production"
+
+
+def event_debug_query_compat_source(settings: Any) -> Literal["explicit", "environment_default"]:
+    if getattr(settings, "event_debug_query_compat_enabled", None) is not None:
+        return "explicit"
+    return "environment_default"
+
+
+def event_debug_token_missing_in_production(settings: Any) -> bool:
+    return (
+        app_environment(settings) == "production"
+        and event_debug_enabled(settings)
+        and production_debug_token_required(settings)
+        and not event_debug_token_required(settings)
+    )
+
+
+def event_debug_query_compat_enabled_in_production(settings: Any) -> bool:
+    return (
+        app_environment(settings) == "production"
+        and event_debug_enabled(settings)
+        and event_debug_query_compat_enabled(settings)
+    )
+
+
+def debug_access_posture(settings: Any) -> Literal[
+    "disabled",
+    "token_gated",
+    "production_token_required_missing",
+    "open_no_token",
+]:
+    if not event_debug_enabled(settings):
+        return "disabled"
+    if event_debug_token_required(settings):
+        return "token_gated"
+    if app_environment(settings) == "production" and production_debug_token_required(settings):
+        return "production_token_required_missing"
+    return "open_no_token"
+
+
+def debug_token_policy_hint(settings: Any) -> Literal[
+    "not_applicable_debug_disabled",
+    "token_gated",
+    "configure_event_debug_token_or_disable_debug",
+    "debug_access_open_without_token",
+]:
+    posture = debug_access_posture(settings)
+    if posture == "disabled":
+        return "not_applicable_debug_disabled"
+    if posture == "token_gated":
+        return "token_gated"
+    if posture == "production_token_required_missing":
+        return "configure_event_debug_token_or_disable_debug"
+    return "debug_access_open_without_token"
+
+
 def event_debug_source(settings: Any) -> Literal["explicit", "environment_default"]:
     if getattr(settings, "event_debug_enabled", None) is not None:
         return "explicit"
@@ -41,6 +109,10 @@ def production_policy_mismatches(settings: Any) -> list[str]:
     violations: list[str] = []
     if event_debug_enabled(settings):
         violations.append("event_debug_enabled=true")
+    if event_debug_query_compat_enabled_in_production(settings):
+        violations.append("event_debug_query_compat_enabled=true")
+    if event_debug_token_missing_in_production(settings):
+        violations.append("event_debug_token_missing=true")
     if startup_schema_mode(settings) == "create_tables":
         violations.append("startup_schema_mode=create_tables")
     return violations
@@ -86,6 +158,11 @@ def runtime_policy_snapshot(settings: Any) -> dict[str, Any]:
         "startup_schema_mode": startup_schema_mode(settings),
         "event_debug_enabled": event_debug_enabled(settings),
         "event_debug_token_required": event_debug_token_required(settings),
+        "production_debug_token_required": production_debug_token_required(settings),
+        "event_debug_query_compat_enabled": event_debug_query_compat_enabled(settings),
+        "event_debug_query_compat_source": event_debug_query_compat_source(settings),
+        "debug_access_posture": debug_access_posture(settings),
+        "debug_token_policy_hint": debug_token_policy_hint(settings),
         "event_debug_source": event_debug_source(settings),
         "production_policy_enforcement": enforcement,
         "recommended_production_policy_enforcement": recommended_enforcement,

@@ -179,3 +179,20 @@ def test_role_agent_uses_hands_on_collaboration_preference_before_theta() -> Non
     )
 
     assert result.selected == "executor"
+
+
+def test_role_agent_uses_relation_collaboration_signal_for_ambiguous_question() -> None:
+    result = RoleAgent().run(
+        event=_event("Can you help me with this?"),
+        perception=_perception("question", "general", "request_help"),
+        context=_context(),
+        relations=[
+            {
+                "relation_type": "collaboration_dynamic",
+                "relation_value": "guided",
+                "confidence": 0.79,
+            }
+        ],
+    )
+
+    assert result.selected == "mentor"

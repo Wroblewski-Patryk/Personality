@@ -105,6 +105,21 @@ AION needs durable structured storage for:
 
 Vector or embedding-based retrieval may be added later, but it is not required for the canonical model.
 
+## Runtime Memory Layer Vocabulary
+
+To keep runtime and repository boundaries explicit, memory retrieval should use one shared vocabulary:
+
+- `episodic`: turn-level event traces and payload snapshots
+- `semantic`: generalized conclusions derived from episodes
+- `affective`: emotionally relevant support patterns and continuity signals
+- `operational`: active runtime state used to execute work (preferences, goals, tasks, milestone signals)
+
+The same layer names should be used in:
+
+- repository retrieval APIs
+- runtime memory-load orchestration
+- architecture and operations docs
+
 ---
 
 ## Memory Lifecycle
@@ -163,10 +178,10 @@ Memory retrieval must be:
 
 Typical order:
 
-1. fetch identity-linked state and goals
-2. fetch recent memory
-3. fetch relevant conclusions
-4. combine and filter
+1. fetch operational state needed for active execution
+2. fetch episodic memory for near-turn continuity
+3. fetch semantic and affective conclusions
+4. combine, rank, and filter for current context
 
 ---
 

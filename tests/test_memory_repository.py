@@ -11,6 +11,8 @@ from app.memory.models import (
     AionGoalProgress,
     AionMemory,
     AionReflectionTask,
+    AionSemanticEmbedding,
+    AionSubconsciousProposal,
     AionTask,
 )
 from app.memory.repository import MemoryRepository
@@ -55,6 +57,346 @@ async def test_memory_repository_persists_structured_episode_payload(tmp_path) -
     assert row is not None
     assert row.payload is not None
     assert row.payload["response_language"] == "en"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_exposes_memory_layer_vocabulary_and_conclusion_mapping(tmp_path) -> None:
+    database_path = tmp_path / "memory-layer-vocabulary.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    assert repository.memory_layer_vocabulary() == (
+        "episodic",
+        "semantic",
+        "affective",
+        "operational",
+    )
+    assert repository.conclusion_memory_layer("affective_support_pattern") == "affective"
+    assert repository.conclusion_memory_layer("goal_milestone_risk") == "operational"
+    assert repository.conclusion_memory_layer("custom_semantic_fact") == "semantic"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_upserts_and_queries_semantic_embeddings(tmp_path) -> None:
+    database_path = tmp_path / "memory-semantic-embeddings.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    first = await repository.upsert_semantic_embedding(
+        user_id="u-1",
+        source_kind="episodic",
+        source_id="mem-1",
+        source_event_id="evt-1",
+        scope_type="global",
+        scope_key="global",
+        content="deploy blocker workaround",
+        embedding=[1.0, 0.0, 0.0],
+        embedding_model="test-v1",
+        embedding_dimensions=3,
+        metadata={"memory_kind": "semantic"},
+    )
+    second = await repository.upsert_semantic_embedding(
+        user_id="u-1",
+        source_kind="semantic",
+        source_id="conclusion-1",
+        source_event_id="evt-2",
+        scope_type="goal",
+        scope_key="11",
+        content="goal execution recovering",
+        embedding=[0.0, 1.0, 0.0],
+        embedding_model="test-v1",
+        embedding_dimensions=3,
+        metadata={"kind": "goal_execution_state"},
+    )
+    third = await repository.upsert_semantic_embedding(
+        user_id="u-1",
+        source_kind="affective",
+        source_id="aff-1",
+        source_event_id="evt-3",
+        scope_type="global",
+        scope_key="global",
+        content="recurring distress pattern",
+        embedding=[0.8, 0.2, 0.0],
+        embedding_model="test-v1",
+        embedding_dimensions=3,
+        metadata={"kind": "affective_support_pattern"},
+    )
+
+    hits = await repository.query_semantic_similarity(
+        user_id="u-1",
+        query_embedding=[0.9, 0.1, 0.0],
+        source_kinds=["episodic", "affective"],
+        limit=3,
+    )
+
+    assert first["source_kind"] == "episodic"
+    assert second["scope_type"] == "goal"
+    assert second["scope_key"] == "11"
+    assert third["source_kind"] == "affective"
+    assert hits[0]["source_id"] in {"mem-1", "aff-1"}
+    assert hits[0]["similarity"] >= hits[1]["similarity"]
+
+    await engine.dispose()
+
+
+async def test_memory_repository_upsert_conclusion_creates_embedding_shell_for_semantic_layers(tmp_path) -> None:
+    database_path = tmp_path / "memory-conclusion-embedding-shell.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="affective_support_pattern",
+        content="recurring_distress",
+        confidence=0.81,
+        source="background_reflection",
+        supporting_event_id="evt-aff",
+    )
+
+    async with session_factory() as session:
+        rows = (
+            await session.execute(
+                select(AionSemanticEmbedding).order_by(AionSemanticEmbedding.id.asc())
+            )
+        ).scalars().all()
+
+    assert len(rows) == 1
+    assert rows[0].source_kind == "affective"
+    assert rows[0].source_id.startswith("conclusion:")
+    assert rows[0].embedding is None
+    assert rows[0].embedding_model == "pending"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_builds_hybrid_memory_bundle_with_vector_and_lexical_diagnostics(tmp_path) -> None:
+    database_path = tmp_path / "memory-hybrid-bundle.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.write_episode(
+        event_id="evt-1",
+        trace_id="trace-1",
+        source="api",
+        user_id="u-1",
+        event_timestamp=datetime.now(timezone.utc),
+        summary="User said 'fix deploy blocker'.",
+        payload={
+            "event": "fix deploy blocker",
+            "memory_topics": ["deploy", "blocker"],
+            "memory_kind": "semantic",
+            "response_language": "en",
+        },
+        importance=0.9,
+    )
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="custom_semantic_fact",
+        content="deployment blockers usually require dependency sequencing",
+        confidence=0.75,
+        source="background_reflection",
+        supporting_event_id="evt-1",
+    )
+    await repository.upsert_semantic_embedding(
+        user_id="u-1",
+        source_kind="semantic",
+        source_id="conclusion:vector-1",
+        source_event_id="evt-1",
+        scope_type="global",
+        scope_key="global",
+        content="deployment blockers usually require dependency sequencing",
+        embedding=[1.0, 0.0, 0.0],
+        embedding_model="test-v1",
+        embedding_dimensions=3,
+        metadata={"kind": "custom_semantic_fact"},
+    )
+
+    bundle = await repository.get_hybrid_memory_bundle(
+        user_id="u-1",
+        query_text="deploy blocker sequencing",
+        query_embedding=[0.95, 0.05, 0.0],
+        episodic_limit=4,
+        conclusion_limit=4,
+    )
+
+    assert len(bundle["episodic"]) == 1
+    assert any("deploy" in str(item.get("summary", "")).lower() for item in bundle["episodic"])
+    assert len(bundle["semantic"]) >= 1
+    assert bundle["diagnostics"]["episodic_candidates"] >= 1
+    assert bundle["diagnostics"]["semantic_candidates"] >= 1
+    assert bundle["diagnostics"]["vector_hits"] >= 1
+
+    await engine.dispose()
+
+
+async def test_memory_repository_upserts_and_reads_scoped_relations(tmp_path) -> None:
+    database_path = tmp_path / "memory-relations.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.upsert_relation(
+        user_id="u-1",
+        relation_type="communication_style_alignment",
+        relation_value="guided",
+        confidence=0.78,
+        source="background_reflection",
+        supporting_event_id="evt-rel-1",
+    )
+    await repository.upsert_relation(
+        user_id="u-1",
+        relation_type="goal_execution_trust",
+        relation_value="high_trust",
+        confidence=0.74,
+        source="background_reflection",
+        supporting_event_id="evt-rel-2",
+        scope_type="goal",
+        scope_key="11",
+    )
+
+    goal_relations = await repository.get_user_relations(
+        user_id="u-1",
+        scope_type="goal",
+        scope_key="11",
+        include_global=True,
+    )
+    strict_goal_relations = await repository.get_user_relations(
+        user_id="u-1",
+        scope_type="goal",
+        scope_key="11",
+        include_global=False,
+    )
+
+    assert any(item["relation_type"] == "communication_style_alignment" for item in goal_relations)
+    assert any(item["relation_type"] == "goal_execution_trust" for item in goal_relations)
+    assert len(strict_goal_relations) == 1
+    assert strict_goal_relations[0]["scope_type"] == "goal"
+    assert strict_goal_relations[0]["scope_key"] == "11"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_persists_and_resolves_subconscious_proposals(tmp_path) -> None:
+    database_path = tmp_path / "memory-subconscious-proposals.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    first = await repository.upsert_subconscious_proposal(
+        user_id="u-1",
+        proposal_type="research_topic",
+        summary="Research deployment rollback constraints.",
+        payload={"topic": "deployment rollback constraints"},
+        confidence=0.72,
+        source_event_id="evt-proposal-1",
+        research_policy="read_only",
+        allowed_tools=["memory_retrieval", "knowledge_search"],
+    )
+    second = await repository.upsert_subconscious_proposal(
+        user_id="u-1",
+        proposal_type="research_topic",
+        summary="Research deployment rollback constraints.",
+        payload={"topic": "deployment rollback constraints", "detail": "recent incidents"},
+        confidence=0.78,
+        source_event_id="evt-proposal-2",
+        research_policy="read_only",
+        allowed_tools=["knowledge_search"],
+    )
+
+    pending = await repository.get_pending_subconscious_proposals(user_id="u-1", limit=5)
+    resolved = await repository.resolve_subconscious_proposal(
+        proposal_id=int(second["proposal_id"]),
+        decision="accept",
+        reason="confirmed by conscious planning",
+    )
+    pending_after = await repository.get_pending_subconscious_proposals(user_id="u-1", limit=5)
+
+    assert int(first["proposal_id"]) == int(second["proposal_id"])
+    assert len(pending) == 1
+    assert pending[0]["summary"] == "Research deployment rollback constraints."
+    assert pending[0]["confidence"] == 0.78
+    assert pending[0]["research_policy"] == "read_only"
+    assert pending[0]["allowed_tools"] == ["knowledge_search"]
+    assert resolved is not None
+    assert resolved["status"] == "accepted"
+    assert resolved["decision_reason"] == "confirmed by conscious planning"
+    assert pending_after == []
+
+    async with session_factory() as session:
+        rows = (await session.execute(select(AionSubconsciousProposal))).scalars().all()
+
+    assert len(rows) == 1
+    assert rows[0].status == "accepted"
+    assert rows[0].decision_reason == "confirmed by conscious planning"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_can_read_conclusions_by_memory_layer(tmp_path) -> None:
+    database_path = tmp_path / "memory-layer-read.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="response_style",
+        content="structured",
+        confidence=0.92,
+        source="background_reflection",
+        supporting_event_id="evt-style",
+    )
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="affective_support_pattern",
+        content="recurring_distress",
+        confidence=0.79,
+        source="background_reflection",
+        supporting_event_id="evt-affective",
+    )
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="custom_semantic_fact",
+        content="user works on deployment docs",
+        confidence=0.71,
+        source="background_reflection",
+        supporting_event_id="evt-semantic",
+    )
+
+    affective = await repository.get_conclusions_for_layer(
+        user_id="u-1",
+        layer="affective",
+        limit=5,
+    )
+    operational = await repository.get_conclusions_for_layer(
+        user_id="u-1",
+        layer="operational",
+        limit=5,
+    )
+    semantic = await repository.get_conclusions_for_layer(
+        user_id="u-1",
+        layer="semantic",
+        limit=5,
+    )
+    operational_view = await repository.get_operational_memory_view(user_id="u-1")
+
+    assert [item["kind"] for item in affective] == ["affective_support_pattern"]
+    assert [item["kind"] for item in operational] == ["response_style"]
+    assert [item["kind"] for item in semantic] == ["custom_semantic_fact"]
+    assert operational_view["response_style"] == "structured"
 
     await engine.dispose()
 

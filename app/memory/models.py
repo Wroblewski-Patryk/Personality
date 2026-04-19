@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from sqlalchemy import JSON, DateTime, Float, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from app.memory.vector_types import EmbeddingVectorType
+
 
 class Base(DeclarativeBase):
     pass
@@ -20,6 +22,40 @@ class AionMemory(Base):
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     importance: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
+class AionSemanticEmbedding(Base):
+    __tablename__ = "aion_semantic_embedding"
+    __table_args__ = (
+        UniqueConstraint("user_id", "source_kind", "source_id", name="uq_aion_semantic_embedding_source"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    source_kind: Mapped[str] = mapped_column(String(24), nullable=False, index=True)
+    source_id: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    source_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    scope_type: Mapped[str] = mapped_column(String(16), nullable=False, default="global", index=True)
+    scope_key: Mapped[str] = mapped_column(String(64), nullable=False, default="global", index=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float] | None] = mapped_column(
+        EmbeddingVectorType(dimensions=1536),
+        nullable=True,
+    )
+    embedding_model: Mapped[str] = mapped_column(String(64), nullable=False, default="deterministic-v1")
+    embedding_dimensions: Mapped[int] = mapped_column(Integer, nullable=False, default=32)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -62,6 +98,41 @@ class AionConclusion(Base):
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     source: Mapped[str] = mapped_column(String(32), nullable=False, default="system")
     supporting_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
+class AionRelation(Base):
+    __tablename__ = "aion_relation"
+    __table_args__ = (
+        UniqueConstraint("user_id", "relation_type", "scope_type", "scope_key", name="uq_aion_relation_user_type_scope"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    relation_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    relation_value: Mapped[str] = mapped_column(String(128), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    source: Mapped[str] = mapped_column(String(32), nullable=False, default="background_reflection")
+    scope_type: Mapped[str] = mapped_column(String(16), nullable=False, default="global", index=True)
+    scope_key: Mapped[str] = mapped_column(String(64), nullable=False, default="global", index=True)
+    supporting_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    decay_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.02)
+    last_observed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -209,6 +280,34 @@ class AionReflectionTask(Base):
     status: Mapped[str] = mapped_column(String(24), nullable=False, default="pending", index=True)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
+class AionSubconsciousProposal(Base):
+    __tablename__ = "aion_subconscious_proposal"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    proposal_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    source_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="pending", index=True)
+    decision_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    research_policy: Mapped[str] = mapped_column(String(16), nullable=False, default="read_only")
+    allowed_tools_json: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

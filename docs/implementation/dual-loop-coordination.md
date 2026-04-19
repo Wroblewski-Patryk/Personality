@@ -119,14 +119,14 @@ external systems as tools, not as its cognitive core.
 
 ## Connector Boundary
 
-Future productivity integrations should follow one explicit rule:
+Productivity integrations follow one explicit rule:
 
 - user-authorized external connectors expose capabilities
 - planning may reason about those capabilities
 - action may execute against them only through explicit permission and action
   boundaries
 
-Planned connector families include:
+Connector families in current contract scope:
 
 - calendar systems
 - task platforms such as ClickUp or Trello
@@ -174,7 +174,26 @@ and any final user-facing message.
 
 ## Status
 
-These notes describe planned coordination direction.
+These notes describe the coordination direction and current implementation
+baseline.
 
-They are not yet a statement that the live runtime already implements this
-behavior.
+Current implementation status:
+
+- contract scaffolding is now explicit in runtime graph state:
+  - `attention_inbox`
+  - `pending_turn`
+  - `subconscious_proposals`
+  - `proposal_handoffs`
+- baseline Telegram burst coalescing now runs through a shared attention-turn
+  coordinator with `pending|claimed|answered` ownership and queued no-op
+  responses for non-owner burst events
+- subconscious proposals are now persisted in durable storage with explicit
+  lifecycle status and conscious handoff decisions
+- subconscious research proposals now carry explicit read-only policy and
+  allowed-tool bounds
+- proactive scheduler events now pass through an explicit attention gate before
+  delivery planning
+- connector contracts now include permission-gate outputs plus typed calendar
+  and task-system synchronization intents
+- provider-backed connector execution is still intentionally deferred; current
+  contracts keep integration authority inside action boundaries

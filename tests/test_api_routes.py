@@ -1,9 +1,13 @@
+import asyncio
 from datetime import datetime, timezone
+from threading import Thread
+from time import sleep
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.routes import router
+from app.core.attention import AttentionTurnCoordinator
 from app.core.contracts import (
     ActionResult,
     ContextOutput,
@@ -24,12 +28,17 @@ from app.core.contracts import (
 
 
 class FakeRuntime:
-    def __init__(self, *, reflection_triggered: bool = False):
+    def __init__(self, *, reflection_triggered: bool = False, run_delay_seconds: float = 0.0):
         self.last_event: Event | None = None
+        self.events: list[Event] = []
         self.reflection_triggered = reflection_triggered
+        self.run_delay_seconds = max(0.0, float(run_delay_seconds))
 
     async def run(self, event: Event) -> RuntimeResult:
+        if self.run_delay_seconds > 0:
+            await asyncio.sleep(self.run_delay_seconds)
         self.last_event = event
+        self.events.append(event)
         timestamp = datetime.now(timezone.utc)
         return RuntimeResult(
             event=event,
@@ -165,20 +174,41 @@ class FakeSettings:
         app_env: str = "development",
         event_debug_enabled: bool | None = True,
         event_debug_token: str | None = None,
+        production_debug_token_required: bool = True,
+        event_debug_query_compat_enabled: bool | None = None,
+        event_debug_query_compat_recent_window: int = 20,
+        event_debug_query_compat_stale_after_seconds: int = 86400,
         startup_schema_mode: str = "migrate",
         production_policy_enforcement: str = "warn",
+        reflection_runtime_mode: str = "in_process",
+        scheduler_enabled: bool = False,
+        reflection_interval: int = 900,
+        maintenance_interval: int = 3600,
     ):
         self.telegram_webhook_secret = telegram_webhook_secret
         self.app_env = app_env
         self.event_debug_enabled = event_debug_enabled
         self.event_debug_token = event_debug_token
+        self.production_debug_token_required = production_debug_token_required
+        self.event_debug_query_compat_enabled = event_debug_query_compat_enabled
+        self.event_debug_query_compat_recent_window = event_debug_query_compat_recent_window
+        self.event_debug_query_compat_stale_after_seconds = event_debug_query_compat_stale_after_seconds
         self.startup_schema_mode = startup_schema_mode
         self.production_policy_enforcement = production_policy_enforcement
+        self.reflection_runtime_mode = reflection_runtime_mode
+        self.scheduler_enabled = scheduler_enabled
+        self.reflection_interval = reflection_interval
+        self.maintenance_interval = maintenance_interval
 
     def is_event_debug_enabled(self) -> bool:
         if self.event_debug_enabled is not None:
             return self.event_debug_enabled
         return True
+
+    def is_event_debug_query_compat_enabled(self) -> bool:
+        if self.event_debug_query_compat_enabled is not None:
+            return self.event_debug_query_compat_enabled
+        return self.app_env != "production"
 
 
 class FakeMemoryRepository:
@@ -225,24 +255,75 @@ class FakeReflectionWorker:
         }
 
 
+class FakeSchedulerWorker:
+    def __init__(
+        self,
+        *,
+        enabled: bool = False,
+        running: bool = False,
+        reflection_runtime_mode: str = "in_process",
+        reflection_interval_seconds: int = 900,
+        maintenance_interval_seconds: int = 3600,
+    ):
+        self.enabled = enabled
+        self.running = running
+        self.reflection_runtime_mode = reflection_runtime_mode
+        self.reflection_interval_seconds = reflection_interval_seconds
+        self.maintenance_interval_seconds = maintenance_interval_seconds
+
+    def snapshot(self) -> dict:
+        return {
+            "enabled": self.enabled,
+            "running": self.running,
+            "reflection_runtime_mode": self.reflection_runtime_mode,
+            "reflection_interval_seconds": self.reflection_interval_seconds,
+            "maintenance_interval_seconds": self.maintenance_interval_seconds,
+            "reflection_batch_limit": 10,
+            "next_reflection_due_at": None,
+            "next_maintenance_due_at": None,
+            "last_reflection_tick_at": None,
+            "last_maintenance_tick_at": None,
+            "last_reflection_summary": {},
+            "last_maintenance_summary": {},
+        }
+
+
 def _client(
     secret: str | None = None,
     *,
     app_env: str = "development",
     reflection_triggered: bool = False,
+    run_delay_seconds: float = 0.0,
     reflection_stats: dict[str, int] | None = None,
     reflection_running: bool = True,
     event_debug_enabled: bool | None = True,
     event_debug_token: str | None = None,
+    production_debug_token_required: bool = True,
+    event_debug_query_compat_enabled: bool | None = None,
+    event_debug_query_compat_recent_window: int = 20,
+    event_debug_query_compat_stale_after_seconds: int = 86400,
     startup_schema_mode: str = "migrate",
     production_policy_enforcement: str = "warn",
+    reflection_runtime_mode: str = "in_process",
+    scheduler_enabled: bool = False,
+    scheduler_running: bool = False,
+    reflection_interval: int = 900,
+    maintenance_interval: int = 3600,
+    attention_burst_window_ms: int = 120,
 ) -> tuple[TestClient, FakeRuntime, FakeTelegramClient]:
     app = FastAPI()
     app.include_router(router)
-    runtime = FakeRuntime(reflection_triggered=reflection_triggered)
+    runtime = FakeRuntime(reflection_triggered=reflection_triggered, run_delay_seconds=run_delay_seconds)
     telegram_client = FakeTelegramClient()
     memory_repository = FakeMemoryRepository(stats=reflection_stats)
     reflection_worker = FakeReflectionWorker(running=reflection_running)
+    scheduler_worker = FakeSchedulerWorker(
+        enabled=scheduler_enabled,
+        running=scheduler_running,
+        reflection_runtime_mode=reflection_runtime_mode,
+        reflection_interval_seconds=reflection_interval,
+        maintenance_interval_seconds=maintenance_interval,
+    )
     app.state.runtime = runtime
     app.state.telegram_client = telegram_client
     app.state.settings = FakeSettings(
@@ -250,12 +331,37 @@ def _client(
         app_env=app_env,
         event_debug_enabled=event_debug_enabled,
         event_debug_token=event_debug_token,
+        production_debug_token_required=production_debug_token_required,
+        event_debug_query_compat_enabled=event_debug_query_compat_enabled,
+        event_debug_query_compat_recent_window=event_debug_query_compat_recent_window,
+        event_debug_query_compat_stale_after_seconds=event_debug_query_compat_stale_after_seconds,
         startup_schema_mode=startup_schema_mode,
         production_policy_enforcement=production_policy_enforcement,
+        reflection_runtime_mode=reflection_runtime_mode,
+        scheduler_enabled=scheduler_enabled,
+        reflection_interval=reflection_interval,
+        maintenance_interval=maintenance_interval,
     )
     app.state.memory_repository = memory_repository
     app.state.reflection_worker = reflection_worker
+    app.state.scheduler_worker = scheduler_worker
+    app.state.attention_turn_coordinator = AttentionTurnCoordinator(
+        burst_window_ms=attention_burst_window_ms,
+        answered_ttl_seconds=0.5,
+        stale_turn_seconds=3.0,
+    )
     return TestClient(app), runtime, telegram_client
+
+
+def _telegram_update(update_id: int, text: str, *, chat_id: int = 123, user_id: int = 999) -> dict:
+    return {
+        "update_id": update_id,
+        "message": {
+            "text": text,
+            "chat": {"id": chat_id},
+            "from": {"id": user_id},
+        },
+    }
 
 
 def test_health_endpoint_returns_ok() -> None:
@@ -270,6 +376,11 @@ def test_health_endpoint_returns_ok() -> None:
             "startup_schema_mode": "migrate",
             "event_debug_enabled": True,
             "event_debug_token_required": False,
+            "production_debug_token_required": True,
+            "event_debug_query_compat_enabled": True,
+            "event_debug_query_compat_source": "environment_default",
+            "debug_access_posture": "open_no_token",
+            "debug_token_policy_hint": "debug_access_open_without_token",
             "event_debug_source": "explicit",
             "production_policy_enforcement": "warn",
             "recommended_production_policy_enforcement": "warn",
@@ -278,9 +389,59 @@ def test_health_endpoint_returns_ok() -> None:
             "strict_startup_blocked": False,
             "strict_rollout_ready": True,
             "strict_rollout_hint": "not_applicable_non_production",
+            "event_debug_query_compat_allow_rate": 0.0,
+            "event_debug_query_compat_block_rate": 0.0,
+            "event_debug_query_compat_recommendation": "no_compat_traffic_detected_disable_when_possible",
+            "event_debug_query_compat_sunset_ready": True,
+            "event_debug_query_compat_sunset_reason": "no_compat_attempts_detected",
+            "event_debug_query_compat_recent_attempts_total": 0,
+            "event_debug_query_compat_recent_allow_rate": 0.0,
+            "event_debug_query_compat_recent_block_rate": 0.0,
+            "event_debug_query_compat_recent_state": "no_recent_attempts",
+            "event_debug_query_compat_stale_after_seconds": 86400,
+            "event_debug_query_compat_last_attempt_age_seconds": None,
+            "event_debug_query_compat_last_attempt_state": "no_attempts_recorded",
+            "event_debug_query_compat_activity_state": "no_attempts_observed",
+            "event_debug_query_compat_activity_hint": "can_disable_when_ready",
+            "event_debug_query_compat_telemetry": {
+                "attempts_total": 0,
+                "allowed_total": 0,
+                "blocked_total": 0,
+                "last_attempt_at": None,
+                "last_allowed_at": None,
+                "last_blocked_at": None,
+                "recent_window_size": 20,
+                "recent_attempts_total": 0,
+                "recent_allowed_total": 0,
+                "recent_blocked_total": 0,
+            },
+        },
+        "scheduler": {
+            "healthy": True,
+            "enabled": False,
+            "running": False,
+            "reflection_runtime_mode": "in_process",
+            "reflection_interval_seconds": 900,
+            "maintenance_interval_seconds": 3600,
+            "reflection_batch_limit": 10,
+            "next_reflection_due_at": None,
+            "next_maintenance_due_at": None,
+            "last_reflection_tick_at": None,
+            "last_maintenance_tick_at": None,
+            "last_reflection_summary": {},
+            "last_maintenance_summary": {},
+        },
+        "attention": {
+            "burst_window_ms": 120,
+            "answered_ttl_seconds": 0.5,
+            "stale_turn_seconds": 3.0,
+            "pending": 0,
+            "claimed": 0,
+            "answered": 0,
         },
         "reflection": {
             "healthy": True,
+            "runtime_mode": "in_process",
             "worker": {
                 "running": True,
                 "queue_size": 1,
@@ -305,6 +466,55 @@ def test_health_endpoint_returns_ok() -> None:
     }
 
 
+def test_health_endpoint_allows_deferred_reflection_mode_without_running_worker() -> None:
+    client, _, _ = _client(
+        reflection_running=False,
+        reflection_runtime_mode="deferred",
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["reflection"]["runtime_mode"] == "deferred"
+    assert body["reflection"]["worker"]["running"] is False
+    assert body["reflection"]["healthy"] is True
+
+
+def test_health_endpoint_marks_scheduler_unhealthy_when_enabled_but_not_running() -> None:
+    client, _, _ = _client(
+        scheduler_enabled=True,
+        scheduler_running=False,
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["scheduler"]["enabled"] is True
+    assert body["scheduler"]["running"] is False
+    assert body["scheduler"]["healthy"] is False
+
+
+def test_health_endpoint_exposes_attention_snapshot() -> None:
+    client, _, _ = _client(attention_burst_window_ms=240)
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["attention"] == {
+        "burst_window_ms": 240,
+        "answered_ttl_seconds": 0.5,
+        "stale_turn_seconds": 3.0,
+        "pending": 0,
+        "claimed": 0,
+        "answered": 0,
+    }
+
+
 def test_health_endpoint_exposes_runtime_policy_flags() -> None:
     client, _, _ = _client(
         app_env="production",
@@ -322,6 +532,11 @@ def test_health_endpoint_exposes_runtime_policy_flags() -> None:
         "startup_schema_mode": "create_tables",
         "event_debug_enabled": False,
         "event_debug_token_required": False,
+        "production_debug_token_required": True,
+        "event_debug_query_compat_enabled": False,
+        "event_debug_query_compat_source": "environment_default",
+        "debug_access_posture": "disabled",
+        "debug_token_policy_hint": "not_applicable_debug_disabled",
         "event_debug_source": "explicit",
         "production_policy_enforcement": "strict",
         "recommended_production_policy_enforcement": "warn",
@@ -330,6 +545,32 @@ def test_health_endpoint_exposes_runtime_policy_flags() -> None:
         "strict_startup_blocked": True,
         "strict_rollout_ready": False,
         "strict_rollout_hint": "resolve_mismatches_before_strict",
+        "event_debug_query_compat_allow_rate": 0.0,
+        "event_debug_query_compat_block_rate": 0.0,
+        "event_debug_query_compat_recommendation": "compat_disabled",
+        "event_debug_query_compat_sunset_ready": True,
+        "event_debug_query_compat_sunset_reason": "compat_disabled",
+        "event_debug_query_compat_recent_attempts_total": 0,
+        "event_debug_query_compat_recent_allow_rate": 0.0,
+        "event_debug_query_compat_recent_block_rate": 0.0,
+        "event_debug_query_compat_recent_state": "compat_disabled",
+        "event_debug_query_compat_stale_after_seconds": 86400,
+        "event_debug_query_compat_last_attempt_age_seconds": None,
+        "event_debug_query_compat_last_attempt_state": "no_attempts_recorded",
+        "event_debug_query_compat_activity_state": "compat_disabled",
+        "event_debug_query_compat_activity_hint": "compat_disabled_no_action",
+        "event_debug_query_compat_telemetry": {
+            "attempts_total": 0,
+            "allowed_total": 0,
+            "blocked_total": 0,
+            "last_attempt_at": None,
+            "last_allowed_at": None,
+            "last_blocked_at": None,
+            "recent_window_size": 20,
+            "recent_attempts_total": 0,
+            "recent_allowed_total": 0,
+            "recent_blocked_total": 0,
+        },
     }
 
 
@@ -342,6 +583,11 @@ def test_health_endpoint_marks_event_debug_source_as_environment_default_when_un
     body = response.json()
     assert body["runtime_policy"]["event_debug_enabled"] is True
     assert body["runtime_policy"]["event_debug_token_required"] is False
+    assert body["runtime_policy"]["production_debug_token_required"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_enabled"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_source"] == "environment_default"
+    assert body["runtime_policy"]["debug_access_posture"] == "open_no_token"
+    assert body["runtime_policy"]["debug_token_policy_hint"] == "debug_access_open_without_token"
     assert body["runtime_policy"]["event_debug_source"] == "environment_default"
     assert body["runtime_policy"]["production_policy_enforcement"] == "warn"
     assert body["runtime_policy"]["recommended_production_policy_enforcement"] == "warn"
@@ -350,6 +596,23 @@ def test_health_endpoint_marks_event_debug_source_as_environment_default_when_un
     assert body["runtime_policy"]["strict_startup_blocked"] is False
     assert body["runtime_policy"]["strict_rollout_ready"] is True
     assert body["runtime_policy"]["strict_rollout_hint"] == "not_applicable_non_production"
+    assert body["runtime_policy"]["event_debug_query_compat_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_block_rate"] == 0.0
+    assert (
+        body["runtime_policy"]["event_debug_query_compat_recommendation"]
+        == "no_compat_traffic_detected_disable_when_possible"
+    )
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_ready"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_reason"] == "no_compat_attempts_detected"
+    assert body["runtime_policy"]["event_debug_query_compat_recent_attempts_total"] == 0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_block_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_state"] == "no_recent_attempts"
+    assert body["runtime_policy"]["event_debug_query_compat_stale_after_seconds"] == 86400
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"] is None
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "no_attempts_recorded"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "no_attempts_observed"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "can_disable_when_ready"
 
 
 def test_health_endpoint_exposes_all_production_policy_mismatches_when_present() -> None:
@@ -366,13 +629,33 @@ def test_health_endpoint_exposes_all_production_policy_mismatches_when_present()
     body = response.json()
     assert body["runtime_policy"]["production_policy_mismatches"] == [
         "event_debug_enabled=true",
+        "event_debug_token_missing=true",
         "startup_schema_mode=create_tables",
     ]
-    assert body["runtime_policy"]["production_policy_mismatch_count"] == 2
+    assert body["runtime_policy"]["production_policy_mismatch_count"] == 3
     assert body["runtime_policy"]["strict_startup_blocked"] is True
     assert body["runtime_policy"]["strict_rollout_ready"] is False
+    assert body["runtime_policy"]["production_debug_token_required"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_enabled"] is False
+    assert body["runtime_policy"]["event_debug_query_compat_source"] == "environment_default"
+    assert body["runtime_policy"]["debug_access_posture"] == "production_token_required_missing"
+    assert body["runtime_policy"]["debug_token_policy_hint"] == "configure_event_debug_token_or_disable_debug"
     assert body["runtime_policy"]["recommended_production_policy_enforcement"] == "warn"
     assert body["runtime_policy"]["strict_rollout_hint"] == "resolve_mismatches_before_strict"
+    assert body["runtime_policy"]["event_debug_query_compat_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_block_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recommendation"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_ready"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_reason"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_recent_attempts_total"] == 0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_block_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_state"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_stale_after_seconds"] == 86400
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"] is None
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "no_attempts_recorded"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "compat_disabled_no_action"
 
 
 def test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready() -> None:
@@ -389,9 +672,105 @@ def test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready() ->
     body = response.json()
     assert body["runtime_policy"]["production_policy_mismatches"] == []
     assert body["runtime_policy"]["event_debug_token_required"] is False
+    assert body["runtime_policy"]["production_debug_token_required"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_enabled"] is False
+    assert body["runtime_policy"]["event_debug_query_compat_source"] == "environment_default"
+    assert body["runtime_policy"]["debug_access_posture"] == "disabled"
+    assert body["runtime_policy"]["debug_token_policy_hint"] == "not_applicable_debug_disabled"
     assert body["runtime_policy"]["strict_rollout_ready"] is True
     assert body["runtime_policy"]["recommended_production_policy_enforcement"] == "strict"
     assert body["runtime_policy"]["strict_rollout_hint"] == "can_enable_strict"
+    assert body["runtime_policy"]["event_debug_query_compat_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_block_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recommendation"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_ready"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_reason"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_recent_attempts_total"] == 0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_block_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_state"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_stale_after_seconds"] == 86400
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"] is None
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "no_attempts_recorded"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "compat_disabled_no_action"
+
+
+def test_health_endpoint_marks_query_compat_as_explicit_production_mismatch_when_enabled() -> None:
+    client, _, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token="debug-secret",
+        event_debug_query_compat_enabled=True,
+        startup_schema_mode="migrate",
+        production_policy_enforcement="warn",
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["runtime_policy"]["event_debug_query_compat_enabled"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_source"] == "explicit"
+    assert body["runtime_policy"]["production_policy_mismatches"] == [
+        "event_debug_enabled=true",
+        "event_debug_query_compat_enabled=true",
+    ]
+    assert body["runtime_policy"]["production_policy_mismatch_count"] == 2
+    assert body["runtime_policy"]["strict_rollout_ready"] is False
+    assert body["runtime_policy"]["event_debug_query_compat_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_block_rate"] == 0.0
+    assert (
+        body["runtime_policy"]["event_debug_query_compat_recommendation"]
+        == "no_compat_traffic_detected_disable_when_possible"
+    )
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_ready"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_reason"] == "no_compat_attempts_detected"
+    assert body["runtime_policy"]["event_debug_query_compat_recent_attempts_total"] == 0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_block_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_state"] == "no_recent_attempts"
+    assert body["runtime_policy"]["event_debug_query_compat_stale_after_seconds"] == 86400
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"] is None
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "no_attempts_recorded"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "no_attempts_observed"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "can_disable_when_ready"
+
+
+def test_health_endpoint_marks_debug_access_posture_as_token_gated_when_token_is_configured() -> None:
+    client, _, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token="debug-secret",
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["runtime_policy"]["event_debug_enabled"] is True
+    assert body["runtime_policy"]["event_debug_token_required"] is True
+    assert body["runtime_policy"]["debug_access_posture"] == "token_gated"
+    assert body["runtime_policy"]["debug_token_policy_hint"] == "token_gated"
+
+
+def test_health_endpoint_marks_debug_access_posture_as_open_when_production_token_requirement_is_disabled() -> None:
+    client, _, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token=None,
+        production_debug_token_required=False,
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["runtime_policy"]["event_debug_enabled"] is True
+    assert body["runtime_policy"]["event_debug_token_required"] is False
+    assert body["runtime_policy"]["production_debug_token_required"] is False
+    assert body["runtime_policy"]["debug_access_posture"] == "open_no_token"
+    assert body["runtime_policy"]["debug_token_policy_hint"] == "debug_access_open_without_token"
 
 
 def test_health_endpoint_marks_reflection_unhealthy_when_worker_not_running() -> None:
@@ -534,8 +913,27 @@ def test_event_endpoint_can_return_full_runtime_debug_payload_when_requested() -
     assert body["debug"]["stage_timings_ms"]["memory_load"] == 1
     assert body["debug"]["stage_timings_ms"]["total"] == 12
     assert body["debug"]["event"]["source"] == "api"
+    assert response.headers["x-aion-debug-compat"] == "query_debug_route_is_compatibility_use_post_event_debug"
+    assert response.headers["link"] == '</event/debug>; rel="alternate"'
+    assert response.headers["x-aion-debug-compat-deprecated"] == "true"
     assert runtime.last_event is not None
     assert runtime.last_event.payload["text"] == "show debug runtime"
+
+
+def test_event_debug_endpoint_returns_full_runtime_debug_payload_when_enabled() -> None:
+    client, runtime, _ = _client(reflection_triggered=True)
+
+    response = client.post("/event/debug", json={"text": "show explicit debug runtime"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["reply"]["message"] == "Test reply"
+    assert body["runtime"]["reflection_triggered"] is True
+    assert body["debug"]["expression"]["message"] == "Test reply"
+    assert body["debug"]["event"]["source"] == "api"
+    assert "x-aion-debug-compat" not in response.headers
+    assert runtime.last_event is not None
+    assert runtime.last_event.payload["text"] == "show explicit debug runtime"
 
 
 def test_event_endpoint_rejects_debug_payload_when_debug_token_is_missing() -> None:
@@ -546,6 +944,102 @@ def test_event_endpoint_rejects_debug_payload_when_debug_token_is_missing() -> N
     assert response.status_code == 403
     assert response.json()["detail"] == "Invalid debug token."
     assert runtime.last_event is None
+
+
+def test_event_debug_endpoint_rejects_debug_payload_when_debug_token_is_missing() -> None:
+    client, runtime, _ = _client(event_debug_enabled=True, event_debug_token="debug-secret")
+
+    response = client.post("/event/debug", json={"text": "show debug runtime"})
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Invalid debug token."
+    assert runtime.last_event is None
+
+
+def test_event_endpoint_rejects_debug_payload_in_production_when_token_is_not_configured() -> None:
+    client, runtime, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token=None,
+        production_debug_token_required=True,
+        event_debug_query_compat_enabled=True,
+    )
+
+    response = client.post("/event?debug=true", json={"text": "show debug runtime"})
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Debug token is required in production."
+    assert runtime.last_event is None
+
+
+def test_event_debug_endpoint_rejects_debug_payload_in_production_when_token_is_not_configured() -> None:
+    client, runtime, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token=None,
+        production_debug_token_required=True,
+    )
+
+    response = client.post("/event/debug", json={"text": "show debug runtime"})
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Debug token is required in production."
+    assert runtime.last_event is None
+
+
+def test_event_endpoint_allows_debug_payload_in_production_when_token_requirement_is_disabled() -> None:
+    client, runtime, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token=None,
+        production_debug_token_required=False,
+        event_debug_query_compat_enabled=True,
+    )
+
+    response = client.post("/event?debug=true", json={"text": "show debug runtime"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "debug" in body
+    assert body["debug"]["expression"]["message"] == "Test reply"
+    assert runtime.last_event is not None
+
+
+def test_event_endpoint_rejects_debug_query_compat_route_in_production_when_disabled_by_default() -> None:
+    client, runtime, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token="debug-secret",
+    )
+
+    response = client.post("/event?debug=true", json={"text": "show debug runtime"})
+
+    assert response.status_code == 403
+    assert (
+        response.json()["detail"]
+        == "Debug query compatibility route is disabled for this environment. Use POST /event/debug."
+    )
+    assert runtime.last_event is None
+
+    body = client.get("/health").json()
+    assert body["runtime_policy"]["event_debug_query_compat_telemetry"]["attempts_total"] == 1
+    assert body["runtime_policy"]["event_debug_query_compat_telemetry"]["allowed_total"] == 0
+    assert body["runtime_policy"]["event_debug_query_compat_telemetry"]["blocked_total"] == 1
+    assert body["runtime_policy"]["event_debug_query_compat_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_block_rate"] == 1.0
+    assert body["runtime_policy"]["event_debug_query_compat_recommendation"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_ready"] is True
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_reason"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_recent_attempts_total"] == 1
+    assert body["runtime_policy"]["event_debug_query_compat_recent_allow_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_block_rate"] == 1.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_state"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_stale_after_seconds"] == 86400
+    assert isinstance(body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"], int)
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"] >= 0
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "fresh"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "compat_disabled"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "compat_disabled_no_action"
 
 
 def test_event_endpoint_allows_debug_payload_when_debug_token_matches() -> None:
@@ -561,6 +1055,158 @@ def test_event_endpoint_allows_debug_payload_when_debug_token_matches() -> None:
     body = response.json()
     assert "debug" in body
     assert body["debug"]["expression"]["message"] == "Test reply"
+    assert response.headers["x-aion-debug-compat"] == "query_debug_route_is_compatibility_use_post_event_debug"
+    assert response.headers["x-aion-debug-compat-deprecated"] == "true"
+    assert runtime.last_event is not None
+
+
+def test_event_endpoint_allows_debug_payload_in_production_when_query_compat_is_explicitly_enabled() -> None:
+    client, runtime, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token="debug-secret",
+        event_debug_query_compat_enabled=True,
+    )
+
+    response = client.post(
+        "/event?debug=true",
+        json={"text": "show debug runtime"},
+        headers={"X-AION-Debug-Token": "debug-secret"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "debug" in body
+    assert body["debug"]["expression"]["message"] == "Test reply"
+    assert response.headers["x-aion-debug-compat"] == "query_debug_route_is_compatibility_use_post_event_debug"
+    assert response.headers["x-aion-debug-compat-deprecated"] == "true"
+    assert runtime.last_event is not None
+
+
+def test_health_endpoint_exposes_query_compat_telemetry_after_allowed_and_blocked_attempts() -> None:
+    client, _, _ = _client(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token="debug-secret",
+        event_debug_query_compat_enabled=True,
+    )
+
+    allowed = client.post(
+        "/event?debug=true",
+        json={"text": "debug allowed"},
+        headers={"X-AION-Debug-Token": "debug-secret"},
+    )
+    assert allowed.status_code == 200
+
+    blocked = client.post(
+        "/event?debug=true",
+        json={"text": "debug blocked"},
+    )
+    assert blocked.status_code == 403
+
+    body = client.get("/health").json()
+    telemetry = body["runtime_policy"]["event_debug_query_compat_telemetry"]
+    assert telemetry["attempts_total"] == 2
+    assert telemetry["allowed_total"] == 1
+    assert telemetry["blocked_total"] == 1
+    assert telemetry["last_attempt_at"] is not None
+    assert telemetry["last_allowed_at"] is not None
+    assert telemetry["last_blocked_at"] is not None
+    assert telemetry["recent_window_size"] == 20
+    assert telemetry["recent_attempts_total"] == 2
+    assert telemetry["recent_allowed_total"] == 1
+    assert telemetry["recent_blocked_total"] == 1
+    assert body["runtime_policy"]["event_debug_query_compat_allow_rate"] == 0.5
+    assert body["runtime_policy"]["event_debug_query_compat_block_rate"] == 0.5
+    assert (
+        body["runtime_policy"]["event_debug_query_compat_recommendation"]
+        == "migrate_clients_before_disabling_compat"
+    )
+    assert body["runtime_policy"]["event_debug_query_compat_sunset_ready"] is False
+    assert (
+        body["runtime_policy"]["event_debug_query_compat_sunset_reason"]
+        == "compat_attempts_detected_migration_needed"
+    )
+    assert body["runtime_policy"]["event_debug_query_compat_recent_attempts_total"] == 2
+    assert body["runtime_policy"]["event_debug_query_compat_recent_allow_rate"] == 0.5
+    assert body["runtime_policy"]["event_debug_query_compat_recent_block_rate"] == 0.5
+    assert body["runtime_policy"]["event_debug_query_compat_recent_state"] == "mixed"
+    assert body["runtime_policy"]["event_debug_query_compat_stale_after_seconds"] == 86400
+    assert isinstance(body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"], int)
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"] >= 0
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "fresh"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "recent_attempts_observed"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "keep_compat_until_recent_clients_migrate"
+
+
+def test_health_endpoint_respects_configured_query_compat_recent_window_size() -> None:
+    client, _, _ = _client(
+        event_debug_query_compat_recent_window=3,
+    )
+
+    for _ in range(4):
+        response = client.post("/event?debug=true", json={"text": "debug rolling window"})
+        assert response.status_code == 200
+
+    body = client.get("/health").json()
+    telemetry = body["runtime_policy"]["event_debug_query_compat_telemetry"]
+    assert telemetry["recent_window_size"] == 3
+    assert telemetry["recent_attempts_total"] == 3
+    assert telemetry["recent_allowed_total"] == 3
+    assert telemetry["recent_blocked_total"] == 0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_attempts_total"] == 3
+    assert body["runtime_policy"]["event_debug_query_compat_recent_allow_rate"] == 1.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_block_rate"] == 0.0
+    assert body["runtime_policy"]["event_debug_query_compat_recent_state"] == "mostly_allowed"
+    assert body["runtime_policy"]["event_debug_query_compat_stale_after_seconds"] == 86400
+    assert isinstance(body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"], int)
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"] >= 0
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "fresh"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "recent_attempts_observed"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "keep_compat_until_recent_clients_migrate"
+
+
+def test_health_endpoint_respects_configured_query_compat_stale_threshold() -> None:
+    client, _, _ = _client(
+        event_debug_query_compat_stale_after_seconds=30,
+    )
+
+    body = client.get("/health").json()
+    assert body["runtime_policy"]["event_debug_query_compat_stale_after_seconds"] == 30
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_age_seconds"] is None
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "no_attempts_recorded"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "no_attempts_observed"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "can_disable_when_ready"
+
+
+def test_health_endpoint_marks_query_compat_activity_as_stale_when_last_attempt_is_older_than_threshold() -> None:
+    client, _, _ = _client(
+        event_debug_query_compat_stale_after_seconds=1,
+    )
+
+    response = client.post("/event?debug=true", json={"text": "debug stale posture"})
+    assert response.status_code == 200
+    sleep(1.1)
+
+    body = client.get("/health").json()
+    assert body["runtime_policy"]["event_debug_query_compat_last_attempt_state"] == "stale"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_state"] == "stale_historical_attempts"
+    assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "verify_stale_clients_before_disable"
+
+
+def test_event_debug_endpoint_allows_debug_payload_when_debug_token_matches() -> None:
+    client, runtime, _ = _client(event_debug_enabled=True, event_debug_token="debug-secret")
+
+    response = client.post(
+        "/event/debug",
+        json={"text": "show debug runtime"},
+        headers={"X-AION-Debug-Token": "debug-secret"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "debug" in body
+    assert body["debug"]["expression"]["message"] == "Test reply"
     assert runtime.last_event is not None
 
 
@@ -568,6 +1214,16 @@ def test_event_endpoint_rejects_debug_payload_when_debug_mode_is_disabled() -> N
     client, runtime, _ = _client(event_debug_enabled=False)
 
     response = client.post("/event?debug=true", json={"text": "show debug runtime"})
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Debug payload is disabled for this environment."
+    assert runtime.last_event is None
+
+
+def test_event_debug_endpoint_rejects_debug_payload_when_debug_mode_is_disabled() -> None:
+    client, runtime, _ = _client(event_debug_enabled=False)
+
+    response = client.post("/event/debug", json={"text": "show debug runtime"})
 
     assert response.status_code == 403
     assert response.json()["detail"] == "Debug payload is disabled for this environment."
@@ -593,6 +1249,7 @@ def test_event_endpoint_contract_smoke_pins_public_shape_and_debug_gate() -> Non
     assert "debug" in debug_body
     assert "event" in debug_body["debug"]
     assert "stage_timings_ms" in debug_body["debug"]
+    assert debug_response.headers["x-aion-debug-compat"] == "query_debug_route_is_compatibility_use_post_event_debug"
 
 
 def test_event_endpoint_exposes_reflection_trigger_when_runtime_queues_reflection() -> None:
@@ -609,19 +1266,107 @@ def test_event_endpoint_exposes_reflection_trigger_when_runtime_queues_reflectio
     assert runtime.last_event.payload["text"] == "trigger reflection"
 
 
+def test_event_endpoint_coalesces_rapid_telegram_messages_into_single_runtime_turn() -> None:
+    client, runtime, _ = _client(attention_burst_window_ms=160)
+    first_response: dict[str, object] = {}
+
+    def _first_call() -> None:
+        first_response["value"] = client.post("/event", json=_telegram_update(1001, "first burst message"))
+
+    thread = Thread(target=_first_call)
+    thread.start()
+    sleep(0.05)
+    second = client.post("/event", json=_telegram_update(1002, " second   burst    message "))
+    thread.join(timeout=2.0)
+
+    assert "value" in first_response
+    first = first_response["value"]
+    assert isinstance(first, type(second))
+    assert first.status_code == 200
+    assert second.status_code == 200
+
+    second_body = second.json()
+    assert second_body["queue"] == {
+        "queued": True,
+        "reason": "coalesced_into_pending_turn",
+        "turn_id": second_body["queue"]["turn_id"],
+        "source_count": 2,
+    }
+
+    assert len(runtime.events) == 1
+    assembled = runtime.events[0]
+    assert assembled.payload["text"] == "first burst message\nsecond burst message"
+    assert assembled.payload["turn_status"] == "claimed"
+    assert assembled.payload["turn_source_count"] == 2
+    assert len(assembled.payload["coalesced_event_ids"]) == 2
+
+
+def test_event_endpoint_ignores_duplicate_telegram_update_during_pending_turn() -> None:
+    client, runtime, _ = _client(attention_burst_window_ms=160)
+    first_response: dict[str, object] = {}
+
+    def _first_call() -> None:
+        first_response["value"] = client.post("/event", json=_telegram_update(2001, "first payload"))
+
+    thread = Thread(target=_first_call)
+    thread.start()
+    sleep(0.05)
+    duplicate = client.post("/event", json=_telegram_update(2001, "duplicate payload"))
+    thread.join(timeout=2.0)
+
+    assert "value" in first_response
+    assert duplicate.status_code == 200
+    duplicate_body = duplicate.json()
+    assert duplicate_body["queue"] == {
+        "queued": True,
+        "reason": "duplicate_update",
+        "turn_id": duplicate_body["queue"]["turn_id"],
+        "source_count": 1,
+    }
+    assert len(runtime.events) == 1
+    assert runtime.events[0].payload["text"] == "first payload"
+
+
+def test_event_endpoint_blocks_second_runtime_run_when_turn_is_already_claimed() -> None:
+    client, runtime, _ = _client(
+        attention_burst_window_ms=40,
+        run_delay_seconds=0.25,
+    )
+    first_response: dict[str, object] = {}
+
+    def _first_call() -> None:
+        first_response["value"] = client.post("/event", json=_telegram_update(3001, "first message"))
+
+    thread = Thread(target=_first_call)
+    thread.start()
+    sleep(0.12)
+    claimed = client.post("/event", json=_telegram_update(3002, "second message while claimed"))
+    thread.join(timeout=3.0)
+
+    assert "value" in first_response
+    assert claimed.status_code == 200
+    claimed_body = claimed.json()
+    assert claimed_body["queue"] == {
+        "queued": True,
+        "reason": "turn_already_claimed",
+        "turn_id": claimed_body["queue"]["turn_id"],
+        "source_count": 1,
+    }
+    assert len(runtime.events) == 1
+    assert runtime.events[0].payload["text"] == "first message"
+
+    next_turn = client.post("/event", json=_telegram_update(3003, "next turn after answer"))
+    assert next_turn.status_code == 200
+    assert len(runtime.events) == 2
+    assert runtime.events[1].payload["text"] == "next turn after answer"
+
+
 def test_event_endpoint_rejects_telegram_payload_with_wrong_secret() -> None:
     client, runtime, _ = _client(secret="expected-secret")
 
     response = client.post(
         "/event",
-        json={
-            "update_id": 1,
-            "message": {
-                "text": "ping",
-                "chat": {"id": 123},
-                "from": {"id": 999},
-            },
-        },
+        json=_telegram_update(1, "ping"),
         headers={"X-Telegram-Bot-Api-Secret-Token": "wrong-secret"},
     )
 

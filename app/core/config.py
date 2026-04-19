@@ -15,8 +15,21 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     event_debug_enabled: bool | None = None
     event_debug_token: str | None = None
+    production_debug_token_required: bool = True
+    event_debug_query_compat_enabled: bool | None = None
+    event_debug_query_compat_recent_window: int = 20
+    event_debug_query_compat_stale_after_seconds: int = 86400
     startup_schema_mode: Literal["migrate", "create_tables"] = "migrate"
     production_policy_enforcement: Literal["warn", "strict"] = "warn"
+    reflection_runtime_mode: Literal["in_process", "deferred"] = "in_process"
+    scheduler_enabled: bool = False
+    reflection_interval: int = 900
+    maintenance_interval: int = 3600
+    proactive_enabled: bool = False
+    proactive_interval: int = 1800
+    attention_burst_window_ms: int = 120
+    attention_answered_ttl_seconds: float = 5.0
+    attention_stale_turn_seconds: float = 30.0
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -42,9 +55,33 @@ class Settings(BaseSettings):
             joined = ", ".join(missing)
             raise ValueError(f"Missing required environment variables: {joined}")
 
+        if self.reflection_interval < 300:
+            raise ValueError("REFLECTION_INTERVAL must be at least 300 seconds.")
+        if self.maintenance_interval < 900:
+            raise ValueError("MAINTENANCE_INTERVAL must be at least 900 seconds.")
+        if self.proactive_interval < 1800:
+            raise ValueError("PROACTIVE_INTERVAL must be at least 1800 seconds.")
+        if self.attention_burst_window_ms < 0:
+            raise ValueError("ATTENTION_BURST_WINDOW_MS must be greater than or equal to 0.")
+        if self.attention_answered_ttl_seconds < 0.5:
+            raise ValueError("ATTENTION_ANSWERED_TTL_SECONDS must be at least 0.5 seconds.")
+        if self.attention_stale_turn_seconds < self.attention_answered_ttl_seconds:
+            raise ValueError(
+                "ATTENTION_STALE_TURN_SECONDS must be greater than or equal to ATTENTION_ANSWERED_TTL_SECONDS."
+            )
+        if self.event_debug_query_compat_recent_window < 1:
+            raise ValueError("EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW must be at least 1.")
+        if self.event_debug_query_compat_stale_after_seconds < 1:
+            raise ValueError("EVENT_DEBUG_QUERY_COMPAT_STALE_AFTER_SECONDS must be at least 1.")
+
     def is_event_debug_enabled(self) -> bool:
         if self.event_debug_enabled is not None:
             return self.event_debug_enabled
+        return self.app_env.lower() != "production"
+
+    def is_event_debug_query_compat_enabled(self) -> bool:
+        if self.event_debug_query_compat_enabled is not None:
+            return self.event_debug_query_compat_enabled
         return self.app_env.lower() != "production"
 
 
