@@ -339,6 +339,7 @@ def test_startup_logs_embedding_strategy_warning_when_provider_falls_back_to_det
     assert any("embedding_strategy_warning" in message for message in messages)
     assert any("requested_provider=openai" in message for message in messages)
     assert any("effective_provider=deterministic" in message for message in messages)
+    assert not any("embedding_model_governance_warning" in message for message in messages)
 
 
 def test_startup_skips_embedding_strategy_warning_when_requested_provider_is_effective(caplog) -> None:
@@ -355,6 +356,44 @@ def test_startup_skips_embedding_strategy_warning_when_requested_provider_is_eff
 
     messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
     assert not any("embedding_strategy_warning" in message for message in messages)
+
+
+def test_startup_logs_embedding_model_governance_warning_when_deterministic_custom_model_is_requested(
+    caplog,
+) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("WARNING", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v2",
+        embedding_source_kinds="episodic,semantic,affective",
+    )
+
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("embedding_model_governance_warning" in message for message in messages)
+    assert any("requested_model=deterministic-v2" in message for message in messages)
+    assert any("governance_state=deterministic_custom_model_name" in message for message in messages)
+
+
+def test_startup_skips_embedding_model_governance_warning_for_deterministic_baseline_model(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("WARNING", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective",
+    )
+
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert not any("embedding_model_governance_warning" in message for message in messages)
 
 
 def test_startup_skips_embedding_strategy_warning_when_vectors_are_disabled(caplog) -> None:

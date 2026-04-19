@@ -283,6 +283,8 @@ Allowed values:
 - `semantic_embedding_provider_hint`
 - `semantic_embedding_model_requested`
 - `semantic_embedding_model_effective`
+- `semantic_embedding_model_governance_state`
+- `semantic_embedding_model_governance_hint`
 - `semantic_embedding_dimensions`
 - `semantic_embedding_warning_state`
 - `semantic_embedding_warning_hint`

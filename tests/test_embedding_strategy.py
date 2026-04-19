@@ -15,6 +15,11 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
     assert snapshot["semantic_embedding_source_coverage_hint"] == "semantic_and_affective_sources_enabled"
     assert snapshot["semantic_embedding_warning_state"] == "no_warning"
     assert snapshot["semantic_embedding_warning_hint"] == "embedding_strategy_ready"
+    assert snapshot["semantic_embedding_model_governance_state"] == "model_contract_aligned"
+    assert (
+        snapshot["semantic_embedding_model_governance_hint"]
+        == "embedding_model_contract_aligned_with_provider"
+    )
     assert snapshot["semantic_embedding_refresh_mode"] == "on_write"
     assert snapshot["semantic_embedding_refresh_interval_seconds"] == 21600
     assert snapshot["semantic_embedding_refresh_state"] == "on_write_refresh_active"
@@ -37,6 +42,8 @@ def test_embedding_strategy_snapshot_marks_vectors_disabled_warning_state() -> N
         snapshot["semantic_embedding_warning_hint"]
         == "enable_semantic_vectors_to_activate_embedding_strategy"
     )
+    assert snapshot["semantic_embedding_model_governance_state"] == "vectors_disabled"
+    assert snapshot["semantic_embedding_model_governance_hint"] == "not_applicable_vectors_disabled"
     assert snapshot["semantic_embedding_refresh_state"] == "vectors_disabled"
     assert snapshot["semantic_embedding_refresh_hint"] == "not_applicable_vectors_disabled"
 
@@ -57,6 +64,11 @@ def test_embedding_strategy_snapshot_marks_provider_fallback_warning_state() -> 
     assert (
         snapshot["semantic_embedding_warning_hint"]
         == "provider_not_implemented_using_deterministic_fallback"
+    )
+    assert snapshot["semantic_embedding_model_governance_state"] == "provider_fallback_effective_model"
+    assert (
+        snapshot["semantic_embedding_model_governance_hint"]
+        == "effective_model_controlled_by_fallback_provider"
     )
 
 
@@ -91,6 +103,23 @@ def test_embedding_strategy_snapshot_marks_manual_refresh_posture_when_manual_mo
     assert snapshot["semantic_embedding_refresh_interval_seconds"] == 7200
     assert snapshot["semantic_embedding_refresh_state"] == "manual_refresh_required"
     assert snapshot["semantic_embedding_refresh_hint"] == "ensure_manual_refresh_process_is_defined"
+
+
+def test_embedding_strategy_snapshot_marks_deterministic_custom_model_governance_posture() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="deterministic",
+        model="deterministic-v2",
+        dimensions=32,
+    )
+
+    assert snapshot["semantic_embedding_model_requested"] == "deterministic-v2"
+    assert snapshot["semantic_embedding_model_effective"] == "deterministic-v2"
+    assert snapshot["semantic_embedding_model_governance_state"] == "deterministic_custom_model_name"
+    assert (
+        snapshot["semantic_embedding_model_governance_hint"]
+        == "deterministic_provider_uses_fixed_embedding_behavior"
+    )
 
 
 def test_normalize_embedding_source_kinds_returns_defaults_when_missing() -> None:

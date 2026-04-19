@@ -194,6 +194,10 @@ Current limitation:
   (`semantic_embedding_refresh_state`,
   `semantic_embedding_refresh_hint`) so startup and health use one refresh
   semantics owner.
+- model-governance posture is now also explicit through shared diagnostics
+  (`semantic_embedding_model_governance_state`,
+  `semantic_embedding_model_governance_hint`) so startup and health align on
+  deterministic custom-model-name visibility.
 
 ### Event API behavior
 

@@ -80,6 +80,22 @@ def embedding_strategy_snapshot(
         warning_state = "provider_fallback_active"
         warning_hint = "provider_not_implemented_using_deterministic_fallback"
 
+    if not semantic_vector_enabled:
+        model_governance_state = "vectors_disabled"
+        model_governance_hint = "not_applicable_vectors_disabled"
+    elif posture["provider_effective"] != posture["provider_requested"]:
+        model_governance_state = "provider_fallback_effective_model"
+        model_governance_hint = "effective_model_controlled_by_fallback_provider"
+    elif (
+        posture["provider_effective"] == DEFAULT_EMBEDDING_PROVIDER
+        and posture["model_requested"] != DEFAULT_EMBEDDING_MODEL
+    ):
+        model_governance_state = "deterministic_custom_model_name"
+        model_governance_hint = "deterministic_provider_uses_fixed_embedding_behavior"
+    else:
+        model_governance_state = "model_contract_aligned"
+        model_governance_hint = "embedding_model_contract_aligned_with_provider"
+
     normalized_refresh_mode = normalize_embedding_refresh_mode(refresh_mode)
     normalized_refresh_interval_seconds = normalize_embedding_refresh_interval_seconds(
         refresh_interval_seconds
@@ -104,6 +120,8 @@ def embedding_strategy_snapshot(
         "semantic_embedding_provider_hint": posture["provider_hint"],
         "semantic_embedding_model_requested": posture["model_requested"],
         "semantic_embedding_model_effective": posture["model_effective"],
+        "semantic_embedding_model_governance_state": model_governance_state,
+        "semantic_embedding_model_governance_hint": model_governance_hint,
         "semantic_embedding_dimensions": max(1, int(dimensions)),
         "semantic_embedding_source_kinds": list(normalized_source_kinds),
         "semantic_embedding_source_coverage_state": source_coverage_state,

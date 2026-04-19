@@ -210,6 +210,12 @@ Completed on 2026-04-18:
   (`semantic_embedding_refresh_state`,
   `semantic_embedding_refresh_hint`) reused by `/health.memory_retrieval` and
   startup refresh warning flow.
+- `PRJ-240` is complete: embedding model-governance posture diagnostics are now
+  explicit through shared helper semantics
+  (`semantic_embedding_model_governance_state`,
+  `semantic_embedding_model_governance_hint`) and startup warning alignment
+  (`embedding_model_governance_warning`) for deterministic custom-model-name
+  posture.
 
 ## Highest-Risk Gaps
 
@@ -900,7 +906,7 @@ implicit or uncontrolled side effects.
 
 ## Next Derived Slice
 
-The planning queue is complete through `PRJ-239`.
+The planning queue is complete through `PRJ-240`.
 There is currently no execution-ready PRJ slice in the board.
 Before the next implementation slice:
 

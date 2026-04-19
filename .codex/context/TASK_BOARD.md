@@ -15,7 +15,7 @@ Last updated: 2026-04-19
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-239`.
+- The planning queue is complete through `PRJ-240`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,27 @@ Last updated: 2026-04-19
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-240 Add embedding model-governance posture diagnostics and startup warning alignment
+  - Status: DONE
+  - Group: Embedding Strategy Posture
+  - Owner: Backend Builder + QA/Test + Product Docs
+  - Depends on: PRJ-239
+  - Priority: P2
+  - Result:
+    - shared embedding strategy helper now exposes model-governance posture
+      diagnostics
+      (`semantic_embedding_model_governance_state`,
+      `semantic_embedding_model_governance_hint`) alongside provider/model and
+      refresh/source posture
+    - `/health.memory_retrieval` now surfaces model-governance diagnostics from
+      the same shared helper semantics
+    - startup warning flow now emits
+      `embedding_model_governance_warning` for deterministic custom-model-name
+      posture so potentially misleading model config is operator-visible
+    - docs/context/planning are synchronized through `PRJ-240`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
 
 - [x] PRJ-239 Unify embedding refresh posture semantics in shared strategy helper
   - Status: DONE

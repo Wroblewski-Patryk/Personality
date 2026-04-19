@@ -268,7 +268,12 @@ The current repo already works as an MVP slice, but several architecture-level d
     `semantic_embedding_refresh_hint`) now align startup and health semantics,
     and startup emits `embedding_refresh_warning` when vectors are enabled in
     manual mode.
-  - provider ownership and embedding model governance are still open.
+  - model-governance posture is now explicit through shared diagnostics
+    (`semantic_embedding_model_governance_state`,
+    `semantic_embedding_model_governance_hint`) and startup warning visibility
+    (`embedding_model_governance_warning`) for deterministic custom-model-name
+    posture.
+  - provider ownership and model-governance enforcement policy are still open.
 - Decision needed:
   - which embedding provider and refresh strategy should own semantic memory
     vectors?

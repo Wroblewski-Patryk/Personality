@@ -454,6 +454,8 @@ def test_health_endpoint_returns_ok() -> None:
             "semantic_embedding_provider_hint": "deterministic_baseline",
             "semantic_embedding_model_requested": "deterministic-v1",
             "semantic_embedding_model_effective": "deterministic-v1",
+            "semantic_embedding_model_governance_state": "model_contract_aligned",
+            "semantic_embedding_model_governance_hint": "embedding_model_contract_aligned_with_provider",
             "semantic_embedding_dimensions": 32,
             "semantic_embedding_warning_state": "no_warning",
             "semantic_embedding_warning_hint": "embedding_strategy_ready",
@@ -548,6 +550,8 @@ def test_health_endpoint_exposes_lexical_only_memory_retrieval_mode_when_semanti
         "semantic_embedding_provider_hint": "deterministic_baseline",
         "semantic_embedding_model_requested": "deterministic-v1",
         "semantic_embedding_model_effective": "deterministic-v1",
+        "semantic_embedding_model_governance_state": "vectors_disabled",
+        "semantic_embedding_model_governance_hint": "not_applicable_vectors_disabled",
         "semantic_embedding_dimensions": 32,
         "semantic_embedding_warning_state": "vectors_disabled",
         "semantic_embedding_warning_hint": "enable_semantic_vectors_to_activate_embedding_strategy",
@@ -582,6 +586,8 @@ def test_health_endpoint_exposes_embedding_provider_fallback_posture_when_non_de
         "semantic_embedding_provider_hint": "provider_not_implemented_fallback_deterministic",
         "semantic_embedding_model_requested": "text-embedding-3-small",
         "semantic_embedding_model_effective": "deterministic-v1",
+        "semantic_embedding_model_governance_state": "provider_fallback_effective_model",
+        "semantic_embedding_model_governance_hint": "effective_model_controlled_by_fallback_provider",
         "semantic_embedding_dimensions": 1536,
         "semantic_embedding_warning_state": "provider_fallback_active",
         "semantic_embedding_warning_hint": "provider_not_implemented_using_deterministic_fallback",
@@ -607,6 +613,23 @@ def test_health_endpoint_exposes_configured_embedding_source_kinds() -> None:
     assert (
         body["memory_retrieval"]["semantic_embedding_source_coverage_hint"]
         == "enable_semantic_or_affective_source_for_vector_hits"
+    )
+
+
+def test_health_endpoint_exposes_embedding_model_governance_posture_for_deterministic_custom_model() -> None:
+    client, _, _ = _client(
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v2",
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["memory_retrieval"]["semantic_embedding_model_governance_state"] == "deterministic_custom_model_name"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_model_governance_hint"]
+        == "deterministic_provider_uses_fixed_embedding_behavior"
     )
 
 

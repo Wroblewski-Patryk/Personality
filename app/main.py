@@ -123,6 +123,16 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
             str(snapshot["semantic_embedding_model_effective"]),
             str(snapshot["semantic_embedding_provider_hint"]),
         )
+    if str(snapshot["semantic_embedding_model_governance_state"]) == "deterministic_custom_model_name":
+        logger.warning(
+            "embedding_model_governance_warning semantic_vector_enabled=%s provider=%s requested_model=%s effective_model=%s governance_state=%s hint=%s recommendation=use_deterministic_v1_or_implement_provider_backed_model_execution",
+            bool(snapshot["semantic_vector_enabled"]),
+            str(snapshot["semantic_embedding_provider_effective"]),
+            str(snapshot["semantic_embedding_model_requested"]),
+            str(snapshot["semantic_embedding_model_effective"]),
+            str(snapshot["semantic_embedding_model_governance_state"]),
+            str(snapshot["semantic_embedding_model_governance_hint"]),
+        )
     if str(snapshot["semantic_embedding_source_coverage_state"]) in {
         "partial_for_current_retrieval_path",
         "missing_for_current_retrieval_path",
