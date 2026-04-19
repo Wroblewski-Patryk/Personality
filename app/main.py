@@ -219,24 +219,51 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
             int(snapshot["semantic_embedding_source_rollout_progress_percent"]),
             str(snapshot["semantic_embedding_source_rollout_recommendation"]),
         )
+    source_rollout_enforcement_alignment_state = str(
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"]
+    )
+    if source_rollout_enforcement_alignment_state in {
+        "below_recommendation",
+        "above_recommendation",
+        "aligned_with_recommendation",
+    }:
+        logger.info(
+            "embedding_source_rollout_enforcement_hint semantic_vector_enabled=%s source_rollout_enforcement=%s recommended_source_rollout_enforcement=%s source_rollout_enforcement_alignment=%s source_rollout_enforcement_alignment_state=%s source_rollout_enforcement_alignment_hint=%s rollout_completion_state=%s rollout_next_source_kind=%s",
+            bool(snapshot["semantic_vector_enabled"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement"]),
+            str(snapshot["semantic_embedding_recommended_source_rollout_enforcement"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement_alignment"]),
+            source_rollout_enforcement_alignment_state,
+            str(snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]),
+            str(snapshot["semantic_embedding_source_rollout_completion_state"]),
+            str(snapshot["semantic_embedding_source_rollout_next_source_kind"]),
+        )
     if str(snapshot["semantic_embedding_source_rollout_enforcement_state"]) == "warning_only":
         logger.warning(
-            "embedding_source_rollout_warning semantic_vector_enabled=%s source_rollout_enforcement=%s source_rollout_enforcement_state=%s source_rollout_enforcement_hint=%s rollout_state=%s rollout_completion_state=%s rollout_next_source_kind=%s recommendation=complete_source_rollout_or_keep_warn_mode",
+            "embedding_source_rollout_warning semantic_vector_enabled=%s source_rollout_enforcement=%s source_rollout_enforcement_state=%s source_rollout_enforcement_hint=%s recommended_source_rollout_enforcement=%s source_rollout_enforcement_alignment=%s source_rollout_enforcement_alignment_state=%s source_rollout_enforcement_alignment_hint=%s rollout_state=%s rollout_completion_state=%s rollout_next_source_kind=%s recommendation=complete_source_rollout_or_keep_warn_mode",
             bool(snapshot["semantic_vector_enabled"]),
             str(snapshot["semantic_embedding_source_rollout_enforcement"]),
             str(snapshot["semantic_embedding_source_rollout_enforcement_state"]),
             str(snapshot["semantic_embedding_source_rollout_enforcement_hint"]),
+            str(snapshot["semantic_embedding_recommended_source_rollout_enforcement"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement_alignment"]),
+            source_rollout_enforcement_alignment_state,
+            str(snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]),
             str(snapshot["semantic_embedding_source_rollout_state"]),
             str(snapshot["semantic_embedding_source_rollout_completion_state"]),
             str(snapshot["semantic_embedding_source_rollout_next_source_kind"]),
         )
     if str(snapshot["semantic_embedding_source_rollout_enforcement_state"]) == "blocked":
         logger.error(
-            "embedding_source_rollout_block semantic_vector_enabled=%s source_rollout_enforcement=%s source_rollout_enforcement_state=%s source_rollout_enforcement_hint=%s rollout_state=%s rollout_completion_state=%s rollout_next_source_kind=%s",
+            "embedding_source_rollout_block semantic_vector_enabled=%s source_rollout_enforcement=%s source_rollout_enforcement_state=%s source_rollout_enforcement_hint=%s recommended_source_rollout_enforcement=%s source_rollout_enforcement_alignment=%s source_rollout_enforcement_alignment_state=%s source_rollout_enforcement_alignment_hint=%s rollout_state=%s rollout_completion_state=%s rollout_next_source_kind=%s",
             bool(snapshot["semantic_vector_enabled"]),
             str(snapshot["semantic_embedding_source_rollout_enforcement"]),
             str(snapshot["semantic_embedding_source_rollout_enforcement_state"]),
             str(snapshot["semantic_embedding_source_rollout_enforcement_hint"]),
+            str(snapshot["semantic_embedding_recommended_source_rollout_enforcement"]),
+            str(snapshot["semantic_embedding_source_rollout_enforcement_alignment"]),
+            source_rollout_enforcement_alignment_state,
+            str(snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]),
             str(snapshot["semantic_embedding_source_rollout_state"]),
             str(snapshot["semantic_embedding_source_rollout_completion_state"]),
             str(snapshot["semantic_embedding_source_rollout_next_source_kind"]),

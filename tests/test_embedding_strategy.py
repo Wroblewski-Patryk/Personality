@@ -33,6 +33,16 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
         snapshot["semantic_embedding_source_rollout_enforcement_hint"]
         == "pending_source_rollout_allowed_in_warn_mode"
     )
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "aligned_with_recommendation"
+    )
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "source_rollout_enforcement_matches_recommendation"
+    )
     assert snapshot["semantic_embedding_warning_state"] == "no_warning"
     assert snapshot["semantic_embedding_warning_hint"] == "embedding_strategy_ready"
     assert snapshot["semantic_embedding_provider_ownership_state"] == "deterministic_baseline_owner"
@@ -125,6 +135,19 @@ def test_embedding_strategy_snapshot_marks_vectors_disabled_warning_state() -> N
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_hint"]
         == "not_applicable_vectors_disabled"
+    )
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment"]
+        == "not_applicable_vectors_disabled"
+    )
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "not_applicable_vectors_disabled"
+    )
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "enable_vectors_before_source_rollout_enforcement_alignment"
     )
     assert snapshot["semantic_embedding_warning_state"] == "vectors_disabled"
     assert (
@@ -251,6 +274,16 @@ def test_embedding_strategy_snapshot_marks_provider_fallback_warning_state() -> 
     assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "relation"
     assert snapshot["semantic_embedding_source_rollout_completion_state"] == "baseline_complete_relation_pending"
     assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 67
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "aligned_with_recommendation"
+    )
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "source_rollout_enforcement_matches_recommendation"
+    )
     assert snapshot["semantic_embedding_strict_rollout_violations"] == [
         "provider_ownership_fallback_active"
     ]
@@ -364,6 +397,13 @@ def test_embedding_strategy_snapshot_marks_all_vector_sources_enabled_rollout_st
         == "not_applicable_rollout_complete"
     )
     assert snapshot["semantic_embedding_source_rollout_enforcement_hint"] == "source_rollout_is_complete"
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "strict"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "below_recommendation"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"] == "below_recommendation"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "consider_enabling_source_rollout_strict_when_rollout_is_complete"
+    )
     assert snapshot["semantic_embedding_recommended_refresh_mode"] == "manual"
     assert snapshot["semantic_embedding_refresh_alignment_state"] == "on_write_before_recommended_manual"
     assert (
@@ -487,6 +527,41 @@ def test_embedding_strategy_snapshot_marks_source_rollout_enforcement_blocked_in
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_hint"]
         == "enable_pending_source_kinds_before_startup"
+    )
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "above_recommendation"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"] == "above_recommendation"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "source_rollout_strict_enabled_ahead_of_recommendation"
+    )
+
+
+def test_embedding_strategy_snapshot_marks_source_rollout_enforcement_aligned_when_rollout_is_complete_and_strict_is_enabled() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="deterministic",
+        model="deterministic-v1",
+        dimensions=32,
+        source_kinds=("episodic", "semantic", "affective", "relation"),
+        source_rollout_enforcement="strict",
+    )
+
+    assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "none"
+    assert snapshot["semantic_embedding_source_rollout_enforcement"] == "strict"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_state"]
+        == "not_applicable_rollout_complete"
+    )
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "strict"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "aligned_with_recommendation"
+    )
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "source_rollout_enforcement_matches_recommendation"
     )
 
 

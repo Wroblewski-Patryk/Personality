@@ -364,6 +364,10 @@ Allowed values:
 - `semantic_embedding_source_rollout_enforcement`
 - `semantic_embedding_source_rollout_enforcement_state`
 - `semantic_embedding_source_rollout_enforcement_hint`
+- `semantic_embedding_recommended_source_rollout_enforcement`
+- `semantic_embedding_source_rollout_enforcement_alignment`
+- `semantic_embedding_source_rollout_enforcement_alignment_state`
+- `semantic_embedding_source_rollout_enforcement_alignment_hint`
 - `semantic_embedding_refresh_mode`
 - `semantic_embedding_refresh_interval_seconds`
 - `semantic_embedding_refresh_state`

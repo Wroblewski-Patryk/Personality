@@ -15,7 +15,7 @@ Last updated: 2026-04-20
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-265`.
+- The planning queue is complete through `PRJ-275`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,150 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-275 Sync source-rollout enforcement recommendation/alignment slice across docs, planning, and context
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: Product Docs + Backend Builder
+  - Depends on: PRJ-274
+  - Priority: P2
+  - Result:
+    - task board, project state, iteration plan, and open-decisions docs are
+      synchronized through `PRJ-275`
+    - canonical env/config and runtime ops docs now include source-rollout
+      enforcement recommendation/alignment diagnostics
+    - runtime reality docs now record startup source-rollout enforcement hint
+      posture and shared alignment ownership
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_config.py`
+    - `.\.venv\Scripts\python -m pytest -q`
+
+- [x] PRJ-274 Add startup regression coverage for source-rollout enforcement recommendation/alignment hints
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: QA/Test
+  - Depends on: PRJ-273
+  - Priority: P2
+  - Result:
+    - startup log regressions now pin `embedding_source_rollout_enforcement_hint`
+      posture for aligned and below-recommendation scenarios
+    - warning/block log regressions now pin recommendation and alignment fields
+      for warn and strict startup paths
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_main_runtime_policy.py`
+
+- [x] PRJ-273 Expand `/health.memory_retrieval` contract regressions for source-rollout enforcement recommendation/alignment fields
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: QA/Test
+  - Depends on: PRJ-272
+  - Priority: P2
+  - Result:
+    - API health contract tests now pin source-rollout enforcement recommendation
+      and alignment fields across vectors-disabled, pending-rollout, strict
+      blocked, and rollout-complete states
+    - `/health` regression coverage now includes aligned strict posture once
+      rollout is complete
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py`
+
+- [x] PRJ-272 Add shared snapshot regression coverage for source-rollout enforcement recommendation/alignment diagnostics
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: QA/Test
+  - Depends on: PRJ-271
+  - Priority: P2
+  - Result:
+    - embedding strategy unit regressions now pin recommendation/alignment
+      semantics for vectors-disabled, pending-rollout, rollout-complete, strict
+      blocked, and strict aligned states
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py`
+
+- [x] PRJ-271 Add startup source-rollout enforcement alignment hint logs from shared diagnostics
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-270
+  - Priority: P2
+  - Result:
+    - startup now emits `embedding_source_rollout_enforcement_hint` with current
+      enforcement, recommendation, alignment, and rollout completion context
+    - hint log posture is shared across aligned, below-recommendation, and
+      above-recommendation scenarios
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_main_runtime_policy.py tests/test_embedding_strategy.py`
+
+- [x] PRJ-270 Enrich startup source-rollout enforcement warning/block logs with recommendation/alignment diagnostics
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-269
+  - Priority: P2
+  - Result:
+    - `embedding_source_rollout_warning` now includes recommended enforcement and
+      alignment diagnostics from shared snapshot ownership
+    - `embedding_source_rollout_block` now includes recommendation/alignment
+      diagnostics for strict pending-rollout fail-fast posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_main_runtime_policy.py`
+
+- [x] PRJ-269 Expose source-rollout enforcement recommendation/alignment diagnostics through `/health.memory_retrieval`
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-268
+  - Priority: P2
+  - Result:
+    - `/health.memory_retrieval` now surfaces source-rollout enforcement
+      recommendation/alignment fields
+      (`semantic_embedding_recommended_source_rollout_enforcement`,
+      `semantic_embedding_source_rollout_enforcement_alignment`,
+      `semantic_embedding_source_rollout_enforcement_alignment_state`,
+      `semantic_embedding_source_rollout_enforcement_alignment_hint`)
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_embedding_strategy.py`
+
+- [x] PRJ-268 Add source-rollout enforcement alignment state/hint diagnostics in shared embedding strategy snapshot
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-267
+  - Priority: P2
+  - Result:
+    - shared snapshot now exposes source-rollout enforcement alignment state/hint
+      (`semantic_embedding_source_rollout_enforcement_alignment_state`,
+      `semantic_embedding_source_rollout_enforcement_alignment_hint`)
+    - alignment state semantics now distinguish aligned, below-recommendation,
+      above-recommendation, and vectors-disabled posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py`
+
+- [x] PRJ-267 Add source-rollout enforcement alignment primitive diagnostics in shared embedding strategy snapshot
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-266
+  - Priority: P2
+  - Result:
+    - shared snapshot now exposes source-rollout enforcement alignment primitive
+      (`semantic_embedding_source_rollout_enforcement_alignment`) against
+      rollout-aware recommendation posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py`
+
+- [x] PRJ-266 Add source-rollout enforcement recommendation diagnostics in shared embedding strategy snapshot
+  - Status: DONE
+  - Group: Embedding Source Rollout Enforcement Alignment
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-265
+  - Priority: P2
+  - Result:
+    - shared snapshot now exposes rollout-aware source-rollout enforcement
+      recommendation (`semantic_embedding_recommended_source_rollout_enforcement`)
+      with `warn` while rollout is pending and `strict` when rollout is complete
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py`
 
 - [x] PRJ-265 Sync embedding source-rollout enforcement slice across docs, planning, and context
   - Status: DONE

@@ -251,6 +251,15 @@ Last updated: 2026-04-20
   `/health.memory_retrieval`; startup now emits
   `embedding_source_rollout_warning` in warn mode and
   `embedding_source_rollout_block` in strict mode for pending rollout states.
+- 2026-04-20: source-rollout enforcement recommendation/alignment posture is
+  now explicit through shared diagnostics
+  (`semantic_embedding_recommended_source_rollout_enforcement`,
+  `semantic_embedding_source_rollout_enforcement_alignment`,
+  `semantic_embedding_source_rollout_enforcement_alignment_state`,
+  `semantic_embedding_source_rollout_enforcement_alignment_hint`) in
+  `/health.memory_retrieval`; startup now emits
+  `embedding_source_rollout_enforcement_hint` and warning/block logs include
+  the same recommendation/alignment diagnostics.
 - 2026-04-19: relation memory is now a first-class subsystem (`aion_relation`)
   with scoped repository APIs; reflection derives relation updates and runtime
   stages now consume high-confidence relation cues across context, role,

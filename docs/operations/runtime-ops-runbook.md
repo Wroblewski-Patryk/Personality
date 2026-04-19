@@ -120,6 +120,10 @@ retrieval posture:
 - `semantic_embedding_source_rollout_enforcement`
 - `semantic_embedding_source_rollout_enforcement_state`
 - `semantic_embedding_source_rollout_enforcement_hint`
+- `semantic_embedding_recommended_source_rollout_enforcement`
+- `semantic_embedding_source_rollout_enforcement_alignment`
+- `semantic_embedding_source_rollout_enforcement_alignment_state`
+- `semantic_embedding_source_rollout_enforcement_alignment_hint`
 - `semantic_embedding_refresh_mode`
 - `semantic_embedding_refresh_interval_seconds`
 - `semantic_embedding_refresh_state`
@@ -163,12 +167,17 @@ state, next source kind, enabled/missing source sets, and rollout progress.
 
 When vectors are enabled, source rollout is still pending, and
 `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT=warn`, startup emits
-`embedding_source_rollout_warning` to keep pending rollout posture visible.
+`embedding_source_rollout_warning` to keep pending rollout posture visible,
+including recommendation/alignment diagnostics.
 
 When vectors are enabled, source rollout is still pending, and
 `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT=strict`, startup emits
 `embedding_source_rollout_block` and fails fast until source rollout is
-complete.
+complete, including recommendation/alignment diagnostics.
+
+Startup now also emits `embedding_source_rollout_enforcement_hint` to expose
+current enforcement vs recommended rollout posture
+(`aligned|below_recommendation|above_recommendation`).
 
 When semantic vectors are enabled and `EMBEDDING_REFRESH_MODE=manual`, startup
 also emits `embedding_refresh_warning` so operators can confirm that a separate

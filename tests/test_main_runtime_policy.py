@@ -567,6 +567,9 @@ def test_startup_logs_embedding_source_rollout_warning_when_rollout_enforcement_
     assert any("embedding_source_rollout_warning" in message for message in messages)
     assert any("source_rollout_enforcement=warn" in message for message in messages)
     assert any("source_rollout_enforcement_state=warning_only" in message for message in messages)
+    assert any("recommended_source_rollout_enforcement=warn" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment=aligned" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment_state=aligned_with_recommendation" in message for message in messages)
     assert any("rollout_next_source_kind=relation" in message for message in messages)
     assert not any("embedding_source_rollout_block" in message for message in messages)
 
@@ -596,6 +599,55 @@ def test_startup_blocks_embedding_source_rollout_when_enforcement_is_strict(capl
     assert any("embedding_source_rollout_block" in message for message in messages)
     assert any("source_rollout_enforcement=strict" in message for message in messages)
     assert any("source_rollout_enforcement_state=blocked" in message for message in messages)
+    assert any("recommended_source_rollout_enforcement=warn" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment=above_recommendation" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment_state=above_recommendation" in message for message in messages)
+
+
+def test_startup_logs_embedding_source_rollout_enforcement_hint_when_alignment_is_aligned(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("INFO", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective",
+        embedding_source_rollout_enforcement="warn",
+    )
+
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("embedding_source_rollout_enforcement_hint" in message for message in messages)
+    assert any("source_rollout_enforcement=warn" in message for message in messages)
+    assert any("recommended_source_rollout_enforcement=warn" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment=aligned" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment_state=aligned_with_recommendation" in message for message in messages)
+
+
+def test_startup_logs_embedding_source_rollout_enforcement_hint_when_alignment_is_below_recommendation(
+    caplog,
+) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("INFO", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective,relation",
+        embedding_source_rollout_enforcement="warn",
+    )
+
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("embedding_source_rollout_enforcement_hint" in message for message in messages)
+    assert any("source_rollout_enforcement=warn" in message for message in messages)
+    assert any("recommended_source_rollout_enforcement=strict" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment=below_recommendation" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment_state=below_recommendation" in message for message in messages)
 
 
 def test_startup_logs_embedding_refresh_warning_when_manual_refresh_mode_is_enabled(caplog) -> None:

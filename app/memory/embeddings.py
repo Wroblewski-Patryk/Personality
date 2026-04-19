@@ -383,6 +383,37 @@ def embedding_strategy_snapshot(
                 enforcement_alignment_hint = "model_governance_strict_enabled_ahead_of_recommendation"
 
     if not semantic_vector_enabled:
+        recommended_source_rollout_enforcement = "warn"
+        source_rollout_enforcement_alignment = "not_applicable_vectors_disabled"
+        source_rollout_enforcement_alignment_state = "not_applicable_vectors_disabled"
+        source_rollout_enforcement_alignment_hint = (
+            "enable_vectors_before_source_rollout_enforcement_alignment"
+        )
+    else:
+        recommended_source_rollout_enforcement = (
+            "strict" if source_rollout_next_source_kind == "none" else "warn"
+        )
+        source_rollout_enforcement_alignment = _enforcement_alignment_state(
+            normalized_source_rollout_enforcement,
+            recommended_source_rollout_enforcement,
+        )
+        if source_rollout_enforcement_alignment == "aligned":
+            source_rollout_enforcement_alignment_state = "aligned_with_recommendation"
+            source_rollout_enforcement_alignment_hint = (
+                "source_rollout_enforcement_matches_recommendation"
+            )
+        elif source_rollout_enforcement_alignment == "below_recommendation":
+            source_rollout_enforcement_alignment_state = "below_recommendation"
+            source_rollout_enforcement_alignment_hint = (
+                "consider_enabling_source_rollout_strict_when_rollout_is_complete"
+            )
+        else:
+            source_rollout_enforcement_alignment_state = "above_recommendation"
+            source_rollout_enforcement_alignment_hint = (
+                "source_rollout_strict_enabled_ahead_of_recommendation"
+            )
+
+    if not semantic_vector_enabled:
         recommended_refresh_mode = "on_write"
         refresh_alignment_state = "not_applicable_vectors_disabled"
         refresh_alignment_hint = "enable_vectors_before_refresh_alignment"
@@ -456,6 +487,10 @@ def embedding_strategy_snapshot(
         "semantic_embedding_source_rollout_enforcement": normalized_source_rollout_enforcement,
         "semantic_embedding_source_rollout_enforcement_state": source_rollout_enforcement_state,
         "semantic_embedding_source_rollout_enforcement_hint": source_rollout_enforcement_hint,
+        "semantic_embedding_recommended_source_rollout_enforcement": recommended_source_rollout_enforcement,
+        "semantic_embedding_source_rollout_enforcement_alignment": source_rollout_enforcement_alignment,
+        "semantic_embedding_source_rollout_enforcement_alignment_state": source_rollout_enforcement_alignment_state,
+        "semantic_embedding_source_rollout_enforcement_alignment_hint": source_rollout_enforcement_alignment_hint,
         "semantic_embedding_warning_state": warning_state,
         "semantic_embedding_warning_hint": warning_hint,
         "semantic_embedding_refresh_mode": normalized_refresh_mode,

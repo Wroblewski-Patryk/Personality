@@ -319,6 +319,33 @@ Completed on 2026-04-18:
   `embedding_source_rollout_block` in strict mode for pending source rollout.
 - `PRJ-265` is complete: planning/docs/context are synchronized through
   `PRJ-265` with targeted regression coverage for source-rollout enforcement.
+- `PRJ-266` is complete: source-rollout enforcement recommendation posture is
+  now explicit through shared diagnostics
+  (`semantic_embedding_recommended_source_rollout_enforcement`).
+- `PRJ-267` is complete: source-rollout enforcement alignment primitive is now
+  explicit through shared diagnostics
+  (`semantic_embedding_source_rollout_enforcement_alignment`).
+- `PRJ-268` is complete: source-rollout enforcement alignment state/hint are
+  now explicit through shared diagnostics
+  (`semantic_embedding_source_rollout_enforcement_alignment_state`,
+  `semantic_embedding_source_rollout_enforcement_alignment_hint`).
+- `PRJ-269` is complete: `/health.memory_retrieval` now surfaces source-rollout
+  enforcement recommendation/alignment posture.
+- `PRJ-270` is complete: startup source-rollout warning/block logs now include
+  recommendation/alignment diagnostics from the shared snapshot.
+- `PRJ-271` is complete: startup now emits
+  `embedding_source_rollout_enforcement_hint` with current enforcement,
+  recommendation, and alignment posture.
+- `PRJ-272` is complete: snapshot regressions now pin source-rollout
+  recommendation/alignment semantics across disabled, pending, complete, and
+  strict aligned/blocked rollout states.
+- `PRJ-273` is complete: `/health` API regressions now pin source-rollout
+  recommendation/alignment fields across key rollout states.
+- `PRJ-274` is complete: startup logging regressions now pin source-rollout
+  enforcement hint posture plus warning/block recommendation/alignment fields.
+- `PRJ-275` is complete: planning/docs/context are synchronized through
+  `PRJ-275` with targeted regression coverage for source-rollout enforcement
+  recommendation/alignment diagnostics.
 
 ## Highest-Risk Gaps
 
@@ -1009,7 +1036,7 @@ implicit or uncontrolled side effects.
 
 ## Next Derived Slice
 
-The planning queue is complete through `PRJ-265`.
+The planning queue is complete through `PRJ-275`.
 There is currently no execution-ready PRJ slice in the board.
 Before the next implementation slice:
 

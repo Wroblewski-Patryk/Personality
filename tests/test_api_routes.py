@@ -511,6 +511,10 @@ def test_health_endpoint_returns_ok() -> None:
             "semantic_embedding_source_rollout_enforcement": "warn",
             "semantic_embedding_source_rollout_enforcement_state": "warning_only",
             "semantic_embedding_source_rollout_enforcement_hint": "pending_source_rollout_allowed_in_warn_mode",
+            "semantic_embedding_recommended_source_rollout_enforcement": "warn",
+            "semantic_embedding_source_rollout_enforcement_alignment": "aligned",
+            "semantic_embedding_source_rollout_enforcement_alignment_state": "aligned_with_recommendation",
+            "semantic_embedding_source_rollout_enforcement_alignment_hint": "source_rollout_enforcement_matches_recommendation",
             "semantic_embedding_refresh_mode": "on_write",
             "semantic_embedding_refresh_interval_seconds": 21600,
             "semantic_embedding_refresh_state": "on_write_refresh_active",
@@ -649,6 +653,10 @@ def test_health_endpoint_exposes_lexical_only_memory_retrieval_mode_when_semanti
         "semantic_embedding_source_rollout_enforcement": "warn",
         "semantic_embedding_source_rollout_enforcement_state": "not_applicable_vectors_disabled",
         "semantic_embedding_source_rollout_enforcement_hint": "not_applicable_vectors_disabled",
+        "semantic_embedding_recommended_source_rollout_enforcement": "warn",
+        "semantic_embedding_source_rollout_enforcement_alignment": "not_applicable_vectors_disabled",
+        "semantic_embedding_source_rollout_enforcement_alignment_state": "not_applicable_vectors_disabled",
+        "semantic_embedding_source_rollout_enforcement_alignment_hint": "enable_vectors_before_source_rollout_enforcement_alignment",
         "semantic_embedding_refresh_mode": "on_write",
         "semantic_embedding_refresh_interval_seconds": 21600,
         "semantic_embedding_refresh_state": "vectors_disabled",
@@ -727,6 +735,10 @@ def test_health_endpoint_exposes_embedding_provider_fallback_posture_when_non_de
         "semantic_embedding_source_rollout_enforcement": "warn",
         "semantic_embedding_source_rollout_enforcement_state": "warning_only",
         "semantic_embedding_source_rollout_enforcement_hint": "pending_source_rollout_allowed_in_warn_mode",
+        "semantic_embedding_recommended_source_rollout_enforcement": "warn",
+        "semantic_embedding_source_rollout_enforcement_alignment": "aligned",
+        "semantic_embedding_source_rollout_enforcement_alignment_state": "aligned_with_recommendation",
+        "semantic_embedding_source_rollout_enforcement_alignment_hint": "source_rollout_enforcement_matches_recommendation",
         "semantic_embedding_refresh_mode": "on_write",
         "semantic_embedding_refresh_interval_seconds": 21600,
         "semantic_embedding_refresh_state": "on_write_refresh_active",
@@ -771,6 +783,16 @@ def test_health_endpoint_exposes_configured_embedding_source_kinds() -> None:
         body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_hint"]
         == "pending_source_rollout_allowed_in_warn_mode"
     )
+    assert body["memory_retrieval"]["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "aligned_with_recommendation"
+    )
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "source_rollout_enforcement_matches_recommendation"
+    )
 
 
 def test_health_endpoint_marks_source_rollout_fully_enabled_when_relation_is_included() -> None:
@@ -802,6 +824,16 @@ def test_health_endpoint_marks_source_rollout_fully_enabled_when_relation_is_inc
         == "not_applicable_rollout_complete"
     )
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_hint"] == "source_rollout_is_complete"
+    assert body["memory_retrieval"]["semantic_embedding_recommended_source_rollout_enforcement"] == "strict"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment"] == "below_recommendation"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "below_recommendation"
+    )
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "consider_enabling_source_rollout_strict_when_rollout_is_complete"
+    )
     assert body["memory_retrieval"]["semantic_embedding_recommended_refresh_mode"] == "manual"
     assert (
         body["memory_retrieval"]["semantic_embedding_refresh_alignment_state"]
@@ -898,7 +930,47 @@ def test_health_endpoint_exposes_source_rollout_enforcement_blocked_posture_in_s
         body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_hint"]
         == "enable_pending_source_kinds_before_startup"
     )
+    assert body["memory_retrieval"]["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment"] == "above_recommendation"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "above_recommendation"
+    )
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "source_rollout_strict_enabled_ahead_of_recommendation"
+    )
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "relation"
+
+
+def test_health_endpoint_exposes_source_rollout_enforcement_aligned_posture_when_rollout_is_complete_and_strict_is_enabled() -> None:
+    client, _, _ = _client(
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective,relation",
+        embedding_source_rollout_enforcement="strict",
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "none"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement"] == "strict"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_state"]
+        == "not_applicable_rollout_complete"
+    )
+    assert body["memory_retrieval"]["semantic_embedding_recommended_source_rollout_enforcement"] == "strict"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "aligned_with_recommendation"
+    )
+    assert (
+        body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_hint"]
+        == "source_rollout_enforcement_matches_recommendation"
+    )
 
 
 def test_health_endpoint_exposes_embedding_refresh_posture() -> None:

@@ -260,6 +260,17 @@ Current limitation:
   `semantic_embedding_source_rollout_enforcement_hint`), enabling
   warn-mode rollout visibility and strict-mode startup block behavior while
   rollout remains pending.
+- source-rollout enforcement recommendation/alignment posture is now explicit
+  through shared diagnostics
+  (`semantic_embedding_recommended_source_rollout_enforcement`,
+  `semantic_embedding_source_rollout_enforcement_alignment`,
+  `semantic_embedding_source_rollout_enforcement_alignment_state`,
+  `semantic_embedding_source_rollout_enforcement_alignment_hint`), so startup
+  and `/health` share one recommendation/alignment owner for source-rollout
+  enforcement.
+- startup now emits `embedding_source_rollout_enforcement_hint` and
+  recommendation/alignment-enriched warning/block logs for source-rollout
+  enforcement posture.
 - refresh cadence posture is now explicit through helper-owned diagnostics
   (`semantic_embedding_refresh_cadence_state`,
   `semantic_embedding_refresh_cadence_hint`) plus refresh recommendation and
