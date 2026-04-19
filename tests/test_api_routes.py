@@ -508,6 +508,11 @@ def test_health_endpoint_returns_ok() -> None:
             "semantic_embedding_refresh_interval_seconds": 21600,
             "semantic_embedding_refresh_state": "on_write_refresh_active",
             "semantic_embedding_refresh_hint": "refresh_on_write_enabled",
+            "semantic_embedding_refresh_cadence_state": "on_write_continuous",
+            "semantic_embedding_refresh_cadence_hint": "on_write_refresh_has_no_manual_gap",
+            "semantic_embedding_recommended_refresh_mode": "on_write",
+            "semantic_embedding_refresh_alignment_state": "aligned",
+            "semantic_embedding_refresh_alignment_hint": "refresh_mode_matches_active_rollout_recommendation",
         },
         "scheduler": {
             "healthy": True,
@@ -638,6 +643,11 @@ def test_health_endpoint_exposes_lexical_only_memory_retrieval_mode_when_semanti
         "semantic_embedding_refresh_interval_seconds": 21600,
         "semantic_embedding_refresh_state": "vectors_disabled",
         "semantic_embedding_refresh_hint": "not_applicable_vectors_disabled",
+        "semantic_embedding_refresh_cadence_state": "vectors_disabled",
+        "semantic_embedding_refresh_cadence_hint": "not_applicable_vectors_disabled",
+        "semantic_embedding_recommended_refresh_mode": "on_write",
+        "semantic_embedding_refresh_alignment_state": "not_applicable_vectors_disabled",
+        "semantic_embedding_refresh_alignment_hint": "enable_vectors_before_refresh_alignment",
     }
 
 
@@ -708,6 +718,11 @@ def test_health_endpoint_exposes_embedding_provider_fallback_posture_when_non_de
         "semantic_embedding_refresh_interval_seconds": 21600,
         "semantic_embedding_refresh_state": "on_write_refresh_active",
         "semantic_embedding_refresh_hint": "refresh_on_write_enabled",
+        "semantic_embedding_refresh_cadence_state": "on_write_continuous",
+        "semantic_embedding_refresh_cadence_hint": "on_write_refresh_has_no_manual_gap",
+        "semantic_embedding_recommended_refresh_mode": "on_write",
+        "semantic_embedding_refresh_alignment_state": "aligned",
+        "semantic_embedding_refresh_alignment_hint": "refresh_mode_matches_active_rollout_recommendation",
     }
 
 
@@ -763,6 +778,15 @@ def test_health_endpoint_marks_source_rollout_fully_enabled_when_relation_is_inc
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "none"
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_completion_state"] == "fully_enabled"
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_progress_percent"] == 100
+    assert body["memory_retrieval"]["semantic_embedding_recommended_refresh_mode"] == "manual"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_refresh_alignment_state"]
+        == "on_write_before_recommended_manual"
+    )
+    assert (
+        body["memory_retrieval"]["semantic_embedding_refresh_alignment_hint"]
+        == "consider_switching_to_manual_for_mature_rollout"
+    )
 
 
 def test_health_endpoint_exposes_embedding_model_governance_posture_for_deterministic_custom_model() -> None:
@@ -848,6 +872,17 @@ def test_health_endpoint_exposes_embedding_refresh_posture() -> None:
     assert (
         body["memory_retrieval"]["semantic_embedding_refresh_hint"]
         == "ensure_manual_refresh_process_is_defined"
+    )
+    assert body["memory_retrieval"]["semantic_embedding_refresh_cadence_state"] == "manual_moderate_frequency"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_refresh_cadence_hint"]
+        == "manual_refresh_runs_within_daily_window"
+    )
+    assert body["memory_retrieval"]["semantic_embedding_recommended_refresh_mode"] == "on_write"
+    assert body["memory_retrieval"]["semantic_embedding_refresh_alignment_state"] == "manual_override"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_refresh_alignment_hint"]
+        == "ensure_manual_mode_has_operational_coverage"
     )
     assert body["memory_retrieval"]["semantic_embedding_owner_strategy_state"] == "deterministic_manual_owner"
     assert (

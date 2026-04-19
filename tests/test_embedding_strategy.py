@@ -82,6 +82,14 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
     assert snapshot["semantic_embedding_refresh_interval_seconds"] == 21600
     assert snapshot["semantic_embedding_refresh_state"] == "on_write_refresh_active"
     assert snapshot["semantic_embedding_refresh_hint"] == "refresh_on_write_enabled"
+    assert snapshot["semantic_embedding_refresh_cadence_state"] == "on_write_continuous"
+    assert snapshot["semantic_embedding_refresh_cadence_hint"] == "on_write_refresh_has_no_manual_gap"
+    assert snapshot["semantic_embedding_recommended_refresh_mode"] == "on_write"
+    assert snapshot["semantic_embedding_refresh_alignment_state"] == "aligned"
+    assert (
+        snapshot["semantic_embedding_refresh_alignment_hint"]
+        == "refresh_mode_matches_active_rollout_recommendation"
+    )
 
 
 def test_embedding_strategy_snapshot_marks_vectors_disabled_warning_state() -> None:
@@ -168,6 +176,14 @@ def test_embedding_strategy_snapshot_marks_vectors_disabled_warning_state() -> N
     )
     assert snapshot["semantic_embedding_refresh_state"] == "vectors_disabled"
     assert snapshot["semantic_embedding_refresh_hint"] == "not_applicable_vectors_disabled"
+    assert snapshot["semantic_embedding_refresh_cadence_state"] == "vectors_disabled"
+    assert snapshot["semantic_embedding_refresh_cadence_hint"] == "not_applicable_vectors_disabled"
+    assert snapshot["semantic_embedding_recommended_refresh_mode"] == "on_write"
+    assert snapshot["semantic_embedding_refresh_alignment_state"] == "not_applicable_vectors_disabled"
+    assert (
+        snapshot["semantic_embedding_refresh_alignment_hint"]
+        == "enable_vectors_before_refresh_alignment"
+    )
 
 
 def test_embedding_strategy_snapshot_marks_provider_fallback_warning_state() -> None:
@@ -327,6 +343,12 @@ def test_embedding_strategy_snapshot_marks_all_vector_sources_enabled_rollout_st
     assert snapshot["semantic_embedding_source_rollout_phase_index"] == 3
     assert snapshot["semantic_embedding_source_rollout_phase_total"] == 3
     assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 100
+    assert snapshot["semantic_embedding_recommended_refresh_mode"] == "manual"
+    assert snapshot["semantic_embedding_refresh_alignment_state"] == "on_write_before_recommended_manual"
+    assert (
+        snapshot["semantic_embedding_refresh_alignment_hint"]
+        == "consider_switching_to_manual_for_mature_rollout"
+    )
 
 
 def test_embedding_strategy_snapshot_marks_manual_refresh_posture_when_manual_mode_is_requested() -> None:
@@ -343,6 +365,14 @@ def test_embedding_strategy_snapshot_marks_manual_refresh_posture_when_manual_mo
     assert snapshot["semantic_embedding_refresh_interval_seconds"] == 7200
     assert snapshot["semantic_embedding_refresh_state"] == "manual_refresh_required"
     assert snapshot["semantic_embedding_refresh_hint"] == "ensure_manual_refresh_process_is_defined"
+    assert snapshot["semantic_embedding_refresh_cadence_state"] == "manual_moderate_frequency"
+    assert snapshot["semantic_embedding_refresh_cadence_hint"] == "manual_refresh_runs_within_daily_window"
+    assert snapshot["semantic_embedding_recommended_refresh_mode"] == "on_write"
+    assert snapshot["semantic_embedding_refresh_alignment_state"] == "manual_override"
+    assert (
+        snapshot["semantic_embedding_refresh_alignment_hint"]
+        == "ensure_manual_mode_has_operational_coverage"
+    )
 
 
 def test_embedding_strategy_snapshot_marks_deterministic_custom_model_governance_posture() -> None:
@@ -455,6 +485,34 @@ def test_embedding_strategy_snapshot_marks_mixed_alignment_when_provider_strict_
         snapshot["semantic_embedding_enforcement_alignment_hint"]
         == "normalize_enforcement_levels_to_recommendation"
     )
+
+
+def test_embedding_strategy_snapshot_marks_manual_high_frequency_refresh_cadence_state() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="deterministic",
+        model="deterministic-v1",
+        dimensions=32,
+        refresh_mode="manual",
+        refresh_interval_seconds=600,
+    )
+
+    assert snapshot["semantic_embedding_refresh_cadence_state"] == "manual_high_frequency"
+    assert snapshot["semantic_embedding_refresh_cadence_hint"] == "manual_refresh_runs_at_high_frequency"
+
+
+def test_embedding_strategy_snapshot_marks_manual_low_frequency_refresh_cadence_state() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="deterministic",
+        model="deterministic-v1",
+        dimensions=32,
+        refresh_mode="manual",
+        refresh_interval_seconds=50000,
+    )
+
+    assert snapshot["semantic_embedding_refresh_cadence_state"] == "manual_low_frequency"
+    assert snapshot["semantic_embedding_refresh_cadence_hint"] == "manual_refresh_may_cause_stale_vectors"
 
 
 def test_normalize_embedding_source_kinds_returns_defaults_when_missing() -> None:

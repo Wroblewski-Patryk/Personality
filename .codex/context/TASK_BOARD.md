@@ -15,7 +15,7 @@ Last updated: 2026-04-20
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-255`.
+- The planning queue is complete through `PRJ-260`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,87 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-260 Sync embedding refresh-strategy guidance slice across docs, planning, and context
+  - Status: DONE
+  - Group: Embedding Refresh Strategy Guidance
+  - Owner: Product Docs + Backend Builder
+  - Depends on: PRJ-259
+  - Priority: P2
+  - Result:
+    - task board, project state, iteration plan, and open-decisions docs are
+      synchronized through `PRJ-260`
+    - canonical env/config and runtime ops docs now include refresh
+      cadence/recommendation/alignment diagnostics
+    - runtime reality docs now record startup refresh-hint posture and shared
+      refresh strategy ownership
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
+    - `.\.venv\Scripts\python -m pytest -q`
+
+- [x] PRJ-259 Add startup refresh-strategy hint logs from shared diagnostics
+  - Status: DONE
+  - Group: Embedding Refresh Strategy Guidance
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-258
+  - Priority: P2
+  - Result:
+    - startup refresh warning logs now include cadence diagnostics for manual
+      posture visibility
+    - startup now emits `embedding_refresh_hint` when refresh mode is not
+      aligned with rollout recommendation posture
+    - runtime log regressions now pin manual-override and
+      on-write-before-manual-recommendation hint paths
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_main_runtime_policy.py tests/test_embedding_strategy.py`
+
+- [x] PRJ-258 Add refresh recommendation-alignment diagnostics in shared embedding strategy snapshot
+  - Status: DONE
+  - Group: Embedding Refresh Strategy Guidance
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-257
+  - Priority: P2
+  - Result:
+    - shared embedding strategy snapshot now exposes refresh alignment posture
+      (`semantic_embedding_refresh_alignment_state`,
+      `semantic_embedding_refresh_alignment_hint`) against rollout-aware
+      refresh recommendation
+    - `/health.memory_retrieval` now surfaces refresh alignment posture across
+      vectors-disabled, active rollout, and fully-enabled rollout states
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py`
+
+- [x] PRJ-257 Add refresh strategy recommendation diagnostics in shared embedding strategy snapshot
+  - Status: DONE
+  - Group: Embedding Refresh Strategy Guidance
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-256
+  - Priority: P2
+  - Result:
+    - shared embedding strategy snapshot now exposes recommended refresh mode
+      (`semantic_embedding_recommended_refresh_mode`) using rollout-aware
+      semantics (`on_write` during active rollout, `manual` for mature/full
+      source rollout)
+    - `/health.memory_retrieval` now surfaces recommended refresh posture for
+      baseline and full-source rollout states
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py`
+
+- [x] PRJ-256 Add refresh cadence diagnostics in shared embedding strategy snapshot
+  - Status: DONE
+  - Group: Embedding Refresh Strategy Guidance
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-255
+  - Priority: P2
+  - Result:
+    - shared embedding strategy snapshot now exposes refresh cadence diagnostics
+      (`semantic_embedding_refresh_cadence_state`,
+      `semantic_embedding_refresh_cadence_hint`) for vectors-disabled, on-write,
+      and manual high/moderate/low-frequency modes
+    - `/health.memory_retrieval` now surfaces refresh cadence posture in all
+      tested retrieval configurations
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py`
 
 - [x] PRJ-255 Sync embedding source-rollout sequencing slice across docs, planning, and context
   - Status: DONE

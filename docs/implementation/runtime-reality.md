@@ -253,6 +253,16 @@ Current limitation:
   vectors are enabled.
 - startup now also emits `embedding_source_rollout_hint` when vectors are
   enabled and rollout still has a pending next source kind.
+- refresh cadence posture is now explicit through helper-owned diagnostics
+  (`semantic_embedding_refresh_cadence_state`,
+  `semantic_embedding_refresh_cadence_hint`) plus refresh recommendation and
+  alignment diagnostics
+  (`semantic_embedding_recommended_refresh_mode`,
+  `semantic_embedding_refresh_alignment_state`,
+  `semantic_embedding_refresh_alignment_hint`) so `/health` and startup use one
+  refresh strategy owner.
+- startup now emits `embedding_refresh_hint` whenever refresh mode deviates from
+  rollout recommendation posture.
 
 ### Event API behavior
 

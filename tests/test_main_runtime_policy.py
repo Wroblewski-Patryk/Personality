@@ -570,6 +570,8 @@ def test_startup_logs_embedding_refresh_warning_when_manual_refresh_mode_is_enab
     assert any("refresh_interval_seconds=7200" in message for message in messages)
     assert any("refresh_state=manual_refresh_required" in message for message in messages)
     assert any("hint=ensure_manual_refresh_process_is_defined" in message for message in messages)
+    assert any("refresh_cadence_state=manual_moderate_frequency" in message for message in messages)
+    assert any("refresh_cadence_hint=manual_refresh_runs_within_daily_window" in message for message in messages)
 
 
 def test_startup_skips_embedding_refresh_warning_when_on_write_refresh_mode_is_enabled(caplog) -> None:
@@ -589,6 +591,55 @@ def test_startup_skips_embedding_refresh_warning_when_on_write_refresh_mode_is_e
 
     messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
     assert not any("embedding_refresh_warning" in message for message in messages)
+
+
+def test_startup_logs_embedding_refresh_hint_when_manual_mode_overrides_active_rollout_recommendation(
+    caplog,
+) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("INFO", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective",
+        embedding_refresh_mode="manual",
+        embedding_refresh_interval_seconds=7200,
+    )
+
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("embedding_refresh_hint" in message for message in messages)
+    assert any("refresh_mode=manual" in message for message in messages)
+    assert any("recommended_refresh_mode=on_write" in message for message in messages)
+    assert any("refresh_alignment_state=manual_override" in message for message in messages)
+    assert any("refresh_cadence_state=manual_moderate_frequency" in message for message in messages)
+
+
+def test_startup_logs_embedding_refresh_hint_when_on_write_precedes_manual_recommendation_for_mature_rollout(
+    caplog,
+) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("INFO", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="deterministic",
+        embedding_model="deterministic-v1",
+        embedding_source_kinds="episodic,semantic,affective,relation",
+        embedding_refresh_mode="on_write",
+        embedding_refresh_interval_seconds=21600,
+    )
+
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("embedding_refresh_hint" in message for message in messages)
+    assert any("refresh_mode=on_write" in message for message in messages)
+    assert any("recommended_refresh_mode=manual" in message for message in messages)
+    assert any("refresh_alignment_state=on_write_before_recommended_manual" in message for message in messages)
 
 
 def test_startup_logs_embedding_strategy_hint_when_strict_rollout_is_ready_but_enforcement_is_warn(

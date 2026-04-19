@@ -353,6 +353,11 @@ Allowed values:
 - `semantic_embedding_refresh_interval_seconds`
 - `semantic_embedding_refresh_state`
 - `semantic_embedding_refresh_hint`
+- `semantic_embedding_refresh_cadence_state`
+- `semantic_embedding_refresh_cadence_hint`
+- `semantic_embedding_recommended_refresh_mode`
+- `semantic_embedding_refresh_alignment_state`
+- `semantic_embedding_refresh_alignment_hint`
 
 Compatibility route `POST /event?debug=true` also emits:
 

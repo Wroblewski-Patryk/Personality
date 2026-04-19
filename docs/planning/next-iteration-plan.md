@@ -287,6 +287,22 @@ Completed on 2026-04-18:
 - `PRJ-255` is complete: planning/docs/context are synchronized through
   `PRJ-255` with targeted regression coverage for source-rollout sequencing
   diagnostics.
+- `PRJ-256` is complete: refresh cadence posture is now explicit in shared
+  diagnostics (`semantic_embedding_refresh_cadence_state`,
+  `semantic_embedding_refresh_cadence_hint`) for vectors-disabled, on-write,
+  and manual high/moderate/low frequency modes.
+- `PRJ-257` is complete: refresh strategy recommendation posture is now explicit
+  in shared diagnostics (`semantic_embedding_recommended_refresh_mode`) with
+  rollout-aware recommendation semantics.
+- `PRJ-258` is complete: refresh recommendation alignment posture is now
+  explicit through shared diagnostics
+  (`semantic_embedding_refresh_alignment_state`,
+  `semantic_embedding_refresh_alignment_hint`).
+- `PRJ-259` is complete: startup now emits `embedding_refresh_hint` whenever
+  refresh posture deviates from rollout recommendation, and refresh warning logs
+  now include cadence diagnostics.
+- `PRJ-260` is complete: planning/docs/context are synchronized through
+  `PRJ-260` with targeted regression coverage for refresh strategy diagnostics.
 
 ## Highest-Risk Gaps
 
@@ -977,7 +993,7 @@ implicit or uncontrolled side effects.
 
 ## Next Derived Slice
 
-The planning queue is complete through `PRJ-255`.
+The planning queue is complete through `PRJ-260`.
 There is currently no execution-ready PRJ slice in the board.
 Before the next implementation slice:
 

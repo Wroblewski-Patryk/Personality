@@ -233,6 +233,16 @@ Last updated: 2026-04-20
   baseline rollout posture.
 - 2026-04-20: startup now emits `embedding_source_rollout_hint` whenever
   vectors are enabled and source rollout still has a pending next source kind.
+- 2026-04-20: refresh cadence posture is now explicit through shared diagnostics
+  (`semantic_embedding_refresh_cadence_state`,
+  `semantic_embedding_refresh_cadence_hint`) in `/health.memory_retrieval`.
+- 2026-04-20: refresh recommendation and alignment posture are now explicit
+  through shared diagnostics (`semantic_embedding_recommended_refresh_mode`,
+  `semantic_embedding_refresh_alignment_state`,
+  `semantic_embedding_refresh_alignment_hint`) in `/health.memory_retrieval`.
+- 2026-04-20: startup now emits `embedding_refresh_hint` whenever refresh
+  posture deviates from rollout recommendation, and manual refresh warnings now
+  include cadence diagnostics.
 - 2026-04-19: relation memory is now a first-class subsystem (`aion_relation`)
   with scoped repository APIs; reflection derives relation updates and runtime
   stages now consume high-confidence relation cues across context, role,

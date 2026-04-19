@@ -121,6 +121,11 @@ retrieval posture:
 - `semantic_embedding_refresh_interval_seconds`
 - `semantic_embedding_refresh_state`
 - `semantic_embedding_refresh_hint`
+- `semantic_embedding_refresh_cadence_state`
+- `semantic_embedding_refresh_cadence_hint`
+- `semantic_embedding_recommended_refresh_mode`
+- `semantic_embedding_refresh_alignment_state`
+- `semantic_embedding_refresh_alignment_hint`
 
 When semantic vectors are enabled and a non-implemented provider is requested
 (for example `EMBEDDING_PROVIDER=openai` today), startup emits
@@ -156,6 +161,11 @@ state, next source kind, enabled/missing source sets, and rollout progress.
 When semantic vectors are enabled and `EMBEDDING_REFRESH_MODE=manual`, startup
 also emits `embedding_refresh_warning` so operators can confirm that a separate
 manual refresh process exists for embedding updates.
+
+Startup now also emits `embedding_refresh_hint` when refresh mode is not
+aligned with rollout recommendation posture (for example manual override before
+mature rollout, or on-write posture before recommended manual mode after full
+source rollout).
 
 Startup now also emits `embedding_strategy_hint` with strict-rollout readiness,
 recommendations, and enforcement-alignment posture so operators can decide

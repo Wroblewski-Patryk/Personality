@@ -185,12 +185,25 @@ def embedding_strategy_snapshot(
     if not semantic_vector_enabled:
         refresh_state = "vectors_disabled"
         refresh_hint = "not_applicable_vectors_disabled"
+        refresh_cadence_state = "vectors_disabled"
+        refresh_cadence_hint = "not_applicable_vectors_disabled"
     elif normalized_refresh_mode == "manual":
         refresh_state = "manual_refresh_required"
         refresh_hint = "ensure_manual_refresh_process_is_defined"
+        if normalized_refresh_interval_seconds <= 900:
+            refresh_cadence_state = "manual_high_frequency"
+            refresh_cadence_hint = "manual_refresh_runs_at_high_frequency"
+        elif normalized_refresh_interval_seconds <= DEFAULT_EMBEDDING_REFRESH_INTERVAL_SECONDS:
+            refresh_cadence_state = "manual_moderate_frequency"
+            refresh_cadence_hint = "manual_refresh_runs_within_daily_window"
+        else:
+            refresh_cadence_state = "manual_low_frequency"
+            refresh_cadence_hint = "manual_refresh_may_cause_stale_vectors"
     else:
         refresh_state = "on_write_refresh_active"
         refresh_hint = "refresh_on_write_enabled"
+        refresh_cadence_state = "on_write_continuous"
+        refresh_cadence_hint = "on_write_refresh_has_no_manual_gap"
 
     if provider_ownership_state == "provider_fallback_active":
         if normalized_provider_ownership_enforcement == "strict":
@@ -349,6 +362,27 @@ def embedding_strategy_snapshot(
             else:
                 enforcement_alignment_hint = "model_governance_strict_enabled_ahead_of_recommendation"
 
+    if not semantic_vector_enabled:
+        recommended_refresh_mode = "on_write"
+        refresh_alignment_state = "not_applicable_vectors_disabled"
+        refresh_alignment_hint = "enable_vectors_before_refresh_alignment"
+    elif source_rollout_completion_state == "fully_enabled":
+        recommended_refresh_mode = "manual"
+        if normalized_refresh_mode == "manual":
+            refresh_alignment_state = "aligned"
+            refresh_alignment_hint = "refresh_mode_matches_mature_rollout_recommendation"
+        else:
+            refresh_alignment_state = "on_write_before_recommended_manual"
+            refresh_alignment_hint = "consider_switching_to_manual_for_mature_rollout"
+    else:
+        recommended_refresh_mode = "on_write"
+        if normalized_refresh_mode == "on_write":
+            refresh_alignment_state = "aligned"
+            refresh_alignment_hint = "refresh_mode_matches_active_rollout_recommendation"
+        else:
+            refresh_alignment_state = "manual_override"
+            refresh_alignment_hint = "ensure_manual_mode_has_operational_coverage"
+
     return {
         "semantic_vector_enabled": semantic_vector_enabled,
         "semantic_retrieval_mode": "hybrid_vector_lexical" if semantic_vector_enabled else "lexical_only",
@@ -405,6 +439,11 @@ def embedding_strategy_snapshot(
         "semantic_embedding_refresh_interval_seconds": normalized_refresh_interval_seconds,
         "semantic_embedding_refresh_state": refresh_state,
         "semantic_embedding_refresh_hint": refresh_hint,
+        "semantic_embedding_refresh_cadence_state": refresh_cadence_state,
+        "semantic_embedding_refresh_cadence_hint": refresh_cadence_hint,
+        "semantic_embedding_recommended_refresh_mode": recommended_refresh_mode,
+        "semantic_embedding_refresh_alignment_state": refresh_alignment_state,
+        "semantic_embedding_refresh_alignment_hint": refresh_alignment_hint,
     }
 
 

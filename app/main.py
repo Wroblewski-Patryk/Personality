@@ -218,12 +218,30 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
         )
     if str(snapshot["semantic_embedding_refresh_state"]) == "manual_refresh_required":
         logger.warning(
-            "embedding_refresh_warning semantic_vector_enabled=%s refresh_mode=%s refresh_interval_seconds=%s refresh_state=%s hint=%s recommendation=ensure_manual_refresh_process_is_defined",
+            "embedding_refresh_warning semantic_vector_enabled=%s refresh_mode=%s refresh_interval_seconds=%s refresh_state=%s hint=%s refresh_cadence_state=%s refresh_cadence_hint=%s recommendation=ensure_manual_refresh_process_is_defined",
             bool(snapshot["semantic_vector_enabled"]),
             str(snapshot["semantic_embedding_refresh_mode"]),
             int(snapshot["semantic_embedding_refresh_interval_seconds"]),
             str(snapshot["semantic_embedding_refresh_state"]),
             str(snapshot["semantic_embedding_refresh_hint"]),
+            str(snapshot["semantic_embedding_refresh_cadence_state"]),
+            str(snapshot["semantic_embedding_refresh_cadence_hint"]),
+        )
+    refresh_alignment_state = str(snapshot["semantic_embedding_refresh_alignment_state"])
+    if refresh_alignment_state in {
+        "manual_override",
+        "on_write_before_recommended_manual",
+    }:
+        logger.info(
+            "embedding_refresh_hint semantic_vector_enabled=%s refresh_mode=%s recommended_refresh_mode=%s refresh_alignment_state=%s refresh_alignment_hint=%s refresh_cadence_state=%s refresh_cadence_hint=%s refresh_interval_seconds=%s",
+            bool(snapshot["semantic_vector_enabled"]),
+            str(snapshot["semantic_embedding_refresh_mode"]),
+            str(snapshot["semantic_embedding_recommended_refresh_mode"]),
+            refresh_alignment_state,
+            str(snapshot["semantic_embedding_refresh_alignment_hint"]),
+            str(snapshot["semantic_embedding_refresh_cadence_state"]),
+            str(snapshot["semantic_embedding_refresh_cadence_hint"]),
+            int(snapshot["semantic_embedding_refresh_interval_seconds"]),
         )
     alignment_state = str(snapshot["semantic_embedding_enforcement_alignment_state"])
     if alignment_state in {
