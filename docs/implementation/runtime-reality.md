@@ -89,6 +89,13 @@ Current implementation already follows that ownership split:
 - runtime-owned post-graph segment:
   `memory_persist` and `reflection_enqueue` in `app/core/runtime.py`
 
+Runtime boundary ownership is now explicit in orchestrator structure:
+
+- `_build_foreground_graph_state_seed(...)` owns pre-graph state handoff
+- `_run_foreground_stage_graph(...)` owns graph-stage execution boundary checks
+- `_run_post_graph_followups(...)` owns runtime follow-up persistence/trigger
+  stages after graph completion
+
 Targeted contract diff review for this slice:
 
 - canonical docs keep the cognitive order and ownership principles

@@ -220,6 +220,240 @@ class RuntimeOrchestrator:
             preferences.setdefault(f"relation_{relation_type}_confidence", confidence)
         return preferences
 
+    def _build_foreground_graph_state_seed(
+        self,
+        *,
+        event: Event,
+        memory: list[dict],
+        user_profile: dict | None,
+        user_preferences: dict,
+        user_theta: dict | None,
+        user_conclusions: list[dict],
+        affective_conclusions: list[dict],
+        relations: list[dict],
+        identity,
+        active_goals: list[dict],
+        active_tasks: list[dict],
+        active_goal_milestones: list[dict],
+        goal_milestone_history: list[dict],
+        goal_progress_history: list[dict],
+        pending_subconscious_proposals: list[dict],
+        hybrid_diagnostics: dict[str, int],
+        stage_timings_ms: dict[str, int],
+    ):
+        return build_graph_state_seed(event).model_copy(
+            update={
+                "memory": GraphMemoryState(
+                    episodic=list(memory),
+                    semantic=list(user_conclusions),
+                    affective=list(affective_conclusions),
+                    operational={
+                        "user_profile": user_profile,
+                        "user_preferences": user_preferences,
+                        "user_theta": user_theta,
+                        "hybrid_retrieval_diagnostics": hybrid_diagnostics,
+                    },
+                ),
+                "conclusions": list(user_conclusions),
+                "relations": list(relations),
+                "user_preferences": dict(user_preferences),
+                "theta": user_theta,
+                "identity": identity,
+                "active_goals": list(active_goals),
+                "active_tasks": list(active_tasks),
+                "active_goal_milestones": list(active_goal_milestones),
+                "goal_milestone_history": list(goal_milestone_history),
+                "goal_progress_history": list(goal_progress_history),
+                "subconscious_proposals": list(pending_subconscious_proposals),
+                "stage_timings_ms": stage_timings_ms,
+            }
+        )
+
+    async def _run_foreground_stage_graph(
+        self,
+        *,
+        graph_state_seed,
+        stage_logger: RuntimeStageLogger,
+        stage_timings_ms: dict[str, int],
+        text: str,
+        user_profile: dict | None,
+    ):
+        graph_state = await self.foreground_graph_runner.run(
+            graph_state=graph_state_seed,
+            stage_logger=stage_logger,
+            stage_timings_ms=stage_timings_ms,
+            text=text,
+            user_profile=user_profile,
+        )
+        missing = [
+            name
+            for name in ("perception", "context", "motivation", "role", "plan", "expression", "action_result")
+            if getattr(graph_state, name) is None
+        ]
+        if missing:  # pragma: no cover - defensive path
+            raise ValueError(f"langgraph foreground run did not produce required output: {', '.join(missing)}")
+        return graph_state
+
+    async def _run_post_graph_followups(
+        self,
+        *,
+        event: Event,
+        stage_logger: RuntimeStageLogger,
+        stage_timings_ms: dict[str, int],
+        perception,
+        context,
+        motivation,
+        role,
+        plan,
+        expression,
+        action_result,
+        user_preferences: dict,
+        active_goals: list[dict],
+        active_tasks: list[dict],
+        active_goal_milestones: list[dict],
+        goal_milestone_history: list[dict],
+    ):
+        memory_record = None
+        reflection_triggered = False
+        result_active_goals = active_goals
+        result_active_tasks = active_tasks
+        result_active_goal_milestones = active_goal_milestones
+        result_goal_milestone_history = goal_milestone_history
+
+        stage_timings_ms["memory_persist"] = 0
+        stage_timings_ms["reflection_enqueue"] = 0
+        stage_timings_ms["state_refresh"] = 0
+
+        try:
+            if plan.proposal_handoffs and hasattr(self.memory_repository, "resolve_subconscious_proposal"):
+
+                async def resolve_subconscious_proposals() -> int:
+                    resolved = 0
+                    for handoff in plan.proposal_handoffs:
+                        await self.memory_repository.resolve_subconscious_proposal(
+                            proposal_id=int(handoff.proposal_id),
+                            decision=handoff.decision,
+                            reason=handoff.reason,
+                        )
+                        resolved += 1
+                    return resolved
+
+                await self._run_async_stage(
+                    stage_logger=stage_logger,
+                    stage_timings_ms=stage_timings_ms,
+                    stage="proposal_handoff",
+                    input_summary=f"handoffs={len(plan.proposal_handoffs)}",
+                    operation=resolve_subconscious_proposals,
+                    output_summary=lambda result: f"resolved={result}",
+                )
+
+            memory_record = await self._run_async_stage(
+                stage_logger=stage_logger,
+                stage_timings_ms=stage_timings_ms,
+                stage="memory_persist",
+                input_summary=(
+                    f"mode={motivation.mode} role={role.selected} action_status={action_result.status}"
+                ),
+                operation=lambda: self.action_executor.persist_episode(
+                    event=event,
+                    perception=perception,
+                    context=context,
+                    motivation=motivation,
+                    role=role,
+                    plan=plan,
+                    action_result=action_result,
+                    expression=expression,
+                ),
+                output_summary=lambda result: f"memory_id={result.id or 'none'} importance={result.importance}",
+            )
+
+            async def enqueue_reflection_task() -> bool:
+                if self.reflection_worker is not None:
+                    return await self.reflection_worker.enqueue(
+                        user_id=event.meta.user_id,
+                        event_id=event.event_id,
+                        dispatch=self.reflection_worker.is_running(),
+                    )
+                await self.memory_repository.enqueue_reflection_task(
+                    user_id=event.meta.user_id,
+                    event_id=event.event_id,
+                )
+                return True
+
+            reflection_triggered = await self._run_async_stage(
+                stage_logger=stage_logger,
+                stage_timings_ms=stage_timings_ms,
+                stage="reflection_enqueue",
+                input_summary=(
+                    f"worker={self._present_label(self.reflection_worker)}"
+                    if self.reflection_worker is not None
+                    else "worker=no"
+                ),
+                operation=enqueue_reflection_task,
+                output_summary=lambda result: f"triggered={result}",
+            )
+
+            async def refresh_runtime_state():
+                refreshed_goals = await self.memory_repository.get_active_goals(user_id=event.meta.user_id, limit=5)
+                refreshed_goal_ids = [int(goal["id"]) for goal in refreshed_goals if goal.get("id") is not None]
+                refreshed_tasks = await self.memory_repository.get_active_tasks(
+                    user_id=event.meta.user_id,
+                    goal_ids=refreshed_goal_ids,
+                    limit=5,
+                )
+                refreshed_milestones = await self.memory_repository.get_active_goal_milestones(
+                    user_id=event.meta.user_id,
+                    goal_ids=refreshed_goal_ids,
+                    limit=5,
+                )
+                refreshed_milestone_history = await self.memory_repository.get_recent_goal_milestone_history(
+                    user_id=event.meta.user_id,
+                    goal_ids=refreshed_goal_ids,
+                    limit=6,
+                )
+                return (
+                    refreshed_goals,
+                    refreshed_tasks,
+                    refreshed_milestones,
+                    refreshed_milestone_history,
+                )
+
+            refreshed_goals, refreshed_tasks, refreshed_milestones, refreshed_milestone_history = await self._run_async_stage(
+                stage_logger=stage_logger,
+                stage_timings_ms=stage_timings_ms,
+                stage="state_refresh",
+                input_summary=f"user_id={event.meta.user_id}",
+                operation=refresh_runtime_state,
+                output_summary=lambda result: (
+                    f"goals={len(result[0])} tasks={len(result[1])} milestones={len(result[2])} "
+                    f"history={len(result[3])}"
+                ),
+            )
+            result_active_goals = refreshed_goals
+            result_active_tasks = refreshed_tasks
+            result_active_goal_milestones = self._enrich_goal_milestones(
+                active_goal_milestones=refreshed_milestones,
+                user_preferences=user_preferences,
+                active_goals=refreshed_goals,
+            )
+            result_goal_milestone_history = refreshed_milestone_history
+        except Exception as exc:  # pragma: no cover - defensive path
+            self.logger.warning(
+                "memory follow-up degraded event_id=%s trace_id=%s error_type=%s",
+                event.event_id,
+                event.meta.trace_id,
+                type(exc).__name__,
+            )
+
+        return (
+            memory_record,
+            reflection_triggered,
+            result_active_goals,
+            result_active_tasks,
+            result_active_goal_milestones,
+            result_goal_milestone_history,
+        )
+
     async def run(self, event: Event) -> RuntimeResult:
         attention_gate = evaluate_proactive_attention_gate(event)
         if attention_gate is not None:
@@ -435,198 +669,73 @@ class RuntimeOrchestrator:
         )
 
         text = str(event.payload.get("text", "")).strip()
-        graph_state_seed = build_graph_state_seed(event).model_copy(
-            update={
-                "memory": GraphMemoryState(
-                    episodic=list(memory),
-                    semantic=list(user_conclusions),
-                    affective=list(affective_conclusions),
-                    operational={
-                        "user_profile": user_profile,
-                        "user_preferences": user_preferences,
-                        "user_theta": user_theta,
-                        "hybrid_retrieval_diagnostics": hybrid_diagnostics,
-                    },
-                ),
-                "conclusions": list(user_conclusions),
-                "relations": list(relations),
-                "user_preferences": dict(user_preferences),
-                "theta": user_theta,
-                "identity": identity,
-                "active_goals": list(active_goals),
-                "active_tasks": list(active_tasks),
-                "active_goal_milestones": list(active_goal_milestones),
-                "goal_milestone_history": list(goal_milestone_history),
-                "goal_progress_history": list(goal_progress_history),
-                "subconscious_proposals": list(pending_subconscious_proposals),
-                "stage_timings_ms": stage_timings_ms,
-            }
+        graph_state_seed = self._build_foreground_graph_state_seed(
+            event=event,
+            memory=memory,
+            user_profile=user_profile,
+            user_preferences=user_preferences,
+            user_theta=user_theta,
+            user_conclusions=user_conclusions,
+            affective_conclusions=affective_conclusions,
+            relations=relations,
+            identity=identity,
+            active_goals=active_goals,
+            active_tasks=active_tasks,
+            active_goal_milestones=active_goal_milestones,
+            goal_milestone_history=goal_milestone_history,
+            goal_progress_history=goal_progress_history,
+            pending_subconscious_proposals=pending_subconscious_proposals,
+            hybrid_diagnostics=hybrid_diagnostics,
+            stage_timings_ms=stage_timings_ms,
         )
-        graph_state = await self.foreground_graph_runner.run(
-            graph_state=graph_state_seed,
+        graph_state = await self._run_foreground_stage_graph(
+            graph_state_seed=graph_state_seed,
             stage_logger=stage_logger,
             stage_timings_ms=stage_timings_ms,
             text=text,
             user_profile=user_profile,
         )
-        if graph_state.perception is None:  # pragma: no cover - defensive path
-            raise ValueError("langgraph foreground run did not produce perception output")
-        if graph_state.context is None:  # pragma: no cover - defensive path
-            raise ValueError("langgraph foreground run did not produce context output")
-        if graph_state.motivation is None:  # pragma: no cover - defensive path
-            raise ValueError("langgraph foreground run did not produce motivation output")
-        if graph_state.role is None:  # pragma: no cover - defensive path
-            raise ValueError("langgraph foreground run did not produce role output")
-        if graph_state.plan is None:  # pragma: no cover - defensive path
-            raise ValueError("langgraph foreground run did not produce planning output")
-        if graph_state.expression is None:  # pragma: no cover - defensive path
-            raise ValueError("langgraph foreground run did not produce expression output")
-        if graph_state.action_result is None:  # pragma: no cover - defensive path
-            raise ValueError("langgraph foreground run did not produce action output")
 
         perception = graph_state.perception
+        assert perception is not None
         affective = graph_state.affective or perception.affective
         context = graph_state.context
+        assert context is not None
         motivation = graph_state.motivation
+        assert motivation is not None
         role = graph_state.role
+        assert role is not None
         plan = graph_state.plan
+        assert plan is not None
         expression = graph_state.expression
+        assert expression is not None
         action_result = graph_state.action_result
+        assert action_result is not None
 
-        memory_record = None
-        reflection_triggered = False
-        stage_timings_ms["memory_persist"] = 0
-        stage_timings_ms["reflection_enqueue"] = 0
-        stage_timings_ms["state_refresh"] = 0
-        result_active_goals = active_goals
-        result_active_tasks = active_tasks
-        result_active_goal_milestones = active_goal_milestones
-        result_goal_milestone_history = goal_milestone_history
-        try:
-            if plan.proposal_handoffs and hasattr(self.memory_repository, "resolve_subconscious_proposal"):
-                async def resolve_subconscious_proposals() -> int:
-                    resolved = 0
-                    for handoff in plan.proposal_handoffs:
-                        await self.memory_repository.resolve_subconscious_proposal(
-                            proposal_id=int(handoff.proposal_id),
-                            decision=handoff.decision,
-                            reason=handoff.reason,
-                        )
-                        resolved += 1
-                    return resolved
-
-                await self._run_async_stage(
-                    stage_logger=stage_logger,
-                    stage_timings_ms=stage_timings_ms,
-                    stage="proposal_handoff",
-                    input_summary=f"handoffs={len(plan.proposal_handoffs)}",
-                    operation=resolve_subconscious_proposals,
-                    output_summary=lambda result: f"resolved={result}",
-                )
-
-            memory_record = await self._run_async_stage(
-                stage_logger=stage_logger,
-                stage_timings_ms=stage_timings_ms,
-                stage="memory_persist",
-                input_summary=(
-                    f"mode={motivation.mode} role={role.selected} action_status={action_result.status}"
-                ),
-                operation=lambda: self.action_executor.persist_episode(
-                    event=event,
-                    perception=perception,
-                    context=context,
-                    motivation=motivation,
-                    role=role,
-                    plan=plan,
-                    action_result=action_result,
-                    expression=expression,
-                ),
-                output_summary=lambda result: f"memory_id={result.id or 'none'} importance={result.importance}",
-            )
-
-            async def enqueue_reflection_task() -> bool:
-                if self.reflection_worker is not None:
-                    return await self.reflection_worker.enqueue(
-                        user_id=event.meta.user_id,
-                        event_id=event.event_id,
-                        dispatch=self.reflection_worker.is_running(),
-                    )
-                await self.memory_repository.enqueue_reflection_task(
-                    user_id=event.meta.user_id,
-                    event_id=event.event_id,
-                )
-                return True
-
-            if self.reflection_worker is not None:
-                reflection_triggered = await self._run_async_stage(
-                    stage_logger=stage_logger,
-                    stage_timings_ms=stage_timings_ms,
-                    stage="reflection_enqueue",
-                    input_summary=f"worker={self._present_label(self.reflection_worker)}",
-                    operation=enqueue_reflection_task,
-                    output_summary=lambda result: f"triggered={result}",
-                )
-            else:
-                reflection_triggered = await self._run_async_stage(
-                    stage_logger=stage_logger,
-                    stage_timings_ms=stage_timings_ms,
-                    stage="reflection_enqueue",
-                    input_summary="worker=no",
-                    operation=enqueue_reflection_task,
-                    output_summary=lambda result: f"triggered={result}",
-                )
-
-            async def refresh_runtime_state():
-                refreshed_goals = await self.memory_repository.get_active_goals(user_id=event.meta.user_id, limit=5)
-                refreshed_goal_ids = [int(goal["id"]) for goal in refreshed_goals if goal.get("id") is not None]
-                refreshed_tasks = await self.memory_repository.get_active_tasks(
-                    user_id=event.meta.user_id,
-                    goal_ids=refreshed_goal_ids,
-                    limit=5,
-                )
-                refreshed_milestones = await self.memory_repository.get_active_goal_milestones(
-                    user_id=event.meta.user_id,
-                    goal_ids=refreshed_goal_ids,
-                    limit=5,
-                )
-                refreshed_milestone_history = await self.memory_repository.get_recent_goal_milestone_history(
-                    user_id=event.meta.user_id,
-                    goal_ids=refreshed_goal_ids,
-                    limit=6,
-                )
-                return (
-                    refreshed_goals,
-                    refreshed_tasks,
-                    refreshed_milestones,
-                    refreshed_milestone_history,
-                )
-
-            refreshed_goals, refreshed_tasks, refreshed_milestones, refreshed_milestone_history = await self._run_async_stage(
-                stage_logger=stage_logger,
-                stage_timings_ms=stage_timings_ms,
-                stage="state_refresh",
-                input_summary=f"user_id={event.meta.user_id}",
-                operation=refresh_runtime_state,
-                output_summary=lambda result: (
-                    f"goals={len(result[0])} tasks={len(result[1])} milestones={len(result[2])} "
-                    f"history={len(result[3])}"
-                ),
-            )
-            result_active_goals = refreshed_goals
-            result_active_tasks = refreshed_tasks
-            result_active_goal_milestones = self._enrich_goal_milestones(
-                active_goal_milestones=refreshed_milestones,
-                user_preferences=user_preferences,
-                active_goals=refreshed_goals,
-            )
-            result_goal_milestone_history = refreshed_milestone_history
-        except Exception as exc:  # pragma: no cover - defensive path
-            self.logger.warning(
-                "memory follow-up degraded event_id=%s trace_id=%s error_type=%s",
-                event.event_id,
-                event.meta.trace_id,
-                type(exc).__name__,
-            )
+        (
+            memory_record,
+            reflection_triggered,
+            result_active_goals,
+            result_active_tasks,
+            result_active_goal_milestones,
+            result_goal_milestone_history,
+        ) = await self._run_post_graph_followups(
+            event=event,
+            stage_logger=stage_logger,
+            stage_timings_ms=stage_timings_ms,
+            perception=perception,
+            context=context,
+            motivation=motivation,
+            role=role,
+            plan=plan,
+            expression=expression,
+            action_result=action_result,
+            user_preferences=user_preferences,
+            active_goals=active_goals,
+            active_tasks=active_tasks,
+            active_goal_milestones=active_goal_milestones,
+            goal_milestone_history=goal_milestone_history,
+        )
 
         duration_ms = int((perf_counter() - started) * 1000)
         stage_timings_ms["total"] = duration_ms

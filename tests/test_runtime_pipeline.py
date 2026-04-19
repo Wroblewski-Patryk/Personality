@@ -991,6 +991,44 @@ async def test_runtime_pipeline_contract_smoke_pins_stage_and_action_boundary_in
     assert result.reflection_triggered is True
 
 
+async def test_runtime_pipeline_keeps_explicit_runtime_graph_boundary_segments() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-boundary-contract",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Show runtime boundary ownership."},
+        meta=EventMeta(user_id="u-1", trace_id="t-boundary-contract"),
+    )
+
+    result = await runtime.run(event)
+    stage_order = list(result.stage_timings_ms.keys())
+
+    assert stage_order.index("memory_load") < stage_order.index("perception")
+    assert stage_order.index("task_load") < stage_order.index("perception")
+    assert stage_order.index("goal_milestone_load") < stage_order.index("perception")
+    assert stage_order.index("identity_load") < stage_order.index("perception")
+    assert stage_order.index("action") < stage_order.index("memory_persist")
+    assert stage_order.index("memory_persist") < stage_order.index("reflection_enqueue")
+    assert stage_order.index("reflection_enqueue") < stage_order.index("state_refresh")
+
+
 async def test_runtime_pipeline_emits_structured_stage_logs(caplog) -> None:
     memory = FakeMemoryRepository(recent_memory=[])
     action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())

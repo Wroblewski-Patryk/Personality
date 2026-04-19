@@ -154,6 +154,9 @@ def test_build_graph_state_seed_defaults() -> None:
         "expression",
         "action",
     )
+    assert "memory_load" not in GRAPH_FOREGROUND_STAGE_ORDER
+    assert "memory_persist" not in GRAPH_FOREGROUND_STAGE_ORDER
+    assert "reflection_enqueue" not in GRAPH_FOREGROUND_STAGE_ORDER
 
 
 def test_runtime_result_to_graph_state_maps_orchestrator_contract() -> None:
