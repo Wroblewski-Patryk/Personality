@@ -84,6 +84,44 @@ without changing stage responsibilities.
 
 ---
 
+## Foreground Ownership Contract (Target-State Convergence)
+
+Foreground execution keeps one explicit ownership split while orchestration
+converges toward canonical architecture:
+
+| Foreground segment | Contract owner | Notes |
+| --- | --- | --- |
+| Baseline load (`event` normalization result, state seed, identity/memory/task baseline acquisition) | Runtime orchestrator | Runs before graph execution and prepares one shared state seed for cognitive stages. |
+| Stage graph (`perception -> affective_assessment -> context -> motivation -> role -> planning -> expression -> action`) | Graph runner + stage adapters | Owns cognitive stage sequencing and stage outputs. |
+| Episodic memory write | Runtime orchestrator (`memory` follow-up stage) | Persists completed turn after action output exists. |
+| Reflection trigger | Runtime orchestrator (`reflection` follow-up stage) | Emits/enqueues reflection work only after episodic persistence step. |
+
+This split defines the target foreground boundary for `PRJ-276..PRJ-279`.
+
+---
+
+## Foreground Migration Invariants
+
+During boundary migration, the following invariants must remain stable:
+
+1. Stage output keys remain stable across orchestration boundaries:
+   `perception`, `context`, `motivation`, `role`, `plan`, `expression`,
+   `action_result`.
+2. Canonical stage ordering remains stable inside the cognitive stage graph:
+   `perception -> ... -> expression -> action`.
+3. Baseline load completes before graph execution starts.
+4. Episodic memory write runs only after action output exists.
+5. Reflection trigger runs only after episodic memory persistence completes.
+6. Side-effect ownership remains explicit:
+   - cognitive reasoning stages stay side-effect-free
+   - action owns world-facing execution and domain-intent execution
+   - runtime follow-up stages own post-turn persistence/trigger operations.
+
+Any further graph/runtime boundary move must preserve these invariants unless
+canonical architecture docs are explicitly revised first.
+
+---
+
 ## Attention Inbox And Proposal Handoff Contract
 
 The dual-loop boundary should remain explicit in runtime state.

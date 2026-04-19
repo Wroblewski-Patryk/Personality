@@ -74,6 +74,28 @@ Transition note:
 - this compatibility boundary exists to enable incremental migration instead of
   a big-bang rewrite
 
+## Foreground Convergence Contract (PRJ-276)
+
+Target-state ownership for foreground convergence is now explicit in
+`docs/architecture/16_agent_contracts.md`.
+
+Current implementation already follows that ownership split:
+
+- runtime-owned pre-graph segment:
+  `memory_load` plus shared state seed assembly in `app/core/runtime.py`
+- graph-owned stage segment:
+  `perception -> affective_assessment -> context -> motivation -> role ->
+  planning -> expression -> action` in `app/core/runtime_graph.py`
+- runtime-owned post-graph segment:
+  `memory_persist` and `reflection_enqueue` in `app/core/runtime.py`
+
+Targeted contract diff review for this slice:
+
+- canonical docs keep the cognitive order and ownership principles
+- runtime-reality keeps transitional wiring explicit without redefining
+  architecture
+- next boundary-alignment implementation slice is `PRJ-278`
+
 ---
 
 ## Current Runtime Contracts

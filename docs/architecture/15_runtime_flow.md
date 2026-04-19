@@ -260,6 +260,20 @@ Reflection itself belongs to the background loop.
 
 ---
 
+## Foreground Ownership Boundary (Target State)
+
+Foreground convergence follows one explicit ownership split:
+
+- runtime-owned pre-graph segment: baseline load and state preparation
+- graph-owned segment: canonical stage graph (`perception -> ... -> action`)
+- runtime-owned post-graph segment: episodic memory write and reflection trigger
+
+The detailed ownership and migration invariants are defined in
+`docs/architecture/16_agent_contracts.md` under the foreground boundary
+contract.
+
+---
+
 ## Background Runtime - Canonical Flow
 
 ### Step 1. Reflection Trigger or Schedule
