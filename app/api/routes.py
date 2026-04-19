@@ -90,6 +90,9 @@ def _memory_retrieval_snapshot_from_settings(settings) -> dict[str, Any]:
         ),
         refresh_mode=str(getattr(settings, "embedding_refresh_mode", "on_write")),
         refresh_interval_seconds=int(getattr(settings, "embedding_refresh_interval_seconds", 21600)),
+        provider_ownership_enforcement=str(
+            getattr(settings, "embedding_provider_ownership_enforcement", "warn")
+        ),
     )
 
 

@@ -340,7 +340,37 @@ def test_startup_logs_embedding_strategy_warning_when_provider_falls_back_to_det
     assert any("requested_provider=openai" in message for message in messages)
     assert any("effective_provider=deterministic" in message for message in messages)
     assert any("ownership_state=provider_fallback_active" in message for message in messages)
+    assert any("ownership_enforcement=warn" in message for message in messages)
+    assert any("ownership_enforcement_state=warning_only" in message for message in messages)
     assert not any("embedding_model_governance_warning" in message for message in messages)
+    assert not any("embedding_strategy_block" in message for message in messages)
+
+
+def test_startup_blocks_embedding_provider_fallback_when_ownership_enforcement_is_strict(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("WARNING", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="openai",
+        embedding_model="text-embedding-3-small",
+        embedding_provider_ownership_enforcement="strict",
+    )
+
+    try:
+        _log_embedding_strategy_warnings(settings=settings, logger=logger)
+    except RuntimeError as exc:
+        assert "Embedding provider ownership strict-mode violation" in str(exc)
+        assert "requested_provider=openai" in str(exc)
+        assert "effective_provider=deterministic" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected strict provider ownership enforcement to block startup.")
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("embedding_strategy_warning" in message for message in messages)
+    assert any("ownership_enforcement=strict" in message for message in messages)
+    assert any("ownership_enforcement_state=blocked" in message for message in messages)
+    assert any("embedding_strategy_block" in message for message in messages)
 
 
 def test_startup_skips_embedding_strategy_warning_when_requested_provider_is_effective(caplog) -> None:

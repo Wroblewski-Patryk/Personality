@@ -49,6 +49,9 @@
 - `EMBEDDING_REFRESH_INTERVAL_SECONDS` (optional, default `21600`) to declare
   expected embedding refresh cadence interval in seconds (must be at least
   `60`)
+- `EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT` (optional, default `warn`) to
+  decide whether provider-ownership fallback stays warning-only or blocks
+  startup (`warn|strict`)
 - `PRODUCTION_DEBUG_TOKEN_REQUIRED` (optional, default `true`) to enforce
   debug-token configuration for production debug payload access
 - `ATTENTION_BURST_WINDOW_MS` (optional) to tune Telegram burst coalescing

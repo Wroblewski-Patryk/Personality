@@ -10,6 +10,8 @@ DEFAULT_EMBEDDING_SOURCE_KINDS = ("episodic", "semantic", "affective")
 EMBEDDING_REFRESH_MODES = ("on_write", "manual")
 DEFAULT_EMBEDDING_REFRESH_MODE = "on_write"
 DEFAULT_EMBEDDING_REFRESH_INTERVAL_SECONDS = 21600
+EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT_MODES = ("warn", "strict")
+DEFAULT_EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT = "warn"
 
 
 def resolve_embedding_posture(
@@ -47,6 +49,7 @@ def embedding_strategy_snapshot(
     source_kinds: tuple[str, ...] | None = None,
     refresh_mode: str | None = None,
     refresh_interval_seconds: int | None = None,
+    provider_ownership_enforcement: str | None = None,
 ) -> dict[str, str | bool | int]:
     posture = resolve_embedding_posture(provider=provider, model=model)
     if source_kinds is None:
@@ -113,6 +116,9 @@ def embedding_strategy_snapshot(
     normalized_refresh_interval_seconds = normalize_embedding_refresh_interval_seconds(
         refresh_interval_seconds
     )
+    normalized_provider_ownership_enforcement = normalize_embedding_provider_ownership_enforcement(
+        provider_ownership_enforcement
+    )
     if not semantic_vector_enabled:
         refresh_state = "vectors_disabled"
         refresh_hint = "not_applicable_vectors_disabled"
@@ -122,6 +128,20 @@ def embedding_strategy_snapshot(
     else:
         refresh_state = "on_write_refresh_active"
         refresh_hint = "refresh_on_write_enabled"
+
+    if provider_ownership_state == "provider_fallback_active":
+        if normalized_provider_ownership_enforcement == "strict":
+            provider_ownership_enforcement_state = "blocked"
+            provider_ownership_enforcement_hint = "switch_to_effective_provider_owner_before_startup"
+        else:
+            provider_ownership_enforcement_state = "warning_only"
+            provider_ownership_enforcement_hint = "fallback_allowed_in_warn_mode"
+    elif provider_ownership_state == "vectors_disabled":
+        provider_ownership_enforcement_state = "not_applicable_vectors_disabled"
+        provider_ownership_enforcement_hint = "not_applicable_vectors_disabled"
+    else:
+        provider_ownership_enforcement_state = "not_applicable_no_fallback"
+        provider_ownership_enforcement_hint = "no_provider_ownership_violation"
 
     return {
         "semantic_vector_enabled": semantic_vector_enabled,
@@ -133,6 +153,9 @@ def embedding_strategy_snapshot(
         "semantic_embedding_provider_hint": posture["provider_hint"],
         "semantic_embedding_provider_ownership_state": provider_ownership_state,
         "semantic_embedding_provider_ownership_hint": provider_ownership_hint,
+        "semantic_embedding_provider_ownership_enforcement": normalized_provider_ownership_enforcement,
+        "semantic_embedding_provider_ownership_enforcement_state": provider_ownership_enforcement_state,
+        "semantic_embedding_provider_ownership_enforcement_hint": provider_ownership_enforcement_hint,
         "semantic_embedding_model_requested": posture["model_requested"],
         "semantic_embedding_model_effective": posture["model_effective"],
         "semantic_embedding_model_governance_state": model_governance_state,
@@ -185,6 +208,13 @@ def normalize_embedding_refresh_interval_seconds(value: int | None) -> int:
     except (TypeError, ValueError):
         interval = DEFAULT_EMBEDDING_REFRESH_INTERVAL_SECONDS
     return max(60, interval)
+
+
+def normalize_embedding_provider_ownership_enforcement(value: str | None) -> str:
+    normalized = str(value or DEFAULT_EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT).strip().lower()
+    if normalized not in EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT_MODES:
+        return DEFAULT_EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT
+    return normalized
 
 
 def deterministic_embedding(text: str, *, dimensions: int = 32) -> list[float]:

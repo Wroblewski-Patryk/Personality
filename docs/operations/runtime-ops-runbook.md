@@ -75,6 +75,9 @@ retrieval posture:
 - `semantic_embedding_provider_hint`
 - `semantic_embedding_provider_ownership_state`
 - `semantic_embedding_provider_ownership_hint`
+- `semantic_embedding_provider_ownership_enforcement`
+- `semantic_embedding_provider_ownership_enforcement_state`
+- `semantic_embedding_provider_ownership_enforcement_hint`
 - `semantic_embedding_model_requested`
 - `semantic_embedding_model_effective`
 - `semantic_embedding_model_governance_state`
@@ -94,6 +97,11 @@ When semantic vectors are enabled and a non-implemented provider is requested
 (for example `EMBEDDING_PROVIDER=openai` today), startup emits
 `embedding_strategy_warning` with requested/effective provider-model posture
 and deterministic fallback hint, plus provider-ownership diagnostics.
+
+When provider-ownership fallback is active and
+`EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT=strict`, startup emits
+`embedding_strategy_block` and fails fast until effective provider ownership is
+aligned.
 
 When semantic vectors are enabled with `EMBEDDING_PROVIDER=deterministic` and a
 non-baseline model name is requested, startup emits
@@ -182,6 +190,9 @@ Recommended when Telegram webhooks are enabled:
 - `EMBEDDING_REFRESH_INTERVAL_SECONDS` (optional, default `21600`) to declare
   expected embedding refresh cadence interval in seconds (must be at least
   `60`)
+- `EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT` (`warn|strict`, default `warn`)
+  to decide whether provider-ownership fallback remains warning-only or blocks
+  startup
 - `PRODUCTION_DEBUG_TOKEN_REQUIRED` (`true|false`, default `true`) to require
   a configured debug token for production debug payload access when debug
   exposure is enabled

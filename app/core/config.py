@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     embedding_source_kinds: str = "episodic,semantic,affective"
     embedding_refresh_mode: Literal["on_write", "manual"] = "on_write"
     embedding_refresh_interval_seconds: int = 21600
+    embedding_provider_ownership_enforcement: Literal["warn", "strict"] = "warn"
     startup_schema_mode: Literal["migrate", "create_tables"] = "migrate"
     production_policy_enforcement: Literal["warn", "strict"] = "warn"
     reflection_runtime_mode: Literal["in_process", "deferred"] = "in_process"

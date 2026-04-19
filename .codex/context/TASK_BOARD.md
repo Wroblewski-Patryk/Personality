@@ -15,7 +15,7 @@ Last updated: 2026-04-19
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-241`.
+- The planning queue is complete through `PRJ-242`.
 - No `READY` PRJ slice is currently registered; derive the next smallest slice
   from `docs/planning/open-decisions.md` and sync it with the board before
   implementation.
@@ -48,6 +48,25 @@ Last updated: 2026-04-19
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-242 Add embedding provider-ownership enforcement posture and strict startup block option
+  - Status: DONE
+  - Group: Embedding Strategy Posture
+  - Owner: Backend Builder + QA/Test + Product Docs
+  - Depends on: PRJ-241
+  - Priority: P2
+  - Result:
+    - runtime config now exposes explicit provider-ownership enforcement posture
+      through `EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT` (`warn|strict`)
+    - shared embedding strategy helper now exposes
+      `semantic_embedding_provider_ownership_enforcement`,
+      `semantic_embedding_provider_ownership_enforcement_state`, and
+      `semantic_embedding_provider_ownership_enforcement_hint`
+    - startup now supports strict provider-ownership block mode for fallback
+      ownership posture, while warn mode remains warning-only
+    - docs/context/planning are synchronized through `PRJ-242`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_config.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
 
 - [x] PRJ-241 Add embedding provider-ownership posture diagnostics and startup warning enrichment
   - Status: DONE

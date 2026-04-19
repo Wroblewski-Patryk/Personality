@@ -200,6 +200,18 @@ Expected embedding refresh cadence interval in seconds.
 
 Default: `21600` (must be at least `60`).
 
+`EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT`
+
+Controls whether provider-ownership fallback posture is warning-only or
+startup-blocking.
+
+Allowed values:
+
+- `warn`
+- `strict`
+
+Default: `warn`.
+
 `PRODUCTION_DEBUG_TOKEN_REQUIRED`
 
 Controls whether production debug payload access requires a configured debug
@@ -283,6 +295,9 @@ Allowed values:
 - `semantic_embedding_provider_hint`
 - `semantic_embedding_provider_ownership_state`
 - `semantic_embedding_provider_ownership_hint`
+- `semantic_embedding_provider_ownership_enforcement`
+- `semantic_embedding_provider_ownership_enforcement_state`
+- `semantic_embedding_provider_ownership_enforcement_hint`
 - `semantic_embedding_model_requested`
 - `semantic_embedding_model_effective`
 - `semantic_embedding_model_governance_state`

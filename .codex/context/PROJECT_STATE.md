@@ -177,6 +177,10 @@ Last updated: 2026-04-19
   shared diagnostics (`semantic_embedding_provider_ownership_state`,
   `semantic_embedding_provider_ownership_hint`) reused by
   `/health.memory_retrieval` and startup fallback warning flow.
+- 2026-04-19: embedding provider-ownership enforcement posture is now explicit
+  through `EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT` (`warn|strict`) and shared
+  enforcement diagnostics in `/health.memory_retrieval`; strict mode can now
+  block startup when provider ownership fallback remains active.
 - 2026-04-19: relation memory is now a first-class subsystem (`aion_relation`)
   with scoped repository APIs; reflection derives relation updates and runtime
   stages now consume high-confidence relation cues across context, role,

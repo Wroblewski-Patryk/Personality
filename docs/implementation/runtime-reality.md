@@ -202,6 +202,12 @@ Current limitation:
   (`semantic_embedding_provider_ownership_state`,
   `semantic_embedding_provider_ownership_hint`) so startup fallback warnings
   and health diagnostics use the same ownership semantics.
+- provider-ownership enforcement posture is now explicit through
+  `EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT` and helper-owned diagnostics
+  (`semantic_embedding_provider_ownership_enforcement`,
+  `semantic_embedding_provider_ownership_enforcement_state`,
+  `semantic_embedding_provider_ownership_enforcement_hint`), enabling strict
+  startup block mode for unresolved fallback ownership posture.
 
 ### Event API behavior
 
