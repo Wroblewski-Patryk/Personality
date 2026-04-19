@@ -262,6 +262,9 @@ async def test_runtime_pipeline_api_source() -> None:
     assert "Earlier reply" in result.context.summary
     assert result.perception.language == "en"
     assert result.perception.language_source == "recent_memory"
+    assert result.perception.affective.affect_label == "neutral"
+    assert result.perception.affective.source == "deterministic_placeholder"
+    assert result.affective.affect_label == result.perception.affective.affect_label
     assert "general" in result.perception.topic_tags
     assert result.role.selected == "advisor"
     assert result.motivation.mode == "respond"

@@ -523,8 +523,10 @@ def test_event_endpoint_can_return_full_runtime_debug_payload_when_requested() -
     body = response.json()
     assert body["reply"]["message"] == "Test reply"
     assert body["runtime"]["reflection_triggered"] is True
+    assert body["debug"]["affective"]["affect_label"] == "neutral"
     assert body["debug"]["expression"]["message"] == "Test reply"
     assert body["debug"]["perception"]["language"] == "en"
+    assert body["debug"]["perception"]["affective"]["source"] == "deterministic_placeholder"
     assert body["debug"]["identity"]["mission"] == "Help the user move forward with clear, constructive support."
     assert body["debug"]["active_goals"][0]["name"] == "ship the MVP"
     assert body["debug"]["active_tasks"][0]["status"] == "blocked"

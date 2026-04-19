@@ -21,6 +21,15 @@ class Event(BaseModel):
     meta: EventMeta
 
 
+class AffectiveAssessmentOutput(BaseModel):
+    affect_label: str = "neutral"
+    intensity: float = 0.0
+    needs_support: bool = False
+    confidence: float = 0.0
+    source: str = "deterministic_placeholder"
+    evidence: list[str] = Field(default_factory=list)
+
+
 class PerceptionOutput(BaseModel):
     event_type: str
     topic: str
@@ -31,6 +40,7 @@ class PerceptionOutput(BaseModel):
     language_confidence: float
     ambiguity: float
     initial_salience: float
+    affective: AffectiveAssessmentOutput = Field(default_factory=AffectiveAssessmentOutput)
 
 
 class ContextOutput(BaseModel):
@@ -166,6 +176,7 @@ class RuntimeResult(BaseModel):
     goal_milestone_history: list[GoalMilestoneHistoryRecordOutput] = Field(default_factory=list)
     goal_progress_history: list[GoalProgressRecordOutput] = Field(default_factory=list)
     perception: PerceptionOutput
+    affective: AffectiveAssessmentOutput = Field(default_factory=AffectiveAssessmentOutput)
     context: ContextOutput
     motivation: MotivationOutput
     role: RoleOutput

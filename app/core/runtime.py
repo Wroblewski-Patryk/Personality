@@ -297,9 +297,10 @@ class RuntimeOrchestrator:
             operation=lambda: self.perception_agent.run(event, recent_memory=memory, user_profile=user_profile),
             output_summary=lambda result: (
                 f"topic={result.topic} intent={result.intent} language={result.language} "
-                f"ambiguity={result.ambiguity}"
+                f"affect={result.affective.affect_label} ambiguity={result.ambiguity}"
             ),
         )
+        affective = perception.affective
 
         context = self._run_stage(
             stage_logger=stage_logger,
@@ -547,6 +548,7 @@ class RuntimeOrchestrator:
             goal_milestone_history=result_goal_milestone_history,
             goal_progress_history=goal_progress_history,
             perception=perception,
+            affective=affective,
             context=context,
             motivation=motivation,
             role=role,

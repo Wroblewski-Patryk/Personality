@@ -58,6 +58,23 @@ The live runtime currently uses:
 - `execute`
 - `clarify`
 
+### Affective assessment slot
+
+The live runtime now carries an explicit affective contract slot per turn:
+
+- `affect_label`
+- `intensity`
+- `needs_support`
+- `confidence`
+- `source`
+- `evidence`
+
+Current implementation posture:
+
+- perception populates this slot with deterministic placeholder signals
+- motivation, role, and expression still rely on existing heuristics for
+  behavior decisions until the follow-up slices wire this slot through
+
 ### Event API behavior
 
 `POST /event` currently returns:

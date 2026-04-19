@@ -68,6 +68,9 @@ Last updated: 2026-04-19
 - 2026-04-19: API event normalization now supports `X-AION-User-Id` fallback
   (when `meta.user_id` is missing), making user-scoped language/profile memory
   handling safer for multi-user API traffic.
+- 2026-04-19: runtime now carries a first-class affective contract slot
+  (`affect_label`, `intensity`, `needs_support`, `confidence`, `source`,
+  `evidence`) populated by deterministic perception placeholders.
 - 2026-04-19: documentation now explicitly separates canonical architecture in
   `docs/architecture/` from transitional implementation reality in
   `docs/implementation/runtime-reality.md`, so human-oriented design intent can
@@ -130,8 +133,8 @@ Last updated: 2026-04-19
   ownership
 - Active execution queue now extends through `PRJ-068`.
 - Top blockers:
-  - current runtime still lacks first-class affective assessment and affective
-    memory despite supportive behavior being present
+  - affective slot now exists, but motivation/role/expression do not yet
+    consume it and affective memory is still missing
   - reflection still stores several operational conclusions globally per user,
     which can leak one goal's state into another
   - action still reparses user text for some durable writes instead of relying
@@ -226,6 +229,10 @@ Last updated: 2026-04-19
   `X-AION-User-Id` as fallback identity when `meta.user_id` is omitted,
   normalization/API tests now pin user-id precedence, and docs/context were
   synchronized for multi-user API safety.
+- 2026-04-19: `PRJ-053` is complete: runtime contracts now include explicit
+  affective assessment fields, perception emits deterministic affective
+  placeholders, runtime exposes top-level affective state, and
+  architecture/planning/context docs plus regression tests were synchronized.
 - 2026-04-19: architecture docs were realigned so `docs/architecture/` again
   describes the canonical cognitive flow, while runtime-delivery shortcuts,
   live storage names, and policy details were moved into

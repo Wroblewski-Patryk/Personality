@@ -124,6 +124,8 @@ Typical output:
 - ambiguity
 - initial salience
 - language signal
+- affective assessment placeholder (`affect_label`, `intensity`,
+  `needs_support`, `confidence`, `source`, `evidence`)
 
 Perception recognizes the event but does not decide what to do.
 

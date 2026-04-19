@@ -72,10 +72,11 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 4a. Affective Assessment Strategy
 
 - Current repo fact:
-  - emotion and support-sensitive behavior are still detected mainly through
-    local keyword heuristics in perception, motivation, and role selection.
-  - supportive behavior exists, but affective interpretation is not yet a
-    first-class runtime contract.
+  - runtime now has a first-class affective contract slot
+    (`affect_label`, `intensity`, `needs_support`, `confidence`, `source`,
+    `evidence`) populated by deterministic perception placeholders.
+  - motivation, role, and expression still detect emotion/support behavior
+    through their own local heuristics and do not yet consume the shared slot.
 - Decision needed:
   - should affective assessment remain heuristic for MVP, or move to an
     AI-assisted structured classifier with deterministic fallback?

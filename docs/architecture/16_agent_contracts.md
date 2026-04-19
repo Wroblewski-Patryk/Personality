@@ -41,6 +41,7 @@ Canonical shared runtime state may include:
   "memory": {},
   "conclusions": [],
   "theta": {},
+  "affective": {},
   "goals": [],
   "tasks": [],
   "perception": {},
@@ -79,7 +80,15 @@ Identify what happened.
     "intent": "...",
     "language": "en",
     "ambiguity": 0.0,
-    "initial_salience": 0.0
+    "initial_salience": 0.0,
+    "affective": {
+      "affect_label": "neutral|support_distress|urgent_pressure|positive_engagement",
+      "intensity": 0.0,
+      "needs_support": false,
+      "confidence": 0.0,
+      "source": "deterministic_placeholder|ai_classifier|fallback",
+      "evidence": []
+    }
   }
 }
 ```
