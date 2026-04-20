@@ -76,6 +76,31 @@ def test_runtime_stage_logger_failure_payload_is_traceable(caplog) -> None:
     assert payload["error"].endswith("...")
 
 
+def test_runtime_stage_logger_supports_foreground_followup_stage_names(caplog) -> None:
+    logger_name = "aion.runtime.contract.followup"
+    caplog.set_level("INFO", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    stage_logger = RuntimeStageLogger(
+        logger=logger,
+        context=RuntimeLogContext(event_id="evt-followup", trace_id="trace-followup", source="api"),
+    )
+
+    stage_logger.start("memory_persist", summary="persist episode")
+    stage_logger.success("memory_persist", duration_ms=3, summary="stored")
+    stage_logger.start("reflection_enqueue", summary="enqueue reflection")
+    stage_logger.success("reflection_enqueue", duration_ms=1, summary="queued")
+
+    entries = _runtime_logs(caplog, logger_name)
+    assert [(entry["stage"], entry["status"]) for entry in entries] == [
+        ("memory_persist", "start"),
+        ("memory_persist", "success"),
+        ("reflection_enqueue", "start"),
+        ("reflection_enqueue", "success"),
+    ]
+    assert entries[1]["duration_ms"] == 3
+    assert entries[3]["duration_ms"] == 1
+
+
 def test_summarize_for_log_contract() -> None:
     assert summarize_for_log("  hello   world ") == "hello world"
     assert summarize_for_log("") == "-"

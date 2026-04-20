@@ -399,9 +399,10 @@ Last updated: 2026-04-20
   toward affective understanding, scoped memory, and stronger action intent
   ownership
 - Active `PRJ` execution queue is complete through `PRJ-299`; execution is
-  currently in Group 17 foreground convergence slices.
-- `PRJ-277` is the current `READY` implementation slice after `PRJ-276`
-  defined the target-state foreground ownership and migration invariants.
+  now moving from completed Group 17 foreground convergence into Group 18
+  background reflection topology.
+- `PRJ-280` is the current `READY` implementation slice after foreground
+  convergence completed through `PRJ-279`.
 - Top blockers:
   - runtime currently emits connector intents and permission gates but does not
     yet execute provider-backed calendar/task/drive integrations
@@ -414,6 +415,15 @@ Last updated: 2026-04-20
 
 ## Recent Progress
 
+- 2026-04-20: `PRJ-279` is complete: foreground architecture-parity regressions
+  now pin runtime/API/logging boundary order invariants, and planning/context
+  docs are synchronized to the converged foreground boundary.
+- 2026-04-20: `PRJ-278` is complete: graph/runtime orchestration boundaries are
+  now explicit in orchestrator structure (`pre-graph seed`, `graph run`,
+  `post-graph follow-up`) with regression coverage.
+- 2026-04-20: `PRJ-277` is complete: expression now emits an explicit
+  response-execution handoff contract consumed by action, reducing implicit
+  delivery coupling.
 - 2026-04-20: `PRJ-276` is complete: canonical runtime-flow and
   agent-contract docs now define one explicit foreground ownership split
   (runtime baseline-load and post-action follow-up segments versus graph-owned
@@ -797,8 +807,9 @@ Last updated: 2026-04-20
   target-state convergence across foreground runtime boundaries, background
   reflection topology, production retrieval rollout, adaptive governance,
   dual-loop execution boundaries, and operational hardening.
-- 2026-04-20: `PRJ-276` is complete; `PRJ-277` is now the next `READY` slice
-  for explicit response-execution handoff convergence.
+- 2026-04-20: foreground convergence group is now complete through `PRJ-279`;
+  `PRJ-280` is the next `READY` slice for reflection topology ownership
+  convergence.
 
 ## Working Agreements
 

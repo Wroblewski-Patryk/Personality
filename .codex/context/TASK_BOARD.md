@@ -16,8 +16,8 @@ Last updated: 2026-04-20
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
 - The planning queue is complete through `PRJ-299`.
-- `PRJ-277` is currently `READY` and continues the target-state architecture
-  convergence queue described in `docs/planning/next-iteration-plan.md`.
+- `PRJ-280` is currently `READY` and begins the background-topology convergence
+  queue after foreground runtime convergence completed through `PRJ-279`.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
@@ -28,52 +28,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-277 Introduce an explicit response-execution contract for expression-to-action handoff
-  - Status: READY
-  - Group: Foreground Runtime Convergence
-  - Owner: Backend Builder
-  - Depends on: PRJ-276
-  - Priority: P1
-  - Result:
-    - expression produces an explicit execution handoff that preserves wording
-      and tone ownership while action remains the sole execution owner
-    - response delivery stops depending on implicit coupling between expression
-      and action
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_expression_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_graph_stage_adapters.py`
-
-## BACKLOG
-
-- [ ] PRJ-278 Align graph/runtime orchestration boundaries for baseline load, memory write, and reflection trigger
-  - Status: BACKLOG
-  - Group: Foreground Runtime Convergence
-  - Owner: Backend Builder
-  - Depends on: PRJ-277
-  - Priority: P1
-  - Result:
-    - graph-owned and runtime-owned segments are explicit in code rather than
-      hidden in orchestration shortcuts
-    - foreground flow can move toward canonical architecture without breaking
-      traceability or the action boundary
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_graph_state_contract.py tests/test_graph_stage_adapters.py tests/test_main_lifespan_policy.py`
-
-- [ ] PRJ-279 Add foreground architecture-parity regressions and sync docs/context
-  - Status: BACKLOG
-  - Group: Foreground Runtime Convergence
-  - Owner: QA/Test + Product Docs
-  - Depends on: PRJ-278
-  - Priority: P1
-  - Result:
-    - regression coverage fails quickly when foreground ordering or stage
-      ownership drifts away from the agreed target-state contract
-    - docs, planning, and context stay synchronized with the converged
-      foreground boundary
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_logging.py tests/test_graph_state_contract.py`
-
 - [ ] PRJ-280 Define target-state reflection topology and worker-mode contract
-  - Status: BACKLOG
+  - Status: READY
   - Group: Background Reflection Topology
   - Owner: Planner + Ops/Release
   - Depends on: PRJ-279
@@ -85,6 +41,8 @@ Last updated: 2026-04-20
       which are temporary execution choices
   - Validation:
     - doc-and-context sync plus targeted topology review recorded in this slice
+
+## BACKLOG
 
 - [ ] PRJ-281 Extract the reflection enqueue/dispatch boundary from app-local scheduler ownership
   - Status: BACKLOG
@@ -364,6 +322,49 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-279 Add foreground architecture-parity regressions and sync docs/context
+  - Status: DONE
+  - Group: Foreground Runtime Convergence
+  - Owner: QA/Test + Product Docs
+  - Depends on: PRJ-278
+  - Priority: P1
+  - Result:
+    - architecture-parity regressions now pin foreground boundary ordering in
+      runtime, API debug payload, and logging test surfaces
+    - docs, planning, and context are synchronized to the converged foreground
+      ownership boundary through `PRJ-279`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_logging.py tests/test_graph_state_contract.py`
+
+- [x] PRJ-278 Align graph/runtime orchestration boundaries for baseline load, memory write, and reflection trigger
+  - Status: DONE
+  - Group: Foreground Runtime Convergence
+  - Owner: Backend Builder
+  - Depends on: PRJ-277
+  - Priority: P1
+  - Result:
+    - runtime now exposes explicit pre-graph seed ownership, graph-stage
+      execution boundary, and post-graph follow-up ownership in
+      `RuntimeOrchestrator`
+    - foreground flow keeps target-state traceability without breaking the
+      action boundary
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_graph_state_contract.py tests/test_graph_stage_adapters.py tests/test_main_lifespan_policy.py`
+
+- [x] PRJ-277 Introduce an explicit response-execution contract for expression-to-action handoff
+  - Status: DONE
+  - Group: Foreground Runtime Convergence
+  - Owner: Backend Builder
+  - Depends on: PRJ-276
+  - Priority: P1
+  - Result:
+    - expression now emits explicit response-execution handoff data consumed by
+      action as the execution contract boundary
+    - action execution no longer depends on implicit expression coupling for
+      delivery preparation
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_expression_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_graph_stage_adapters.py tests/test_graph_state_contract.py`
 
 - [x] PRJ-276 Define target-state foreground ownership and graph boundary invariants
   - Status: DONE

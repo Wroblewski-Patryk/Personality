@@ -145,30 +145,41 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 3a. Expression vs Action Ordering
 
 - Current repo fact:
-  - the intended architecture still describes `... -> action -> expression -> memory -> reflection`.
-  - the current orchestrator computes `expression` before `action`, then passes an explicit `ActionDelivery` handoff into the action layer.
-  - action now delegates channel delivery to integration-owned routing (`DeliveryRouter`), so integration dispatch consumes the explicit handoff while side effects still remain action-triggered.
+  - canonical architecture describes `... -> planning -> expression -> action -> memory -> reflection`.
+  - foreground runtime now materializes an explicit response-execution handoff
+    (`ActionDelivery`) at expression output, and action consumes that handoff
+    directly.
+  - action still delegates channel delivery to integration-owned routing
+    (`DeliveryRouter`), so integration dispatch consumes explicit handoff
+    payload while side effects remain action-triggered.
 - Decision needed:
-  - should runtime keep this expression-before-action implementation detail, or should action consume a lower-level response plan so final expression can move back after action in a stricter architecture-aligned pipeline?
+  - should future connector-heavy flows keep one shared `ActionDelivery`
+    contract, or introduce connector-specific handoff extensions while
+    preserving expression/action ownership boundaries?
 
 ### 3b. Graph Orchestration Adoption
 
 - Current repo fact:
   - architecture docs describe `LangGraph` as the intended orchestration layer,
     and foreground stage execution now runs through LangGraph `StateGraph`.
-  - baseline-state load plus memory/reflection follow-up still run outside graph
-    execution, keeping migration incremental.
-  - runtime now has an explicit graph-compatibility boundary
-    (`GraphRuntimeState`, conversion helpers, and stage adapters around current
-    modules), so migration can proceed incrementally.
+  - foreground ownership convergence for Group 17 is now complete:
+    - `PRJ-276` defined canonical ownership and migration invariants
+    - `PRJ-277` made expression-to-action handoff explicit
+    - `PRJ-278` made runtime-owned pre/post graph segments explicit in code
+    - `PRJ-279` pinned parity regressions and synchronized docs/context
+  - baseline-state load plus post-action persistence/reflection still run
+    outside graph execution by design, with explicit ownership boundaries.
+  - runtime keeps an explicit graph-compatibility boundary
+    (`GraphRuntimeState`, conversion helpers, stage adapters) for incremental
+    migration without contract drift.
   - `PRJ-276` now defines the target foreground ownership boundary and migration
     invariants in canonical docs:
     - runtime-owned: baseline load, episodic memory write, reflection trigger
     - graph-owned: cognitive stage graph (`perception -> ... -> action`)
   - `LangChain` is described as optional support, not the architectural core.
 - Decision needed:
-  - how should implementation converge to the documented ownership split with
-    minimal runtime risk (`PRJ-277..PRJ-279`)?
+  - should any non-stage segments move into graph-owned nodes in a future phase,
+    or should current pre/post graph ownership stay the long-term baseline?
   - where does LangChain actually reduce complexity, and where would it only
     add more framework surface?
 

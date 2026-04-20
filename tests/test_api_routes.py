@@ -142,6 +142,7 @@ class FakeRuntime:
                 "goal_progress_load": 0,
                 "identity_load": 0,
                 "perception": 0,
+                "affective_assessment": 0,
                 "context": 0,
                 "motivation": 0,
                 "role": 0,
@@ -1776,6 +1777,29 @@ def test_event_endpoint_contract_smoke_pins_public_shape_and_debug_gate() -> Non
     assert "event" in debug_body["debug"]
     assert "stage_timings_ms" in debug_body["debug"]
     assert debug_response.headers["x-aion-debug-compat"] == "query_debug_route_is_compatibility_use_post_event_debug"
+
+
+def test_event_endpoint_debug_payload_pins_foreground_boundary_stage_order() -> None:
+    client, _, _ = _client()
+
+    debug_response = client.post("/event?debug=true", json={"text": "foreground boundary parity"})
+
+    assert debug_response.status_code == 200
+    debug_body = debug_response.json()
+    stage_timings = debug_body["debug"]["stage_timings_ms"]
+    stage_order = list(stage_timings.keys())
+
+    assert stage_order.index("memory_load") < stage_order.index("perception")
+    assert stage_order.index("task_load") < stage_order.index("perception")
+    assert stage_order.index("goal_milestone_load") < stage_order.index("perception")
+    assert stage_order.index("identity_load") < stage_order.index("perception")
+    assert stage_order.index("perception") < stage_order.index("affective_assessment")
+    assert stage_order.index("affective_assessment") < stage_order.index("context")
+    assert stage_order.index("expression") < stage_order.index("action")
+    assert stage_order.index("action") < stage_order.index("memory_persist")
+    assert stage_order.index("memory_persist") < stage_order.index("reflection_enqueue")
+    assert stage_order.index("reflection_enqueue") < stage_order.index("state_refresh")
+    assert stage_order[-1] == "total"
 
 
 def test_event_endpoint_exposes_reflection_trigger_when_runtime_queues_reflection() -> None:

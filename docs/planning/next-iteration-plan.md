@@ -350,6 +350,15 @@ Completed on 2026-04-18:
   define one explicit foreground ownership split (runtime pre/post graph vs
   graph stage spine) plus migration invariants for stable stage contracts and
   ordering while convergence continues.
+- `PRJ-277` is complete: expression now emits an explicit response-execution
+  handoff contract consumed by action, preserving wording/tone ownership in
+  expression while keeping execution ownership in action.
+- `PRJ-278` is complete: runtime orchestration boundaries are now explicit in
+  code through pre-graph seed ownership, graph-stage execution, and post-graph
+  follow-up segments (`memory_persist`, `reflection_enqueue`, `state_refresh`).
+- `PRJ-279` is complete: foreground architecture-parity regressions now pin
+  API-stage ordering and logging-stage ownership surfaces, and planning/context
+  docs are synchronized to the converged foreground boundary.
 
 ## Highest-Risk Gaps
 
@@ -1292,10 +1301,10 @@ not around temporary convenience defaults.
 ## Next Derived Slice
 
 The planning queue is complete through `PRJ-299`.
-`PRJ-277` is currently the execution-ready slice in the board.
+`PRJ-280` is currently the execution-ready slice in the board.
 Before the next implementation slice:
 
-- take `PRJ-277` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-280` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to that one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 
