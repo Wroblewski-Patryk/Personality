@@ -15,9 +15,10 @@ Last updated: 2026-04-20
   - run relevant tests and validations
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
-- The planning queue is complete through `PRJ-299`.
-- `PRJ-298` is complete; `PRJ-299` is currently `READY` for final
-  release-readiness regression and docs/context/runbook synchronization.
+- The planning queue is complete through `PRJ-299`; post-convergence execution
+  now starts with `PRJ-300`.
+- `PRJ-299` is complete; `PRJ-300` is currently `READY` to seed the first
+  post-convergence execution lane from remaining open decisions.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
@@ -28,25 +29,28 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-299 Add release-readiness regressions and sync docs/context/runbook
+- [ ] PRJ-300 Derive and record the first post-convergence execution queue
   - Status: READY
-  - Group: Operational Hardening And Release Truth
-  - Owner: QA/Test + Product Docs + Ops/Release
-  - Depends on: PRJ-298
+  - Group: Post-Convergence Planning Baseline
+  - Owner: Planner + Product Docs
+  - Depends on: PRJ-299
   - Priority: P1
   - Result:
-    - release-readiness checks and operational docs now match the target-state
-      production baseline
-    - planning, project state, and runbook truth remain synchronized at the end
-      of the convergence queue
+    - first post-convergence queue is explicitly derived from remaining open
+      decisions and reflected in planning docs plus task board state
+    - execution does not stall after `PRJ-299` because the next lane is
+      already scoped into small reversible slices
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q`
+    - doc-and-context sync plus targeted planning coherence review recorded in
+      this slice
 
 ## BACKLOG
 
 - [ ] (none)
 
 ## FUTURE
+
+- [ ] (none)
 
 ## IN_PROGRESS
 
@@ -61,6 +65,22 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-299 Add release-readiness regressions and sync docs/context/runbook
+  - Status: DONE
+  - Group: Operational Hardening And Release Truth
+  - Owner: QA/Test + Product Docs + Ops/Release
+  - Depends on: PRJ-298
+  - Priority: P1
+  - Result:
+    - `/health` now exposes release-readiness gate posture and smoke scripts
+      fail fast on production-policy drift
+    - release-readiness regressions and operational docs now match the
+      target-state production baseline
+    - planning, project state, and runbook truth remain synchronized at the
+      end of the convergence queue
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q`
 
 - [x] PRJ-298 Finalize deployment and release truth for Coolify/manual fallback and smoke ownership
   - Status: DONE

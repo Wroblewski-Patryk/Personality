@@ -342,6 +342,8 @@ baseline while keeping explicit `warn` override as a controlled escape hatch.
 - `strict_rollout_ready` to indicate no strict-mode mismatches are present
 - `recommended_production_policy_enforcement` to guide rollout posture
 - `strict_rollout_hint` to provide a concise rollout action summary
+- `release_readiness` gate snapshot (`ready`, `violations`) derived from
+  runtime-policy release guardrails for smoke automation
 
 `GET /health` also includes `memory_retrieval` posture fields:
 

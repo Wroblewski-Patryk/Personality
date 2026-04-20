@@ -35,6 +35,32 @@ with urllib.request.urlopen(health_request, timeout=30) as response:
 if health.get("status") != "ok":
     raise SystemExit(f"Health check failed: unexpected status {health.get('status')!r}")
 
+runtime_policy = health.get("runtime_policy")
+if not isinstance(runtime_policy, dict):
+    raise SystemExit("Health check failed: response is missing runtime_policy")
+
+release_readiness = health.get("release_readiness")
+if isinstance(release_readiness, dict) and "ready" in release_readiness:
+    release_ready = bool(release_readiness.get("ready"))
+    release_violations = [
+        str(item)
+        for item in release_readiness.get("violations", [])
+        if isinstance(item, str) and item.strip()
+    ]
+else:
+    release_violations = []
+    if runtime_policy.get("production_policy_mismatches"):
+        release_violations.append("runtime_policy.production_policy_mismatches_non_empty")
+    if bool(runtime_policy.get("strict_startup_blocked")):
+        release_violations.append("runtime_policy.strict_startup_blocked=true")
+    if bool(runtime_policy.get("event_debug_query_compat_enabled")):
+        release_violations.append("runtime_policy.event_debug_query_compat_enabled=true")
+    release_ready = len(release_violations) == 0
+
+if not release_ready:
+    details = ",".join(release_violations) if release_violations else "unspecified"
+    raise SystemExit(f"Release readiness check failed: {details}")
+
 payload = {
     "source": "api",
     "subsource": "manual_smoke",
@@ -80,6 +106,8 @@ summary = {
     "runtime_role": result.get("runtime", {}).get("role"),
     "runtime_action": result.get("runtime", {}).get("action_status"),
     "reflection_triggered": result.get("runtime", {}).get("reflection_triggered"),
+    "release_ready": release_ready,
+    "release_violations": release_violations,
     "debug_included": "debug" in result,
 }
 

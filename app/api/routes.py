@@ -18,6 +18,7 @@ from app.core.runtime_policy import (
     event_debug_query_compat_enabled,
     event_debug_token_required,
     production_debug_token_required,
+    release_readiness_snapshot,
     runtime_policy_snapshot,
 )
 from app.core.runtime import RuntimeOrchestrator
@@ -257,9 +258,11 @@ async def health(request: Request) -> dict[str, Any]:
     )
     attention_snapshot = _attention_snapshot_from_request(request)
     memory_retrieval_snapshot = _memory_retrieval_snapshot_from_settings(settings)
+    release_readiness = release_readiness_snapshot(runtime_policy)
     return {
         "status": "ok",
         "runtime_policy": runtime_policy,
+        "release_readiness": release_readiness,
         "memory_retrieval": memory_retrieval_snapshot,
         "scheduler": {
             "healthy": scheduler_healthy,

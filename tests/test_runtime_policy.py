@@ -4,6 +4,8 @@ from app.core.config import Settings
 from app.core.runtime_policy import (
     production_policy_mismatch_count,
     recommended_production_policy_enforcement,
+    release_readiness_snapshot,
+    release_readiness_violations,
     runtime_policy_snapshot,
     strict_rollout_hint,
     strict_rollout_ready,
@@ -262,3 +264,58 @@ def test_runtime_policy_snapshot_includes_query_compat_and_token_missing_when_bo
         "startup_schema_mode=create_tables",
     ]
     assert snapshot["production_policy_mismatch_count"] == 4
+
+
+def test_release_readiness_snapshot_is_ready_when_release_gates_pass() -> None:
+    runtime_policy = {
+        "production_policy_mismatches": [],
+        "strict_startup_blocked": False,
+        "event_debug_query_compat_enabled": False,
+    }
+
+    readiness = release_readiness_snapshot(runtime_policy)
+
+    assert readiness == {
+        "ready": True,
+        "violations": [],
+    }
+
+
+def test_release_readiness_snapshot_is_not_ready_when_release_gates_fail() -> None:
+    runtime_policy = {
+        "production_policy_mismatches": ["event_debug_enabled=true"],
+        "strict_startup_blocked": True,
+        "event_debug_query_compat_enabled": True,
+    }
+
+    readiness = release_readiness_snapshot(runtime_policy)
+
+    assert readiness["ready"] is False
+    assert readiness["violations"] == [
+        "runtime_policy.production_policy_mismatches_non_empty",
+        "runtime_policy.strict_startup_blocked=true",
+        "runtime_policy.event_debug_query_compat_enabled=true",
+    ]
+
+
+def test_release_readiness_violations_include_missing_required_gate_fields() -> None:
+    runtime_policy = {}
+
+    violations = release_readiness_violations(runtime_policy)
+
+    assert violations == [
+        "runtime_policy.production_policy_mismatches_missing",
+        "runtime_policy.strict_startup_blocked_missing",
+        "runtime_policy.event_debug_query_compat_enabled_missing",
+    ]
+
+
+def test_release_readiness_violations_are_not_applicable_outside_production() -> None:
+    runtime_policy = {
+        "strict_rollout_hint": "not_applicable_non_production",
+        "production_policy_mismatches": [],
+        "strict_startup_blocked": False,
+        "event_debug_query_compat_enabled": True,
+    }
+
+    assert release_readiness_violations(runtime_policy) == []

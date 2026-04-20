@@ -846,7 +846,7 @@ Last updated: 2026-04-20
 - 2026-04-20: foreground convergence group is now complete through `PRJ-279`;
   background topology convergence is complete through `PRJ-283`; production
   retrieval implementation is complete through `PRJ-287`; adaptive governance
-  policy baseline is complete through `PRJ-288`; `PRJ-299` is now the next
+  policy baseline is complete through `PRJ-288`; `PRJ-300` is now the next
   `READY` implementation slice.
 - 2026-04-20: `PRJ-288` is complete: architecture contracts now define explicit
   adaptive influence evidence gates, precedence, and tie-break guardrails for
@@ -934,6 +934,13 @@ Last updated: 2026-04-20
 - 2026-04-20: `PRJ-298` validation is green:
   `.\.venv\Scripts\python -m pytest -q`
   passed with `598 passed`.
+- 2026-04-20: `PRJ-299` is complete: `/health` now exposes a compact
+  `release_readiness` gate snapshot (`ready`, `violations`) derived from
+  runtime-policy release guardrails, and release smoke scripts fail fast on
+  production-policy drift.
+- 2026-04-20: `PRJ-299` validation is green:
+  `.\.venv\Scripts\python -m pytest -q`
+  passed with `602 passed`.
 
 ## Working Agreements
 

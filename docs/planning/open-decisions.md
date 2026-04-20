@@ -71,6 +71,10 @@ The current repo already works as an MVP slice, but several architecture-level d
   - production policy enforcement now resolves to `strict` by default in
     production when `PRODUCTION_POLICY_ENFORCEMENT` is unset, while explicit
     `warn` remains a controlled override.
+  - `GET /health` now exposes `release_readiness` (`ready`, `violations`) so
+    release smoke can fail fast when production-policy drift appears.
+  - `scripts/run_release_smoke.{ps1,sh}` now enforce that release-readiness
+    gate and stop the release when drift signals are present.
 - Decision (PRJ-296 target production baseline, 2026-04-20):
   - target production startup posture is migration-only
     (`STARTUP_SCHEMA_MODE=migrate`); `create_tables` remains a temporary

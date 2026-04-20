@@ -47,6 +47,9 @@ signals (`recommended_production_policy_enforcement`, `strict_rollout_hint`),
 so operators can verify active policy posture, detect strict-mode startup
 risks, assess strict-rollout readiness, and track compatibility-route sunset
 readiness during incident triage and release smoke.
+`GET /health.release_readiness` now also exposes a compact release gate
+snapshot (`ready`, `violations`) derived from those runtime-policy fields so
+smoke scripts can fail fast on deployment drift.
 Observed compat attempts now always keep sunset recommendation in
 `migrate_clients_before_disabling_compat` until clients are moved away from
 `POST /event?debug=true`.
@@ -240,11 +243,12 @@ after the incident window.
 
 Operator release gate:
 
+- verify `/health.release_readiness.ready=true`
 - verify `/health.runtime_policy.production_policy_mismatches` is empty
 - verify `/health.runtime_policy.strict_startup_blocked=false`
 - verify `/health.runtime_policy.event_debug_query_compat_enabled=false`
 
-## Deployment And Release Path (PRJ-298)
+## Deployment And Release Path (PRJ-298/PRJ-299)
 
 Primary deployment path:
 
@@ -265,6 +269,8 @@ Release smoke ownership:
 - release operator (Ops/Release owner of the deploy) runs:
   - Windows: `.\scripts\run_release_smoke.ps1 -BaseUrl "<deployment_url>"`
   - Debian/bash: `./scripts/run_release_smoke.sh "<deployment_url>"`
+- smoke now fails fast when `/health.release_readiness.ready=false`
+  (or when fallback policy-gate checks detect drift on older runtimes).
 - release is not considered complete until smoke passes (`GET /health` plus
   `POST /event` roundtrip).
 

@@ -1328,10 +1328,12 @@ not around temporary convenience defaults.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q`
 
-- `PRJ-299` Add release-readiness regressions and sync docs/context/runbook.
+- `PRJ-299` is complete.
   - Result:
-    - release-readiness checks and operational docs now match the target-state
-      production baseline
+    - `/health` now exposes a compact `release_readiness` gate snapshot and
+      release smoke scripts fail fast when production-policy drift is detected
+    - release-readiness regressions and operational docs now match the
+      target-state production baseline
     - planning, project state, and runbook truth remain synchronized at the end
       of the convergence queue
   - Validation:
@@ -1339,13 +1341,19 @@ not around temporary convenience defaults.
 
 ## Next Derived Slice
 
-The planning queue is complete through `PRJ-299`.
-`PRJ-299` is currently the execution-ready slice in the board.
+The convergence queue is complete through `PRJ-299`.
+`PRJ-300` is currently the execution-ready slice in the board.
 Before the next implementation slice:
 
-- take `PRJ-299` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-300` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to that one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
+
+`PRJ-300` candidate:
+
+- derive and document the first post-convergence execution queue from remaining
+  open decisions (`1`, `3`, and related unresolved follow-ups) so the board has
+  an explicit next lane after `PRJ-299` closure.
 
 ## Parallel-Ready Lanes
 

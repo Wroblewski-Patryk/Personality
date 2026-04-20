@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from typing import Any, Literal
 
 
@@ -154,6 +155,39 @@ def strict_rollout_hint(settings: Any) -> Literal[
     if strict_rollout_ready(settings):
         return "can_enable_strict"
     return "resolve_mismatches_before_strict"
+
+
+def release_readiness_violations(runtime_policy: Mapping[str, Any]) -> list[str]:
+    if runtime_policy.get("strict_rollout_hint") == "not_applicable_non_production":
+        return []
+
+    violations: list[str] = []
+
+    mismatches = runtime_policy.get("production_policy_mismatches")
+    if not isinstance(mismatches, list):
+        violations.append("runtime_policy.production_policy_mismatches_missing")
+    elif mismatches:
+        violations.append("runtime_policy.production_policy_mismatches_non_empty")
+
+    if "strict_startup_blocked" not in runtime_policy:
+        violations.append("runtime_policy.strict_startup_blocked_missing")
+    elif runtime_policy.get("strict_startup_blocked") is True:
+        violations.append("runtime_policy.strict_startup_blocked=true")
+
+    if "event_debug_query_compat_enabled" not in runtime_policy:
+        violations.append("runtime_policy.event_debug_query_compat_enabled_missing")
+    elif runtime_policy.get("event_debug_query_compat_enabled") is True:
+        violations.append("runtime_policy.event_debug_query_compat_enabled=true")
+
+    return violations
+
+
+def release_readiness_snapshot(runtime_policy: Mapping[str, Any]) -> dict[str, Any]:
+    violations = release_readiness_violations(runtime_policy)
+    return {
+        "ready": len(violations) == 0,
+        "violations": violations,
+    }
 
 
 def runtime_policy_snapshot(settings: Any) -> dict[str, Any]:

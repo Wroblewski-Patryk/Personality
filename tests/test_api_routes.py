@@ -457,6 +457,10 @@ def test_health_endpoint_returns_ok() -> None:
                 "recent_blocked_total": 0,
             },
         },
+        "release_readiness": {
+            "ready": True,
+            "violations": [],
+        },
         "memory_retrieval": {
             "semantic_vector_enabled": True,
             "semantic_retrieval_mode": "hybrid_vector_lexical",
@@ -1165,6 +1169,8 @@ def test_health_endpoint_marks_event_debug_source_as_environment_default_when_un
     assert body["runtime_policy"]["strict_startup_blocked"] is False
     assert body["runtime_policy"]["strict_rollout_ready"] is True
     assert body["runtime_policy"]["strict_rollout_hint"] == "not_applicable_non_production"
+    assert body["release_readiness"]["ready"] is True
+    assert body["release_readiness"]["violations"] == []
     assert body["runtime_policy"]["event_debug_query_compat_allow_rate"] == 0.0
     assert body["runtime_policy"]["event_debug_query_compat_block_rate"] == 0.0
     assert (
@@ -1204,6 +1210,11 @@ def test_health_endpoint_exposes_all_production_policy_mismatches_when_present()
     assert body["runtime_policy"]["production_policy_mismatch_count"] == 3
     assert body["runtime_policy"]["strict_startup_blocked"] is True
     assert body["runtime_policy"]["strict_rollout_ready"] is False
+    assert body["release_readiness"]["ready"] is False
+    assert body["release_readiness"]["violations"] == [
+        "runtime_policy.production_policy_mismatches_non_empty",
+        "runtime_policy.strict_startup_blocked=true",
+    ]
     assert body["runtime_policy"]["production_debug_token_required"] is True
     assert body["runtime_policy"]["event_debug_query_compat_enabled"] is False
     assert body["runtime_policy"]["event_debug_query_compat_source"] == "environment_default"
@@ -1305,6 +1316,11 @@ def test_health_endpoint_marks_query_compat_as_explicit_production_mismatch_when
     ]
     assert body["runtime_policy"]["production_policy_mismatch_count"] == 2
     assert body["runtime_policy"]["strict_rollout_ready"] is False
+    assert body["release_readiness"]["ready"] is False
+    assert body["release_readiness"]["violations"] == [
+        "runtime_policy.production_policy_mismatches_non_empty",
+        "runtime_policy.event_debug_query_compat_enabled=true",
+    ]
     assert body["runtime_policy"]["event_debug_query_compat_allow_rate"] == 0.0
     assert body["runtime_policy"]["event_debug_query_compat_block_rate"] == 0.0
     assert (
