@@ -25,6 +25,37 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-20 - Memory is not validated if persistence never changes later behavior
+- Context:
+  - architectural memory work can look complete in contracts, repository
+    writes, and health/debug surfaces while still failing to influence later
+    turns in practice.
+- Symptom:
+  - the system appears to "have memory" in implementation terms, but follow-up
+    responses remain generic and do not reuse the earlier stored context.
+- Root cause:
+  - coverage focused on write/read mechanics and contract shape without enough
+    scenario-level validation that retrieved memory changes context, planning,
+    or expression over time.
+- Guardrail:
+  - for memory-sensitive work, require behavior-driven tests that prove
+    `write -> retrieve -> influence -> delayed recall`, not just persistence or
+    retrieval in isolation.
+- Preferred pattern:
+  - validate through internal debug mode plus user-simulation scenarios
+  - record whether retrieved memory appears in context and changes the later
+    response
+  - treat missing behavioral influence as a real failure even when storage
+    mechanics pass
+- Avoid:
+  - calling memory "done" because DB rows, summaries, or retrieval counts exist
+  - relying only on unit/contract tests for cognitive correctness
+- Evidence:
+  - `docs/architecture/29_runtime_behavior_testing.md`
+  - `docs/engineering/testing.md`
+  - `docs/planning/open-decisions.md`
+  - `.codex/context/TASK_BOARD.md`
+
 ### 2026-04-20 - Windows runtime may not provide bash for shell-script smoke checks
 - Context:
   - validating release smoke script alignment on Windows-first execution

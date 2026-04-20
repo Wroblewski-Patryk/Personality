@@ -24,6 +24,7 @@ Read these before starting non-trivial work:
 - `docs/architecture/15_runtime_flow.md`
 - `docs/architecture/16_agent_contracts.md`
 - `docs/architecture/17_logging_and_debugging.md`
+- `docs/architecture/29_runtime_behavior_testing.md`
 - `docs/architecture/26_env_and_config.md`
 - `docs/architecture/27_codex_instructions.md`
 - `docs/engineering/local-development.md`

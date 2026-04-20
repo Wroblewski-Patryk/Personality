@@ -8,6 +8,14 @@ The repository currently contains lightweight backend-focused tests for:
 - expression behavior
 - end-to-end runtime pipeline composition with fake dependencies
 
+Canonical behavior-validation expectations now also live in:
+
+- `docs/architecture/29_runtime_behavior_testing.md`
+
+That architecture file defines when passing unit and integration tests are
+still insufficient because the runtime has not yet proven memory influence,
+continuity, or decision integrity across time.
+
 Primary command:
 
 ```powershell
@@ -30,6 +38,11 @@ Primary command:
   - health endpoint
   - API roundtrip through `POST /event`
   - Telegram webhook flow in a non-production environment
+- Behavior-driven system checks:
+  - internal debug-mode validation of perception/context/motivation/role/plan
+    and retrieved memory
+  - user-simulation scenarios without debug payloads
+  - persistence, continuity, and failure-mode scenarios across time
 
 ## Required Checks By Change Type
 
@@ -62,6 +75,9 @@ For meaningful repo changes, leave behind:
 - the exact test command used
 - pass/fail result
 - a short note if coverage is still missing for a known edge case
+- a scenario-level behavior note when the touched subsystem is memory,
+  reflection, planning, language continuity, relation influence, or proactive
+  behavior
 
 Useful migration verification command:
 

@@ -46,6 +46,7 @@ These files describe the intended long-term shape of the system:
 - `architecture/26_env_and_config.md`
 - `architecture/27_codex_instructions.md`
 - `architecture/28_local_windows_and_coolify_deploy.md`
+- `architecture/29_runtime_behavior_testing.md`
 
 ## Implementation Reality
 
