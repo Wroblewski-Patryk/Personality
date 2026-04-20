@@ -1162,9 +1162,17 @@ Last updated: 2026-04-20
 - 2026-04-20: `PRJ-326` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
   passed with `136 passed`.
-- 2026-04-20: `PRJ-327` is the next `READY` slice, focused on richer language
-  continuity precedence across current turn, memory, and durable preference
-  state.
+- 2026-04-20: `PRJ-327` is complete: language detection now follows explicit
+  precedence across current-turn lexical signals, recent memory continuity, and
+  durable profile preference.
+- 2026-04-20: `PRJ-327` also expands continuity parsing to use
+  `payload.response_language` hints from episodic memory and ignores
+  unsupported language codes before falling back to profile/default posture.
+- 2026-04-20: `PRJ-327` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_context_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
+  passed with `140 passed`.
+- 2026-04-20: `PRJ-328` is the next `READY` slice, focused on identity/language
+  continuity regressions across session behavior and API fallback boundaries.
 
 ## Working Agreements
 

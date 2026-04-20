@@ -42,6 +42,7 @@ LANGUAGE_HINT_WORDS = {
         "moge",
     },
 }
+SUPPORTED_LANGUAGE_CODES = frozenset(LANGUAGE_HINT_WORDS.keys())
 
 LANGUAGE_NAMES = {
     "en": {"english", "angielski"},
@@ -139,49 +140,36 @@ def detect_language(
         return LanguageDecision(code="pl", confidence=0.94, source="diacritic_signal")
 
     tokens = tokenize_normalized(text)
-    scores = {
-        code: len(tokens.intersection(words))
-        for code, words in LANGUAGE_HINT_WORDS.items()
-    }
-    best_code = max(scores, key=scores.get)
-    best_score = scores[best_code]
-    other_score = max(score for code, score in scores.items() if code != best_code)
+    keyword_decision = _keyword_language_decision(tokens)
+    if keyword_decision is not None and keyword_decision.confidence >= 0.69:
+        return keyword_decision
 
-    if best_score >= 2 and best_score > other_score:
-        confidence = min(0.9, 0.45 + (best_score * 0.12))
-        return LanguageDecision(code=best_code, confidence=round(confidence, 2), source="keyword_signal")
+    memory_decision = _memory_language_decision(recent_memory or [])
+    profile_decision = _profile_language_decision(user_profile)
+    continuity_decision = _resolve_continuity_decision(
+        normalized_text=normalized,
+        token_count=len(tokens),
+        memory_decision=memory_decision,
+        profile_decision=profile_decision,
+        user_profile=user_profile,
+    )
+    if continuity_decision is not None:
+        return continuity_decision
 
-    memory_language = infer_language_from_memory(recent_memory or [])
-    if memory_language:
-        return LanguageDecision(code=memory_language, confidence=0.72, source="recent_memory")
-
-    profile_language = infer_language_from_profile(user_profile)
-    if profile_language:
-        return LanguageDecision(code=profile_language, confidence=0.66, source="user_profile")
-
-    if best_score == 1 and best_score > other_score:
-        return LanguageDecision(code=best_code, confidence=0.58, source="keyword_signal")
+    if keyword_decision is not None:
+        return keyword_decision
 
     return LanguageDecision(code="en", confidence=0.35, source="default")
 
 
 def infer_language_from_memory(recent_memory: list[dict]) -> str | None:
-    for memory_item in recent_memory:
-        summary = str(memory_item.get("summary", ""))
-        match = re.search(r"(?:response_)?language=([a-z]{2})", summary)
-        if match:
-            return match.group(1)
-    return None
+    decision = _memory_language_decision(recent_memory)
+    return decision.code if decision is not None else None
 
 
 def infer_language_from_profile(user_profile: dict | None) -> str | None:
-    if not user_profile:
-        return None
-
-    language = str(user_profile.get("preferred_language", "")).strip().lower()
-    if re.fullmatch(r"[a-z]{2}", language):
-        return language
-    return None
+    decision = _profile_language_decision(user_profile)
+    return decision.code if decision is not None else None
 
 
 def _contains_polish_diacritic(text: str) -> bool:
@@ -209,4 +197,117 @@ def _detect_explicit_language_request(normalized: str) -> str | None:
                 return code
             if f"po {name}" in normalized:
                 return code
+    return None
+
+
+def _keyword_language_decision(tokens: set[str]) -> LanguageDecision | None:
+    scores = {
+        code: len(tokens.intersection(words))
+        for code, words in LANGUAGE_HINT_WORDS.items()
+    }
+    best_code = max(scores, key=scores.get)
+    best_score = scores[best_code]
+    other_score = max(score for code, score in scores.items() if code != best_code)
+
+    if best_score >= 2 and best_score > other_score:
+        confidence = min(0.9, 0.45 + (best_score * 0.12))
+        return LanguageDecision(code=best_code, confidence=round(confidence, 2), source="keyword_signal")
+    if best_score == 1 and best_score > other_score:
+        return LanguageDecision(code=best_code, confidence=0.58, source="keyword_signal")
+    return None
+
+
+def _memory_language_decision(recent_memory: list[dict]) -> LanguageDecision | None:
+    if not recent_memory:
+        return None
+
+    language_weights: dict[str, float] = {}
+    for index, memory_item in enumerate(recent_memory[:6]):
+        code = _extract_memory_language(memory_item)
+        if code is None:
+            continue
+        recency_weight = max(0.2, 1.0 - (index * 0.18))
+        language_weights[code] = language_weights.get(code, 0.0) + recency_weight
+
+    if not language_weights:
+        return None
+
+    best_code, best_weight = max(language_weights.items(), key=lambda item: item[1])
+    other_weight = max((weight for code, weight in language_weights.items() if code != best_code), default=0.0)
+    if best_weight <= other_weight:
+        return None
+
+    confidence = min(0.84, 0.58 + (best_weight * 0.12))
+    return LanguageDecision(code=best_code, confidence=round(confidence, 2), source="recent_memory")
+
+
+def _extract_memory_language(memory_item: dict) -> str | None:
+    payload = memory_item.get("payload")
+    if isinstance(payload, dict):
+        payload_language = _normalize_language_code(
+            payload.get("response_language") or payload.get("language")
+        )
+        if payload_language is not None:
+            return payload_language
+
+    summary = str(memory_item.get("summary", ""))
+    match = re.search(r"(?:response_)?language=([a-z]{2})", summary)
+    if not match:
+        return None
+    return _normalize_language_code(match.group(1))
+
+
+def _profile_language_decision(user_profile: dict | None) -> LanguageDecision | None:
+    if not user_profile:
+        return None
+
+    language = _normalize_language_code(user_profile.get("preferred_language"))
+    if language is None:
+        return None
+
+    raw_confidence = user_profile.get("language_confidence", 0.66)
+    try:
+        confidence = float(raw_confidence)
+    except (TypeError, ValueError):
+        confidence = 0.66
+    confidence = max(0.55, min(0.95, confidence))
+    return LanguageDecision(code=language, confidence=round(confidence, 2), source="user_profile")
+
+
+def _resolve_continuity_decision(
+    *,
+    normalized_text: str,
+    token_count: int,
+    memory_decision: LanguageDecision | None,
+    profile_decision: LanguageDecision | None,
+    user_profile: dict | None,
+) -> LanguageDecision | None:
+    if memory_decision is None:
+        return profile_decision
+    if profile_decision is None:
+        return memory_decision
+
+    if memory_decision.code == profile_decision.code:
+        if profile_decision.confidence > memory_decision.confidence + 0.12:
+            return profile_decision
+        return memory_decision
+
+    if _is_ambiguous_follow_up(normalized_text=normalized_text, token_count=token_count):
+        profile_source = str((user_profile or {}).get("language_source", "")).strip().lower()
+        if profile_source == "explicit_request" and profile_decision.confidence >= 0.9:
+            return profile_decision
+    return memory_decision
+
+
+def _is_ambiguous_follow_up(*, normalized_text: str, token_count: int) -> bool:
+    if token_count <= 2:
+        return True
+    stripped = normalized_text.strip()
+    return token_count <= 4 and len(stripped) <= 24
+
+
+def _normalize_language_code(value: object) -> str | None:
+    code = str(value or "").strip().lower()
+    if code in SUPPORTED_LANGUAGE_CODES:
+        return code
     return None

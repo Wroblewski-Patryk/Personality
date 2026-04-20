@@ -58,6 +58,48 @@ def test_detect_language_prefers_recent_memory_over_user_profile() -> None:
     assert result.source == "recent_memory"
 
 
+def test_detect_language_uses_payload_language_from_recent_memory() -> None:
+    result = detect_language(
+        "ok",
+        recent_memory=[
+            {"payload": {"response_language": "pl"}},
+        ],
+    )
+
+    assert result.code == "pl"
+    assert result.source == "recent_memory"
+
+
+def test_detect_language_ignores_unsupported_memory_language_and_falls_back_to_profile() -> None:
+    result = detect_language(
+        "ok",
+        recent_memory=[
+            {"summary": "event=hola; response_language=es; expression=Vale."},
+        ],
+        user_profile={"preferred_language": "pl", "language_confidence": 0.9},
+    )
+
+    assert result.code == "pl"
+    assert result.source == "user_profile"
+
+
+def test_detect_language_can_prefer_explicit_profile_preference_on_ambiguous_follow_up() -> None:
+    result = detect_language(
+        "ok",
+        recent_memory=[
+            {"summary": "event=hello; response_language=en; expression=Sure, let's keep going."},
+        ],
+        user_profile={
+            "preferred_language": "pl",
+            "language_confidence": 0.93,
+            "language_source": "explicit_request",
+        },
+    )
+
+    assert result.code == "pl"
+    assert result.source == "user_profile"
+
+
 def test_perception_agent_propagates_detected_language() -> None:
     perception = PerceptionAgent().run(_event("How should we deploy this?"), recent_memory=[])
 

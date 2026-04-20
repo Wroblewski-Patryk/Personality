@@ -36,28 +36,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-327 Add richer language continuity policy across profile, memory, and current turn context
-  - Status: READY
-  - Group: Identity, Language, And Profile Boundary Hardening
-  - Owner: Backend Builder
-  - Depends on: PRJ-326
-  - Priority: P1
-  - Result:
-    - language choice can use a clearer precedence model across current turn,
-      recent memory, and durable preference state
-    - multilingual continuity becomes more architecture-aligned and less
-      heuristic-only
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_context_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-328 Add identity and language continuity regressions across session and API fallback boundaries
-  - Status: FUTURE
+  - Status: READY
   - Group: Identity, Language, And Profile Boundary Hardening
   - Owner: QA/Test
   - Depends on: PRJ-327
@@ -68,6 +48,12 @@ Last updated: 2026-04-20
     - drift between profile state and response behavior becomes visible quickly
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-329 Sync docs/context for identity, language, and profile boundary hardening
   - Status: FUTURE
@@ -203,6 +189,26 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-327 Add richer language continuity policy across profile, memory, and current turn context
+  - Status: DONE
+  - Group: Identity, Language, And Profile Boundary Hardening
+  - Owner: Backend Builder
+  - Depends on: PRJ-326
+  - Priority: P1
+  - Result:
+    - language decision logic now follows explicit precedence across
+      current-turn signals, recent memory continuity, and durable profile
+      preference signals
+    - continuity heuristics now ingest structured episodic payload language
+      hints (`payload.response_language`) and ignore unsupported language codes
+      instead of inheriting arbitrary two-letter values
+    - ambiguous follow-up tie-breaks now allow explicit durable profile
+      preference to win against conflicting memory continuity without changing
+      non-ambiguous turn behavior
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_context_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
+      (`140 passed`)
 
 - [x] PRJ-326 Refactor identity loading around explicit profile-versus-conclusion ownership
   - Status: DONE
