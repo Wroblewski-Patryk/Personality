@@ -16,8 +16,8 @@ Last updated: 2026-04-20
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
 - The planning queue is complete through `PRJ-299`.
-- `PRJ-288` is complete; `PRJ-289` is currently `READY` and starts runtime
-  adoption of the governed adaptive influence policy.
+- `PRJ-289` is complete; `PRJ-290` is currently `READY` and continues adaptive
+  governance rollout into proactive and attention surfaces.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
@@ -28,27 +28,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-289 Refactor role, motivation, and planning to consume governed adaptive influence rules
-  - Status: READY
-  - Group: Adaptive Cognition Governance
-  - Owner: Backend Builder
-  - Depends on: PRJ-288
-  - Priority: P1
-  - Result:
-    - core cognition stages consume one governed adaptive-policy owner instead
-      of ad hoc signal checks
-    - role and planning behavior remain explainable as the architecture grows
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-290 Extend proactive and attention logic to consume governed relation/theta signals
-  - Status: FUTURE
+  - Status: READY
   - Group: Adaptive Cognition Governance
   - Owner: Backend Builder
   - Depends on: PRJ-289
@@ -59,6 +40,12 @@ Last updated: 2026-04-20
     - adaptive cues do not silently bypass attention or anti-spam guardrails
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-291 Add adaptive-governance regressions and sync docs/context
   - Status: FUTURE

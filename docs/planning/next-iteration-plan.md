@@ -1228,13 +1228,13 @@ further through runtime behavior.
       this slice
     - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
 
-- `PRJ-289` Refactor role, motivation, and planning to consume governed adaptive influence rules.
+- `PRJ-289` is complete.
   - Result:
     - core cognition stages consume one governed adaptive-policy owner instead
       of ad hoc signal checks
     - role and planning behavior remain explainable as the architecture grows
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_adaptive_policy.py tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
 
 - `PRJ-290` Extend proactive and attention logic to consume governed relation/theta signals.
   - Result:
@@ -1340,10 +1340,10 @@ not around temporary convenience defaults.
 ## Next Derived Slice
 
 The planning queue is complete through `PRJ-299`.
-`PRJ-289` is currently the execution-ready slice in the board.
+`PRJ-290` is currently the execution-ready slice in the board.
 Before the next implementation slice:
 
-- take `PRJ-289` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-290` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to that one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 

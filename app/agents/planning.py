@@ -1,3 +1,4 @@
+from app.core.adaptive_policy import dominant_theta_channel, relation_value
 from app.core.contracts import (
     CalendarSchedulingIntentDomainIntent,
     ConnectedDriveAccessDomainIntent,
@@ -79,9 +80,9 @@ class PlanningAgent:
         goal_milestone_transition = str((user_preferences or {}).get("goal_milestone_transition", "")).strip().lower()
         goal_milestone_risk = str((user_preferences or {}).get("goal_milestone_risk", "")).strip().lower()
         goal_completion_criteria = str((user_preferences or {}).get("goal_completion_criteria", "")).strip().lower()
-        relation_collaboration = self._relation_value(relations=relations or [], relation_type="collaboration_dynamic")
-        relation_support = self._relation_value(relations=relations or [], relation_type="support_intensity_preference")
-        relation_delivery = self._relation_value(relations=relations or [], relation_type="delivery_reliability")
+        relation_collaboration = relation_value(relations=relations or [], relation_type="collaboration_dynamic")
+        relation_support = relation_value(relations=relations or [], relation_type="support_intensity_preference")
+        relation_delivery = relation_value(relations=relations or [], relation_type="delivery_reliability")
         goal_milestone_arc_signal = goal_milestone_arc or self._goal_milestone_arc_signal(goal_milestone_history or [])
         goal_history_signal = self._goal_history_signal(goal_progress_history or [])
         proactive_decision = self.proactive_decision_engine.decide(
@@ -794,16 +795,16 @@ class PlanningAgent:
         return handoffs, accepted, extra_steps
 
     def _theta_plan_step(self, theta: dict | None, steps: list[str]) -> str | None:
-        if not theta:
+        channel = dominant_theta_channel(theta)
+        if channel is None:
             return None
-
-        candidates = {
-            "maintain_supportive_stance": float(theta.get("support_bias", 0.0) or 0.0),
-            "favor_structured_reasoning": float(theta.get("analysis_bias", 0.0) or 0.0),
-            "favor_concrete_next_step": float(theta.get("execution_bias", 0.0) or 0.0),
+        step_by_channel = {
+            "support": "maintain_supportive_stance",
+            "analysis": "favor_structured_reasoning",
+            "execution": "favor_concrete_next_step",
         }
-        step, bias = max(candidates.items(), key=lambda item: item[1])
-        if bias < 0.58:
+        step = step_by_channel.get(channel)
+        if step is None:
             return None
 
         if step == "maintain_supportive_stance" and (
@@ -1292,15 +1293,3 @@ class PlanningAgent:
 
     def _goal_milestone_arc_signal(self, goal_milestone_history: list[dict]) -> str:
         return shared_goal_milestone_arc_signal(goal_milestone_history)
-
-    def _relation_value(self, *, relations: list[dict], relation_type: str) -> str | None:
-        for relation in relations:
-            if str(relation.get("relation_type", "")).strip().lower() != relation_type:
-                continue
-            confidence = float(relation.get("confidence", 0.0) or 0.0)
-            if confidence < 0.68:
-                continue
-            value = str(relation.get("relation_value", "")).strip().lower()
-            if value:
-                return value
-        return None

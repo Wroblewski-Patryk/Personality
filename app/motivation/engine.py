@@ -1,3 +1,4 @@
+from app.core.adaptive_policy import dominant_theta_channel, should_apply_motivation_adaptive_tie_break
 from app.core.contracts import ContextOutput, Event, MotivationOutput, PerceptionOutput
 from app.proactive.engine import ProactiveDecisionEngine
 from app.utils.goal_task_selection import (
@@ -453,12 +454,21 @@ class MotivationEngine:
         arousal += (0.1 + (0.2 * affective_intensity)) if has_emotional_signal else 0.0
         arousal += 0.1 if has_question else 0.0
 
-        theta_mode = None
-        if not has_emotional_signal and not has_execution_signal and not has_analysis_signal:
-            theta_mode = self._theta_mode(theta)
-        collaboration_mode = None
-        if not has_emotional_signal and not has_execution_signal and not has_analysis_signal:
-            collaboration_mode = self._collaboration_mode(collaboration_preference)
+        adaptive_tie_break_allowed = should_apply_motivation_adaptive_tie_break(
+            intent=perception.intent,
+            topic=perception.topic,
+            is_brief_turn=is_brief_turn,
+            has_positive_signal=has_positive_signal,
+            has_emotional_signal=has_emotional_signal,
+            has_execution_signal=has_execution_signal,
+            has_analysis_signal=has_analysis_signal,
+        )
+        theta_mode = self._theta_mode(theta) if adaptive_tie_break_allowed else None
+        collaboration_mode = (
+            self._collaboration_mode(collaboration_preference)
+            if adaptive_tie_break_allowed
+            else None
+        )
 
         if has_emotional_signal:
             mode = "respond"
@@ -466,19 +476,13 @@ class MotivationEngine:
             mode = "execute"
         elif has_analysis_signal:
             mode = "analyze"
-        elif collaboration_mode and (
-            perception.intent == "request_help"
-            or (perception.topic == "general" and is_brief_turn and not has_positive_signal)
-        ):
+        elif collaboration_mode:
             mode = collaboration_mode
             importance += 0.05
             if collaboration_mode == "execute":
                 urgency += 0.08
                 arousal += 0.05
-        elif theta_mode and (
-            perception.intent == "request_help"
-            or (perception.topic == "general" and is_brief_turn and not has_positive_signal)
-        ):
+        elif theta_mode:
             mode = theta_mode
             importance += 0.05
             if theta_mode == "execute":
@@ -513,18 +517,15 @@ class MotivationEngine:
         return max(0.0, min(1.0, round(value, 2)))
 
     def _theta_mode(self, theta: dict | None) -> str | None:
-        if not theta:
+        channel = dominant_theta_channel(theta)
+        if channel is None:
             return None
-
-        candidates = {
-            "respond": float(theta.get("support_bias", 0.0) or 0.0),
-            "analyze": float(theta.get("analysis_bias", 0.0) or 0.0),
-            "execute": float(theta.get("execution_bias", 0.0) or 0.0),
+        mode_by_channel = {
+            "support": "respond",
+            "analysis": "analyze",
+            "execution": "execute",
         }
-        mode, bias = max(candidates.items(), key=lambda item: item[1])
-        if bias < 0.58:
-            return None
-        return mode
+        return mode_by_channel.get(channel)
 
     def _collaboration_mode(self, collaboration_preference: str) -> str | None:
         if collaboration_preference == "hands_on":

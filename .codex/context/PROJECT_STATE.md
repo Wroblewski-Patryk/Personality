@@ -854,6 +854,13 @@ Last updated: 2026-04-20
 - 2026-04-20: `PRJ-288` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
   passed with `151 passed`.
+- 2026-04-20: `PRJ-289` is complete: role, motivation, and planning now consume
+  shared governed adaptive-policy helpers (`app/core/adaptive_policy.py`) for
+  relation evidence thresholds, preferred-role gating, theta dominance, and
+  adaptive tie-break posture checks.
+- 2026-04-20: `PRJ-289` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_adaptive_policy.py tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+  passed with `156 passed`.
 
 ## Working Agreements
 

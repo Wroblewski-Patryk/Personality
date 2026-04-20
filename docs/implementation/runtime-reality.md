@@ -518,8 +518,9 @@ Current behavior:
 - canonical adaptive influence governance policy is now documented in
   `docs/architecture/16_agent_contracts.md`, including explicit evidence gates
   and precedence for affective, relation, preference, and theta signals
-- current runtime still applies that policy through stage-local thresholds and
-  tie-break checks; a shared policy owner refactor is queued in `PRJ-289`
+- foreground cognition stages now consume a shared policy owner
+  (`app/core/adaptive_policy.py`) for relation thresholds, preferred-role
+  evidence gating, theta dominance, and adaptive tie-break posture checks
 
 Current topology ownership split:
 

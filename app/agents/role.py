@@ -1,3 +1,10 @@
+from app.core.adaptive_policy import (
+    ROLE_COLLABORATION_RELATION_CONFIDENCE_MIN,
+    dominant_theta_channel,
+    is_role_adaptive_tie_break_turn,
+    preferred_role_allowed,
+    relation_value,
+)
 from app.core.contracts import ContextOutput, Event, PerceptionOutput, RoleOutput
 from app.utils.language import normalize_for_matching
 
@@ -21,15 +28,21 @@ class RoleAgent:
         preferred_role = str((user_preferences or {}).get("preferred_role", "")).strip().lower()
         preferred_role_confidence = float((user_preferences or {}).get("preferred_role_confidence", 0.0) or 0.0)
         collaboration_preference = str((user_preferences or {}).get("collaboration_preference", "")).strip().lower()
-        relation_collaboration = self._relation_value(
+        relation_collaboration = relation_value(
             relations=relations or [],
             relation_type="collaboration_dynamic",
-            min_confidence=0.7,
+            min_confidence=ROLE_COLLABORATION_RELATION_CONFIDENCE_MIN,
         )
-        relation_support = self._relation_value(
+        relation_support = relation_value(
             relations=relations or [],
             relation_type="support_intensity_preference",
-            min_confidence=0.68,
+        )
+        is_help_turn = perception.event_type == "question" or perception.intent == "request_help"
+        is_general_turn = perception.topic == "general"
+        is_role_tie_break_turn = is_role_adaptive_tie_break_turn(
+            event_type=perception.event_type,
+            intent=perception.intent,
+            topic=perception.topic,
         )
 
         analysis_keywords = {
@@ -77,34 +90,38 @@ class RoleAgent:
         if any(lowered.startswith(keyword) for keyword in executor_keywords):
             return RoleOutput(selected="executor", confidence=0.78)
 
-        if preferred_role in self.PREFERRED_ROLES and preferred_role_confidence >= 0.72:
-            if perception.event_type == "question" or perception.intent == "request_help":
+        if preferred_role_allowed(
+            preferred_role=preferred_role,
+            preferred_role_confidence=preferred_role_confidence,
+            allowed_roles=self.PREFERRED_ROLES,
+        ):
+            if is_help_turn:
                 return RoleOutput(selected=preferred_role, confidence=0.73)
-            if perception.topic == "general":
+            if is_general_turn:
                 return RoleOutput(selected=preferred_role, confidence=0.68)
 
         collaboration_role = self._collaboration_role(collaboration_preference)
-        if collaboration_role is not None:
-            if perception.event_type == "question" or perception.intent == "request_help":
+        if collaboration_role is not None and is_role_tie_break_turn:
+            if is_help_turn:
                 return RoleOutput(selected=collaboration_role, confidence=0.71)
-            if perception.topic == "general":
+            if is_general_turn:
                 return RoleOutput(selected=collaboration_role, confidence=0.66)
 
         relation_role = self._collaboration_role(relation_collaboration or "")
-        if relation_role is not None:
-            if perception.event_type == "question" or perception.intent == "request_help":
+        if relation_role is not None and is_role_tie_break_turn:
+            if is_help_turn:
                 return RoleOutput(selected=relation_role, confidence=0.69)
-            if perception.topic == "general":
+            if is_general_turn:
                 return RoleOutput(selected=relation_role, confidence=0.64)
 
         theta_role = self._theta_role(theta)
-        if theta_role is not None:
-            if perception.event_type == "question" or perception.intent == "request_help":
+        if theta_role is not None and is_role_tie_break_turn:
+            if is_help_turn:
                 return RoleOutput(selected=theta_role, confidence=0.69)
-            if perception.topic == "general":
+            if is_general_turn:
                 return RoleOutput(selected=theta_role, confidence=0.64)
 
-        if perception.event_type == "question" or perception.intent == "request_help":
+        if is_help_turn:
             return RoleOutput(selected="mentor", confidence=0.71)
 
         if context.risk_level >= 0.5:
@@ -113,37 +130,19 @@ class RoleAgent:
         return RoleOutput(selected="advisor", confidence=0.6)
 
     def _theta_role(self, theta: dict | None) -> str | None:
-        if not theta:
+        channel = dominant_theta_channel(theta)
+        if channel is None:
             return None
-
-        support_bias = float(theta.get("support_bias", 0.0) or 0.0)
-        analysis_bias = float(theta.get("analysis_bias", 0.0) or 0.0)
-        execution_bias = float(theta.get("execution_bias", 0.0) or 0.0)
-        candidates = {
-            "friend": support_bias,
-            "analyst": analysis_bias,
-            "executor": execution_bias,
+        role_by_channel = {
+            "support": "friend",
+            "analysis": "analyst",
+            "execution": "executor",
         }
-        role, bias = max(candidates.items(), key=lambda item: item[1])
-        if bias < 0.58:
-            return None
-        return role
+        return role_by_channel.get(channel)
 
     def _collaboration_role(self, collaboration_preference: str) -> str | None:
         if collaboration_preference == "hands_on":
             return "executor"
         if collaboration_preference == "guided":
             return "mentor"
-        return None
-
-    def _relation_value(self, *, relations: list[dict], relation_type: str, min_confidence: float) -> str | None:
-        for relation in relations:
-            if str(relation.get("relation_type", "")).strip().lower() != relation_type:
-                continue
-            confidence = float(relation.get("confidence", 0.0) or 0.0)
-            if confidence < min_confidence:
-                continue
-            value = str(relation.get("relation_value", "")).strip().lower()
-            if value:
-                return value
         return None
