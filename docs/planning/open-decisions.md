@@ -38,7 +38,7 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-318..PRJ-321`: internal debug ingress migration
     (`3` implementation follow-up) - complete
   - `PRJ-322..PRJ-325`: scheduler externalization and attention ownership
-    (`1`, `12`, `12a` implementation follow-up)
+    (`1`, `12`, `12a` implementation follow-up) - complete
   - `PRJ-326..PRJ-329`: identity, language, and profile boundary hardening
     (`8`, `9`)
   - `PRJ-330..PRJ-333`: relation lifecycle and trust influence rollout
@@ -695,6 +695,16 @@ The current repo already works as an MVP slice, but several architecture-level d
     interruption-cost guardrails and typed plan/motivation outputs.
   - proactive delivery now enforces baseline guardrails (user opt-in, outbound
     and unanswered throttle checks, delivery-target requirement) before outreach.
+- Decision (PRJ-322 scheduler execution owner posture, 2026-04-20):
+  - scheduler cadence execution mode is now explicit through
+    `SCHEDULER_EXECUTION_MODE` (`in_process|externalized`)
+  - `/health.scheduler` now exposes owner-mode and readiness posture
+    (`execution_mode`, cadence owners, dispatch reasons, blocker list)
+- Decision (PRJ-323 shared cadence dispatch boundary, 2026-04-20):
+  - maintenance and proactive cadence now share one owner-aware dispatch
+    boundary in runtime contracts
+  - maintenance execution now explicitly no-ops under externalized owner posture
+    instead of relying on implicit in-process assumptions
 - Decision (PRJ-301 scheduler/reflection baseline, 2026-04-20):
   - scheduled reflection baseline stays in-process first
     (`REFLECTION_RUNTIME_MODE=in_process`) with durable enqueue semantics.
@@ -745,6 +755,12 @@ The current repo already works as an MVP slice, but several architecture-level d
   - timing windows remain config-owned by the attention boundary through
     `ATTENTION_BURST_WINDOW_MS`, `ATTENTION_ANSWERED_TTL_SECONDS`, and
     `ATTENTION_STALE_TURN_SECONDS`.
+- Decision (PRJ-324 attention owner posture, 2026-04-20):
+  - attention coordination owner mode is now explicit through
+    `ATTENTION_COORDINATION_MODE` (`in_process|durable_inbox`)
+  - `/health.attention` now exposes owner-mode deployment readiness posture
+    (`coordination_mode`, `turn_state_owner`, `deployment_readiness`) for
+    durable-inbox rollout preparation
 - Remaining follow-up decision:
   - what production-default timing values should be promoted as the release
     baseline once dual-loop rollout stabilizes?

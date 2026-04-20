@@ -1557,7 +1557,7 @@ This group moves scheduler and attention ownership closer to the intended
 architecture by making cadence execution mode explicit in code rather than only
 in planning decisions.
 
-- `PRJ-322` Implement owner-aware scheduler execution mode and health snapshot.
+- `PRJ-322` Implement owner-aware scheduler execution mode and health snapshot. (complete)
   - Result:
     - scheduler runtime exposes one explicit owner mode for cadence execution
       (`in_process|externalized`)
@@ -1566,7 +1566,7 @@ in planning decisions.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_contracts.py tests/test_scheduler_worker.py tests/test_api_routes.py tests/test_config.py`
 
-- `PRJ-323` Route maintenance and proactive cadence through the shared owner-aware dispatch boundary.
+- `PRJ-323` Route maintenance and proactive cadence through the shared owner-aware dispatch boundary. (complete)
   - Result:
     - cadence ownership becomes explicit in scheduler/runtime dispatch instead
       of hidden behind in-process assumptions
@@ -1575,7 +1575,7 @@ in planning decisions.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_runtime_pipeline.py tests/test_action_executor.py tests/test_api_routes.py`
 
-- `PRJ-324` Add attention-inbox ownership posture for future durable coordination rollout.
+- `PRJ-324` Add attention-inbox ownership posture for future durable coordination rollout. (complete)
   - Result:
     - attention coordination now exposes one explicit owner posture for
       in-process versus durable inbox evolution
@@ -1736,7 +1736,7 @@ Runtime behavior-validation queue is now complete through `PRJ-317`.
 Next implementation queue is now seeded through `PRJ-337`.
 Before the next implementation slice:
 
-- take `PRJ-322` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-326` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 

@@ -357,9 +357,10 @@ Current limitation:
 - app status
 - reflection worker queue snapshot
 - non-secret runtime policy flags
-- scheduler cadence posture and latest tick summaries
-- attention turn-assembly posture (`burst_window_ms`, turn TTLs, pending /
-  claimed / answered counters)
+- scheduler cadence posture (`execution_mode`, cadence owners, dispatch reasons,
+  readiness/blockers) and latest tick summaries
+- attention turn-assembly posture (`coordination_mode`, owner posture,
+  readiness/blockers, timing windows, pending/claimed/answered counters)
 
 Production debug access now also supports explicit token-requirement policy via
 `PRODUCTION_DEBUG_TOKEN_REQUIRED` (default `true`).
@@ -451,14 +452,17 @@ Scheduler-facing runtime contracts are now explicit:
 - source/subsource and payload shape checks are centralized in
   `app/core/scheduler_contracts.py`
 - runtime config includes scheduler and cadence boundaries:
-  `SCHEDULER_ENABLED`, `REFLECTION_INTERVAL`, `MAINTENANCE_INTERVAL`,
-  `PROACTIVE_ENABLED`, `PROACTIVE_INTERVAL`
+  `SCHEDULER_ENABLED`, `SCHEDULER_EXECUTION_MODE`, `REFLECTION_INTERVAL`,
+  `MAINTENANCE_INTERVAL`, `PROACTIVE_ENABLED`, `PROACTIVE_INTERVAL`
 - in-process scheduler cadence is now implemented through
   `app/workers/scheduler.py` for reflection and maintenance routines
 - proactive ticks now have a live decision and delivery-guard path when a
   scheduler proactive event is received
 - scheduler runtime posture and latest tick summaries are visible through
   `GET /health`
+- maintenance/proactive cadence dispatch now uses shared owner-aware boundary
+  decisions (`in_process_owner_mode|externalized_owner_mode`) and scheduler
+  maintenance path explicitly no-ops in externalized posture
 
 `PRJ-308` now defines the target cadence-ownership direction:
 
@@ -620,6 +624,10 @@ What is already live:
   attention-turn coordinator; rapid pending messages can assemble into one turn
   and duplicate/non-owner burst events return queued metadata instead of
   triggering duplicate runtime runs
+- attention coordination owner posture is now explicit through
+  `ATTENTION_COORDINATION_MODE` (`in_process|durable_inbox`) and
+  `/health.attention` readiness fields (`coordination_mode`,
+  `turn_state_owner`, `deployment_readiness`)
 - attention turn timing is now runtime-configurable through
   `ATTENTION_BURST_WINDOW_MS`, `ATTENTION_ANSWERED_TTL_SECONDS`, and
   `ATTENTION_STALE_TURN_SECONDS`

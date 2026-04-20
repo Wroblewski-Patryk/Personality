@@ -58,13 +58,13 @@ vs recent traffic so migration windows can separate historical noise from active
 compat dependency.
 
 `GET /health` also includes a `scheduler` object with cadence posture
-(`enabled`, `running`, interval settings) and latest reflection/maintenance
-tick summaries.
+(`execution_mode`, cadence owners, dispatch/readiness posture, interval
+settings) and latest reflection/maintenance tick summaries.
 
 `GET /health` now also includes an `attention` object with burst-turn assembly
-posture (`burst_window_ms`, `answered_ttl_seconds`, `stale_turn_seconds`) and
+posture (`coordination_mode`, owner/readiness semantics, timing windows) and
 live turn counters (`pending`, `claimed`, `answered`) to support burst-message
-triage and operator verification of attention gate behavior.
+triage and owner-mode rollout verification.
 
 `GET /health` now also includes a `memory_retrieval` object with semantic
 retrieval posture:
@@ -419,10 +419,14 @@ Recommended when Telegram webhooks are enabled:
 - `PRODUCTION_POLICY_ENFORCEMENT` (`warn|strict`) to decide whether production
   policy mismatches remain warning-only or block startup
   (default: `strict` in production, `warn` outside production)
+- `SCHEDULER_EXECUTION_MODE` (`in_process|externalized`) to define maintenance
+  and proactive cadence owner posture
 - `ATTENTION_BURST_WINDOW_MS` (optional) to tune burst-message coalescing
   latency and aggregation behavior
 - `ATTENTION_ANSWERED_TTL_SECONDS` and `ATTENTION_STALE_TURN_SECONDS` (optional)
   to tune in-memory turn lifecycle cleanup behavior
+- `ATTENTION_COORDINATION_MODE` (`in_process|durable_inbox`) to define
+  turn-assembly owner posture and rollout expectation
 
 ## Common Operator Flows
 
@@ -468,7 +472,15 @@ Operator checks:
   - `runtime_enqueue_dispatch` / `runtime_enqueue_reason`
   - `scheduler_tick_dispatch` / `scheduler_tick_reason`
   - retry guardrails (`max_attempts`, `retry_backoff_seconds`)
-- verify `/health.scheduler` mode/cadence posture when scheduler is enabled
+- verify `/health.scheduler` owner posture:
+  - `execution_mode`
+  - `maintenance_cadence_owner` / `proactive_cadence_owner`
+  - `cadence_execution.selected_execution_mode`
+  - `cadence_execution.maintenance_tick_dispatch` /
+    `cadence_execution.maintenance_tick_reason`
+  - `cadence_execution.proactive_tick_dispatch` /
+    `cadence_execution.proactive_tick_reason`
+  - `cadence_execution.ready` / `cadence_execution.blocking_signals`
 - treat growing pending queue in deferred mode as external-dispatch signal
   rather than foreground failure
 - verify `aion.scheduler` `scheduler_reflection_tick` logs include
@@ -525,6 +537,8 @@ Post-reflection hardening decisions are synchronized through `PRJ-309`:
   posture is treated as transitional
 - scheduler cadence ownership target is explicit (external long-term owner,
   app-local transitional fallback)
+- attention owner posture is explicit (`in_process|durable_inbox`) with
+  readiness blockers surfaced in `/health.attention.deployment_readiness`
 
 Next execution lane after this sync:
 

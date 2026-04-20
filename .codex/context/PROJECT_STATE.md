@@ -1138,9 +1138,22 @@ Last updated: 2026-04-20
 - 2026-04-20: `PRJ-324` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_scheduler_contracts.py tests/test_config.py`
   passed with `188 passed`.
-- 2026-04-20: `PRJ-325` is the next `READY` slice, focused on syncing docs,
-  planning context, and runtime ops runbook with scheduler/attention ownership
-  posture changes.
+- 2026-04-20: `PRJ-325` is complete: docs/context/runbook are synchronized with
+  owner-aware scheduler cadence posture and attention owner/readiness posture
+  (`SCHEDULER_EXECUTION_MODE`, `ATTENTION_COORDINATION_MODE`, and health
+  ownership/readiness fields).
+- 2026-04-20: `PRJ-325` validation is recorded as doc-and-context sync plus
+  targeted scheduler/attention cross-doc review across
+  `docs/overview.md`,
+  `docs/architecture/26_env_and_config.md`,
+  `docs/operations/runtime-ops-runbook.md`,
+  `docs/implementation/runtime-reality.md`,
+  `docs/planning/open-decisions.md`,
+  `docs/planning/next-iteration-plan.md`,
+  `.codex/context/TASK_BOARD.md`, and
+  `.codex/context/PROJECT_STATE.md`.
+- 2026-04-20: `PRJ-326` is the next `READY` slice, focused on identity loading
+  boundary hardening across profile-versus-conclusion ownership.
 
 ## Working Agreements
 

@@ -82,13 +82,15 @@ What is already live:
   around current stage modules, preparing incremental LangGraph migration
 - LangGraph foreground orchestration now active for `perception -> ... -> action`
 - scheduler event normalization/cadence contracts in runtime and config
-- in-process scheduler reflection and maintenance cadence with `/health`
-  scheduler visibility
+- owner-aware scheduler cadence posture (`in_process|externalized`) with
+  maintenance/proactive owner and dispatch visibility in `/health.scheduler`
 - proactive scheduler decision engine with interruption-cost guardrails and
   typed proactive planning/motivation outputs
 - proactive delivery guardrails with opt-in, throttle limits, and delivery-target
   checks before outreach
 - explicit attention inbox and proposal-handoff runtime-state contracts
+- attention coordination owner posture (`in_process|durable_inbox`) with
+  readiness/blocker visibility in `/health.attention`
 - subconscious proposal persistence with conscious handoff resolution and
   read-only research/tool policy boundaries
 - proactive scheduler attention-gate checks before delivery planning

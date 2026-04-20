@@ -514,6 +514,21 @@ Target deployment baseline (PRJ-301):
 Enables or disables in-process scheduler cadence for reflection and maintenance
 routines.
 
+`SCHEDULER_EXECUTION_MODE`
+
+Controls who owns maintenance/proactive cadence dispatch posture:
+
+- `in_process`: app-local scheduler worker is the active cadence owner
+- `externalized`: external scheduler owner is expected; in-process cadence
+  dispatch is treated as disabled posture
+
+Health posture (`/health.scheduler`) now exposes this owner mode through:
+
+- `execution_mode`
+- `maintenance_cadence_owner` / `proactive_cadence_owner`
+- `cadence_execution` (`selected_execution_mode`, dispatch booleans/reasons,
+  `ready`, `blocking_signals`)
+
 `MAINTENANCE_INTERVAL`
 
 Controls background maintenance cadence when scheduler execution is enabled.
@@ -547,6 +562,22 @@ Ownership split:
 Controls the short coalescing window for bursty Telegram user messages.
 Lower values reduce wait time before processing; higher values increase
 coalescing tolerance.
+
+`ATTENTION_COORDINATION_MODE`
+
+Controls attention turn-assembly owner posture:
+
+- `in_process`: in-memory turn coordinator owns burst-message assembly
+- `durable_inbox`: durable inbox owner is expected (current runtime exposes
+  explicit readiness/blocker posture for this mode)
+
+Health posture (`/health.attention`) now exposes this owner mode through:
+
+- `coordination_mode`
+- `turn_state_owner`
+- `durable_inbox_expected`
+- `deployment_readiness` (`selected_coordination_mode`, `ready`,
+  `blocking_signals`)
 
 `ATTENTION_ANSWERED_TTL_SECONDS`
 

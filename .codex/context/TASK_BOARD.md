@@ -36,29 +36,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-325 Sync docs/context/runbook for scheduler externalization and attention ownership
-  - Status: READY
-  - Group: Scheduler Externalization And Attention Ownership
-  - Owner: Product Docs + Ops/Release
-  - Depends on: PRJ-324
-  - Priority: P1
-  - Result:
-    - docs, planning, and ops truth remain aligned with owner-aware cadence and
-      attention posture
-    - later rollout slices can build on explicit scheduler ownership instead of
-      re-planning it
-  - Validation:
-    - doc-and-context sync plus targeted scheduler/attention cross-doc review
-      recorded in this slice
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-326 Refactor identity loading around explicit profile-versus-conclusion ownership
-  - Status: FUTURE
+  - Status: READY
   - Group: Identity, Language, And Profile Boundary Hardening
   - Owner: Backend Builder
   - Depends on: PRJ-325
@@ -69,6 +48,12 @@ Last updated: 2026-04-20
     - identity continuity stops relying on fuzzy fallback chains
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-327 Add richer language continuity policy across profile, memory, and current turn context
   - Status: FUTURE
@@ -231,6 +216,30 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-325 Sync docs/context/runbook for scheduler externalization and attention ownership
+  - Status: DONE
+  - Group: Scheduler Externalization And Attention Ownership
+  - Owner: Product Docs + Ops/Release
+  - Depends on: PRJ-324
+  - Priority: P1
+  - Result:
+    - canonical docs, implementation reality, planning notes, and ops runbook
+      now align with owner-aware scheduler cadence posture
+      (`SCHEDULER_EXECUTION_MODE`, cadence owner/readiness fields) and attention
+      owner posture (`ATTENTION_COORDINATION_MODE`, deployment-readiness fields)
+    - group handoff is explicit and queue progression is synchronized so
+      identity/language hardening starts from `PRJ-326` without drift
+  - Validation:
+    - doc-and-context sync plus targeted scheduler/attention cross-doc review
+      across `docs/overview.md`,
+      `docs/architecture/26_env_and_config.md`,
+      `docs/operations/runtime-ops-runbook.md`,
+      `docs/implementation/runtime-reality.md`,
+      `docs/planning/open-decisions.md`,
+      `docs/planning/next-iteration-plan.md`,
+      `.codex/context/TASK_BOARD.md`, and
+      `.codex/context/PROJECT_STATE.md`
 
 - [x] PRJ-324 Add attention-inbox ownership posture for future durable coordination rollout
   - Status: DONE
