@@ -32,11 +32,22 @@ from app.core.contracts import (
 
 
 class FakeRuntime:
-    def __init__(self, *, reflection_triggered: bool = False, run_delay_seconds: float = 0.0):
+    def __init__(
+        self,
+        *,
+        reflection_triggered: bool = False,
+        run_delay_seconds: float = 0.0,
+        action_status: str = "success",
+        action_actions: list[str] | None = None,
+        action_notes: str | None = None,
+    ):
         self.last_event: Event | None = None
         self.events: list[Event] = []
         self.reflection_triggered = reflection_triggered
         self.run_delay_seconds = max(0.0, float(run_delay_seconds))
+        self.action_status = action_status
+        self.action_actions = list(action_actions) if action_actions is not None else None
+        self.action_notes = action_notes
 
     async def run(self, event: Event) -> RuntimeResult:
         if self.run_delay_seconds > 0:
@@ -44,6 +55,17 @@ class FakeRuntime:
         self.last_event = event
         self.events.append(event)
         timestamp = datetime.now(timezone.utc)
+        action_actions = self.action_actions
+        if action_actions is None:
+            action_actions = ["api_response"] if self.action_status == "success" else ["send_telegram_message"]
+        action_notes = self.action_notes
+        if action_notes is None:
+            action_notes = "Response returned via API." if self.action_status == "success" else "Runtime action failed."
+        action_result = ActionResult(
+            status=self.action_status,
+            actions=action_actions,
+            notes=action_notes,
+        )
         return RuntimeResult(
             event=event,
             identity=IdentityOutput(
@@ -119,11 +141,7 @@ class FakeRuntime:
                 needs_action=False,
                 needs_response=True,
             ),
-            action_result=ActionResult(
-                status="success",
-                actions=["api_response"],
-                notes="Response returned via API.",
-            ),
+            action_result=action_result,
             expression=ExpressionOutput(
                 message="Test reply",
                 tone="supportive",
@@ -193,11 +211,7 @@ class FakeRuntime:
                     channel="api",
                     language="en",
                 ),
-                action_result=ActionResult(
-                    status="success",
-                    actions=["api_response"],
-                    notes="Response returned via API.",
-                ),
+                action_result=action_result,
             ),
             stage_timings_ms={
                 "memory_load": 1,
@@ -440,6 +454,9 @@ def _client(
     app_env: str = "development",
     reflection_triggered: bool = False,
     run_delay_seconds: float = 0.0,
+    runtime_action_status: str = "success",
+    runtime_action_actions: list[str] | None = None,
+    runtime_action_notes: str | None = None,
     reflection_stats: dict[str, int] | None = None,
     reflection_running: bool = True,
     event_debug_enabled: bool | None = True,
@@ -473,7 +490,13 @@ def _client(
 ) -> tuple[TestClient, FakeRuntime, FakeTelegramClient]:
     app = FastAPI()
     app.include_router(router)
-    runtime = FakeRuntime(reflection_triggered=reflection_triggered, run_delay_seconds=run_delay_seconds)
+    runtime = FakeRuntime(
+        reflection_triggered=reflection_triggered,
+        run_delay_seconds=run_delay_seconds,
+        action_status=runtime_action_status,
+        action_actions=runtime_action_actions,
+        action_notes=runtime_action_notes,
+    )
     telegram_client = FakeTelegramClient()
     memory_repository = FakeMemoryRepository(stats=reflection_stats)
     reflection_worker = FakeReflectionWorker(running=reflection_running)
@@ -1875,6 +1898,24 @@ def test_internal_event_debug_endpoint_returns_primary_debug_payload_without_sha
     assert "x-aion-debug-shared-compat" not in response.headers
     assert runtime.last_event is not None
     assert runtime.last_event.payload["text"] == "show internal debug runtime"
+
+
+def test_internal_event_debug_endpoint_returns_fail_action_result_without_500() -> None:
+    client, runtime, _ = _client(
+        runtime_action_status="fail",
+        runtime_action_actions=["send_telegram_message"],
+        runtime_action_notes="Telegram delivery exception: TimeoutError: upstream timeout",
+    )
+
+    response = client.post("/internal/event/debug", json=_telegram_update(9001, "trigger telegram failure"))
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["runtime"]["action_status"] == "fail"
+    assert body["debug"]["action_result"]["status"] == "fail"
+    assert body["debug"]["action_result"]["actions"] == ["send_telegram_message"]
+    assert "TimeoutError" in body["debug"]["action_result"]["notes"]
+    assert runtime.last_event is not None
 
 
 def test_event_debug_endpoint_rejects_shared_ingress_when_break_glass_override_is_required() -> None:

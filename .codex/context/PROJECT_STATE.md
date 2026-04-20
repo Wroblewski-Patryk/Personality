@@ -1221,6 +1221,22 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-331` required board validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
   passed with `247 passed`.
+- 2026-04-21: `PRJ-338` is complete: Telegram delivery now hardens exception
+  boundaries (`4xx/5xx`, timeout, transport failure) in
+  `DeliveryRouter`, degrading failures to structured
+  `ActionResult(status=fail)` responses instead of uncaught action-stage
+  exceptions that surface as endpoint 500s.
+- 2026-04-21: `PRJ-338` also adds fail-path regression coverage across delivery
+  router, action executor, runtime pipeline, and debug ingress API boundaries,
+  including explicit `/internal/event/debug` fail-action response posture.
+- 2026-04-21: `PRJ-338` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_delivery_router.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+  passed with `160 passed`.
+- 2026-04-21: `PRJ-338` app-lifespan manual smoke attempt through
+  `POST /internal/event/debug` was blocked in this workspace by unresolved DB
+  host startup dependency (`socket.gaierror [Errno 11001] getaddrinfo failed`);
+  the recurring execution guardrail is captured in
+  `.codex/context/LEARNING_JOURNAL.md`.
 - 2026-04-21: `PRJ-332` is now the next `READY` slice, focused on additional
   relation lifecycle and trust-influence regression depth.
 

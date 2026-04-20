@@ -84,11 +84,14 @@ class FakeMemoryRepository:
 
 
 class FakeTelegramClient:
-    def __init__(self):
+    def __init__(self, *, error: Exception | None = None):
+        self.error = error
         self.calls: list[dict[str, int | str]] = []
 
     async def send_message(self, chat_id: int | str, text: str) -> dict:
         self.calls.append({"chat_id": chat_id, "text": text})
+        if self.error is not None:
+            raise self.error
         return {"ok": True}
 
 
@@ -189,6 +192,20 @@ async def test_execute_fails_when_telegram_delivery_contract_has_no_chat_id() ->
     assert result.actions == []
     assert "chat_id is missing" in result.notes
     assert telegram_client.calls == []
+
+
+async def test_execute_handles_telegram_delivery_exception_as_fail_result() -> None:
+    memory_repository = FakeMemoryRepository()
+    telegram_client = FakeTelegramClient(error=TimeoutError("upstream timeout"))
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=telegram_client)
+
+    result = await executor.execute(_plan(), _delivery(channel="telegram", chat_id=123456))
+
+    assert result.status == "fail"
+    assert result.actions == ["send_telegram_message"]
+    assert "TimeoutError" in result.notes
+    assert "upstream timeout" in result.notes
+    assert telegram_client.calls == [{"chat_id": 123456, "text": "hello"}]
 
 
 async def test_execute_defers_when_proactive_delivery_guard_disallows_outreach() -> None:

@@ -385,6 +385,11 @@ class FakeTelegramClient:
         return {"ok": True}
 
 
+class FailingTelegramClient:
+    async def send_message(self, chat_id: int | str, text: str) -> dict:
+        raise TimeoutError("telegram transport timeout")
+
+
 class FakeOpenAIClient:
     def __init__(self):
         self.calls: list[dict[str, str]] = []
@@ -1030,6 +1035,42 @@ async def test_runtime_pipeline_builds_explicit_action_delivery_contract() -> No
     assert captured_delivery.chat_id == 777
     assert captured_delivery.message == "Mocked OpenAI reply"
     assert captured_delivery.language == "en"
+
+
+async def test_runtime_pipeline_degrades_telegram_delivery_exception_to_fail_action_result() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    action = ActionExecutor(memory_repository=memory, telegram_client=FailingTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-telegram-fail-boundary",
+        source="telegram",
+        subsource="user_message",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "hello from telegram", "chat_id": 777},
+        meta=EventMeta(user_id="u-1", trace_id="t-telegram-fail-boundary"),
+    )
+
+    result = await runtime.run(event)
+
+    assert result.action_result.status == "fail"
+    assert result.action_result.actions == ["send_telegram_message"]
+    assert "TimeoutError" in result.action_result.notes
+    assert result.memory_record is not None
+    assert result.memory_record.payload["action"] == "fail"
+    assert result.reflection_triggered is True
 
 
 async def test_runtime_pipeline_contract_smoke_pins_stage_and_action_boundary_invariants() -> None:

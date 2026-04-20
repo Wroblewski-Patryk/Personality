@@ -25,6 +25,35 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-21 - App-lifespan debug smoke can fail early when external DB DNS is unreachable
+- Context:
+  - validating manual `/internal/event/debug` behavior against full app
+    lifespan startup in this workspace.
+- Symptom:
+  - app startup fails before request handling with
+    `socket.gaierror: [Errno 11001] getaddrinfo failed`.
+- Root cause:
+  - current runtime DB target resolves through an external host that is not
+    reachable/resolvable from this execution environment.
+- Guardrail:
+  - for endpoint-boundary validation slices, use route/runtime harness tests as
+    the primary evidence path when full app lifespan depends on unavailable
+    external DB DNS.
+- Preferred pattern:
+  - keep fail-boundary checks in focused API/runtime tests
+  - run app-lifespan smoke only when DB host resolution is confirmed or
+    `DATABASE_URL` is explicitly pointed to a reachable local target
+  - record blocked manual smoke attempts explicitly in task evidence
+- Avoid:
+  - treating blocked full-app startup as proof that endpoint behavior regressed
+  - claiming manual ingress smoke as passed when startup never reaches request
+    handling
+- Evidence:
+  - `.\.venv\Scripts\python -` app-lifespan TestClient smoke attempt during
+    `PRJ-338` failed at startup with `socket.gaierror [Errno 11001]`.
+  - `tests/test_api_routes.py::test_internal_event_debug_endpoint_returns_fail_action_result_without_500`
+  - `tests/test_runtime_pipeline.py::test_runtime_pipeline_degrades_telegram_delivery_exception_to_fail_action_result`
+
 ### 2026-04-20 - Memory is not validated if persistence never changes later behavior
 - Context:
   - architectural memory work can look complete in contracts, repository

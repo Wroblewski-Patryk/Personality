@@ -31,10 +31,17 @@ class DeliveryRouter:
                 notes="Telegram response requested but chat_id is missing.",
             )
 
-        telegram_result = await self.telegram_client.send_message(
-            chat_id=delivery.chat_id,
-            text=delivery.message,
-        )
+        try:
+            telegram_result = await self.telegram_client.send_message(
+                chat_id=delivery.chat_id,
+                text=delivery.message,
+            )
+        except Exception as exc:
+            return ActionResult(
+                status="fail",
+                actions=["send_telegram_message"],
+                notes=f"Telegram delivery exception: {type(exc).__name__}: {exc}",
+            )
         if telegram_result.get("ok"):
             return ActionResult(
                 status="success",

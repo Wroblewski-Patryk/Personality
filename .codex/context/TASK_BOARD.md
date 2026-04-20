@@ -36,23 +36,6 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-338 Harden Telegram delivery failure boundary to prevent 500 runtime crashes
-  - Status: READY
-  - Group: Manual Runtime Reliability Fixes
-  - Owner: Backend Builder
-  - Depends on: PRJ-331
-  - Priority: P0
-  - Result:
-    - Telegram delivery failures (`4xx/5xx`, transport errors, timeout) are
-      handled as controlled `ActionResult(status=fail)` outcomes instead of
-      uncaught exceptions that return HTTP 500 from runtime endpoints
-    - action-boundary resilience keeps memory write and reflection enqueue
-      behavior deterministic for failed Telegram sends
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_delivery_router.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
-    - manual negative Telegram send smoke through `POST /internal/event/debug`
-      with invalid/unreachable `chat_id` confirms no endpoint 500
-
 - [ ] PRJ-332 Add relation lifecycle and trust-influence regressions
   - Status: READY
   - Group: Relation Lifecycle And Trust Influence
@@ -221,6 +204,33 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-338 Harden Telegram delivery failure boundary to prevent 500 runtime crashes
+  - Status: DONE
+  - Group: Manual Runtime Reliability Fixes
+  - Owner: Backend Builder
+  - Depends on: PRJ-331
+  - Priority: P0
+  - Result:
+    - Telegram delivery failures (`4xx/5xx`, transport errors, timeout) are
+      now degraded at the integration boundary to controlled
+      `ActionResult(status=fail)` responses, preventing uncaught action-stage
+      exceptions from bubbling into runtime endpoint 500s.
+    - runtime persistence and reflection follow-up remain deterministic on
+      failed Telegram sends (`action=fail` persisted, reflection enqueue still
+      evaluated) instead of short-circuiting on delivery exceptions.
+    - debug-ingress API behavior now explicitly covers fail-action delivery
+      posture so `/internal/event/debug` returns a structured fail response
+      instead of crashing.
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_delivery_router.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+      (`160 passed`)
+    - Negative debug-ingress boundary coverage is pinned in
+      `tests/test_api_routes.py::test_internal_event_debug_endpoint_returns_fail_action_result_without_500`
+      and `tests/test_runtime_pipeline.py::test_runtime_pipeline_degrades_telegram_delivery_exception_to_fail_action_result`.
+    - App-lifespan manual smoke attempt through `POST /internal/event/debug`
+      was blocked in this workspace by unresolved external DB host at startup;
+      pitfall and guardrail were captured in `.codex/context/LEARNING_JOURNAL.md`.
 
 - [x] PRJ-331 Extend planning, motivation, and proactive logic with governed trust signals
   - Status: DONE
