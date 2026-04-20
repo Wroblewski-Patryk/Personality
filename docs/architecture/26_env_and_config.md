@@ -125,7 +125,8 @@ Default behavior is environment-aware:
 - production default: `false`
 
 When disabled, callers must use explicit internal debug route
-`POST /event/debug`.
+`POST /event/debug` (current transitional shared-endpoint posture before
+dedicated ingress migration).
 
 `EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW`
 
@@ -294,6 +295,24 @@ This target baseline defines release intent.
 Runtime now applies production-aware strict default enforcement for this
 baseline while keeping explicit `warn` override as a controlled escape hatch.
 `/health.runtime_policy` mismatch diagnostics remain the canonical drift signal.
+
+### Internal Debug Ingress Boundary (PRJ-307)
+
+Target ingress contract:
+
+- public API ingress keeps compact response posture and must not expose full
+  runtime payloads
+- full debug payload access belongs to a dedicated internal/admin ingress
+  boundary, not the shared public API endpoint
+- temporary production debug windows remain token-gated and explicitly
+  time-bounded
+
+Current transitional posture:
+
+- `POST /event/debug` is still served by the same app endpoint as public API
+  traffic and is treated as compatibility surface during migration
+- deprecated compatibility `POST /event?debug=true` remains migration-only and
+  should stay disabled in production baseline
 
 ### `create_tables` Removal Criteria (PRJ-306)
 

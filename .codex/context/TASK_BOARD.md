@@ -16,42 +16,170 @@ Last updated: 2026-04-20
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
 - The convergence queue is complete through `PRJ-299`; reflection lane is now
-  complete through `PRJ-304`, and post-reflection hardening queue is seeded
-  through `PRJ-309`.
-- `PRJ-306` is complete; `PRJ-307` is currently `READY` to define the internal
-  debug ingress boundary and migration posture.
+  complete through `PRJ-304`, and post-reflection hardening plus runtime
+  behavior-validation queue is seeded through `PRJ-317`.
+- `PRJ-307` is complete; `PRJ-308` is currently `READY` to define the
+  long-term scheduler externalization boundary.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
   hardening.
+- After `PRJ-309`, continue through the runtime behavior-validation lane so
+  memory, continuity, and failure handling are tested as living-system
+  behavior rather than only contract correctness.
 - Additional architecture-alignment work should be appended after that queue so
   the backlog stays explicitly open for later discovery instead of pretending
   the plan is complete.
 
 ## READY
 
-- [ ] PRJ-307 Define target internal debug ingress boundary and migration posture away from shared public API service endpoint
+- [ ] PRJ-308 Define long-term scheduler externalization boundary for maintenance/proactive cadence ownership
   - Status: READY
   - Group: Post-Reflection Hardening Queue
-  - Owner: Planner + Product Docs
-  - Depends on: PRJ-306
+  - Owner: Planner + Ops/Release
+  - Depends on: PRJ-307
   - Priority: P1
   - Result:
-    - public-api follow-up decision now has explicit target-state ingress
-      contract and migration ownership boundaries
-    - debug-surface hardening can proceed without redefining runtime-policy
-      baselines each slice
+    - scheduler/proactive follow-up now has one explicit target posture for
+      app-local vs external cadence ownership after reflection rollout
+    - later implementation slices can converge on one cadence owner model
+      instead of reopening decision `12` every cycle
   - Validation:
-    - doc-and-context sync plus targeted public-api boundary review recorded in
+    - doc-and-context sync plus targeted scheduler-boundary review recorded in
       this slice
 
 ## BACKLOG
 
-- [ ] (none)
+- [ ] PRJ-309 Sync docs/context/runbook for post-reflection hardening queue decisions
+  - Status: BACKLOG
+  - Group: Post-Reflection Hardening Queue
+  - Owner: Product Docs + Ops/Release
+  - Depends on: PRJ-308
+  - Priority: P1
+  - Result:
+    - planning, project state, and ops runbook remain synchronized after
+      post-reflection decision closure slices
+    - release-readiness and runtime-governance docs stay aligned with the next
+      hardening lane
+  - Validation:
+    - doc-and-context sync plus targeted cross-doc consistency review recorded
+      in this slice
 
 ## FUTURE
 
-- [ ] (none)
+- [ ] PRJ-310 Define the canonical runtime behavior testing contract and required system-debug surface
+  - Status: FUTURE
+  - Group: Runtime Behavior Testing Architecture
+  - Owner: Planner + QA/Test
+  - Depends on: PRJ-309
+  - Priority: P1
+  - Result:
+    - architecture explicitly defines required behavior-testing modes
+      (`system_debug`, `user_simulation`) plus minimum internal debug fields
+    - future cognitive work can be validated against one shared behavior
+      contract instead of ad-hoc debug expectations
+  - Validation:
+    - doc-and-context sync plus targeted behavior-testing architecture review
+      recorded in this slice
+
+- [ ] PRJ-311 Implement the internal system-debug validation surface for behavior checks
+  - Status: FUTURE
+  - Group: Runtime Behavior Testing Architecture
+  - Owner: Backend Builder + QA/Test
+  - Depends on: PRJ-310
+  - Priority: P1
+  - Result:
+    - internal debug responses expose the minimum cognitive-state fields needed
+      to validate perception, memory retrieval, context, motivation, role,
+      planning, and action traces
+    - behavior debugging no longer depends on scattered endpoint-specific
+      payloads or log-only interpretation
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_logging.py`
+
+- [ ] PRJ-312 Add structured behavior-harness output and scenario execution helpers
+  - Status: FUTURE
+  - Group: Runtime Behavior Testing Architecture
+  - Owner: QA/Test
+  - Depends on: PRJ-311
+  - Priority: P1
+  - Result:
+    - behavior scenarios emit structured `test_id/status/reason/trace_id/notes`
+      outputs
+    - scenario execution becomes repeatable for Codex agents, operators, and
+      release workflows
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_scheduler_contracts.py`
+
+- [ ] PRJ-313 Sync docs/context for runtime behavior testing architecture and internal validation contract
+  - Status: FUTURE
+  - Group: Runtime Behavior Testing Architecture
+  - Owner: Product Docs + QA/Test
+  - Depends on: PRJ-312
+  - Priority: P1
+  - Result:
+    - canonical docs, engineering guidance, and project context all describe
+      the same behavior-validation baseline
+    - future slices can rely on one documented contract for behavior testing
+  - Validation:
+    - doc-and-context sync plus targeted cross-doc consistency review recorded
+      in this slice
+
+- [ ] PRJ-314 Add memory behavior scenarios for write, retrieval, influence, and delayed recall
+  - Status: FUTURE
+  - Group: Memory, Continuity, And Failure Validation
+  - Owner: QA/Test + Backend Builder
+  - Depends on: PRJ-313
+  - Priority: P1
+  - Result:
+    - scenario suite now proves `write -> retrieve -> influence -> delayed
+      recall` instead of only memory persistence mechanics
+    - memory can no longer be treated as complete when it fails to shape later
+      turns
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_memory_repository.py tests/test_api_routes.py`
+
+- [ ] PRJ-315 Add multi-session continuity and personality-stability simulation scenarios
+  - Status: FUTURE
+  - Group: Memory, Continuity, And Failure Validation
+  - Owner: QA/Test
+  - Depends on: PRJ-314
+  - Priority: P1
+  - Result:
+    - scenario coverage validates identity continuity, tone stability, and
+      goal/context reuse across session gaps
+    - continuity regressions become visible before they reach user-facing
+      runtime behavior
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_expression_agent.py tests/test_planning_agent.py tests/test_language_runtime.py`
+
+- [ ] PRJ-316 Add contradiction, missing-data, and noisy-input behavior scenarios
+  - Status: FUTURE
+  - Group: Memory, Continuity, And Failure Validation
+  - Owner: QA/Test + Backend Builder
+  - Depends on: PRJ-315
+  - Priority: P1
+  - Result:
+    - failure-mode scenarios verify that the runtime stays explainable and
+      stable under contradiction, incomplete context, and chaotic input
+    - fallback quality becomes part of architecture validation instead of an
+      untested assumption
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_motivation_engine.py tests/test_expression_agent.py`
+
+- [ ] PRJ-317 Make runtime behavior validation part of release-readiness and sync docs/context/runbook
+  - Status: FUTURE
+  - Group: Memory, Continuity, And Failure Validation
+  - Owner: Product Docs + Ops/Release + QA/Test
+  - Depends on: PRJ-316
+  - Priority: P1
+  - Result:
+    - release readiness considers behavior-driven validation for memory,
+      continuity, and failure handling, not only subsystem health
+    - runbook, planning, and project state remain aligned on the living-system
+      validation baseline
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q`
 
 ## IN_PROGRESS
 
@@ -66,6 +194,21 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-307 Define target internal debug ingress boundary and migration posture away from shared public API service endpoint
+  - Status: DONE
+  - Group: Post-Reflection Hardening Queue
+  - Owner: Planner + Product Docs
+  - Depends on: PRJ-306
+  - Priority: P1
+  - Result:
+    - public-api follow-up decision now has explicit target-state ingress
+      contract and migration ownership boundaries
+    - debug-surface hardening can proceed without redefining runtime-policy
+      baselines each slice
+  - Validation:
+    - doc-and-context sync plus targeted public-api boundary review recorded in
+      this slice
 
 - [x] PRJ-306 Define criteria and migration guardrails for removing `create_tables` compatibility startup path
   - Status: DONE

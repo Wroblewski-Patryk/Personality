@@ -248,6 +248,42 @@ Operator release gate:
 - verify `/health.runtime_policy.strict_startup_blocked=false`
 - verify `/health.runtime_policy.event_debug_query_compat_enabled=false`
 
+## Internal Debug Ingress Boundary (PRJ-307)
+
+Target posture:
+
+- public API endpoint keeps compact user-facing behavior (`POST /event`)
+- full runtime debug payload access is served through a dedicated internal/admin
+  ingress boundary
+- shared public API endpoint is not the long-term owner of debug payload ingress
+
+Current transitional posture:
+
+- `POST /event/debug` still runs on the shared API service endpoint behind
+  runtime policy gates
+- compatibility `POST /event?debug=true` remains deprecated and should stay
+  disabled in production baseline
+
+Ownership boundary:
+
+1. Runtime/API owner:
+   - debug payload schema and policy telemetry semantics
+     (`debug_access_posture`, compat telemetry, strict mismatch previews)
+2. Ops/Release owner:
+   - ingress routing, network/auth restrictions, and release/rollback evidence
+     for dedicated internal debug ingress
+
+Migration guardrails:
+
+1. keep `EVENT_DEBUG_ENABLED=false` in production baseline unless a temporary
+   incident-debug window is explicitly approved
+2. when temporary production debug is enabled, require
+   `EVENT_DEBUG_TOKEN` + `PRODUCTION_DEBUG_TOKEN_REQUIRED=true` and record an
+   explicit rollback/expiry window
+3. before retiring shared-endpoint debug in production, verify dedicated
+   internal ingress is operator-reachable and release evidence no longer depends
+   on `POST /event/debug` from public endpoint paths
+
 ## `create_tables` Compatibility Removal Guardrails (PRJ-306)
 
 Before removing `STARTUP_SCHEMA_MODE=create_tables` support from runtime code,

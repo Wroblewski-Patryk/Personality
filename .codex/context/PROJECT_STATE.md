@@ -846,7 +846,7 @@ Last updated: 2026-04-20
 - 2026-04-20: foreground convergence group is now complete through `PRJ-279`;
   background topology convergence is complete through `PRJ-283`; production
   retrieval implementation is complete through `PRJ-287`; adaptive governance
-  policy baseline is complete through `PRJ-288`; `PRJ-307` is now the next
+  policy baseline is complete through `PRJ-288`; `PRJ-308` is now the next
   `READY` implementation slice.
 - 2026-04-20: `PRJ-288` is complete: architecture contracts now define explicit
   adaptive influence evidence gates, precedence, and tie-break guardrails for
@@ -1008,6 +1008,26 @@ Last updated: 2026-04-20
   `docs/planning/next-iteration-plan.md`,
   `.codex/context/TASK_BOARD.md`, and
   `.codex/context/PROJECT_STATE.md`.
+- 2026-04-20: `PRJ-307` is complete: public API follow-up decision now defines
+  explicit target internal debug ingress boundary and migration ownership away
+  from shared public API service endpoint posture.
+- 2026-04-20: `PRJ-307` validation is recorded as doc-and-context sync plus
+  targeted public-api boundary review across
+  `docs/planning/open-decisions.md`,
+  `docs/architecture/26_env_and_config.md`,
+  `docs/implementation/runtime-reality.md`,
+  `docs/operations/runtime-ops-runbook.md`,
+  `docs/planning/next-iteration-plan.md`,
+  `.codex/context/TASK_BOARD.md`, and
+  `.codex/context/PROJECT_STATE.md`.
+- 2026-04-20: canonical architecture now includes
+  `docs/architecture/29_runtime_behavior_testing.md`, which defines required
+  system-debug visibility, user-simulation mode, and behavior-driven validation
+  expectations for memory, continuity, decision integrity, and failure
+  handling.
+- 2026-04-20: execution planning now extends through `PRJ-317`, adding a
+  runtime-behavior validation lane for internal debug surfaces, memory
+  influence checks, continuity scenarios, and failure-mode behavior gating.
 
 ## Working Agreements
 
@@ -1039,6 +1059,7 @@ Last updated: 2026-04-20
 - `docs/architecture/15_runtime_flow.md`
 - `docs/architecture/16_agent_contracts.md`
 - `docs/architecture/17_logging_and_debugging.md`
+- `docs/architecture/29_runtime_behavior_testing.md`
 - `docs/architecture/26_env_and_config.md`
 - `docs/architecture/27_codex_instructions.md`
 - `docs/engineering/local-development.md`

@@ -1409,20 +1409,7 @@ not around temporary convenience defaults.
     - doc-and-context sync plus targeted migration-strategy review recorded in
       this slice
 
-## Next Derived Slice
-
-The post-reflection queue is now seeded through `PRJ-309`.
-`PRJ-307` is currently the execution-ready slice in the board.
-Before the next implementation slice:
-
-- take `PRJ-307` directly from `.codex/context/TASK_BOARD.md`
-- keep the implementation scope bounded to that one reversible slice
-- preserve target-state architecture bias when resolving local runtime choices
-
-Post-reflection hardening queue:
-
-- `PRJ-307` Define target internal debug ingress boundary and migration posture
-  away from shared public API service endpoint.
+- `PRJ-307` is complete.
   - Result:
     - public-api follow-up decision now has explicit target-state ingress
       contract and migration ownership boundaries
@@ -1431,6 +1418,103 @@ Post-reflection hardening queue:
   - Validation:
     - doc-and-context sync plus targeted public-api boundary review recorded in
       this slice
+
+## Group 23 - Runtime Behavior Testing Architecture
+
+This group makes behavior validation a first-class architectural concern so the
+repo can prove that cognition works across time, not only that contracts and
+unit paths look correct in isolation.
+
+- `PRJ-310` Define the canonical runtime behavior testing contract and required system-debug surface.
+  - Result:
+    - architecture explicitly defines required behavior-testing modes
+      (`system_debug`, `user_simulation`) plus minimum internal debug fields
+    - future cognitive work can be validated against one shared behavior
+      contract instead of ad-hoc debug expectations
+  - Validation:
+    - doc-and-context sync plus targeted behavior-testing architecture review
+      recorded in this slice
+
+- `PRJ-311` Implement the internal system-debug validation surface for behavior checks.
+  - Result:
+    - internal debug responses expose the minimum cognitive-state fields needed
+      to validate perception, memory retrieval, context, motivation, role,
+      planning, and action traces
+    - behavior debugging no longer depends on scattered endpoint-specific
+      payloads or log-only interpretation
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_logging.py`
+
+- `PRJ-312` Add structured behavior-harness output and scenario execution helpers.
+  - Result:
+    - behavior scenarios now emit structured pass/fail/skip outputs with
+      `test_id`, `status`, `reason`, `trace_id`, and notes
+    - scenario execution becomes repeatable for Codex agents, operators, and
+      release workflows
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_scheduler_contracts.py`
+
+- `PRJ-313` Sync docs/context for runtime behavior testing architecture and internal validation contract.
+  - Result:
+    - canonical docs, engineering guidance, and project context all describe
+      the same behavior-validation baseline
+    - future slices can rely on one documented contract for behavior testing
+  - Validation:
+    - doc-and-context sync plus targeted cross-doc consistency review recorded
+      in this slice
+
+## Group 24 - Memory, Continuity, And Failure Validation
+
+This group turns the new behavior-testing contract into concrete scenarios that
+can prove whether AION feels alive rather than only structurally compliant.
+
+- `PRJ-314` Add memory behavior scenarios for write, retrieval, influence, and delayed recall.
+  - Result:
+    - scenario suite now proves `write -> retrieve -> influence -> delayed
+      recall` instead of only memory persistence mechanics
+    - memory can no longer be treated as complete when it fails to shape later
+      turns
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_memory_repository.py tests/test_api_routes.py`
+
+- `PRJ-315` Add multi-session continuity and personality-stability simulation scenarios.
+  - Result:
+    - scenario coverage now validates identity continuity, tone stability, and
+      goal/context reuse across session gaps
+    - continuity regressions become visible before they reach user-facing
+      runtime behavior
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_expression_agent.py tests/test_planning_agent.py tests/test_language_runtime.py`
+
+- `PRJ-316` Add contradiction, missing-data, and noisy-input behavior scenarios.
+  - Result:
+    - failure-mode scenarios now verify that the runtime stays explainable and
+      stable under contradiction, incomplete context, and chaotic input
+    - fallback quality becomes part of architecture validation instead of an
+      untested assumption
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_motivation_engine.py tests/test_expression_agent.py`
+
+- `PRJ-317` Make runtime behavior validation part of release-readiness and sync docs/context/runbook.
+  - Result:
+    - release readiness now considers behavior-driven validation for memory,
+      continuity, and failure handling, not only subsystem health
+    - runbook, planning, and project state remain aligned on the living-system
+      validation baseline
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q`
+
+## Next Derived Slice
+
+The post-reflection queue is now seeded through `PRJ-317`.
+`PRJ-308` is currently the execution-ready slice in the board.
+Before the next implementation slice:
+
+- take `PRJ-308` directly from `.codex/context/TASK_BOARD.md`
+- keep the implementation scope bounded to that one reversible slice
+- preserve target-state architecture bias when resolving local runtime choices
+
+Post-reflection hardening queue:
 
 - `PRJ-308` Define long-term scheduler externalization boundary for
   maintenance/proactive cadence ownership.
@@ -1453,6 +1537,84 @@ Post-reflection hardening queue:
   - Validation:
     - doc-and-context sync plus targeted cross-doc consistency review recorded
       in this slice
+
+Runtime behavior validation queue:
+
+- `PRJ-310` Define the canonical runtime behavior testing contract and required
+  system-debug surface.
+  - Result:
+    - architecture now defines required behavior-testing modes and minimum
+      internal validation fields for the cognitive loop
+    - future work can be judged on behavior over time, not only code shape
+  - Validation:
+    - doc-and-context sync plus targeted behavior-testing architecture review
+      recorded in this slice
+
+- `PRJ-311` Implement the internal system-debug validation surface for
+  behavior checks.
+  - Result:
+    - internal debug responses expose the cognitive state required for
+      behavior-driven validation
+    - memory/context/motivation/role/plan/action traces become easier to
+      inspect in one place
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_logging.py`
+
+- `PRJ-312` Add structured behavior-harness output and scenario execution
+  helpers.
+  - Result:
+    - behavior scenarios emit consistent structured outcomes
+    - release and QA workflows gain one repeatable behavior-test interface
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_scheduler_contracts.py`
+
+- `PRJ-313` Sync docs/context for runtime behavior testing architecture and
+  internal validation contract.
+  - Result:
+    - canonical docs, engineering guidance, and project context now describe
+      the same behavior-validation baseline
+    - execution agents can treat the behavior-testing contract as source truth
+  - Validation:
+    - doc-and-context sync plus targeted cross-doc consistency review recorded
+      in this slice
+
+- `PRJ-314` Add memory behavior scenarios for write, retrieval, influence, and
+  delayed recall.
+  - Result:
+    - scenario suite now proves memory influence over time instead of only
+      persistence mechanics
+    - memory regressions become visible when retrieval does not change later
+      behavior
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_memory_repository.py tests/test_api_routes.py`
+
+- `PRJ-315` Add multi-session continuity and personality-stability simulation
+  scenarios.
+  - Result:
+    - continuity, tone stability, and context reuse are now scenario-tested
+      across session boundaries
+    - identity drift becomes visible before user-facing regressions spread
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_expression_agent.py tests/test_planning_agent.py tests/test_language_runtime.py`
+
+- `PRJ-316` Add contradiction, missing-data, and noisy-input behavior
+  scenarios.
+  - Result:
+    - fallback quality is now tested under contradiction, incomplete context,
+      and chaotic input
+    - architecture-level resilience becomes measurable instead of assumed
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_motivation_engine.py tests/test_expression_agent.py`
+
+- `PRJ-317` Make runtime behavior validation part of release-readiness and
+  sync docs/context/runbook.
+  - Result:
+    - release readiness now includes behavior-driven validation for memory,
+      continuity, and failure handling
+    - runbook and planning truth stay aligned with the living-system test
+      baseline
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q`
 
 ## Parallel-Ready Lanes
 
@@ -1484,10 +1646,14 @@ group locks the production and release baseline for the converged runtime.
 4. `PRJ-288..PRJ-291` Adaptive cognition governance
 5. `PRJ-292..PRJ-295` Attention and proposal execution boundary
 6. `PRJ-296..PRJ-299` Operational hardening and release truth
+7. `PRJ-301..PRJ-304` Reflection deployment baseline and readiness rollout
+8. `PRJ-306..PRJ-309` Post-reflection hardening decisions
+9. `PRJ-310..PRJ-313` Runtime behavior testing architecture
+10. `PRJ-314..PRJ-317` Memory, continuity, and failure validation
 
 The queue should still be treated as intentionally open after those items.
 Additional small architecture-alignment slices may still be discovered while
-executing Groups 17 through 22.
+executing Groups 17 through 24.
 
 ## Handoff Rules For Execution Agents
 
@@ -1515,4 +1681,8 @@ This phase is complete when:
   gates share one conscious execution boundary
 - production startup, debug posture, and release workflow describe the intended
   target-state baseline rather than temporary convenience defaults
+- system-debug visibility and user-simulation scenarios are sufficient to prove
+  whether memory, continuity, and decision-making work across time
+- memory is considered correct only when stored state influences later context
+  and response behavior
 - docs, code, and `.codex/context/` describe the same runtime truth

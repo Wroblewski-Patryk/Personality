@@ -332,7 +332,7 @@ Current limitation:
 - an optional debug payload when `debug=true`, debug exposure is enabled by
   policy, and compatibility query route is enabled
 - explicit internal debug route `POST /event/debug` remains available when
-  debug exposure is enabled
+  debug exposure is enabled (current transitional shared-endpoint posture)
 - when API payload metadata omits `meta.user_id`, runtime can use
   `X-AION-User-Id` as a fallback identity key before defaulting to `anonymous`
 - for Telegram burst traffic, non-owner duplicate events can return a compact
@@ -355,6 +355,10 @@ Production debug access now also supports explicit token-requirement policy via
 Compatibility `POST /event?debug=true` route now supports explicit
 environment-aware policy via `EVENT_DEBUG_QUERY_COMPAT_ENABLED`
 (default `true` outside production, `false` in production).
+`PRJ-307` now defines target debug ingress boundary: full runtime debug payload
+access should move to a dedicated internal/admin ingress path owned by
+ops-controlled routing/auth posture; current shared-endpoint
+`POST /event/debug` remains transitional until that migration is implemented.
 Target production baseline is now explicitly documented as migration-only +
 strict policy posture with debug exposure disabled by default; runtime rollout
 now enforces production strict policy by default when enforcement is unset, and

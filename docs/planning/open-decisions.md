@@ -31,8 +31,12 @@ The current repo already works as an MVP slice, but several architecture-level d
     (`1`, `12` follow-up)
   - `PRJ-306..PRJ-309`: post-reflection hardening decisions (`2` follow-up,
     `3` follow-up, `12` follow-up)
+  - `PRJ-310..PRJ-313`: runtime behavior testing architecture and internal
+    validation surface (`3`, `5`, `12`)
+  - `PRJ-314..PRJ-317`: memory/continuity/failure validation scenarios and
+    release gating (`5`, `8`, `9`, `12`)
 - reflection deployment lane is now complete through `PRJ-304`; next queue
-  execution now continues through `PRJ-309` after `PRJ-306` closure.
+  execution now continues through `PRJ-309` after `PRJ-307` closure.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -223,9 +227,30 @@ The current repo already works as an MVP slice, but several architecture-level d
     `PRODUCTION_DEBUG_TOKEN_REQUIRED=true`).
   - strict production policy enforcement should treat debug-exposure mismatch
     states as release-blocking drift.
+- Decision (PRJ-307 internal debug ingress boundary, 2026-04-20):
+  - target ingress contract is:
+    - public API ingress keeps `POST /event` compact and must not expose full
+      runtime payloads
+    - full runtime debug payload access belongs to a dedicated internal/admin
+      ingress boundary (not a shared public API service endpoint)
+  - migration posture is:
+    - current `POST /event/debug` on shared API service endpoint is a
+      transitional compatibility posture
+    - deprecated compatibility `POST /event?debug=true` remains migration-only
+      and should stay disabled in production baseline
+    - production incident-debug usage should migrate to dedicated internal
+      ingress first, then shared-endpoint debug exposure should be retired as
+      default posture
+  - ownership boundaries are:
+    - runtime/API owners keep debug payload schema and policy telemetry
+      semantics (`debug_access_posture`, compat telemetry, strict mismatch
+      previews)
+    - Ops/Release owns ingress routing, network/auth controls, and
+      release/rollback evidence for the dedicated debug ingress path
 - Remaining follow-up decision:
-  - should the internal debug surface eventually move behind a dedicated admin
-    ingress instead of sharing the public API service endpoint?
+  - in which release window should production enforce dedicated internal
+    ingress-only debug access (shared-endpoint debug disabled except
+    break-glass override)?
 
 ### 3a. Expression vs Action Ordering
 
@@ -729,3 +754,22 @@ The current repo already works as an MVP slice, but several architecture-level d
     in?
   - how should the personality propose new capabilities or connectors without
     self-authorizing access to outside systems?
+
+### 13. Runtime Behavior Validation Surface
+
+- Current repo fact:
+  - the repository has broad unit and integration coverage plus runtime-policy,
+    health, scheduler, and memory contract tests.
+  - debug surfaces already expose substantial internal state, but canonical
+    architecture does not yet define a required behavior-validation contract
+    for proving cognition across time.
+  - practical testing has shown that a subsystem can look well implemented
+    through contracts and still fail to influence later behavior in a useful
+    way (for example memory that persists but does not shape future turns).
+- Decision needed:
+  - which internal debug fields are mandatory for behavior validation of the
+    cognitive loop?
+  - when do behavior-driven scenarios become release-gating instead of
+    best-effort diagnostics?
+  - which scenario families must always exist for memory, continuity, and
+    failure handling before the system can be considered architecture-aligned?
