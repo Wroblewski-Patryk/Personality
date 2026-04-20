@@ -35,8 +35,10 @@ The current repo already works as an MVP slice, but several architecture-level d
     validation surface (`3`, `5`, `12`)
   - `PRJ-314..PRJ-317`: memory/continuity/failure validation scenarios and
     release gating (`5`, `8`, `9`, `12`)
-- reflection deployment lane is now complete through `PRJ-304`; next queue
-  execution now continues through `PRJ-309` after `PRJ-308` closure.
+- reflection deployment lane is complete through `PRJ-304`, and
+  post-reflection hardening decisions are now complete through `PRJ-309`.
+- next queue execution now continues through runtime behavior-validation slices
+  `PRJ-310..PRJ-317`.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

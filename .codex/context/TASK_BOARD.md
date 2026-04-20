@@ -18,13 +18,14 @@ Last updated: 2026-04-20
 - The convergence queue is complete through `PRJ-299`; reflection lane is now
   complete through `PRJ-304`, and post-reflection hardening plus runtime
   behavior-validation queue is seeded through `PRJ-317`.
-- `PRJ-308` is complete; `PRJ-309` is currently `READY` to synchronize
-  post-reflection hardening decisions across docs/context/runbook.
+- `PRJ-309` is complete; `PRJ-310` is currently `READY` to define canonical
+  runtime behavior testing contract and required internal debug validation
+  surface.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
   hardening.
-- After `PRJ-309`, continue through the runtime behavior-validation lane so
+- Runtime behavior-validation lane is now active after `PRJ-309`, so
   memory, continuity, and failure handling are tested as living-system
   behavior rather than only contract correctness.
 - Additional architecture-alignment work should be appended after that queue so
@@ -33,29 +34,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-309 Sync docs/context/runbook for post-reflection hardening queue decisions
-  - Status: READY
-  - Group: Post-Reflection Hardening Queue
-  - Owner: Product Docs + Ops/Release
-  - Depends on: PRJ-308
-  - Priority: P1
-  - Result:
-    - planning, project state, and ops runbook remain synchronized after
-      post-reflection decision closure slices
-    - release-readiness and runtime-governance docs stay aligned with the next
-      hardening lane
-  - Validation:
-    - doc-and-context sync plus targeted cross-doc consistency review recorded
-      in this slice
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-310 Define the canonical runtime behavior testing contract and required system-debug surface
-  - Status: FUTURE
+  - Status: READY
   - Group: Runtime Behavior Testing Architecture
   - Owner: Planner + QA/Test
   - Depends on: PRJ-309
@@ -68,6 +48,12 @@ Last updated: 2026-04-20
   - Validation:
     - doc-and-context sync plus targeted behavior-testing architecture review
       recorded in this slice
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-311 Implement the internal system-debug validation surface for behavior checks
   - Status: FUTURE
@@ -181,6 +167,21 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-309 Sync docs/context/runbook for post-reflection hardening queue decisions
+  - Status: DONE
+  - Group: Post-Reflection Hardening Queue
+  - Owner: Product Docs + Ops/Release
+  - Depends on: PRJ-308
+  - Priority: P1
+  - Result:
+    - planning, project state, and ops runbook remain synchronized after
+      post-reflection decision closure slices
+    - release-readiness and runtime-governance docs stay aligned with the next
+      hardening lane
+  - Validation:
+    - doc-and-context sync plus targeted cross-doc consistency review recorded
+      in this slice
 
 - [x] PRJ-308 Define long-term scheduler externalization boundary for maintenance/proactive cadence ownership
   - Status: DONE

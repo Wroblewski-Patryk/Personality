@@ -503,6 +503,23 @@ Rollout guardrails before production cadence externalization:
 3. release smoke coverage verifies selected cadence owner path and alerting
    visibility
 
+## Post-Reflection Hardening Baseline (PRJ-309)
+
+Post-reflection hardening decisions are synchronized through `PRJ-309`:
+
+- migration-first startup remains the production target and `create_tables`
+  compatibility removal guardrails stay explicit
+- internal debug ingress target boundary is defined and shared-endpoint debug
+  posture is treated as transitional
+- scheduler cadence ownership target is explicit (external long-term owner,
+  app-local transitional fallback)
+
+Next execution lane after this sync:
+
+- runtime behavior validation architecture and scenarios (`PRJ-310..PRJ-317`)
+  extend release confidence from subsystem health checks to
+  memory/continuity/failure behavior evidence
+
 ### Start Local Stack
 
 ```powershell

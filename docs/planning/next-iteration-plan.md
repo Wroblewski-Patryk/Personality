@@ -1514,28 +1514,30 @@ can prove whether AION feels alive rather than only structurally compliant.
     - doc-and-context sync plus targeted scheduler-boundary review recorded in
       this slice
 
-## Next Derived Slice
-
-The post-reflection queue is now seeded through `PRJ-317`.
-`PRJ-309` is currently the execution-ready slice in the board.
-Before the next implementation slice:
-
-- take `PRJ-309` directly from `.codex/context/TASK_BOARD.md`
-- keep the implementation scope bounded to that one reversible slice
-- preserve target-state architecture bias when resolving local runtime choices
-
-Post-reflection hardening queue:
-
-- `PRJ-309` Sync docs/context/runbook for post-reflection hardening queue
-  decisions.
+- `PRJ-309` is complete.
   - Result:
-    - planning, project state, and ops runbook remain synchronized after
+    - planning, project state, and ops runbook are synchronized after
       post-reflection decision closure slices
     - release-readiness and runtime-governance docs stay aligned with the next
       hardening lane
   - Validation:
     - doc-and-context sync plus targeted cross-doc consistency review recorded
       in this slice
+
+## Next Derived Slice
+
+The post-reflection queue is now seeded through `PRJ-317`.
+`PRJ-310` is currently the execution-ready slice in the board.
+Before the next implementation slice:
+
+- take `PRJ-310` directly from `.codex/context/TASK_BOARD.md`
+- keep the implementation scope bounded to that one reversible slice
+- preserve target-state architecture bias when resolving local runtime choices
+
+Post-reflection hardening queue:
+
+- `PRJ-306..PRJ-309` are complete.
+- Next execution lane is runtime behavior validation (`PRJ-310..PRJ-317`).
 
 Runtime behavior validation queue:
 
