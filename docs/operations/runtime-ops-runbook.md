@@ -259,8 +259,11 @@ Target posture:
 
 Current transitional posture:
 
-- `POST /event/debug` still runs on the shared API service endpoint behind
-  runtime policy gates
+- `POST /internal/event/debug` is now the primary internal debug ingress
+- shared `POST /event/debug` still runs on the shared API service endpoint
+  behind runtime policy gates and is treated as compatibility surface
+- shared ingress mode is explicitly configurable via
+  `EVENT_DEBUG_SHARED_INGRESS_MODE=compatibility|break_glass_only`
 - compatibility `POST /event?debug=true` remains deprecated and should stay
   disabled in production baseline
 
@@ -363,11 +366,14 @@ Recommended when Telegram webhooks are enabled:
 
 - `TELEGRAM_WEBHOOK_SECRET`
 - `EVENT_DEBUG_ENABLED` to control whether debug payload routes
-  (`POST /event/debug` and compatibility `POST /event?debug=true`) can expose
-  full internal runtime payloads (production default is disabled unless
-  explicitly enabled)
+  (`POST /internal/event/debug`, shared `POST /event/debug`, and compatibility
+  `POST /event?debug=true`) can expose full internal runtime payloads
+  (production default is disabled unless explicitly enabled)
 - `EVENT_DEBUG_TOKEN` (optional) to require `X-AION-Debug-Token` for
   debug payload route access
+- `EVENT_DEBUG_SHARED_INGRESS_MODE` (optional, default `compatibility`) to
+  control shared endpoint posture (`compatibility|break_glass_only`) for
+  `POST /event/debug`
 - `EVENT_DEBUG_QUERY_COMPAT_ENABLED` (optional) to explicitly enable or disable
   compatibility `POST /event?debug=true` route (production default is disabled)
 - `EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW` (optional, default `20`) to control
@@ -563,8 +569,18 @@ Optional debug payload:
 Optional debug payload with token:
 
 ```powershell
+curl -X POST "http://localhost:8000/internal/event/debug" `
+  -H "Content-Type: application/json" `
+  -H "X-AION-Debug-Token: <token>" `
+  -d "{\"text\":\"debug check\"}"
+```
+
+Shared compatibility debug payload in break-glass mode:
+
+```powershell
 curl -X POST "http://localhost:8000/event/debug" `
   -H "Content-Type: application/json" `
+  -H "X-AION-Debug-Break-Glass: true" `
   -H "X-AION-Debug-Token: <token>" `
   -d "{\"text\":\"debug check\"}"
 ```
@@ -579,7 +595,8 @@ curl -X POST "http://localhost:8000/event?debug=true" `
 ```
 
 When compat route is accepted, response includes compatibility/deprecation
-headers that point to `POST /event/debug` as the preferred internal path.
+headers that point to `POST /internal/event/debug` as the preferred internal
+path.
 
 ### Run Health Check
 

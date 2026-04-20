@@ -39,8 +39,9 @@ Important current-runtime notes:
 - language is chosen per event and can fall back to recent memory or profile state for ambiguous turns
 - reflection runs through a durable Postgres-backed queue and updates conclusions, theta, and lightweight goal-manager signals in the background
 - `POST /event` returns a compact public response by default;
-  `POST /event/debug` (and compatibility `POST /event?debug=true`) are
-  policy-gated for full runtime payload inspection
+  `POST /internal/event/debug` is the primary internal debug ingress, while
+  `POST /event/debug` and compatibility `POST /event?debug=true` remain
+  policy-gated transitional surfaces
 
 ## Runtime Stage Ownership
 

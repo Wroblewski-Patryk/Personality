@@ -1104,8 +1104,22 @@ Last updated: 2026-04-20
 - 2026-04-20: `PRJ-320` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py`
   passed with `113 passed`.
-- 2026-04-20: `PRJ-321` is the next `READY` slice, focused on
-  docs/context/runbook synchronization for internal debug ingress migration.
+- 2026-04-20: `PRJ-321` is complete: canonical docs, planning notes, and
+  operations runbook now align with internal debug ingress migration reality
+  (`POST /internal/event/debug` primary, shared `POST /event/debug`
+  compatibility posture, break-glass controls, and updated compat headers).
+- 2026-04-20: `PRJ-321` validation is recorded as doc-and-context sync plus
+  targeted debug-ingress cross-doc review across
+  `docs/overview.md`,
+  `docs/architecture/26_env_and_config.md`,
+  `docs/operations/runtime-ops-runbook.md`,
+  `docs/implementation/runtime-reality.md`,
+  `docs/planning/open-decisions.md`,
+  `docs/planning/next-iteration-plan.md`,
+  `.codex/context/TASK_BOARD.md`, and
+  `.codex/context/PROJECT_STATE.md`.
+- 2026-04-20: `PRJ-322` is the next `READY` slice, focused on owner-aware
+  scheduler execution mode and health snapshot posture.
 
 ## Working Agreements
 

@@ -111,7 +111,8 @@ Controls whether debug runtime payloads may be exposed through the event API.
 `EVENT_DEBUG_TOKEN`
 
 Optional debug-access token for debug payload routes
-(`POST /event/debug` and compatibility `POST /event?debug=true`).
+(`POST /internal/event/debug`, shared compatibility `POST /event/debug`, and
+compatibility query route `POST /event?debug=true`).
 When set, debug payload responses require `X-AION-Debug-Token` to match.
 
 `EVENT_DEBUG_QUERY_COMPAT_ENABLED`
@@ -125,8 +126,20 @@ Default behavior is environment-aware:
 - production default: `false`
 
 When disabled, callers must use explicit internal debug route
-`POST /event/debug` (current transitional shared-endpoint posture before
-dedicated ingress migration).
+`POST /internal/event/debug` (shared `POST /event/debug` remains a transitional
+compatibility path).
+
+`EVENT_DEBUG_SHARED_INGRESS_MODE`
+
+Controls shared-endpoint debug posture for `POST /event/debug`.
+
+Allowed values:
+
+- `compatibility` (default): shared endpoint remains available as compatibility
+  ingress and emits migration headers.
+- `break_glass_only`: shared endpoint requires explicit
+  `X-AION-Debug-Break-Glass: true` override for emergency usage while keeping
+  internal ingress (`POST /internal/event/debug`) as primary path.
 
 `EVENT_DEBUG_QUERY_COMPAT_RECENT_WINDOW`
 
@@ -309,8 +322,12 @@ Target ingress contract:
 
 Current transitional posture:
 
-- `POST /event/debug` is still served by the same app endpoint as public API
-  traffic and is treated as compatibility surface during migration
+- `POST /internal/event/debug` is now the explicit primary internal debug
+  ingress for full runtime payload inspection
+- shared `POST /event/debug` is still served by the same app endpoint as
+  public API traffic and remains a compatibility surface during migration
+- shared ingress posture is explicitly configurable
+  (`EVENT_DEBUG_SHARED_INGRESS_MODE=compatibility|break_glass_only`)
 - deprecated compatibility `POST /event?debug=true` remains migration-only and
   should stay disabled in production baseline
 
@@ -335,6 +352,14 @@ Compatibility `STARTUP_SCHEMA_MODE=create_tables` should be removed only after:
   `POST /event?debug=true` path is enabled
 - `event_debug_query_compat_source` to indicate whether compat-route posture
   comes from explicit config or environment default
+- `event_debug_ingress_owner` to describe internal-vs-shared ingress ownership
+  posture
+- `event_debug_internal_ingress_path` and `event_debug_shared_ingress_path` to
+  expose canonical debug route path ownership
+- `event_debug_shared_ingress_mode`,
+  `event_debug_shared_ingress_break_glass_required`, and
+  `event_debug_shared_ingress_posture` to expose transitional shared-endpoint
+  sunset posture
 - `event_debug_query_compat_telemetry` with in-process compat-route usage
   counters (`attempts_total`, `allowed_total`, `blocked_total`) and last-attempt
   timestamps for sunset-readiness tracking
@@ -455,9 +480,16 @@ Compatibility `STARTUP_SCHEMA_MODE=create_tables` should be removed only after:
 
 Compatibility route `POST /event?debug=true` also emits:
 
-- `X-AION-Debug-Compat: query_debug_route_is_compatibility_use_post_event_debug`
+- `X-AION-Debug-Compat: query_debug_route_is_compatibility_use_internal_event_debug`
 - `X-AION-Debug-Compat-Deprecated: true`
-- `Link: </event/debug>; rel="alternate"`
+- `Link: </internal/event/debug>; rel="alternate"`
+
+Shared compatibility route `POST /event/debug` emits:
+
+- `X-AION-Debug-Shared-Compat: shared_debug_route_is_compatibility_use_internal_event_debug`
+- `X-AION-Debug-Shared-Compat-Deprecated: true`
+- `X-AION-Debug-Shared-Mode: compatibility|break_glass_only`
+- `X-AION-Debug-Shared-Posture: transitional_compatibility|transitional_break_glass_only`
 
 `REFLECTION_INTERVAL`
 

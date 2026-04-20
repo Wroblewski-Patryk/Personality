@@ -36,7 +36,7 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-314..PRJ-317`: memory/continuity/failure validation scenarios and
     release gating (`5`, `8`, `9`, `12`) - complete
   - `PRJ-318..PRJ-321`: internal debug ingress migration
-    (`3` implementation follow-up)
+    (`3` implementation follow-up) - complete
   - `PRJ-322..PRJ-325`: scheduler externalization and attention ownership
     (`1`, `12`, `12a` implementation follow-up)
   - `PRJ-326..PRJ-329`: identity, language, and profile boundary hardening
@@ -153,14 +153,20 @@ The current repo already works as an MVP slice, but several architecture-level d
 
 - Current repo fact:
   - `POST /event` now returns a smaller public response by default: event identifiers, reply payload, and a compact runtime summary.
-  - the full serialized runtime result is exposed through both
-    `POST /event/debug` (explicit internal debug path) and
-    `POST /event?debug=true` (compatibility path), guarded by explicit config
-    (`EVENT_DEBUG_ENABLED`) with environment-aware defaults (enabled in
+  - the full serialized runtime result is exposed through primary internal
+    route `POST /internal/event/debug`, plus transitional compatibility routes
+    `POST /event/debug` (shared endpoint) and
+    `POST /event?debug=true` (query compatibility path), guarded by explicit
+    config (`EVENT_DEBUG_ENABLED`) with environment-aware defaults (enabled in
     non-production, disabled in production unless explicitly enabled).
   - `POST /event?debug=true` now emits explicit compatibility headers
     (`X-AION-Debug-Compat`, `Link`) that point operators to
-    `POST /event/debug` as the preferred internal debug route.
+    `POST /internal/event/debug` as the preferred internal debug route.
+  - shared `POST /event/debug` now emits explicit compatibility headers
+    (`X-AION-Debug-Shared-Compat`, `X-AION-Debug-Shared-Mode`,
+    `X-AION-Debug-Shared-Posture`) and can run in
+    `compatibility|break_glass_only` mode through
+    `EVENT_DEBUG_SHARED_INGRESS_MODE`.
   - compat-route responses now also emit
     `X-AION-Debug-Compat-Deprecated=true` and runtime health now exposes
     `event_debug_query_compat_telemetry` counters plus derived compat sunset
@@ -197,7 +203,8 @@ The current repo already works as an MVP slice, but several architecture-level d
     enabled by default outside production and disabled by default in
     production unless explicitly enabled.
   - when `EVENT_DEBUG_TOKEN` is configured, `POST /event?debug=true` also requires `X-AION-Debug-Token`.
-  - when `EVENT_DEBUG_TOKEN` is configured, `POST /event/debug` also requires
+  - when `EVENT_DEBUG_TOKEN` is configured, both
+    `POST /internal/event/debug` and `POST /event/debug` require
     `X-AION-Debug-Token`.
   - production can now enforce debug-token configuration through
     `PRODUCTION_DEBUG_TOKEN_REQUIRED` (default `true`); when enabled and
@@ -246,8 +253,12 @@ The current repo already works as an MVP slice, but several architecture-level d
     - full runtime debug payload access belongs to a dedicated internal/admin
       ingress boundary (not a shared public API service endpoint)
   - migration posture is:
+    - current primary debug ingress path is `POST /internal/event/debug`
     - current `POST /event/debug` on shared API service endpoint is a
       transitional compatibility posture
+    - shared endpoint posture can be tightened to break-glass-only mode
+      (`EVENT_DEBUG_SHARED_INGRESS_MODE=break_glass_only`) while preserving
+      explicit emergency override via `X-AION-Debug-Break-Glass: true`
     - deprecated compatibility `POST /event?debug=true` remains migration-only
       and should stay disabled in production baseline
     - production incident-debug usage should migrate to dedicated internal

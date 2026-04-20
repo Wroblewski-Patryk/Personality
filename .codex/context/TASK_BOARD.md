@@ -36,27 +36,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-321 Sync docs/context/runbook for internal debug ingress migration
-  - Status: READY
-  - Group: Internal Debug Ingress Migration
-  - Owner: Product Docs + Ops/Release
-  - Depends on: PRJ-320
-  - Priority: P1
-  - Result:
-    - docs, planning, project state, and runbook truth stay aligned with the
-      new internal debug ingress baseline
-    - later release-window decisions can be made without reopening the same API
-      boundary ambiguity
-  - Validation:
-    - doc-and-context sync plus targeted debug-ingress cross-doc review
-      recorded in this slice
-
-## BACKLOG
-
-## FUTURE
-
 - [ ] PRJ-322 Implement owner-aware scheduler execution mode and health snapshot
-  - Status: FUTURE
+  - Status: READY
   - Group: Scheduler Externalization And Attention Ownership
   - Owner: Backend Builder + Ops/Release
   - Depends on: PRJ-321
@@ -68,6 +49,12 @@ Last updated: 2026-04-20
       externally owned without inferring from scattered signals
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_contracts.py tests/test_scheduler_worker.py tests/test_api_routes.py tests/test_config.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-323 Route maintenance and proactive cadence through the shared owner-aware dispatch boundary
   - Status: FUTURE
@@ -286,6 +273,24 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-321 Sync docs/context/runbook for internal debug ingress migration
+  - Status: DONE
+  - Group: Internal Debug Ingress Migration
+  - Owner: Product Docs + Ops/Release
+  - Depends on: PRJ-320
+  - Priority: P1
+  - Result:
+    - canonical docs, planning, and runbook now align on primary internal
+      debug ingress (`POST /internal/event/debug`) plus transitional shared
+      posture (`POST /event/debug`)
+    - architecture, operations, and planning docs now include shared
+      break-glass posture controls and updated compatibility-header migration
+      semantics
+    - planning pointer is synchronized so next execution slice starts from
+      `PRJ-322` without queue drift
+  - Validation:
+    - doc-and-context sync plus targeted debug-ingress cross-doc review recorded in this slice
 
 - [x] PRJ-320 Add debug-ingress migration regressions and smoke coverage
   - Status: DONE

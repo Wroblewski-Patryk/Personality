@@ -1512,6 +1512,8 @@ This group turns the resolved internal-debug boundary decision into live code so
 system-debug behavior stops depending on the shared public service endpoint as a
 long-term posture.
 
+Status update (2026-04-20): `PRJ-318..PRJ-321` are complete.
+
 - `PRJ-318` Implement a dedicated internal debug ingress boundary and shared guard path.
   - Result:
     - runtime exposes one explicit internal debug ingress boundary that owns
@@ -1734,7 +1736,7 @@ Runtime behavior-validation queue is now complete through `PRJ-317`.
 Next implementation queue is now seeded through `PRJ-337`.
 Before the next implementation slice:
 
-- take `PRJ-318` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-322` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 

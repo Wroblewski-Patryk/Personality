@@ -331,8 +331,11 @@ Current limitation:
 - a compact public response by default
 - an optional debug payload when `debug=true`, debug exposure is enabled by
   policy, and compatibility query route is enabled
-- explicit internal debug route `POST /event/debug` remains available when
-  debug exposure is enabled (current transitional shared-endpoint posture)
+- explicit primary internal debug route `POST /internal/event/debug` for full
+  runtime inspection when debug exposure is enabled
+- shared `POST /event/debug` remains available as compatibility ingress during
+  migration and supports explicit posture modes
+  (`compatibility|break_glass_only`)
 - debug responses now include an explicit `system_debug` surface with canonical
   behavior-validation fields:
   - normalized event metadata and identifiers
@@ -364,9 +367,9 @@ Compatibility `POST /event?debug=true` route now supports explicit
 environment-aware policy via `EVENT_DEBUG_QUERY_COMPAT_ENABLED`
 (default `true` outside production, `false` in production).
 `PRJ-307` now defines target debug ingress boundary: full runtime debug payload
-access should move to a dedicated internal/admin ingress path owned by
-ops-controlled routing/auth posture; current shared-endpoint
-`POST /event/debug` remains transitional until that migration is implemented.
+access now uses dedicated internal route `POST /internal/event/debug` as the
+primary ingress path; shared-endpoint `POST /event/debug` remains transitional
+compatibility surface owned by explicit shared-ingress posture controls.
 Target production baseline is now explicitly documented as migration-only +
 strict policy posture with debug exposure disabled by default; runtime rollout
 now enforces production strict policy by default when enforcement is unset, and
@@ -378,6 +381,11 @@ Runtime policy health output now also includes `debug_access_posture` and
 (`event_debug_query_compat_enabled`, `event_debug_query_compat_source`) and
 compat-route usage telemetry (`event_debug_query_compat_telemetry`) for
 operator-visible debug access hardening posture.
+Health output now also exposes explicit debug-ingress ownership/posture fields:
+`event_debug_ingress_owner`, `event_debug_internal_ingress_path`,
+`event_debug_shared_ingress_path`, `event_debug_shared_ingress_mode`,
+`event_debug_shared_ingress_break_glass_required`, and
+`event_debug_shared_ingress_posture`.
 Health output also exposes derived compat sunset signals:
 `event_debug_query_compat_allow_rate`, `event_debug_query_compat_block_rate`,
 `event_debug_query_compat_recommendation`,
