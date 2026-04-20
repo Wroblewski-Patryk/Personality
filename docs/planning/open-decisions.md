@@ -36,7 +36,7 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-314..PRJ-317`: memory/continuity/failure validation scenarios and
     release gating (`5`, `8`, `9`, `12`)
 - reflection deployment lane is now complete through `PRJ-304`; next queue
-  execution now continues through `PRJ-309` after `PRJ-307` closure.
+  execution now continues through `PRJ-309` after `PRJ-308` closure.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -677,10 +677,25 @@ The current repo already works as an MVP slice, but several architecture-level d
     (`REFLECTION_RUNTIME_MODE=in_process`) with durable enqueue semantics.
   - deferred reflection dispatch remains opt-in and requires the explicit
     readiness criteria recorded in decision `1`.
-- Remaining follow-up decisions:
-  - should maintenance/proactive cadence stay app-local long term, or move to a
-    dedicated external scheduler path after reflection deferred rollout
-    stabilizes?
+- Decision (PRJ-308 maintenance/proactive cadence ownership boundary, 2026-04-20):
+  - long-term target posture:
+    - cadence ownership for maintenance and proactive wakeups moves to a
+      dedicated external scheduler path after reflection external-dispatch
+      posture is stable
+    - app-local scheduler ownership remains transitional and local-development
+      friendly, not the final production ownership model
+  - ownership boundaries:
+    - runtime keeps event-contract normalization, guardrail evaluation, and
+      conscious execution boundaries for scheduled events
+    - external scheduler owner controls cadence triggering, retry/backoff
+      operations, and production on-call ownership for scheduler availability
+  - rollout guardrails:
+    - move production cadence ownership only after explicit runbook ownership,
+      idempotent scheduler-event contract checks, and release smoke coverage for
+      selected owner path
+    - keep app-local scheduler as explicit fallback while external ownership
+      SLOs and rollback path are being proven
+- Remaining follow-up decision:
   - with `PRJ-295` complete, should conscious attention boundary ownership
     remain in-process coordination, or move to a dedicated durable
     attention-inbox owner in later rollout?

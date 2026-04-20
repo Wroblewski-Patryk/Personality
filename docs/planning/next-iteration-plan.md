@@ -1504,20 +1504,7 @@ can prove whether AION feels alive rather than only structurally compliant.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q`
 
-## Next Derived Slice
-
-The post-reflection queue is now seeded through `PRJ-317`.
-`PRJ-308` is currently the execution-ready slice in the board.
-Before the next implementation slice:
-
-- take `PRJ-308` directly from `.codex/context/TASK_BOARD.md`
-- keep the implementation scope bounded to that one reversible slice
-- preserve target-state architecture bias when resolving local runtime choices
-
-Post-reflection hardening queue:
-
-- `PRJ-308` Define long-term scheduler externalization boundary for
-  maintenance/proactive cadence ownership.
+- `PRJ-308` is complete.
   - Result:
     - scheduler/proactive follow-up now has one explicit target posture for
       app-local vs external cadence ownership after reflection rollout
@@ -1526,6 +1513,18 @@ Post-reflection hardening queue:
   - Validation:
     - doc-and-context sync plus targeted scheduler-boundary review recorded in
       this slice
+
+## Next Derived Slice
+
+The post-reflection queue is now seeded through `PRJ-317`.
+`PRJ-309` is currently the execution-ready slice in the board.
+Before the next implementation slice:
+
+- take `PRJ-309` directly from `.codex/context/TASK_BOARD.md`
+- keep the implementation scope bounded to that one reversible slice
+- preserve target-state architecture bias when resolving local runtime choices
+
+Post-reflection hardening queue:
 
 - `PRJ-309` Sync docs/context/runbook for post-reflection hardening queue
   decisions.

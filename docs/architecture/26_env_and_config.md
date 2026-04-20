@@ -494,6 +494,22 @@ Enables or disables proactive system behavior when that subsystem exists.
 
 Controls proactive cadence when proactive runtime behavior is enabled.
 
+### Scheduler Cadence Ownership Boundary (PRJ-308)
+
+Target ownership posture:
+
+- long-term production cadence ownership for maintenance/proactive wakeups moves
+  to a dedicated external scheduler path
+- app-local scheduler cadence remains transitional for local development,
+  controlled fallback, and rollout windows
+
+Ownership split:
+
+- runtime owns scheduled-event normalization plus guardrail/conscious execution
+  boundaries
+- scheduler owner owns cadence triggering, retries/backoff, and
+  availability/on-call ownership
+
 `ATTENTION_BURST_WINDOW_MS`
 
 Controls the short coalescing window for bursty Telegram user messages.

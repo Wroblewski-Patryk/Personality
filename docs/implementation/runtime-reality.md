@@ -444,6 +444,15 @@ Scheduler-facing runtime contracts are now explicit:
 - scheduler runtime posture and latest tick summaries are visible through
   `GET /health`
 
+`PRJ-308` now defines the target cadence-ownership direction:
+
+- long-term production cadence ownership for maintenance/proactive wakeups
+  should move to a dedicated external scheduler owner
+- app-local scheduler cadence remains transitional during rollout and as an
+  explicit fallback path
+- runtime remains the owner of scheduled-event contract normalization and
+  guardrail/conscious execution boundaries regardless of cadence owner
+
 Current limitation:
 
 - autonomous proactive cadence loops are not yet live in scheduler worker.

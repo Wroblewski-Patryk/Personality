@@ -18,8 +18,8 @@ Last updated: 2026-04-20
 - The convergence queue is complete through `PRJ-299`; reflection lane is now
   complete through `PRJ-304`, and post-reflection hardening plus runtime
   behavior-validation queue is seeded through `PRJ-317`.
-- `PRJ-307` is complete; `PRJ-308` is currently `READY` to define the
-  long-term scheduler externalization boundary.
+- `PRJ-308` is complete; `PRJ-309` is currently `READY` to synchronize
+  post-reflection hardening decisions across docs/context/runbook.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
@@ -33,25 +33,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-308 Define long-term scheduler externalization boundary for maintenance/proactive cadence ownership
-  - Status: READY
-  - Group: Post-Reflection Hardening Queue
-  - Owner: Planner + Ops/Release
-  - Depends on: PRJ-307
-  - Priority: P1
-  - Result:
-    - scheduler/proactive follow-up now has one explicit target posture for
-      app-local vs external cadence ownership after reflection rollout
-    - later implementation slices can converge on one cadence owner model
-      instead of reopening decision `12` every cycle
-  - Validation:
-    - doc-and-context sync plus targeted scheduler-boundary review recorded in
-      this slice
-
-## BACKLOG
-
 - [ ] PRJ-309 Sync docs/context/runbook for post-reflection hardening queue decisions
-  - Status: BACKLOG
+  - Status: READY
   - Group: Post-Reflection Hardening Queue
   - Owner: Product Docs + Ops/Release
   - Depends on: PRJ-308
@@ -64,6 +47,10 @@ Last updated: 2026-04-20
   - Validation:
     - doc-and-context sync plus targeted cross-doc consistency review recorded
       in this slice
+
+## BACKLOG
+
+- [ ] (none)
 
 ## FUTURE
 
@@ -194,6 +181,21 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-308 Define long-term scheduler externalization boundary for maintenance/proactive cadence ownership
+  - Status: DONE
+  - Group: Post-Reflection Hardening Queue
+  - Owner: Planner + Ops/Release
+  - Depends on: PRJ-307
+  - Priority: P1
+  - Result:
+    - scheduler/proactive follow-up now has one explicit target posture for
+      app-local vs external cadence ownership after reflection rollout
+    - later implementation slices can converge on one cadence owner model
+      instead of reopening decision `12` every cycle
+  - Validation:
+    - doc-and-context sync plus targeted scheduler-boundary review recorded in
+      this slice
 
 - [x] PRJ-307 Define target internal debug ingress boundary and migration posture away from shared public API service endpoint
   - Status: DONE

@@ -477,6 +477,32 @@ Ownership invariants:
 - retry/backoff semantics remain queue-owned across runtime modes
 - reflection execution must not block foreground response completion
 
+## Scheduler Cadence Ownership Boundary (PRJ-308)
+
+Target posture:
+
+- long-term production cadence ownership for maintenance/proactive wakeups moves
+  to a dedicated external scheduler owner
+- app-local scheduler cadence remains transitional and fallback-oriented during
+  rollout or incident recovery
+
+Ownership boundaries:
+
+1. Runtime owner:
+   - scheduler event normalization contract
+   - guardrail checks and conscious execution boundaries for scheduled events
+2. Scheduler owner:
+   - cadence triggering, retries/backoff, and runtime wakeup delivery posture
+   - production availability/on-call ownership for scheduler path
+
+Rollout guardrails before production cadence externalization:
+
+1. explicit runbook ownership and rollback steps for external scheduler path
+2. idempotent scheduler-event contract checks validated in regression and smoke
+   evidence
+3. release smoke coverage verifies selected cadence owner path and alerting
+   visibility
+
 ### Start Local Stack
 
 ```powershell
