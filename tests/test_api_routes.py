@@ -1789,6 +1789,26 @@ def test_event_endpoint_prefers_meta_user_id_over_x_aion_user_id_header() -> Non
     assert runtime.last_event.meta.user_id == "meta-user"
 
 
+def test_event_endpoint_user_id_fallback_does_not_stick_between_requests() -> None:
+    client, runtime, _ = _client()
+
+    first = client.post(
+        "/event",
+        json={"text": "hello from api"},
+        headers={"X-AION-User-Id": "header-user"},
+    )
+    second = client.post(
+        "/event",
+        json={"text": "hello from api"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert len(runtime.events) == 2
+    assert runtime.events[0].meta.user_id == "header-user"
+    assert runtime.events[1].meta.user_id == "anonymous"
+
+
 def test_event_endpoint_can_return_full_runtime_debug_payload_when_requested() -> None:
     client, runtime, _ = _client(reflection_triggered=True)
 

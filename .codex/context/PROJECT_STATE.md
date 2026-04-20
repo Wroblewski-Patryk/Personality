@@ -1171,8 +1171,17 @@ Last updated: 2026-04-20
 - 2026-04-20: `PRJ-327` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_context_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
   passed with `140 passed`.
-- 2026-04-20: `PRJ-328` is the next `READY` slice, focused on identity/language
-  continuity regressions across session behavior and API fallback boundaries.
+- 2026-04-20: `PRJ-328` is complete: identity/language continuity regressions
+  now pin ambiguous-turn language continuity across runtime session restarts
+  and profile-backed fallback behavior.
+- 2026-04-20: `PRJ-328` also adds API fallback regression coverage to ensure
+  `X-AION-User-Id` remains per-request identity fallback and does not leak into
+  later requests without explicit identity input.
+- 2026-04-20: `PRJ-328` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+  passed with `141 passed`.
+- 2026-04-20: `PRJ-329` is the next `READY` slice, focused on syncing identity
+  and language boundary hardening outcomes across canonical docs and context.
 
 ## Working Agreements
 

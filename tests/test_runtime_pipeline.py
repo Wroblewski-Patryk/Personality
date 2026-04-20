@@ -2041,6 +2041,84 @@ async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_wi
     assert openai.calls[0]["collaboration_preference"] == ""
 
 
+async def test_runtime_pipeline_preserves_language_continuity_across_session_restart_without_recent_memory() -> None:
+    class SessionProfileMemoryRepository(PersistingFakeMemoryRepository):
+        def __init__(self) -> None:
+            super().__init__(recent_memory=[])
+            self._user_profiles: dict[str, dict] = {}
+
+        async def get_user_profile(self, user_id: str) -> dict | None:
+            return self._user_profiles.get(user_id)
+
+        async def upsert_user_profile_language(self, **kwargs) -> dict:
+            stored = {
+                "user_id": str(kwargs.get("user_id", "")),
+                "preferred_language": str(kwargs.get("language_code", "")).strip().lower(),
+                "language_confidence": float(kwargs.get("confidence", 0.0) or 0.0),
+                "language_source": str(kwargs.get("source", "")).strip().lower(),
+            }
+            self.profile_updates.append(dict(kwargs))
+            self._user_profiles[stored["user_id"]] = stored
+            return stored
+
+    memory = SessionProfileMemoryRepository()
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    runtime_session_one = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    first = await runtime_session_one.run(
+        Event(
+            event_id="evt-language-session-1",
+            source="api",
+            subsource="event_endpoint",
+            timestamp=datetime.now(timezone.utc),
+            payload={"text": "Reply in Polish, please."},
+            meta=EventMeta(user_id="u-session-language", trace_id="t-language-session-1"),
+        )
+    )
+    assert first.perception.language == "pl"
+    assert first.perception.language_source == "explicit_request"
+    assert memory.profile_updates
+
+    memory.recent_memory = []
+
+    runtime_session_two = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+    second = await runtime_session_two.run(
+        Event(
+            event_id="evt-language-session-2",
+            source="api",
+            subsource="event_endpoint",
+            timestamp=datetime.now(timezone.utc),
+            payload={"text": "ok"},
+            meta=EventMeta(user_id="u-session-language", trace_id="t-language-session-2"),
+        )
+    )
+
+    assert second.perception.language == "pl"
+    assert second.perception.language_source == "user_profile"
+    assert second.expression.language == "pl"
+
+
 async def test_runtime_pipeline_applies_structured_response_preference_from_conclusion_memory() -> None:
     memory = FakeMemoryRepository(recent_memory=[])
     memory.user_preferences = {"response_style": "structured", "response_style_source": "explicit_request"}

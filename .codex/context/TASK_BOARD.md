@@ -36,27 +36,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-328 Add identity and language continuity regressions across session and API fallback boundaries
-  - Status: READY
-  - Group: Identity, Language, And Profile Boundary Hardening
-  - Owner: QA/Test
-  - Depends on: PRJ-327
-  - Priority: P1
-  - Result:
-    - identity/language continuity is pinned across multi-session behavior,
-      ambiguous turns, and API user-id fallback paths
-    - drift between profile state and response behavior becomes visible quickly
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-329 Sync docs/context for identity, language, and profile boundary hardening
-  - Status: FUTURE
+  - Status: READY
   - Group: Identity, Language, And Profile Boundary Hardening
   - Owner: Product Docs
   - Depends on: PRJ-328
@@ -68,6 +49,12 @@ Last updated: 2026-04-20
   - Validation:
     - doc-and-context sync plus targeted identity-boundary cross-doc review
       recorded in this slice
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-330 Implement relation decay and confidence revalidation policy
   - Status: FUTURE
@@ -189,6 +176,24 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-328 Add identity and language continuity regressions across session and API fallback boundaries
+  - Status: DONE
+  - Group: Identity, Language, And Profile Boundary Hardening
+  - Owner: QA/Test
+  - Depends on: PRJ-327
+  - Priority: P1
+  - Result:
+    - language continuity regressions now pin ambiguous-turn behavior for
+      durable profile continuity across runtime session restarts
+    - API fallback regressions now pin per-request user-id boundary semantics
+      so header-based identity fallback does not leak across subsequent requests
+      without explicit identity input
+    - continuity drift between profile state and observable response language
+      behavior is now test-visible across runtime and API boundaries
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+      (`141 passed`)
 
 - [x] PRJ-327 Add richer language continuity policy across profile, memory, and current turn context
   - Status: DONE
