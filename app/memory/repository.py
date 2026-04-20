@@ -40,6 +40,10 @@ class MemoryRepository:
     SEMANTIC_SOURCE_KINDS = frozenset({"episodic", "semantic", "affective", "relation"})
     AFFECTIVE_CONCLUSION_KINDS = frozenset({"affective_support_pattern", "affective_support_sensitivity"})
     RELATION_CONFIDENCE_THRESHOLD = 0.65
+    RELATION_EXPIRATION_CONFIDENCE = 0.12
+    RELATION_DECAY_EVIDENCE_WEIGHT = 0.35
+    RELATION_DECAY_EVIDENCE_CAP = 4.0
+    RELATION_REFRESH_EVIDENCE_CAP = 64
     OPERATIONAL_CONCLUSION_KINDS = frozenset(
         {
             "response_style",
@@ -170,6 +174,11 @@ class MemoryRepository:
         )
         normalized_relation_type = str(relation_type).strip().lower()[:32]
         normalized_relation_value = str(relation_value).strip().lower()[:128]
+        normalized_confidence = max(0.0, min(1.0, float(confidence)))
+        normalized_source = str(source or "background_reflection").strip().lower()[:32] or "background_reflection"
+        normalized_evidence_count = max(1, int(evidence_count))
+        normalized_decay_rate = max(0.0, min(1.0, float(decay_rate)))
+        now = datetime.now(timezone.utc)
         async with self.session_factory() as session:
             statement = (
                 select(AionRelation)
@@ -189,23 +198,49 @@ class MemoryRepository:
                     user_id=user_id,
                     relation_type=normalized_relation_type,
                     relation_value=normalized_relation_value,
-                    confidence=max(0.0, min(1.0, float(confidence))),
-                    source=source[:32],
+                    confidence=normalized_confidence,
+                    source=normalized_source,
                     supporting_event_id=supporting_event_id,
                     scope_type=normalized_scope_type,
                     scope_key=normalized_scope_key,
-                    evidence_count=max(1, int(evidence_count)),
-                    decay_rate=max(0.0, min(1.0, float(decay_rate))),
+                    evidence_count=normalized_evidence_count,
+                    decay_rate=normalized_decay_rate,
+                    last_observed_at=now,
                 )
                 session.add(row)
             else:
+                current_effective_confidence = self._revalidated_relation_confidence(row=row, now=now)
+                current_evidence_count = max(1, int(row.evidence_count or 1))
+                combined_evidence_count = min(
+                    self.RELATION_REFRESH_EVIDENCE_CAP,
+                    current_evidence_count + normalized_evidence_count,
+                )
+                previous_relation_value = str(row.relation_value).strip().lower()
                 row.relation_value = normalized_relation_value
-                row.confidence = max(0.0, min(1.0, float(confidence)))
-                row.source = source[:32]
+                row.confidence = normalized_confidence
+                if previous_relation_value == normalized_relation_value:
+                    weighted_confidence = (
+                        (current_effective_confidence * current_evidence_count)
+                        + (normalized_confidence * normalized_evidence_count)
+                    ) / float(max(1, current_evidence_count + normalized_evidence_count))
+                    if normalized_confidence >= current_effective_confidence:
+                        weighted_confidence = min(
+                            1.0,
+                            weighted_confidence + min(0.04, 0.005 * normalized_evidence_count),
+                        )
+                    row.confidence = max(0.0, min(1.0, weighted_confidence))
+                    row.evidence_count = combined_evidence_count
+                    row.decay_rate = self._blended_decay_rate(
+                        current_decay_rate=float(row.decay_rate or normalized_decay_rate),
+                        incoming_decay_rate=normalized_decay_rate,
+                        incoming_evidence_count=normalized_evidence_count,
+                    )
+                else:
+                    row.evidence_count = normalized_evidence_count
+                    row.decay_rate = normalized_decay_rate
+                row.source = normalized_source
                 row.supporting_event_id = supporting_event_id
-                row.evidence_count = max(1, int(evidence_count))
-                row.decay_rate = max(0.0, min(1.0, float(decay_rate)))
-                row.last_observed_at = datetime.now(timezone.utc)
+                row.last_observed_at = now
 
             await session.commit()
             await session.refresh(row)
@@ -257,7 +292,7 @@ class MemoryRepository:
     ) -> list[dict]:
         where_clauses = [AionRelation.user_id == user_id]
         threshold = self.RELATION_CONFIDENCE_THRESHOLD if min_confidence is None else float(min_confidence)
-        where_clauses.append(AionRelation.confidence >= max(0.0, min(1.0, threshold)))
+        threshold = max(0.0, min(1.0, threshold))
 
         if scope_type is not None or scope_key is not None:
             normalized_scope_type, normalized_scope_key = self._normalize_conclusion_scope(
@@ -289,11 +324,31 @@ class MemoryRepository:
                 select(AionRelation)
                 .where(*where_clauses)
                 .order_by(AionRelation.confidence.desc(), AionRelation.updated_at.desc(), AionRelation.id.desc())
-                .limit(limit)
+                .limit(max(limit * 3, limit))
             )
             result = await session.execute(statement)
             rows = result.scalars().all()
-        return [self._serialize_relation(row) for row in rows]
+
+        now = datetime.now(timezone.utc)
+        revalidated_rows: list[dict] = []
+        for row in rows:
+            revalidated = self._serialize_relation_with_revalidation(row=row, now=now)
+            if revalidated is None:
+                continue
+            if float(revalidated.get("confidence", 0.0) or 0.0) < threshold:
+                continue
+            revalidated_rows.append(revalidated)
+
+        sorted_rows = sorted(
+            revalidated_rows,
+            key=lambda item: (
+                float(item.get("confidence", 0.0) or 0.0),
+                str(item.get("updated_at", "")),
+                int(item.get("id", 0) or 0),
+            ),
+            reverse=True,
+        )
+        return sorted_rows[:limit]
 
     async def upsert_semantic_embedding(
         self,
@@ -1879,6 +1934,56 @@ class MemoryRepository:
             "updated_at": row.updated_at,
             "created_at": row.created_at,
         }
+
+    def _serialize_relation_with_revalidation(self, *, row: AionRelation, now: datetime) -> dict | None:
+        revalidated_confidence = self._revalidated_relation_confidence(row=row, now=now)
+        if revalidated_confidence <= self.RELATION_EXPIRATION_CONFIDENCE:
+            return None
+
+        serialized = self._serialize_relation(row)
+        raw_confidence = float(serialized.get("confidence", 0.0) or 0.0)
+        serialized["confidence_raw"] = raw_confidence
+        serialized["confidence"] = revalidated_confidence
+        serialized["revalidation_state"] = "refreshed" if revalidated_confidence >= raw_confidence else "weakened"
+        return serialized
+
+    def _revalidated_relation_confidence(self, *, row: AionRelation, now: datetime) -> float:
+        raw_confidence = max(0.0, min(1.0, float(row.confidence or 0.0)))
+        decay_rate = max(0.0, min(1.0, float(row.decay_rate or 0.0)))
+        if decay_rate <= 0.0:
+            return raw_confidence
+
+        observed_at = self._coerce_datetime(row.last_observed_at) or self._coerce_datetime(row.updated_at)
+        if observed_at is None:
+            return raw_confidence
+
+        age_seconds = max(0.0, (now - observed_at).total_seconds())
+        age_days = age_seconds / 86400.0
+        if age_days <= 0.0:
+            return raw_confidence
+
+        evidence_count = max(1, int(row.evidence_count or 1))
+        decay_scale = self._relation_decay_scale(evidence_count=evidence_count)
+        decayed_confidence = raw_confidence - (age_days * decay_rate * decay_scale)
+        return max(0.0, min(1.0, round(decayed_confidence, 4)))
+
+    def _relation_decay_scale(self, *, evidence_count: int) -> float:
+        return 1.0 / min(
+            self.RELATION_DECAY_EVIDENCE_CAP,
+            1.0 + (max(0, evidence_count - 1) * self.RELATION_DECAY_EVIDENCE_WEIGHT),
+        )
+
+    def _blended_decay_rate(
+        self,
+        *,
+        current_decay_rate: float,
+        incoming_decay_rate: float,
+        incoming_evidence_count: int,
+    ) -> float:
+        current = max(0.0, min(1.0, float(current_decay_rate)))
+        incoming = max(0.0, min(1.0, float(incoming_decay_rate)))
+        incoming_weight = min(0.75, 0.2 + (0.05 * max(1, int(incoming_evidence_count))))
+        return max(0.0, min(1.0, round((current * (1.0 - incoming_weight)) + (incoming * incoming_weight), 4)))
 
     def _serialize_subconscious_proposal(self, row: AionSubconsciousProposal) -> dict:
         return {

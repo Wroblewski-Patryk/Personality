@@ -115,6 +115,10 @@ class ReflectionWorker:
             recent_goal_progress=recent_goal_progress,
             recent_goal_milestone_history=recent_goal_milestone_history,
         )
+        relation_updates = derive_relation_updates(
+            recent_memory,
+            extract_memory_fields=self._extract_memory_fields,
+        )
         theta = derive_theta(recent_memory, extract_memory_fields=self._extract_memory_fields)
         subconscious_proposals: list[dict] = []
         if hasattr(self.memory_repository, "upsert_subconscious_proposal"):
@@ -124,7 +128,7 @@ class ReflectionWorker:
                 active_tasks=active_tasks,
                 extract_memory_fields=self._extract_memory_fields,
             )
-        if not conclusions and theta is None and not subconscious_proposals:
+        if not conclusions and not relation_updates and theta is None and not subconscious_proposals:
             self.logger.info("reflection_noop user_id=%s event_id=%s", user_id, event_id)
             return False
 
@@ -151,10 +155,6 @@ class ReflectionWorker:
                 scope_type,
                 scope_key,
             )
-        relation_updates = derive_relation_updates(
-            recent_memory,
-            extract_memory_fields=self._extract_memory_fields,
-        )
         for relation in relation_updates:
             relation_scope_type, relation_scope_key = self._relation_scope(
                 relation_type=str(relation["relation_type"]),

@@ -36,27 +36,8 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-330 Implement relation decay and confidence revalidation policy
-  - Status: READY
-  - Group: Relation Lifecycle And Trust Influence
-  - Owner: Backend Builder
-  - Depends on: PRJ-329
-  - Priority: P1
-  - Result:
-    - relation records can weaken, refresh, or expire based on evidence age and
-      repeated interaction quality
-    - relation memory becomes lifecycle-aware instead of purely additive
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-331 Extend planning, motivation, and proactive logic with governed trust signals
-  - Status: FUTURE
+  - Status: READY
   - Group: Relation Lifecycle And Trust Influence
   - Owner: Backend Builder
   - Depends on: PRJ-330
@@ -67,6 +48,12 @@ Last updated: 2026-04-21
     - trust influence becomes a coded behavior path instead of a future note
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-332 Add relation lifecycle and trust-influence regressions
   - Status: FUTURE
@@ -162,6 +149,26 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-330 Implement relation decay and confidence revalidation policy
+  - Status: DONE
+  - Group: Relation Lifecycle And Trust Influence
+  - Owner: Backend Builder
+  - Depends on: PRJ-329
+  - Priority: P1
+  - Result:
+    - relation reads now apply age-aware confidence revalidation with
+      evidence-sensitive decay, so stale relation signals weaken over time and
+      expire from retrieval once confidence falls below expiration posture
+    - relation upserts now refresh confidence and evidence through
+      quality-weighted blending for repeated same-value signals, while
+      value-shift updates reset relation posture for revalidation
+    - reflection now persists relation-only updates (including
+      `delivery_reliability=low_trust`) instead of treating those turns as noop
+      when no conclusion/theta update is produced
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
+      (`155 passed`)
 
 - [x] PRJ-329 Sync docs/context for identity, language, and profile boundary hardening
   - Status: DONE

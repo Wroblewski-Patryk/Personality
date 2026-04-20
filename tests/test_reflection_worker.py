@@ -511,6 +511,34 @@ async def test_reflection_worker_derives_relation_updates_from_recent_memory() -
     } in repository.relation_updates
 
 
+async def test_reflection_worker_derives_low_trust_relation_when_delivery_quality_drops() -> None:
+    repository = FakeMemoryRepository(
+        recent_memory=[
+            {"summary": "action=fail; expression=One."},
+            {"summary": "action=fail; expression=Two."},
+            {"summary": "action=success; expression=Three."},
+            {"summary": "action=fail; expression=Four."},
+        ]
+    )
+    worker = ReflectionWorker(memory_repository=repository)
+
+    result = await worker.reflect_user(user_id="u-1", event_id="evt-relations-low-trust")
+
+    assert result is True
+    assert {
+        "user_id": "u-1",
+        "relation_type": "delivery_reliability",
+        "relation_value": "low_trust",
+        "confidence": 0.62,
+        "source": "background_reflection",
+        "supporting_event_id": "evt-relations-low-trust",
+        "scope_type": "global",
+        "scope_key": "global",
+        "evidence_count": 3,
+        "decay_rate": 0.05,
+    } in repository.relation_updates
+
+
 async def test_reflection_worker_avoids_adaptive_inference_without_outcome_evidence() -> None:
     repository = FakeMemoryRepository(
         recent_memory=[

@@ -1196,8 +1196,19 @@ Last updated: 2026-04-21
   `docs/planning/next-iteration-plan.md`,
   `.codex/context/TASK_BOARD.md`, and
   `.codex/context/PROJECT_STATE.md`.
-- 2026-04-21: `PRJ-330` is the next `READY` slice, focused on relation decay
-  and confidence revalidation policy.
+- 2026-04-21: `PRJ-330` is complete: relation retrieval now applies
+  age-aware confidence revalidation with evidence-sensitive decay and explicit
+  expiration posture for stale relation signals.
+- 2026-04-21: `PRJ-330` also refreshes relation durability by blending
+  repeated same-value relation evidence in upsert paths and allows reflection
+  to persist relation-only revalidation updates (`delivery_reliability=low_trust`)
+  without requiring a conclusion/theta write in the same turn.
+- 2026-04-21: `PRJ-330` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
+  passed with `155 passed`.
+- 2026-04-21: `PRJ-331` is the next `READY` slice, focused on extending
+  planning/motivation/proactive trust influence over the relation lifecycle
+  baseline.
 
 ## Working Agreements
 

@@ -56,6 +56,17 @@ def derive_relation_updates(
                     "decay_rate": 0.03,
                 }
             )
+        else:
+            relation_updates.append(
+                {
+                    "relation_type": "delivery_reliability",
+                    "relation_value": "low_trust",
+                    "confidence": 0.62,
+                    "source": "background_reflection",
+                    "evidence_count": max(1, sample_size - action_success_count),
+                    "decay_rate": 0.05,
+                }
+            )
 
     if collaboration_updates:
         relation_updates.append(

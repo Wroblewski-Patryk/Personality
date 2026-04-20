@@ -10,6 +10,7 @@ from app.memory.models import (
     AionGoalMilestoneHistory,
     AionGoalProgress,
     AionMemory,
+    AionRelation,
     AionReflectionTask,
     AionSemanticEmbedding,
     AionSubconsciousProposal,
@@ -583,6 +584,102 @@ async def test_memory_repository_upsert_relation_keeps_embedding_pending_in_manu
     assert rows[0].embedding is None
     assert rows[0].metadata_json["embedding_status"] == "pending_manual_refresh"
     assert rows[0].metadata_json["embedding_refresh_mode"] == "manual"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_refreshes_relation_with_repeated_quality_evidence(tmp_path) -> None:
+    database_path = tmp_path / "memory-relations-refresh.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    first = await repository.upsert_relation(
+        user_id="u-1",
+        relation_type="delivery_reliability",
+        relation_value="high_trust",
+        confidence=0.72,
+        source="background_reflection",
+        supporting_event_id="evt-rel-refresh-1",
+        evidence_count=1,
+        decay_rate=0.04,
+    )
+    refreshed = await repository.upsert_relation(
+        user_id="u-1",
+        relation_type="delivery_reliability",
+        relation_value="high_trust",
+        confidence=0.86,
+        source="background_reflection",
+        supporting_event_id="evt-rel-refresh-2",
+        evidence_count=3,
+        decay_rate=0.02,
+    )
+
+    assert refreshed["confidence"] > first["confidence"]
+    assert refreshed["evidence_count"] == 4
+    assert refreshed["supporting_event_id"] == "evt-rel-refresh-2"
+    assert refreshed["decay_rate"] < first["decay_rate"]
+
+    await engine.dispose()
+
+
+async def test_memory_repository_revalidates_relation_confidence_and_expires_stale_rows(tmp_path) -> None:
+    database_path = tmp_path / "memory-relations-revalidation.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.upsert_relation(
+        user_id="u-1",
+        relation_type="delivery_reliability",
+        relation_value="high_trust",
+        confidence=0.9,
+        source="background_reflection",
+        supporting_event_id="evt-rel-revalidate-1",
+        evidence_count=1,
+        decay_rate=0.08,
+    )
+
+    async with session_factory() as session:
+        row = (
+            await session.execute(
+                select(AionRelation).where(
+                    AionRelation.user_id == "u-1",
+                    AionRelation.relation_type == "delivery_reliability",
+                )
+            )
+        ).scalar_one()
+        row.last_observed_at = datetime.now(timezone.utc) - timedelta(days=2)
+        await session.commit()
+
+    weakened = await repository.get_user_relations(
+        user_id="u-1",
+        min_confidence=0.0,
+    )
+    assert len(weakened) == 1
+    assert weakened[0]["confidence"] < 0.9
+    assert weakened[0]["confidence_raw"] == 0.9
+    assert weakened[0]["revalidation_state"] == "weakened"
+
+    async with session_factory() as session:
+        row = (
+            await session.execute(
+                select(AionRelation).where(
+                    AionRelation.user_id == "u-1",
+                    AionRelation.relation_type == "delivery_reliability",
+                )
+            )
+        ).scalar_one()
+        row.last_observed_at = datetime.now(timezone.utc) - timedelta(days=40)
+        await session.commit()
+
+    expired = await repository.get_user_relations(
+        user_id="u-1",
+        min_confidence=0.0,
+    )
+    assert expired == []
 
     await engine.dispose()
 
