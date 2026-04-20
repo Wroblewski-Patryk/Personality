@@ -846,7 +846,7 @@ Last updated: 2026-04-20
 - 2026-04-20: foreground convergence group is now complete through `PRJ-279`;
   background topology convergence is complete through `PRJ-283`; production
   retrieval implementation is complete through `PRJ-287`; adaptive governance
-  policy baseline is complete through `PRJ-288`; `PRJ-297` is now the next
+  policy baseline is complete through `PRJ-288`; `PRJ-298` is now the next
   `READY` implementation slice.
 - 2026-04-20: `PRJ-288` is complete: architecture contracts now define explicit
   adaptive influence evidence gates, precedence, and tie-break guardrails for
@@ -921,6 +921,13 @@ Last updated: 2026-04-20
   `docs/implementation/runtime-reality.md`,
   `.codex/context/TASK_BOARD.md`, and
   `docs/planning/next-iteration-plan.md`.
+- 2026-04-20: `PRJ-297` is complete: runtime policy now resolves production
+  enforcement to `strict` by default when unset, while explicit
+  `PRODUCTION_POLICY_ENFORCEMENT=warn` remains a controlled override; startup
+  and `/health` policy surfaces now reflect that production-aware default.
+- 2026-04-20: `PRJ-297` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_api_routes.py tests/test_main_lifespan_policy.py`
+  passed with `142 passed`.
 
 ## Working Agreements
 

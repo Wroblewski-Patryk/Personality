@@ -68,6 +68,9 @@ The current repo already works as an MVP slice, but several architecture-level d
   - runtime-policy mismatch detection now uses one shared helper owner so startup and `/health` stay aligned.
   - startup and `/health` now share the same strict-block semantics through shared readiness helpers (`strict_startup_blocked`, `strict_rollout_ready`).
   - startup now emits an informational strict-rollout hint when production runs in `warn` mode and strict rollout is ready.
+  - production policy enforcement now resolves to `strict` by default in
+    production when `PRODUCTION_POLICY_ENFORCEMENT` is unset, while explicit
+    `warn` remains a controlled override.
 - Decision (PRJ-296 target production baseline, 2026-04-20):
   - target production startup posture is migration-only
     (`STARTUP_SCHEMA_MODE=migrate`); `create_tables` remains a temporary
@@ -156,6 +159,9 @@ The current repo already works as an MVP slice, but several architecture-level d
     `event_debug_query_compat_enabled=true` when production debug exposure
     keeps compatibility query-debug route enabled.
   - strict-mode hard-fail behavior is test-covered at startup lifecycle level across both debug and schema mismatch paths, not only at helper-function level.
+  - production now uses strict policy enforcement as the default when
+    enforcement mode is unset, and explicit `warn` keeps temporary override
+    ownership visible.
 - Decision (PRJ-296 target production baseline, 2026-04-20):
   - production public API posture stays compact on `POST /event`; full runtime
     payload remains an internal diagnostics surface.

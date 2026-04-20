@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from app.core.config import Settings
 from app.core.runtime_policy import (
     production_policy_mismatch_count,
     recommended_production_policy_enforcement,
@@ -69,6 +70,37 @@ def test_runtime_policy_snapshot_includes_all_production_mismatches() -> None:
     assert snapshot["recommended_production_policy_enforcement"] == "warn"
     assert snapshot["strict_rollout_hint"] == "resolve_mismatches_before_strict"
     assert snapshot["production_policy_enforcement"] == "strict"
+
+
+def test_runtime_policy_snapshot_defaults_to_strict_enforcement_for_production_settings_when_unset() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        app_env="production",
+        event_debug_enabled=False,
+    )
+
+    snapshot = runtime_policy_snapshot(settings)
+
+    assert snapshot["production_policy_enforcement"] == "strict"
+    assert snapshot["production_policy_mismatches"] == []
+    assert snapshot["strict_startup_blocked"] is False
+    assert snapshot["strict_rollout_ready"] is True
+
+
+def test_runtime_policy_snapshot_respects_explicit_warn_override_for_production_settings() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        app_env="production",
+        event_debug_enabled=False,
+        production_policy_enforcement="warn",
+    )
+
+    snapshot = runtime_policy_snapshot(settings)
+
+    assert snapshot["production_policy_enforcement"] == "warn"
+    assert snapshot["production_policy_mismatches"] == []
+    assert snapshot["strict_startup_blocked"] is False
+    assert snapshot["strict_rollout_ready"] is True
 
 
 def test_runtime_policy_snapshot_marks_event_debug_source_as_environment_default_when_unset() -> None:

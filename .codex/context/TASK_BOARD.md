@@ -16,8 +16,8 @@ Last updated: 2026-04-20
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
 - The planning queue is complete through `PRJ-299`.
-- `PRJ-296` is complete; `PRJ-297` is currently `READY` as the first
-  implementation slice that enforces the production posture baseline.
+- `PRJ-297` is complete; `PRJ-298` is currently `READY` for deployment/release
+  truth alignment after production-policy gate hardening.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
@@ -28,27 +28,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-297 Enforce migration-first and internal-debug posture through explicit runtime gates
-  - Status: READY
-  - Group: Operational Hardening And Release Truth
-  - Owner: Backend Builder
-  - Depends on: PRJ-296
-  - Priority: P1
-  - Result:
-    - runtime and config boundaries reflect the agreed production target while
-      keeping any temporary escape hatches explicit and reviewable
-    - startup and API policy posture move closer to the final deployment shape
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_api_routes.py tests/test_main_lifespan_policy.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-298 Finalize deployment and release truth for Coolify/manual fallback and smoke ownership
-  - Status: FUTURE
+  - Status: READY
   - Group: Operational Hardening And Release Truth
   - Owner: Ops/Release
   - Depends on: PRJ-297
@@ -60,6 +41,12 @@ Last updated: 2026-04-20
       prove
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-299 Add release-readiness regressions and sync docs/context/runbook
   - Status: FUTURE
@@ -88,6 +75,19 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-297 Enforce migration-first and internal-debug posture through explicit runtime gates
+  - Status: DONE
+  - Group: Operational Hardening And Release Truth
+  - Owner: Backend Builder
+  - Depends on: PRJ-296
+  - Priority: P1
+  - Result:
+    - runtime and config boundaries reflect the agreed production target while
+      keeping any temporary escape hatches explicit and reviewable
+    - startup and API policy posture move closer to the final deployment shape
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_config.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_api_routes.py tests/test_main_lifespan_policy.py`
 
 - [x] PRJ-296 Define the target production posture for migration-only startup, strict defaults, and the internal debug boundary
   - Status: DONE

@@ -81,6 +81,27 @@ def test_settings_default_to_debug_payload_disabled_in_production() -> None:
     assert settings.is_event_debug_query_compat_enabled() is False
 
 
+def test_settings_default_to_strict_production_policy_enforcement_in_production_when_unset() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        app_env="production",
+        event_debug_enabled=False,
+    )
+
+    assert settings.resolve_production_policy_enforcement() == "strict"
+
+
+def test_settings_allow_explicit_warn_production_policy_enforcement_override_in_production() -> None:
+    settings = Settings(
+        database_url="postgresql+asyncpg://u:p@localhost:5432/aion",
+        app_env="production",
+        event_debug_enabled=False,
+        production_policy_enforcement="warn",
+    )
+
+    assert settings.resolve_production_policy_enforcement() == "warn"
+
+
 def test_settings_allow_explicit_debug_payload_enablement_in_production() -> None:
     settings = Settings(
         database_url="postgresql+asyncpg://u:p@localhost:5432/aion",

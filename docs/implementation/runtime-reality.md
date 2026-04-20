@@ -357,8 +357,8 @@ environment-aware policy via `EVENT_DEBUG_QUERY_COMPAT_ENABLED`
 (default `true` outside production, `false` in production).
 Target production baseline is now explicitly documented as migration-only +
 strict policy posture with debug exposure disabled by default; runtime rollout
-work still tracks this through health mismatch diagnostics until strict defaults
-are enforced in follow-up hardening slices.
+now enforces production strict policy by default when enforcement is unset, and
+explicit `warn` override remains the controlled temporary escape hatch.
 Runtime policy health output now also includes `debug_access_posture` and
 `debug_token_policy_hint` plus compat-route posture markers
 (`event_debug_query_compat_enabled`, `event_debug_query_compat_source`) and

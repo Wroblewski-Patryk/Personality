@@ -96,7 +96,15 @@ def startup_schema_mode(settings: Any) -> str:
 
 
 def production_policy_enforcement(settings: Any) -> Literal["warn", "strict"]:
-    mode = str(getattr(settings, "production_policy_enforcement", "warn")).strip().lower()
+    enforcement_resolver = getattr(settings, "resolve_production_policy_enforcement", None)
+    if callable(enforcement_resolver):
+        mode = str(enforcement_resolver()).strip().lower()
+    else:
+        explicit_mode = getattr(settings, "production_policy_enforcement", None)
+        if explicit_mode is None:
+            mode = "strict" if app_environment(settings) == "production" else "warn"
+        else:
+            mode = str(explicit_mode).strip().lower()
     if mode == "strict":
         return "strict"
     return "warn"

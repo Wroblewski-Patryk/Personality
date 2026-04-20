@@ -279,6 +279,27 @@ def test_startup_logs_strict_rollout_hint_when_production_warn_mode_is_ready(cap
     assert any("hint=can_enable_strict" in message for message in messages)
 
 
+def test_startup_blocks_with_production_default_strict_policy_when_enforcement_is_unset(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("WARNING", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        app_env="production",
+        event_debug_enabled=True,
+        event_debug_token=None,
+        production_debug_token_required=True,
+        startup_schema_mode="migrate",
+        production_policy_enforcement=None,
+    )
+
+    try:
+        _log_runtime_policy_warnings(settings=settings, logger=logger)
+    except RuntimeError as exc:
+        assert "event_debug_enabled=true" in str(exc)
+    else:  # pragma: no cover - defensive fallback
+        raise AssertionError("Expected production default strict policy enforcement to block startup.")
+
+
 def test_startup_skips_debug_token_warning_when_debug_token_is_configured(caplog) -> None:
     logger_name = "aion.app"
     caplog.set_level("WARNING", logger=logger_name)

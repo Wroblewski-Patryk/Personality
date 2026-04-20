@@ -216,8 +216,9 @@ On startup, production also emits an explicit warning when
 path warning: production should normally run migration-first startup mode.
 
 `PRODUCTION_POLICY_ENFORCEMENT` controls whether these production-policy
-mismatches are warning-only (`warn`, default) or startup-blocking (`strict`).
-Use `strict` when production hardening requires fail-fast policy enforcement.
+mismatches are warning-only (`warn`) or startup-blocking (`strict`).
+Runtime default is now environment-aware: production defaults to `strict`,
+non-production defaults to `warn`, and explicit config keeps override ownership.
 Current debug-related mismatch examples include
 `event_debug_enabled=true`, `event_debug_query_compat_enabled=true`, and
 `event_debug_token_missing=true`.
@@ -308,6 +309,7 @@ Recommended when Telegram webhooks are enabled:
   exposure is enabled
 - `PRODUCTION_POLICY_ENFORCEMENT` (`warn|strict`) to decide whether production
   policy mismatches remain warning-only or block startup
+  (default: `strict` in production, `warn` outside production)
 - `ATTENTION_BURST_WINDOW_MS` (optional) to tune burst-message coalescing
   latency and aggregation behavior
 - `ATTENTION_ANSWERED_TTL_SECONDS` and `ATTENTION_STALE_TURN_SECONDS` (optional)

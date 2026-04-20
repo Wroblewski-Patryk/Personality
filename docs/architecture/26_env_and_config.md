@@ -268,6 +268,12 @@ Allowed values:
 - warn
 - strict
 
+Default resolution:
+
+- production: `strict`
+- non-production: `warn`
+- explicit `PRODUCTION_POLICY_ENFORCEMENT` keeps override ownership
+
 ### Target Production Policy Baseline (PRJ-296)
 
 Target production posture is:
@@ -279,9 +285,9 @@ Target production posture is:
 - `PRODUCTION_DEBUG_TOKEN_REQUIRED=true`
 
 This target baseline defines release intent.
-Runtime default transitions and hard enforcement are handled by later execution
-slices (`PRJ-297+`); until then, `/health.runtime_policy` mismatch diagnostics
-remain the canonical drift signal.
+Runtime now applies production-aware strict default enforcement for this
+baseline while keeping explicit `warn` override as a controlled escape hatch.
+`/health.runtime_policy` mismatch diagnostics remain the canonical drift signal.
 
 `GET /health` runtime policy visibility now includes:
 

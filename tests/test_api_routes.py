@@ -1265,6 +1265,24 @@ def test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready() ->
     assert body["runtime_policy"]["event_debug_query_compat_activity_hint"] == "compat_disabled_no_action"
 
 
+def test_health_endpoint_defaults_to_strict_policy_enforcement_in_production_when_unset() -> None:
+    client, _, _ = _client(
+        app_env="production",
+        event_debug_enabled=False,
+        startup_schema_mode="migrate",
+        production_policy_enforcement=None,  # type: ignore[arg-type]
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["runtime_policy"]["production_policy_enforcement"] == "strict"
+    assert body["runtime_policy"]["production_policy_mismatches"] == []
+    assert body["runtime_policy"]["strict_startup_blocked"] is False
+    assert body["runtime_policy"]["strict_rollout_ready"] is True
+
+
 def test_health_endpoint_marks_query_compat_as_explicit_production_mismatch_when_enabled() -> None:
     client, _, _ = _client(
         app_env="production",

@@ -1311,7 +1311,7 @@ not around temporary convenience defaults.
     - doc-and-context sync plus targeted production-baseline review recorded in
       this slice
 
-- `PRJ-297` Enforce migration-first and internal-debug posture through explicit runtime gates.
+- `PRJ-297` is complete.
   - Result:
     - runtime and config boundaries reflect the agreed production target while
       keeping any temporary escape hatches explicit and reviewable
@@ -1340,10 +1340,10 @@ not around temporary convenience defaults.
 ## Next Derived Slice
 
 The planning queue is complete through `PRJ-299`.
-`PRJ-297` is currently the execution-ready slice in the board.
+`PRJ-298` is currently the execution-ready slice in the board.
 Before the next implementation slice:
 
-- take `PRJ-297` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-298` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to that one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 

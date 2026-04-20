@@ -103,6 +103,14 @@ class Settings(BaseSettings):
             return self.event_debug_query_compat_enabled
         return self.app_env.lower() != "production"
 
+    def resolve_production_policy_enforcement(self) -> Literal["warn", "strict"]:
+        mode = str(self.production_policy_enforcement).strip().lower()
+        if "production_policy_enforcement" not in self.model_fields_set:
+            return "strict" if self.app_env.lower() == "production" else "warn"
+        if mode == "strict":
+            return "strict"
+        return "warn"
+
     def get_embedding_source_kinds(self) -> tuple[str, ...]:
         return normalize_embedding_source_kinds(self.embedding_source_kinds)
 
