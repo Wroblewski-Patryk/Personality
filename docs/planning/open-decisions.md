@@ -486,8 +486,14 @@ The current repo already works as an MVP slice, but several architecture-level d
 - stable `preferred_role` conclusions can now influence role selection on ambiguous turns.
 - stable `collaboration_preference` conclusions can now influence context, role selection, motivation, planning, and expression on ambiguous turns, and explicit user phrases like `step by step` or `do it for me` are now captured as episodic collaboration markers for reflection.
 - reflected theta now provides a softer runtime bias toward support, analysis, or execution behavior without hard-overriding explicit signals, and that bias can now shape role selection, motivation mode, planning stance, and expression tone on ambiguous turns.
-- Decision needed:
-  - which preference types should remain expression-only, and which should be allowed to shape higher-level planning or role selection as the architecture grows?
+- Decision (baseline resolved in `PRJ-288`, 2026-04-20):
+  - `response_style` remains formatting-oriented and may shape expression/planning structure, not execution ownership
+  - `preferred_role` remains a role tie-break signal only, gated by confidence (`>= 0.72`) and ambiguous-turn posture
+  - `collaboration_preference` may shape role/motivation/planning/expression only through ambiguous-turn tie-break paths
+- Follow-up decision:
+  - after `PRJ-289..PRJ-290`, decide whether any preference signal should
+    influence proactive or attention-gate posture beyond current foreground
+    tie-break scope
 
 ### 10a. Action Intent Ownership
 
@@ -507,19 +513,37 @@ The current repo already works as an MVP slice, but several architecture-level d
   - reflection now requires outcome evidence and user-visible cues for
     adaptive updates (`preferred_role`, `theta`, collaboration fallback) to
     reduce feedback loops from role-only traces.
-- Decision needed:
-  - what evidence threshold should be required before adaptive signals can
-    influence future role, motivation, planning, or expression?
-  - which adaptive signals are valuable enough to keep as first-class runtime
-    inputs, and which should remain descriptive-only until stronger evidence is
-    available?
+- Decision (resolved in `PRJ-288`, 2026-04-20):
+  - adaptive influence now has one explicit baseline policy contract in
+    `docs/architecture/16_agent_contracts.md`
+  - evidence thresholds are explicit:
+    - relation cues require confidence `>= 0.68` (`>= 0.70` for role
+      collaboration tie-break)
+    - role preference tie-break requires `preferred_role_confidence >= 0.72`
+    - theta influence requires dominant bias `>= 0.58`
+  - signal precedence is explicit:
+    - affective safety/support cues first
+    - relation/preference cues next
+    - theta last
+  - below-threshold adaptive signals are descriptive-only and must not alter
+    role, motivation mode, planning steps, or expression tone
+- Follow-up decision:
+  - complete shared policy-owner adoption across role/motivation/planning
+    (`PRJ-289`) and attention/proactive consumers (`PRJ-290`)
 
 ### 11. Theta Scope And Durability
 
 - Current repo fact:
   - reflection now updates a lightweight `aion_theta` state from repeated recent role patterns, and runtime can use that state as a soft bias for role selection, motivation, planning, and expression on ambiguous turns.
-- Decision needed:
-  - should theta stay as a lightweight behavioral bias derived from recent runtime patterns, or evolve into a broader long-term identity state with stronger influence over planning, motivation, expression, and proactive behavior?
+- Decision (interim baseline resolved in `PRJ-288`, 2026-04-20):
+  - theta stays a lightweight adaptive tie-break signal, not a dominant
+    identity owner
+  - theta influence remains ambiguity-gated and threshold-gated
+    (`dominant_bias >= 0.58`)
+- Follow-up decision:
+  - after adaptive-governance regressions in `PRJ-291`, decide whether theta
+    should remain bounded to tie-break posture or gain broader long-horizon
+    influence
 
 ### 12. Scheduler And Proactive Runtime
 

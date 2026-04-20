@@ -1200,13 +1200,25 @@ semantics, and family-by-family rollout.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py tests/test_context_agent.py tests/test_runtime_pipeline.py`
 
+- `PRJ-288` is complete.
+  - Result:
+    - canonical architecture now defines one adaptive influence governance
+      baseline for affective, relation, preference, and theta signals
+    - evidence thresholds, precedence order, and tie-break boundaries are now
+      explicit so adaptive influence no longer expands through undocumented
+      heuristics
+  - Validation:
+    - doc-and-context sync plus targeted adaptive-policy review recorded in this
+      slice
+    - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+
 ## Group 20 - Adaptive Cognition Governance
 
 This group keeps richer cognition aligned with the architecture by making
 evidence thresholds and influence scope explicit before adaptive signals spread
 further through runtime behavior.
 
-- `PRJ-288` Define evidence thresholds and influence policy for adaptive signals.
+- `PRJ-288` is complete.
   - Result:
     - the repo has one explicit policy for how affective, relation, preference,
       and theta signals may influence future runtime behavior
@@ -1214,6 +1226,7 @@ further through runtime behavior.
   - Validation:
     - doc-and-context sync plus targeted adaptive-policy review recorded in
       this slice
+    - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
 
 - `PRJ-289` Refactor role, motivation, and planning to consume governed adaptive influence rules.
   - Result:
@@ -1327,10 +1340,10 @@ not around temporary convenience defaults.
 ## Next Derived Slice
 
 The planning queue is complete through `PRJ-299`.
-`PRJ-288` is currently the execution-ready slice in the board.
+`PRJ-289` is currently the execution-ready slice in the board.
 Before the next implementation slice:
 
-- take `PRJ-288` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-289` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to that one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 

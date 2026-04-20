@@ -108,6 +108,9 @@ Last updated: 2026-04-20
 - 2026-04-19: adaptive reflection signals (`preferred_role`, `theta`,
   collaboration fallback) now require outcome evidence and user-visible cues,
   reducing self-reinforcement loops from role-only traces.
+- 2026-04-20: canonical adaptive influence governance policy is now explicit in
+  architecture contracts, including evidence thresholds, precedence, and
+  tie-break boundaries for affective, relation, preference, and theta signals.
 - 2026-04-19: milestone pressure heuristics now prefer phase consistency and
   arc/transition evidence over pure time-window drift.
 - 2026-04-19: runtime now exposes an explicit graph migration boundary through
@@ -842,8 +845,15 @@ Last updated: 2026-04-20
   dual-loop execution boundaries, and operational hardening.
 - 2026-04-20: foreground convergence group is now complete through `PRJ-279`;
   background topology convergence is complete through `PRJ-283`; production
-  retrieval implementation is complete through `PRJ-287`; `PRJ-288` is
-  now the next `READY` implementation slice.
+  retrieval implementation is complete through `PRJ-287`; adaptive governance
+  policy baseline is complete through `PRJ-288`; `PRJ-289` is now the next
+  `READY` implementation slice.
+- 2026-04-20: `PRJ-288` is complete: architecture contracts now define explicit
+  adaptive influence evidence gates, precedence, and tie-break guardrails for
+  affective, relation, preference, and theta signals.
+- 2026-04-20: `PRJ-288` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+  passed with `151 passed`.
 
 ## Working Agreements
 

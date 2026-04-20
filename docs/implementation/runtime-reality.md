@@ -515,6 +515,11 @@ Current behavior:
   self-reinforce from role-only traces
 - milestone pressure heuristics now prefer phase consistency plus
   arc/transition evidence over pure time-window drift
+- canonical adaptive influence governance policy is now documented in
+  `docs/architecture/16_agent_contracts.md`, including explicit evidence gates
+  and precedence for affective, relation, preference, and theta signals
+- current runtime still applies that policy through stage-local thresholds and
+  tie-break checks; a shared policy owner refactor is queued in `PRJ-289`
 
 Current topology ownership split:
 

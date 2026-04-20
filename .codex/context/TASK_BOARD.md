@@ -16,8 +16,8 @@ Last updated: 2026-04-20
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
 - The planning queue is complete through `PRJ-299`.
-- `PRJ-287` is complete; `PRJ-288` is currently `READY` and starts adaptive
-  cognition governance from an explicit evidence/influence policy baseline.
+- `PRJ-288` is complete; `PRJ-289` is currently `READY` and starts runtime
+  adoption of the governed adaptive influence policy.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
@@ -28,28 +28,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-288 Define evidence thresholds and influence policy for adaptive signals
-  - Status: READY
-  - Group: Adaptive Cognition Governance
-  - Owner: Planner
-  - Depends on: PRJ-287
-  - Priority: P1
-  - Result:
-    - the repo has one explicit policy for how affective, relation, preference,
-      and theta signals may influence future runtime behavior
-    - adaptive signals stop expanding through undocumented tie-breakers
-  - Validation:
-    - doc-and-context sync plus targeted adaptive-policy review recorded in
-      this slice
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-289 Refactor role, motivation, and planning to consume governed adaptive influence rules
-  - Status: FUTURE
+  - Status: READY
   - Group: Adaptive Cognition Governance
   - Owner: Backend Builder
   - Depends on: PRJ-288
@@ -60,6 +40,12 @@ Last updated: 2026-04-20
     - role and planning behavior remain explainable as the architecture grows
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-290 Extend proactive and attention logic to consume governed relation/theta signals
   - Status: FUTURE
@@ -213,6 +199,22 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-288 Define evidence thresholds and influence policy for adaptive signals
+  - Status: DONE
+  - Group: Adaptive Cognition Governance
+  - Owner: Planner
+  - Depends on: PRJ-287
+  - Priority: P1
+  - Result:
+    - canonical contracts now define one explicit adaptive influence policy for
+      affective, relation, preference, and theta signals
+    - adaptive influence now has documented evidence gates, precedence, and
+      tie-break boundaries instead of undocumented expansion
+  - Validation:
+    - doc-and-context sync plus targeted adaptive-policy review recorded in
+      this slice
+    - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
 
 - [x] PRJ-287 Add production retrieval rollout regressions and sync docs/context
   - Status: DONE

@@ -276,6 +276,23 @@ contract.
 
 ---
 
+## Adaptive Influence Governance Boundary
+
+Adaptive signals (`affective`, `relation`, `preference`, `theta`) must pass
+through one governed influence policy before they shape foreground behavior.
+
+Policy requirements:
+
+- influence is evidence-gated (low-confidence signals remain descriptive-only)
+- precedence is explicit (`affective` before relation/preference, `theta` last)
+- ambiguous-turn tie-break use is explicit and stage-bounded
+- action-boundary and permission-gate contracts remain unchanged
+
+Detailed evidence thresholds and stage-level guardrails are defined in
+`docs/architecture/16_agent_contracts.md` under adaptive influence governance.
+
+---
+
 ## Background Runtime - Canonical Flow
 
 ### Step 1. Reflection Trigger or Schedule
@@ -416,6 +433,8 @@ These rules must remain true:
 5. reflection does not block user-facing response
 6. identity changes more slowly than theta
 7. stored conclusions influence future behavior
+8. adaptive signals influence foreground behavior only through explicit
+   governance policy surfaces
 
 If these invariants break, runtime and architecture are drifting apart.
 

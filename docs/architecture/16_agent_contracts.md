@@ -122,6 +122,53 @@ canonical architecture docs are explicitly revised first.
 
 ---
 
+## Adaptive Influence Governance Contract (PRJ-288 Baseline)
+
+Adaptive signals may influence foreground cognition only through one governed
+policy owner.
+
+Signals below evidence threshold are descriptive-only inputs and must not
+change role, motivation mode, planning steps, or expression tone by
+themselves.
+
+### Signal Families And Evidence Gates
+
+| Signal family | Minimum evidence gate | Allowed influence scope |
+| --- | --- | --- |
+| Affective turn signal (`perception.affective`) | `needs_support=true` or `affect_label` is `support_distress` or `urgent_pressure`; source is explicit (`deterministic_placeholder`, `ai_classifier`, or `fallback`) | role, motivation, planning, expression |
+| Relation cues (`aion_relation`) | relation `confidence >= 0.68`; role collaboration tie-break uses `confidence >= 0.70` | role, planning, expression tie-breaks |
+| Preference conclusions (`response_style`, `collaboration_preference`, `preferred_role`) | conclusion `confidence >= 0.70`; role preference tie-break requires `preferred_role_confidence >= 0.72` | response style, role tie-break, motivation/planning tie-break |
+| Theta adaptive bias (`support_bias`, `analysis_bias`, `execution_bias`) | dominant bias `>= 0.58` | final tie-break for role, motivation, planning, expression |
+
+### Influence Precedence
+
+1. explicit turn semantics and direct user intent are primary owners
+2. affective safety/support signals may override lower adaptive families
+3. relation and preference cues may shape tie-breaks on ambiguous turns
+4. theta may shape only the last adaptive tie-break when stronger cues do not
+   decide the turn
+
+### Stage Gating Rules
+
+1. role may consume preference/relation/theta tie-breaks only on ambiguous turn
+   posture (`question`, `request_help`, or general-topic fallback path)
+2. motivation may consume collaboration/theta tie-breaks only when explicit
+   emotional, execution, and analysis signals did not already determine mode
+3. planning and expression may consume adaptive cues only to shape guidance,
+   tone, and response structure, not to mint new side effects
+4. action remains the sole side-effect owner regardless of adaptive influence
+
+### Guardrails
+
+1. adaptive cues must not bypass attention gates, connector permission gates,
+   or action-boundary intent ownership
+2. adaptive cues must not self-reinforce without reflection-side outcome
+   evidence
+3. undocumented tie-breakers are disallowed; new adaptive influence requires
+   contract updates first
+
+---
+
 ## Attention Inbox And Proposal Handoff Contract
 
 The dual-loop boundary should remain explicit in runtime state.
