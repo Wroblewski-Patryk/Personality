@@ -264,6 +264,54 @@ def test_motivation_engine_keeps_explicit_analysis_signal_over_collaboration_pre
     assert result.mode == "analyze"
 
 
+def test_motivation_engine_uses_delivery_reliability_tie_break_for_ambiguous_turn() -> None:
+    high_trust = MotivationEngine().run(
+        event=_event("help me"),
+        context=_context(),
+        perception=_perception(),
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "high_trust",
+                "confidence": 0.79,
+            }
+        ],
+    )
+    low_trust = MotivationEngine().run(
+        event=_event("help me"),
+        context=_context(),
+        perception=_perception(),
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "low_trust",
+                "confidence": 0.79,
+            }
+        ],
+    )
+
+    assert high_trust.mode == "execute"
+    assert low_trust.mode == "analyze"
+    assert high_trust.urgency > low_trust.urgency
+
+
+def test_motivation_engine_keeps_explicit_execution_signal_over_low_trust_tie_break() -> None:
+    result = MotivationEngine().run(
+        event=_event("build this quickly"),
+        context=_context(),
+        perception=_perception(),
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "low_trust",
+                "confidence": 0.79,
+            }
+        ],
+    )
+
+    assert result.mode == "execute"
+
+
 def test_motivation_engine_boosts_priority_for_related_goal_and_blocked_task() -> None:
     result = MotivationEngine().run(
         event=_event("Can you help me fix the deployment blocker for the MVP?"),

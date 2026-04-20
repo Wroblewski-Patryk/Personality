@@ -1206,9 +1206,23 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-330` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
   passed with `155 passed`.
-- 2026-04-21: `PRJ-331` is the next `READY` slice, focused on extending
-  planning/motivation/proactive trust influence over the relation lifecycle
-  baseline.
+- 2026-04-21: `PRJ-331` is complete: trust governance now shapes proactive
+  interruption behavior through shared relation/theta-aware cost adjustments,
+  trust-calibrated proactive relevance, and low-trust/high-trust outreach
+  output posture (including tone-oriented plan steps).
+- 2026-04-21: `PRJ-331` also extends foreground trust influence so motivation
+  uses delivery-reliability tie-breaks on ambiguous turns while planning adds
+  explicit confidence posture steps (`plan_with_confident_next_step`,
+  `plan_with_cautious_validation`) and trust-aware proactive outreach tone
+  steps (`use_confident_outreach_tone`, `use_low_pressure_outreach_tone`).
+- 2026-04-21: `PRJ-331` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_adaptive_policy.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+  passed with `172 passed`.
+- 2026-04-21: `PRJ-331` required board validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+  passed with `247 passed`.
+- 2026-04-21: `PRJ-332` is now the next `READY` slice, focused on additional
+  relation lifecycle and trust-influence regression depth.
 
 ## Working Agreements
 

@@ -36,27 +36,8 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-331 Extend planning, motivation, and proactive logic with governed trust signals
-  - Status: READY
-  - Group: Relation Lifecycle And Trust Influence
-  - Owner: Backend Builder
-  - Depends on: PRJ-330
-  - Priority: P1
-  - Result:
-    - relation cues can shape interruption cost, planning confidence, and
-      outreach tone through explicit trust rules
-    - trust influence becomes a coded behavior path instead of a future note
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-332 Add relation lifecycle and trust-influence regressions
-  - Status: FUTURE
+  - Status: READY
   - Group: Relation Lifecycle And Trust Influence
   - Owner: QA/Test
   - Depends on: PRJ-331
@@ -67,6 +48,12 @@ Last updated: 2026-04-21
     - relation drift becomes test-visible before it affects production behavior
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py tests/test_expression_agent.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-333 Sync docs/context for relation lifecycle and trust influence
   - Status: FUTURE
@@ -149,6 +136,30 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-331 Extend planning, motivation, and proactive logic with governed trust signals
+  - Status: DONE
+  - Group: Relation Lifecycle And Trust Influence
+  - Owner: Backend Builder
+  - Depends on: PRJ-330
+  - Priority: P1
+  - Result:
+    - proactive trust governance now calibrates outreach behavior through
+      delivery-reliability-aware interruption cost adjustments, relevance
+      penalties/bonuses, and trust-shaped output-type posture for
+      low-trust/high-trust paths
+    - motivation now uses delivery-reliability tie-breaks on ambiguous turns
+      (`high_trust -> execute`, `low_trust -> analyze`) without overriding
+      explicit execution/analysis/emotional signals
+    - planning now encodes explicit trust confidence posture steps
+      (`plan_with_confident_next_step|plan_with_cautious_validation`) and
+      trust-aware proactive outreach tone steps
+      (`use_confident_outreach_tone|use_low_pressure_outreach_tone`)
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_adaptive_policy.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
+      (`172 passed`)
+    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+      (`247 passed`)
 
 - [x] PRJ-330 Implement relation decay and confidence revalidation policy
   - Status: DONE

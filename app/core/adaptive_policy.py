@@ -130,6 +130,11 @@ def proactive_relevance_adjustment(
         adjustment += 0.06
     elif context["relation_delivery_reliability"] == "medium_trust":
         adjustment += 0.03
+    elif context["relation_delivery_reliability"] == "low_trust":
+        if trigger in {"time_checkin", "relation_nudge", "memory_pattern"}:
+            adjustment -= 0.06
+        else:
+            adjustment -= 0.04
 
     if context["relation_support_intensity"] == "high_support" and trigger in {"time_checkin", "relation_nudge"}:
         adjustment += 0.05
@@ -156,7 +161,32 @@ def proactive_relevance_adjustment(
     elif theta_channel == "support" and trigger in {"time_checkin", "relation_nudge"}:
         adjustment += 0.02
 
-    return max(0.0, min(0.15, round(adjustment, 2)))
+    return max(-0.15, min(0.15, round(adjustment, 2)))
+
+
+def proactive_interruption_adjustment(
+    *,
+    relations: Iterable[Mapping[str, object]],
+    theta: Mapping[str, object] | None,
+) -> float:
+    context = proactive_signal_context(relations=relations, theta=theta)
+    adjustment = 0.0
+    delivery_reliability = context["relation_delivery_reliability"]
+
+    if delivery_reliability == "high_trust":
+        adjustment -= 0.08
+    elif delivery_reliability == "medium_trust":
+        adjustment -= 0.03
+    elif delivery_reliability == "low_trust":
+        adjustment += 0.14
+
+    if context["relation_support_intensity"] == "high_support":
+        adjustment += 0.04
+
+    if context["theta_channel"] == "support":
+        adjustment += 0.03
+
+    return max(-0.15, min(0.25, round(adjustment, 2)))
 
 
 def proactive_attention_limits(
@@ -168,7 +198,10 @@ def proactive_attention_limits(
     recent_outbound_limit = PROACTIVE_ATTENTION_RECENT_OUTBOUND_LIMIT
     unanswered_limit = PROACTIVE_ATTENTION_UNANSWERED_LIMIT
 
-    if context["relation_delivery_reliability"] == "medium_trust":
+    if context["relation_delivery_reliability"] == "low_trust":
+        recent_outbound_limit = min(recent_outbound_limit, 1)
+        unanswered_limit = min(unanswered_limit, 1)
+    elif context["relation_delivery_reliability"] == "medium_trust":
         recent_outbound_limit = min(recent_outbound_limit, 2)
 
     if context["relation_support_intensity"] == "high_support" or context["theta_channel"] == "support":

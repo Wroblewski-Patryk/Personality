@@ -100,6 +100,7 @@ class PlanningAgent:
                 motivation=motivation,
                 proactive_decision=proactive_decision,
                 user_preferences=user_preferences or {},
+                relations=relations or [],
             )
 
         if motivation.mode == "clarify":
@@ -162,9 +163,22 @@ class PlanningAgent:
         if relation_support == "high_support" and "maintain_supportive_stance" not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, "maintain_supportive_stance")
+        trust_confidence_step = self._delivery_reliability_confidence_step(
+            relation_delivery=relation_delivery,
+            steps=steps,
+        )
+        if trust_confidence_step is not None and trust_confidence_step not in steps:
+            prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
+            steps.insert(prepare_index, trust_confidence_step)
         if relation_delivery == "high_trust" and "favor_concrete_next_step" not in steps:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, "favor_concrete_next_step")
+        goal = self._apply_delivery_reliability_goal(
+            goal=goal,
+            relation_delivery=relation_delivery or "",
+            motivation=motivation,
+            role=role,
+        )
 
         theta_step = self._theta_plan_step(theta=theta, steps=steps)
         if theta_step is not None and theta_step not in steps:
@@ -330,9 +344,11 @@ class PlanningAgent:
         motivation: MotivationOutput,
         proactive_decision: ProactiveDecisionOutput,
         user_preferences: dict,
+        relations: list[dict],
     ) -> PlanOutput:
         base_steps = ["evaluate_proactive_trigger", "assess_user_context"]
         attention_gate = event.payload.get("attention_gate") if isinstance(event.payload, dict) else {}
+        relation_delivery = relation_value(relations=relations, relation_type="delivery_reliability")
         if isinstance(attention_gate, dict) and not bool(attention_gate.get("allowed", True)):
             return PlanOutput(
                 goal="Defer proactive outreach until attention-gate conditions are satisfied.",
@@ -389,6 +405,9 @@ class PlanningAgent:
             steps.append("mark_high_priority_proactive")
         if motivation.mode == "execute":
             steps.append("prioritize_immediate_attention")
+        trust_tone_step = self._proactive_trust_tone_step(relation_delivery=relation_delivery or "")
+        if trust_tone_step is not None and trust_tone_step not in steps:
+            steps.append(trust_tone_step)
         steps.append("prepare_response")
 
         needs_response = True
@@ -399,8 +418,12 @@ class PlanningAgent:
         )
         if needs_action:
             steps.append("send_telegram_message")
-        return PlanOutput(
+        goal = self._apply_proactive_delivery_reliability_goal(
             goal=goal_map.get(output_type, goal_map["suggestion"]),
+            relation_delivery=relation_delivery or "",
+        )
+        return PlanOutput(
+            goal=goal,
             steps=steps,
             needs_action=needs_action,
             needs_response=needs_response,
@@ -853,6 +876,47 @@ class PlanningAgent:
             if motivation.mode == "analyze" or role.selected in {"analyst", "mentor"}:
                 return "Explain the situation clearly with a guided step by step path."
             return "Guide the user through the next step in a calm, step by step way."
+        return goal
+
+    def _delivery_reliability_confidence_step(self, relation_delivery: str, steps: list[str]) -> str | None:
+        if relation_delivery == "high_trust":
+            if "plan_with_confident_next_step" in steps:
+                return None
+            return "plan_with_confident_next_step"
+        if relation_delivery == "low_trust":
+            if "plan_with_cautious_validation" in steps:
+                return None
+            return "plan_with_cautious_validation"
+        return None
+
+    def _apply_delivery_reliability_goal(
+        self,
+        *,
+        goal: str,
+        relation_delivery: str,
+        motivation: MotivationOutput,
+        role: RoleOutput,
+    ) -> str:
+        if relation_delivery == "high_trust":
+            if motivation.mode == "execute" or role.selected == "executor":
+                return "Move the requested task toward execution with confidence and the smallest concrete next step."
+            return f"{goal} Keep planning confidence high and finish with one concrete next step."
+        if relation_delivery == "low_trust":
+            return f"{goal} Keep confidence calibrated: make assumptions explicit and include one quick verification check."
+        return goal
+
+    def _proactive_trust_tone_step(self, *, relation_delivery: str) -> str | None:
+        if relation_delivery == "high_trust":
+            return "use_confident_outreach_tone"
+        if relation_delivery == "low_trust":
+            return "use_low_pressure_outreach_tone"
+        return None
+
+    def _apply_proactive_delivery_reliability_goal(self, *, goal: str, relation_delivery: str) -> str:
+        if relation_delivery == "high_trust":
+            return f"{goal} Keep the outreach confident and action-oriented."
+        if relation_delivery == "low_trust":
+            return f"{goal} Keep the outreach low-pressure and verification-oriented."
         return goal
 
     def _select_relevant_goal(self, event: Event, active_goals: list[dict]) -> dict | None:

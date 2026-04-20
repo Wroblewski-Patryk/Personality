@@ -8,6 +8,7 @@ from app.core.adaptive_policy import (
     dominant_theta_channel,
     is_role_adaptive_tie_break_turn,
     proactive_attention_limits,
+    proactive_interruption_adjustment,
     proactive_relevance_adjustment,
     relation_value,
     should_apply_motivation_adaptive_tie_break,
@@ -164,6 +165,48 @@ def test_proactive_relevance_adjustment_uses_relation_and_theta_policy_context()
     assert adaptive >= 0.1
 
 
+def test_proactive_relevance_adjustment_can_reduce_low_trust_outreach_relevance() -> None:
+    adjusted = proactive_relevance_adjustment(
+        trigger="relation_nudge",
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "low_trust",
+                "confidence": 0.79,
+            }
+        ],
+        theta=None,
+    )
+
+    assert adjusted < 0.0
+
+
+def test_proactive_interruption_adjustment_is_higher_for_low_trust_than_high_trust() -> None:
+    high_trust = proactive_interruption_adjustment(
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "high_trust",
+                "confidence": 0.79,
+            }
+        ],
+        theta=None,
+    )
+    low_trust = proactive_interruption_adjustment(
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "low_trust",
+                "confidence": 0.79,
+            }
+        ],
+        theta=None,
+    )
+
+    assert high_trust < 0.0
+    assert low_trust > 0.0
+
+
 def test_proactive_attention_limits_only_tighten_guardrails() -> None:
     baseline = proactive_attention_limits(relations=[], theta=None)
     adaptive = proactive_attention_limits(
@@ -185,4 +228,20 @@ def test_proactive_attention_limits_only_tighten_guardrails() -> None:
     assert baseline["unanswered_proactive_limit"] == PROACTIVE_ATTENTION_UNANSWERED_LIMIT
     assert adaptive["recent_outbound_limit"] <= PROACTIVE_ATTENTION_RECENT_OUTBOUND_LIMIT
     assert adaptive["unanswered_proactive_limit"] <= PROACTIVE_ATTENTION_UNANSWERED_LIMIT
+    assert adaptive["unanswered_proactive_limit"] == 1
+
+
+def test_proactive_attention_limits_are_strictest_for_low_trust_delivery() -> None:
+    adaptive = proactive_attention_limits(
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "low_trust",
+                "confidence": 0.81,
+            }
+        ],
+        theta=None,
+    )
+
+    assert adaptive["recent_outbound_limit"] == 1
     assert adaptive["unanswered_proactive_limit"] == 1

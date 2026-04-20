@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from app.core.adaptive_policy import proactive_relevance_adjustment
+from app.core.adaptive_policy import (
+    proactive_interruption_adjustment,
+    proactive_relevance_adjustment,
+    proactive_signal_context,
+)
 from app.core.contracts import (
     ContextOutput,
     Event,
@@ -41,7 +45,13 @@ class ProactiveDecisionEngine:
         proactive = payload.get("proactive")
         proactive_payload = proactive if isinstance(proactive, dict) else {}
         trigger = str(proactive_payload.get("trigger", "time_checkin") or "time_checkin").strip().lower()
-        output_type = self.OUTPUT_TRIGGER_MAP.get(trigger, "suggestion")
+        signal_context = proactive_signal_context(relations=relations or [], theta=theta)
+        delivery_reliability = signal_context["relation_delivery_reliability"]
+        output_type = self._trust_calibrated_output_type(
+            trigger=trigger,
+            output_type=self.OUTPUT_TRIGGER_MAP.get(trigger, "suggestion"),
+            delivery_reliability=delivery_reliability,
+        )
 
         importance = self._clamp_unit(
             proactive_payload.get("importance", 0.55 + min(max(context.risk_level, 0.0), 0.2))
@@ -59,7 +69,11 @@ class ProactiveDecisionEngine:
             active_tasks=active_tasks or [],
         )
         user_context = proactive_payload.get("user_context") if isinstance(proactive_payload.get("user_context"), dict) else {}
-        interruption_cost = self._interruption_cost(user_context=user_context)
+        interruption_cost = self._interruption_cost(
+            user_context=user_context,
+            relations=relations or [],
+            theta=theta,
+        )
 
         decision_score = round((importance * 0.45 + urgency * 0.35 + relevance * 0.2) - interruption_cost, 2)
         threshold = 0.2 if output_type == "warning" else 0.28
@@ -72,10 +86,18 @@ class ProactiveDecisionEngine:
             mode = "strong"
         elif urgency >= 0.6 or output_type in {"reminder", "insight"}:
             mode = "medium"
+        if delivery_reliability == "low_trust":
+            mode = "soft"
 
         reason = f"{trigger}_selected"
+        if should_interrupt and delivery_reliability == "low_trust":
+            reason = f"{trigger}_selected_low_trust_calibrated"
+        elif should_interrupt and delivery_reliability == "high_trust":
+            reason = f"{trigger}_selected_high_trust"
         if not should_interrupt:
             reason = "interruption_cost_too_high"
+            if delivery_reliability == "low_trust":
+                reason = "interruption_cost_too_high_low_trust"
 
         return ProactiveDecisionOutput(
             trigger=trigger,
@@ -123,7 +145,13 @@ class ProactiveDecisionEngine:
         )
         return self._clamp_unit(relevance)
 
-    def _interruption_cost(self, *, user_context: dict) -> float:
+    def _interruption_cost(
+        self,
+        *,
+        user_context: dict,
+        relations: list[dict],
+        theta: dict | None,
+    ) -> float:
         interruption_cost = 0.18
         if bool(user_context.get("quiet_hours", False)):
             interruption_cost += 0.42
@@ -142,7 +170,29 @@ class ProactiveDecisionEngine:
             interruption_cost += 0.12
         if unanswered_proactive_count >= 1:
             interruption_cost += 0.16
+        interruption_cost += proactive_interruption_adjustment(
+            relations=relations,
+            theta=theta,
+        )
         return self._clamp_unit(interruption_cost)
+
+    def _trust_calibrated_output_type(
+        self,
+        *,
+        trigger: str,
+        output_type: ProactiveOutputType,
+        delivery_reliability: str | None,
+    ) -> ProactiveOutputType:
+        if delivery_reliability == "low_trust":
+            if output_type == "encouragement":
+                return "question"
+            if output_type == "warning":
+                if trigger in {"time_checkin", "relation_nudge", "memory_pattern"}:
+                    return "question"
+                return "reminder"
+        if delivery_reliability == "high_trust" and trigger == "relation_nudge" and output_type in {"suggestion", "question"}:
+            return "encouragement"
+        return output_type
 
     def _safe_int(self, value: object) -> int:
         try:

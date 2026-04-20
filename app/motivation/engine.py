@@ -1,4 +1,8 @@
-from app.core.adaptive_policy import dominant_theta_channel, should_apply_motivation_adaptive_tie_break
+from app.core.adaptive_policy import (
+    dominant_theta_channel,
+    relation_value,
+    should_apply_motivation_adaptive_tie_break,
+)
 from app.core.contracts import ContextOutput, Event, MotivationOutput, PerceptionOutput
 from app.proactive.engine import ProactiveDecisionEngine
 from app.utils.goal_task_selection import (
@@ -119,6 +123,12 @@ class MotivationEngine:
         has_positive_signal = affective_label == "positive_engagement"
         is_brief_turn = len(lowered.split()) <= 4
         collaboration_preference = str((user_preferences or {}).get("collaboration_preference", "")).strip().lower()
+        relation_delivery_reliability = str((user_preferences or {}).get("relation_delivery_reliability", "")).strip().lower()
+        if not relation_delivery_reliability:
+            relation_delivery_reliability = (
+                relation_value(relations=relations or [], relation_type="delivery_reliability")
+                or ""
+            )
         affective_support_pattern = str((user_preferences or {}).get("affective_support_pattern", "")).strip().lower()
         affective_support_sensitivity = str(
             (user_preferences or {}).get("affective_support_sensitivity", "")
@@ -472,6 +482,11 @@ class MotivationEngine:
             if adaptive_tie_break_allowed
             else None
         )
+        delivery_reliability_mode = (
+            self._delivery_reliability_mode(relation_delivery_reliability)
+            if adaptive_tie_break_allowed
+            else None
+        )
 
         if has_emotional_signal:
             mode = "respond"
@@ -485,6 +500,16 @@ class MotivationEngine:
             if collaboration_mode == "execute":
                 urgency += 0.08
                 arousal += 0.05
+        elif delivery_reliability_mode:
+            mode = delivery_reliability_mode
+            if delivery_reliability_mode == "execute":
+                importance += 0.04
+                urgency += 0.06
+                arousal += 0.04
+            else:
+                importance += 0.02
+                urgency -= 0.04
+                valence = min(valence, 0.02)
         elif theta_mode:
             mode = theta_mode
             importance += 0.05
@@ -534,6 +559,13 @@ class MotivationEngine:
         if collaboration_preference == "hands_on":
             return "execute"
         if collaboration_preference == "guided":
+            return "analyze"
+        return None
+
+    def _delivery_reliability_mode(self, relation_delivery_reliability: str) -> str | None:
+        if relation_delivery_reliability == "high_trust":
+            return "execute"
+        if relation_delivery_reliability == "low_trust":
             return "analyze"
         return None
 

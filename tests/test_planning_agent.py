@@ -642,6 +642,52 @@ def test_planning_agent_ignores_subthreshold_relation_signals_for_collaboration_
     ]
 
 
+def test_planning_agent_calibrates_planning_confidence_from_delivery_reliability() -> None:
+    high_trust = PlanningAgent().run(
+        event=_event(text="help me with this"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.52,
+            urgency=0.2,
+            valence=0.05,
+            arousal=0.3,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.6),
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "high_trust",
+                "confidence": 0.79,
+            }
+        ],
+    )
+    low_trust = PlanningAgent().run(
+        event=_event(text="help me with this"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.52,
+            urgency=0.2,
+            valence=0.05,
+            arousal=0.3,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.6),
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "low_trust",
+                "confidence": 0.79,
+            }
+        ],
+    )
+
+    assert "plan_with_confident_next_step" in high_trust.steps
+    assert "favor_concrete_next_step" in high_trust.steps
+    assert "plan_with_cautious_validation" in low_trust.steps
+    assert "quick verification check" in low_trust.goal.lower()
+
+
 def test_planning_agent_aligns_with_active_goal_and_blocked_task() -> None:
     result = PlanningAgent().run(
         event=_event(text="Can you help me fix the deployment blocker for the MVP?"),
@@ -1449,6 +1495,53 @@ def test_planning_agent_builds_proactive_warning_plan_when_interrupt_is_allowed(
     assert result.needs_response is True
     assert result.needs_action is True
     assert result.domain_intents[0].intent_type == "noop"
+
+
+def test_planning_agent_calibrates_proactive_outreach_tone_for_low_trust_relation() -> None:
+    result = PlanningAgent().run(
+        event=_scheduler_event(
+            {
+                "text": "scheduler proactive tick",
+                "chat_id": 123456,
+                "proactive": {
+                    "trigger": "task_blocked",
+                    "importance": 0.92,
+                    "urgency": 0.88,
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": "active",
+                        "recent_outbound_count": 0,
+                        "unanswered_proactive_count": 0,
+                    },
+                },
+            }
+        ),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.9,
+            urgency=0.9,
+            valence=-0.1,
+            arousal=0.8,
+            mode="execute",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.8),
+        user_preferences={"proactive_opt_in": True},
+        relations=[
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "low_trust",
+                "confidence": 0.8,
+            }
+        ],
+        active_tasks=[{"id": 21, "name": "fix deploy blocker", "status": "blocked"}],
+    )
+
+    assert result.proactive_decision is not None
+    assert result.proactive_decision.output_type == "reminder"
+    assert result.proactive_decision.should_interrupt is True
+    assert "use_low_pressure_outreach_tone" in result.steps
+    assert "low-pressure and verification-oriented" in result.goal.lower()
 
 
 def test_planning_agent_defers_proactive_outreach_when_interruption_cost_is_high() -> None:
