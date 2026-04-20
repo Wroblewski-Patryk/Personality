@@ -16,8 +16,8 @@ Last updated: 2026-04-20
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
 - The planning queue is complete through `PRJ-299`.
-- `PRJ-290` is complete; `PRJ-291` is currently `READY` and closes adaptive
-  governance rollout with regression hardening and docs/context sync.
+- `PRJ-291` is complete; `PRJ-292` is currently `READY` and starts the
+  attention/proposal execution-boundary contract lane.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
@@ -28,27 +28,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-291 Add adaptive-governance regressions and sync docs/context
-  - Status: READY
-  - Group: Adaptive Cognition Governance
-  - Owner: QA/Test + Product Docs
-  - Depends on: PRJ-290
-  - Priority: P1
-  - Result:
-    - anti-feedback-loop, cross-goal-leakage, and adaptive influence scope
-      expectations are pinned by regression coverage
-    - docs and context describe the same adaptive governance rules
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-292 Define a durable proposal lifecycle and canonical turn-assembly ownership contract
-  - Status: FUTURE
+  - Status: READY
   - Group: Attention And Proposal Execution Boundary
   - Owner: Planner
   - Depends on: PRJ-291
@@ -61,6 +42,12 @@ Last updated: 2026-04-20
   - Validation:
     - doc-and-context sync plus targeted dual-loop contract review recorded in
       this slice
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-293 Implement end-to-end proposal persistence and conscious handoff decisions
   - Status: FUTURE
@@ -173,6 +160,19 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-291 Add adaptive-governance regressions and sync docs/context
+  - Status: DONE
+  - Group: Adaptive Cognition Governance
+  - Owner: QA/Test + Product Docs
+  - Depends on: PRJ-290
+  - Priority: P1
+  - Result:
+    - anti-feedback-loop, cross-goal-leakage, and adaptive influence scope
+      expectations are pinned by regression coverage
+    - docs and context describe the same adaptive governance rules
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_role_agent.py tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_runtime_pipeline.py`
 
 - [x] PRJ-288 Define evidence thresholds and influence policy for adaptive signals
   - Status: DONE

@@ -195,6 +195,21 @@ def test_motivation_engine_uses_theta_bias_for_ambiguous_brief_turn() -> None:
     assert result.importance >= 0.5
 
 
+def test_motivation_engine_ignores_subthreshold_theta_bias_for_ambiguous_brief_turn() -> None:
+    result = MotivationEngine().run(
+        event=_event("help me"),
+        context=_context(),
+        perception=_perception(),
+        theta={
+            "support_bias": 0.14,
+            "analysis_bias": 0.57,
+            "execution_bias": 0.29,
+        },
+    )
+
+    assert result.mode == "respond"
+
+
 def test_motivation_engine_keeps_explicit_execution_signal_over_theta_support_bias() -> None:
     result = MotivationEngine().run(
         event=_event("deploy the fix now"),
@@ -874,3 +889,70 @@ def test_motivation_engine_proactive_decision_can_use_relation_and_theta_context
 
     assert baseline.mode == "ignore"
     assert adaptive.mode == "execute"
+
+
+def test_motivation_engine_proactive_decision_ignores_subthreshold_relation_and_theta_context() -> None:
+    baseline = MotivationEngine().run(
+        event=_scheduler_event(
+            {
+                "text": "scheduler proactive tick",
+                "proactive": {
+                    "trigger": "task_blocked",
+                    "importance": 0.52,
+                    "urgency": 0.43,
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": "active",
+                        "recent_outbound_count": 2,
+                        "unanswered_proactive_count": 1,
+                    },
+                },
+            }
+        ),
+        context=_context(),
+        perception=_perception(),
+        active_tasks=[{"id": 11, "name": "fix deploy blocker", "status": "blocked"}],
+    )
+    constrained = MotivationEngine().run(
+        event=_scheduler_event(
+            {
+                "text": "scheduler proactive tick",
+                "proactive": {
+                    "trigger": "task_blocked",
+                    "importance": 0.52,
+                    "urgency": 0.43,
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": "active",
+                        "recent_outbound_count": 2,
+                        "unanswered_proactive_count": 1,
+                    },
+                },
+            }
+        ),
+        context=_context(),
+        perception=_perception(),
+        relations=[
+            {
+                "relation_type": "collaboration_dynamic",
+                "relation_value": "hands_on",
+                "confidence": 0.67,
+            },
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "high_trust",
+                "confidence": 0.67,
+            },
+        ],
+        theta={
+            "support_bias": 0.12,
+            "analysis_bias": 0.31,
+            "execution_bias": 0.57,
+        },
+        active_tasks=[{"id": 11, "name": "fix deploy blocker", "status": "blocked"}],
+    )
+
+    assert baseline.mode == "ignore"
+    assert constrained.mode == "ignore"

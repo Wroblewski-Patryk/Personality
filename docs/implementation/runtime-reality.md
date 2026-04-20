@@ -526,6 +526,9 @@ Current behavior:
   evidence gating, theta dominance, and adaptive tie-break posture checks
 - proactive decision and scheduler attention gate now consume the same policy
   owner for relation/theta cues through explicit helper surfaces
+- regression coverage now pins anti-feedback-loop behavior,
+  goal-scoped relation anti-leakage for proactive attention gating, and
+  sub-threshold adaptive influence boundaries across role/motivation/planning
 
 Current topology ownership split:
 

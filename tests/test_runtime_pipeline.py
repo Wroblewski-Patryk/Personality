@@ -336,7 +336,25 @@ class FakeHybridMemoryRepository(FakeMemoryRepository):
         limit: int = 8,
     ) -> list[dict]:
         threshold = 0.0 if min_confidence is None else float(min_confidence)
-        rows = [item for item in self.relations if float(item.get("confidence", 0.0) or 0.0) >= threshold]
+        normalized_scope_type, normalized_scope_key = self._normalize_scope(scope_type=scope_type, scope_key=scope_key)
+        has_scope = scope_type is not None or scope_key is not None
+        rows: list[dict] = []
+        for item in self.relations:
+            confidence = float(item.get("confidence", 0.0) or 0.0)
+            if confidence < threshold:
+                continue
+            if not has_scope:
+                rows.append(item)
+                continue
+            item_scope_type, item_scope_key = self._normalize_scope(
+                scope_type=str(item.get("scope_type") or "global"),
+                scope_key=str(item.get("scope_key") or "global"),
+            )
+            if item_scope_type == normalized_scope_type and item_scope_key == normalized_scope_key:
+                rows.append(item)
+                continue
+            if include_global and item_scope_type == "global":
+                rows.append(item)
         return rows[:limit]
 
 
@@ -1413,6 +1431,95 @@ async def test_runtime_pipeline_uses_primary_goal_scoped_state_without_cross_goa
     assert result.motivation.mode == "analyze"
     assert "recover_goal_progress" in result.plan.steps
     assert "continue_goal_execution" not in result.plan.steps
+    assert result.action_result.status == "success"
+
+
+async def test_runtime_pipeline_uses_goal_scoped_relations_without_cross_goal_leakage() -> None:
+    memory = FakeHybridMemoryRepository(recent_memory=[])
+    memory.user_preferences = {
+        "proactive_opt_in": True,
+        "proactive_recent_outbound_limit": 3,
+        "proactive_unanswered_limit": 2,
+    }
+    memory.active_goals = [
+        {
+            "id": 11,
+            "user_id": "u-1",
+            "name": "ship the MVP this week",
+            "description": "User-declared goal: ship the MVP this week",
+            "priority": "high",
+            "status": "active",
+            "goal_type": "operational",
+        },
+        {
+            "id": 22,
+            "user_id": "u-1",
+            "name": "prepare post-launch documentation",
+            "description": "User-declared goal: prepare post-launch documentation",
+            "priority": "medium",
+            "status": "active",
+            "goal_type": "operational",
+        },
+    ]
+    memory.relations = [
+        {
+            "relation_type": "support_intensity_preference",
+            "relation_value": "high_support",
+            "confidence": 0.78,
+            "scope_type": "goal",
+            "scope_key": "22",
+        },
+        {
+            "relation_type": "delivery_reliability",
+            "relation_value": "medium_trust",
+            "confidence": 0.74,
+            "scope_type": "goal",
+            "scope_key": "22",
+        },
+    ]
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    event = build_scheduler_event(
+        subsource="proactive_tick",
+        payload={
+            "text": "check goal stagnation",
+            "chat_id": 123456,
+            "proactive_trigger": "goal_stagnation",
+            "importance": 0.84,
+            "urgency": 0.7,
+            "user_context": {
+                "quiet_hours": False,
+                "focus_mode": False,
+                "recent_user_activity": "active",
+                "recent_outbound_count": 1,
+                "unanswered_proactive_count": 1,
+            },
+        },
+    )
+
+    result = await runtime.run(event)
+
+    assert result.plan.proactive_decision is not None
+    assert result.plan.proactive_decision.should_interrupt is True
+    assert result.event.payload["attention_gate"]["allowed"] is True
+    assert result.event.payload["attention_gate"]["reason"] == "attention_gate_pass"
+    assert result.event.payload["attention_gate"]["unanswered_proactive_limit"] == 2
+    assert result.event.payload["attention_gate"]["relation_support_intensity"] is None
+    assert result.event.payload["attention_gate"]["relation_delivery_reliability"] is None
+    assert "respect_attention_gate" not in result.plan.steps
+    assert result.plan.proactive_delivery_guard is not None
+    assert result.plan.proactive_delivery_guard.allowed is True
     assert result.action_result.status == "success"
 
 

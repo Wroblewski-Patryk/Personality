@@ -196,3 +196,31 @@ def test_role_agent_uses_relation_collaboration_signal_for_ambiguous_question() 
     )
 
     assert result.selected == "mentor"
+
+
+def test_role_agent_ignores_subthreshold_relation_collaboration_signal() -> None:
+    result = RoleAgent().run(
+        event=_event("Can you help me with this?"),
+        perception=_perception("question", "general", "request_help"),
+        context=_context(),
+        relations=[
+            {
+                "relation_type": "collaboration_dynamic",
+                "relation_value": "hands_on",
+                "confidence": 0.69,
+            }
+        ],
+    )
+
+    assert result.selected == "mentor"
+
+
+def test_role_agent_ignores_subthreshold_theta_bias_for_ambiguous_question() -> None:
+    result = RoleAgent().run(
+        event=_event("Can you help me with this?"),
+        perception=_perception("question", "general", "request_help"),
+        context=_context(),
+        theta={"support_bias": 0.12, "analysis_bias": 0.57, "execution_bias": 0.31},
+    )
+
+    assert result.selected == "mentor"

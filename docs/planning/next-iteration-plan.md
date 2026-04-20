@@ -1244,7 +1244,7 @@ further through runtime behavior.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_adaptive_policy.py`
 
-- `PRJ-291` Add adaptive-governance regressions and sync docs/context.
+- `PRJ-291` is complete.
   - Result:
     - anti-feedback-loop, cross-goal-leakage, and adaptive influence scope
       expectations are pinned by regression coverage
@@ -1340,10 +1340,10 @@ not around temporary convenience defaults.
 ## Next Derived Slice
 
 The planning queue is complete through `PRJ-299`.
-`PRJ-291` is currently the execution-ready slice in the board.
+`PRJ-292` is currently the execution-ready slice in the board.
 Before the next implementation slice:
 
-- take `PRJ-291` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-292` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to that one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 

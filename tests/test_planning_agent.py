@@ -446,6 +446,32 @@ def test_planning_agent_adds_theta_reasoning_step_for_generic_turn() -> None:
     ]
 
 
+def test_planning_agent_ignores_subthreshold_theta_for_generic_turn() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="help me"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.5,
+            urgency=0.2,
+            valence=0.05,
+            arousal=0.3,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.6),
+        theta={
+            "support_bias": 0.15,
+            "analysis_bias": 0.57,
+            "execution_bias": 0.28,
+        },
+    )
+
+    assert result.steps == [
+        "interpret_event",
+        "review_context",
+        "prepare_response",
+    ]
+
+
 def test_planning_agent_uses_guided_collaboration_preference_for_generic_turn() -> None:
     result = PlanningAgent().run(
         event=_event(text="help me with this"),
@@ -523,6 +549,45 @@ def test_planning_agent_uses_relation_signals_for_collaboration_and_support_step
     assert result.goal == "Guide the user through the next step in a calm, step by step way."
     assert "favor_guided_walkthrough" in result.steps
     assert "maintain_supportive_stance" in result.steps
+
+
+def test_planning_agent_ignores_subthreshold_relation_signals_for_collaboration_and_support_steps() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="help me with this"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.52,
+            urgency=0.2,
+            valence=0.05,
+            arousal=0.3,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.6),
+        relations=[
+            {
+                "relation_type": "collaboration_dynamic",
+                "relation_value": "guided",
+                "confidence": 0.67,
+            },
+            {
+                "relation_type": "support_intensity_preference",
+                "relation_value": "high_support",
+                "confidence": 0.67,
+            },
+            {
+                "relation_type": "delivery_reliability",
+                "relation_value": "high_trust",
+                "confidence": 0.67,
+            },
+        ],
+    )
+
+    assert result.goal == "Provide a clear and useful response to the user event."
+    assert result.steps == [
+        "interpret_event",
+        "review_context",
+        "prepare_response",
+    ]
 
 
 def test_planning_agent_aligns_with_active_goal_and_blocked_task() -> None:
