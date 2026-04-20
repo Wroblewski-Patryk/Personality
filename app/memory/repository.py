@@ -210,6 +210,39 @@ class MemoryRepository:
             await session.commit()
             await session.refresh(row)
 
+        if "relation" in self.embedding_source_kinds:
+            relation_content = f"{row.relation_type} {row.relation_value}".strip()
+            relation_embedding, relation_embedding_status = self._materialize_embedding(
+                content=relation_content
+            )
+            await self.upsert_semantic_embedding(
+                user_id=row.user_id,
+                source_kind="relation",
+                source_id=f"relation:{row.id}",
+                source_event_id=row.supporting_event_id,
+                scope_type=row.scope_type,
+                scope_key=row.scope_key,
+                content=relation_content,
+                embedding=relation_embedding,
+                embedding_model=self.embedding_posture["model_effective"],
+                embedding_dimensions=self.embedding_dimensions,
+                metadata={
+                    "relation_type": row.relation_type,
+                    "relation_value": row.relation_value,
+                    "confidence": row.confidence,
+                    "source": row.source,
+                    "evidence_count": row.evidence_count,
+                    "decay_rate": row.decay_rate,
+                    "embedding_status": relation_embedding_status,
+                    "embedding_refresh_mode": self.embedding_refresh_mode,
+                    "embedding_provider_requested": self.embedding_posture["provider_requested"],
+                    "embedding_provider_effective": self.embedding_posture["provider_effective"],
+                    "embedding_provider_hint": self.embedding_posture["provider_hint"],
+                    "embedding_model_requested": self.embedding_posture["model_requested"],
+                    "embedding_model_effective": self.embedding_posture["model_effective"],
+                },
+            )
+
         return self._serialize_relation(row)
 
     async def get_user_relations(
@@ -483,7 +516,7 @@ class MemoryRepository:
             vector_hits = await self.query_semantic_similarity(
                 user_id=user_id,
                 query_embedding=query_embedding,
-                source_kinds=["semantic", "affective"],
+                source_kinds=["semantic", "affective", "relation"],
                 scope_type=scope_type,
                 scope_key=scope_key,
                 include_global=include_global,
@@ -1327,7 +1360,7 @@ class MemoryRepository:
                     "scope_key": row.scope_key,
                     "updated_at": row.updated_at,
                 }
-            if source_kind == "semantic":
+            if source_kind in {"semantic", "affective"}:
                 embedding, embedding_status = self._materialize_embedding(content=row.content)
             else:
                 embedding = None

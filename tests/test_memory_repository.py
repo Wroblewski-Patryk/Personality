@@ -145,7 +145,7 @@ async def test_memory_repository_upserts_and_queries_semantic_embeddings(tmp_pat
     await engine.dispose()
 
 
-async def test_memory_repository_upsert_conclusion_creates_embedding_shell_for_affective_layers(tmp_path) -> None:
+async def test_memory_repository_upsert_conclusion_materializes_affective_embedding_on_write(tmp_path) -> None:
     database_path = tmp_path / "memory-conclusion-embedding-shell.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
     session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
@@ -171,10 +171,11 @@ async def test_memory_repository_upsert_conclusion_creates_embedding_shell_for_a
     assert len(rows) == 1
     assert rows[0].source_kind == "affective"
     assert rows[0].source_id.startswith("conclusion:")
-    assert rows[0].embedding is None
+    assert isinstance(rows[0].embedding, list)
+    assert len(rows[0].embedding) == 32
     assert rows[0].embedding_model == "deterministic-v1"
     assert rows[0].embedding_dimensions == 32
-    assert rows[0].metadata_json["embedding_status"] == "pending_vector_materialization"
+    assert rows[0].metadata_json["embedding_status"] == "materialized_on_write"
     assert rows[0].metadata_json["embedding_refresh_mode"] == "on_write"
     assert rows[0].metadata_json["embedding_provider_requested"] == "deterministic"
     assert rows[0].metadata_json["embedding_provider_effective"] == "deterministic"
@@ -301,6 +302,45 @@ async def test_memory_repository_upsert_conclusion_keeps_semantic_embedding_pend
 
     assert len(rows) == 1
     assert rows[0].source_kind == "semantic"
+    assert rows[0].embedding is None
+    assert rows[0].embedding_model == "deterministic-v1"
+    assert rows[0].embedding_dimensions == 32
+    assert rows[0].metadata_json["embedding_status"] == "pending_manual_refresh"
+    assert rows[0].metadata_json["embedding_refresh_mode"] == "manual"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_upsert_conclusion_keeps_affective_embedding_pending_in_manual_refresh_mode(
+    tmp_path,
+) -> None:
+    database_path = tmp_path / "memory-affective-embedding-manual-refresh.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(
+        session_factory=session_factory,
+        embedding_refresh_mode="manual",
+    )
+    await repository.create_tables(engine)
+
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="affective_support_pattern",
+        content="recurring_distress",
+        confidence=0.81,
+        source="background_reflection",
+        supporting_event_id="evt-affective-manual",
+    )
+
+    async with session_factory() as session:
+        rows = (
+            await session.execute(
+                select(AionSemanticEmbedding).order_by(AionSemanticEmbedding.id.asc())
+            )
+        ).scalars().all()
+
+    assert len(rows) == 1
+    assert rows[0].source_kind == "affective"
     assert rows[0].embedding is None
     assert rows[0].embedding_model == "deterministic-v1"
     assert rows[0].embedding_dimensions == 32
@@ -455,6 +495,94 @@ async def test_memory_repository_upserts_and_reads_scoped_relations(tmp_path) ->
     assert len(strict_goal_relations) == 1
     assert strict_goal_relations[0]["scope_type"] == "goal"
     assert strict_goal_relations[0]["scope_key"] == "11"
+
+    async with session_factory() as session:
+        embedding_rows = (
+            await session.execute(
+                select(AionSemanticEmbedding).order_by(AionSemanticEmbedding.id.asc())
+            )
+        ).scalars().all()
+
+    assert embedding_rows == []
+
+    await engine.dispose()
+
+
+async def test_memory_repository_upsert_relation_materializes_embedding_when_relation_source_is_enabled(
+    tmp_path,
+) -> None:
+    database_path = tmp_path / "memory-relations-embedding.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(
+        session_factory=session_factory,
+        embedding_source_kinds=("episodic", "semantic", "affective", "relation"),
+    )
+    await repository.create_tables(engine)
+
+    await repository.upsert_relation(
+        user_id="u-1",
+        relation_type="collaboration_dynamic",
+        relation_value="guided",
+        confidence=0.78,
+        source="background_reflection",
+        supporting_event_id="evt-rel-embed",
+    )
+
+    async with session_factory() as session:
+        rows = (
+            await session.execute(
+                select(AionSemanticEmbedding).order_by(AionSemanticEmbedding.id.asc())
+            )
+        ).scalars().all()
+
+    assert len(rows) == 1
+    assert rows[0].source_kind == "relation"
+    assert rows[0].source_id.startswith("relation:")
+    assert isinstance(rows[0].embedding, list)
+    assert len(rows[0].embedding) == 32
+    assert rows[0].metadata_json["embedding_status"] == "materialized_on_write"
+    assert rows[0].metadata_json["embedding_refresh_mode"] == "on_write"
+    assert rows[0].metadata_json["relation_type"] == "collaboration_dynamic"
+    assert rows[0].metadata_json["relation_value"] == "guided"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_upsert_relation_keeps_embedding_pending_in_manual_refresh_mode(
+    tmp_path,
+) -> None:
+    database_path = tmp_path / "memory-relations-embedding-manual.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(
+        session_factory=session_factory,
+        embedding_source_kinds=("episodic", "semantic", "affective", "relation"),
+        embedding_refresh_mode="manual",
+    )
+    await repository.create_tables(engine)
+
+    await repository.upsert_relation(
+        user_id="u-1",
+        relation_type="collaboration_dynamic",
+        relation_value="guided",
+        confidence=0.78,
+        source="background_reflection",
+        supporting_event_id="evt-rel-manual",
+    )
+
+    async with session_factory() as session:
+        rows = (
+            await session.execute(
+                select(AionSemanticEmbedding).order_by(AionSemanticEmbedding.id.asc())
+            )
+        ).scalars().all()
+
+    assert len(rows) == 1
+    assert rows[0].source_kind == "relation"
+    assert rows[0].embedding is None
+    assert rows[0].metadata_json["embedding_status"] == "pending_manual_refresh"
+    assert rows[0].metadata_json["embedding_refresh_mode"] == "manual"
 
     await engine.dispose()
 

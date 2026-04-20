@@ -379,6 +379,9 @@ Completed on 2026-04-18:
   write (with deterministic fallback posture when provider execution is not yet
   implemented), and episodic embedding writes now honor explicit refresh
   ownership (`materialized_on_write` vs `pending_manual_refresh`).
+- `PRJ-286` is complete: affective and relation embedding families now
+  participate in source-gated rollout with explicit refresh ownership metadata,
+  and hybrid vector retrieval now includes relation source-family queries.
 
 ## Highest-Risk Gaps
 
@@ -1176,7 +1179,7 @@ semantics, and family-by-family rollout.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_memory_repository.py tests/test_context_agent.py tests/test_runtime_pipeline.py`
 
-- `PRJ-286` Extend vector rollout to affective and relation families with explicit gating.
+- `PRJ-286` is complete.
   - Result:
     - affective and relation memory families join the rollout behind explicit
       source-family gates and completion semantics
@@ -1321,10 +1324,10 @@ not around temporary convenience defaults.
 ## Next Derived Slice
 
 The planning queue is complete through `PRJ-299`.
-`PRJ-286` is currently the execution-ready slice in the board.
+`PRJ-287` is currently the execution-ready slice in the board.
 Before the next implementation slice:
 
-- take `PRJ-286` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-287` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to that one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 

@@ -301,13 +301,12 @@ The current repo already works as an MVP slice, but several architecture-level d
     `semantic_embedding_posture`) and startup logs now emit
     `embedding_strategy_warning` when a requested provider falls back to
     deterministic execution.
-  - semantic conclusions now materialize embeddings on write (with
-    deterministic fallback posture when requested provider execution is not yet
-    available), while episodic writes now honor explicit refresh ownership
-    (`materialized_on_write` vs `pending_manual_refresh`).
-  - affective embedding rows remain explicit rollout shells
-    (`pending_vector_materialization`) until affective/relation rollout slices
-    are implemented.
+  - semantic/affective conclusion embeddings, episodic embeddings, and relation
+    embeddings now honor explicit refresh ownership with
+    `materialized_on_write` versus `pending_manual_refresh` status.
+  - source-family rollout remains explicitly gated by
+    `EMBEDDING_SOURCE_KINDS`, allowing progressive enablement across
+    `semantic|affective|relation` without implicit writes.
   - startup warnings and health diagnostics now share one embedding warning
     posture owner; `/health.memory_retrieval` exposes
     `semantic_embedding_warning_state` and

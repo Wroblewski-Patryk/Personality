@@ -401,9 +401,9 @@ Last updated: 2026-04-20
 - Active `PRJ` execution queue is complete through `PRJ-299`; execution is
   now in Group 19 production memory retrieval rollout after completing Group 18
   background reflection topology and baseline definition in `PRJ-284`.
-- `PRJ-286` is the current `READY` implementation slice to extend rollout from
-  semantic+episodic materialization toward affective and relation families with
-  explicit source-family gating.
+- `PRJ-287` is the current `READY` implementation slice for production-retrieval
+  regression pinning and docs/context synchronization after rollout expansion
+  through relation memory family coverage.
 - Top blockers:
   - runtime currently emits connector intents and permission gates but does not
     yet execute provider-backed calendar/task/drive integrations
@@ -416,6 +416,10 @@ Last updated: 2026-04-20
 
 ## Recent Progress
 
+- 2026-04-20: `PRJ-286` is complete: affective and relation embedding families
+  now participate in source-gated rollout with explicit refresh ownership
+  metadata (`materialized_on_write` vs `pending_manual_refresh`), and relation
+  vectors are now materialized when relation source rollout is enabled.
 - 2026-04-20: `PRJ-285` is complete: semantic conclusion embeddings now
   materialize vectors on write (with deterministic fallback posture when
   requested provider execution is unavailable), and episodic embeddings now
@@ -834,7 +838,7 @@ Last updated: 2026-04-20
   dual-loop execution boundaries, and operational hardening.
 - 2026-04-20: foreground convergence group is now complete through `PRJ-279`;
   background topology convergence is complete through `PRJ-283`; production
-  retrieval implementation is complete through `PRJ-285`; `PRJ-286` is
+  retrieval implementation is complete through `PRJ-286`; `PRJ-287` is
   now the next `READY` implementation slice.
 
 ## Working Agreements

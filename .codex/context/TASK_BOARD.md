@@ -16,8 +16,8 @@ Last updated: 2026-04-20
   - capture architecture follow-up if discovered
   - sync task state, project state, and learning journal when needed
 - The planning queue is complete through `PRJ-299`.
-- `PRJ-285` is complete; `PRJ-286` is currently `READY` and extends rollout
-  from semantic+episodic materialization to affective and relation families.
+- `PRJ-286` is complete; `PRJ-287` is currently `READY` and focuses on
+  production retrieval rollout regressions plus docs/context synchronization.
 - Subsequent slices should follow the grouped execution order for foreground
   runtime convergence, background topology, production retrieval rollout,
   adaptive governance, dual-loop execution boundaries, and operational
@@ -28,24 +28,8 @@ Last updated: 2026-04-20
 
 ## READY
 
-- [ ] PRJ-286 Extend vector rollout to affective and relation families with explicit gating
-  - Status: READY
-  - Group: Production Memory Retrieval Rollout
-  - Owner: Backend Builder
-  - Depends on: PRJ-285
-  - Priority: P1
-  - Result:
-    - affective and relation memory families join the rollout behind explicit
-      source-family gates and completion semantics
-    - retrieval posture can distinguish baseline semantic rollout from full
-      target-state memory coverage
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_memory_repository.py tests/test_context_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
-
-## BACKLOG
-
 - [ ] PRJ-287 Add production retrieval rollout regressions and sync docs/context
-  - Status: BACKLOG
+  - Status: READY
   - Group: Production Memory Retrieval Rollout
   - Owner: QA/Test + Product Docs
   - Depends on: PRJ-286
@@ -57,6 +41,10 @@ Last updated: 2026-04-20
       baseline
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_api_routes.py tests/test_context_agent.py tests/test_runtime_pipeline.py`
+
+## BACKLOG
+
+- [ ] (none)
 
 ## FUTURE
 
@@ -239,6 +227,25 @@ Last updated: 2026-04-20
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-286 Extend vector rollout to affective and relation families with explicit gating
+  - Status: DONE
+  - Group: Production Memory Retrieval Rollout
+  - Owner: Backend Builder
+  - Depends on: PRJ-285
+  - Priority: P1
+  - Result:
+    - affective conclusion embeddings now materialize vectors with explicit
+      refresh ownership metadata (`materialized_on_write` vs
+      `pending_manual_refresh`) under source-family gates
+    - relation embedding writes are now source-gated and materialize vectors
+      with the same refresh ownership contract when `relation` rollout is
+      enabled
+    - hybrid retrieval vector queries now include relation source family so
+      rollout can progress from semantic baseline toward full source coverage
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_memory_repository.py tests/test_context_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
 
 - [x] PRJ-285 Implement the provider-owned semantic and episodic vector materialization path
   - Status: DONE
