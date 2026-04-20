@@ -35,9 +35,20 @@ The current repo already works as an MVP slice, but several architecture-level d
     validation surface (`3`, `5`, `12`) - complete
   - `PRJ-314..PRJ-317`: memory/continuity/failure validation scenarios and
     release gating (`5`, `8`, `9`, `12`) - complete
+  - `PRJ-318..PRJ-321`: internal debug ingress migration
+    (`3` implementation follow-up)
+  - `PRJ-322..PRJ-325`: scheduler externalization and attention ownership
+    (`1`, `12`, `12a` implementation follow-up)
+  - `PRJ-326..PRJ-329`: identity, language, and profile boundary hardening
+    (`8`, `9`)
+  - `PRJ-330..PRJ-333`: relation lifecycle and trust influence rollout
+    (`9a`, `10`, `12`)
+  - `PRJ-334..PRJ-337`: goal/task inference and typed-intent expansion
+    (`5a`, `10a`, `12c`)
 - reflection deployment lane is complete through `PRJ-304`, and
   post-reflection hardening decisions are now complete through `PRJ-309`.
 - runtime behavior-validation lane is now complete through `PRJ-317`.
+- next architecture-to-code queue is now seeded through `PRJ-337`.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

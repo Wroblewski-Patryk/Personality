@@ -1064,6 +1064,14 @@ Last updated: 2026-04-20
 - 2026-04-20: runtime behavior-validation checks are green:
   - `.\scripts\run_behavior_validation.ps1` passed with `6 passed`.
   - `.\.venv\Scripts\python -m pytest -q` passed with `612 passed`.
+- 2026-04-20: execution planning now extends through `PRJ-337`, adding
+  implementation lanes for internal debug ingress migration, scheduler
+  externalization and attention ownership, identity/language boundary
+  hardening, relation lifecycle rollout, and inferred goal/task growth through
+  typed intents.
+- 2026-04-20: `PRJ-318` is the next `READY` slice and begins the
+  post-behavior architecture-to-code queue by implementing a dedicated
+  internal debug ingress boundary.
 
 ## Working Agreements
 

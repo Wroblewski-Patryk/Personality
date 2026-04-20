@@ -1506,6 +1506,208 @@ can prove whether AION feels alive rather than only structurally compliant.
     - `.\scripts\run_behavior_validation.ps1`
     - `.\.venv\Scripts\python -m pytest -q`
 
+## Group 25 - Internal Debug Ingress Migration
+
+This group turns the resolved internal-debug boundary decision into live code so
+system-debug behavior stops depending on the shared public service endpoint as a
+long-term posture.
+
+- `PRJ-318` Implement a dedicated internal debug ingress boundary and shared guard path.
+  - Result:
+    - runtime exposes one explicit internal debug ingress boundary that owns
+      `system_debug` access semantics
+    - shared-endpoint debug access stops being the primary long-term owner of
+      internal cognitive inspection
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py`
+
+- `PRJ-319` Add break-glass override and shared-endpoint sunset posture for debug access.
+  - Result:
+    - public debug access can be explicitly downgraded to break-glass-only
+      posture while preserving controlled emergency access
+    - release posture makes it clear when shared-endpoint debug is transitional
+      instead of baseline
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py tests/test_config.py`
+
+- `PRJ-320` Add debug-ingress migration regressions and smoke coverage.
+  - Result:
+    - API regressions and smoke checks now pin internal-ingress ownership plus
+      shared-endpoint sunset behavior
+    - architecture drift around debug exposure fails quickly
+  - Validation:
+    - `.\scripts\run_release_smoke.ps1`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py`
+
+- `PRJ-321` Sync docs/context/runbook for internal debug ingress migration.
+  - Result:
+    - docs, planning, project state, and runbook truth stay aligned with the
+      new internal debug ingress baseline
+    - later release-window decisions can be made without reopening the same API
+      boundary ambiguity
+  - Validation:
+    - doc-and-context sync plus targeted debug-ingress cross-doc review
+      recorded in this slice
+
+## Group 26 - Scheduler Externalization And Attention Ownership
+
+This group moves scheduler and attention ownership closer to the intended
+architecture by making cadence execution mode explicit in code rather than only
+in planning decisions.
+
+- `PRJ-322` Implement owner-aware scheduler execution mode and health snapshot.
+  - Result:
+    - scheduler runtime exposes one explicit owner mode for cadence execution
+      (`in_process|externalized`)
+    - operators can see whether maintenance/proactive cadence is app-local or
+      externally owned without inferring from scattered signals
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_contracts.py tests/test_scheduler_worker.py tests/test_api_routes.py tests/test_config.py`
+
+- `PRJ-323` Route maintenance and proactive cadence through the shared owner-aware dispatch boundary.
+  - Result:
+    - cadence ownership becomes explicit in scheduler/runtime dispatch instead
+      of hidden behind in-process assumptions
+    - externalization groundwork no longer depends on reflection-only
+      ownership paths
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_runtime_pipeline.py tests/test_action_executor.py tests/test_api_routes.py`
+
+- `PRJ-324` Add attention-inbox ownership posture for future durable coordination rollout.
+  - Result:
+    - attention coordination now exposes one explicit owner posture for
+      in-process versus durable inbox evolution
+    - future durable attention work gets a clean implementation seam instead of
+      ad-hoc migration
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_scheduler_contracts.py`
+
+- `PRJ-325` Sync docs/context/runbook for scheduler externalization and attention ownership.
+  - Result:
+    - docs, planning, and ops truth remain aligned with owner-aware cadence and
+      attention posture
+    - later rollout slices can build on explicit scheduler ownership instead of
+      re-planning it
+  - Validation:
+    - doc-and-context sync plus targeted scheduler/attention cross-doc review
+      recorded in this slice
+
+## Group 27 - Identity, Language, And Profile Boundary Hardening
+
+This group makes identity continuity more explicit in code by tightening the
+boundary between profile state, conclusions, and language behavior.
+
+- `PRJ-326` Refactor identity loading around explicit profile-versus-conclusion ownership.
+  - Result:
+    - runtime identity loading uses one clear owner for durable profile fields
+      versus learned conclusions
+    - identity continuity stops relying on fuzzy fallback chains
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+- `PRJ-327` Add richer language continuity policy across profile, memory, and current turn context.
+  - Result:
+    - language choice can use a clearer precedence model across current turn,
+      recent memory, and durable preference state
+    - multilingual continuity becomes more architecture-aligned and less
+      heuristic-only
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_context_agent.py tests/test_expression_agent.py tests/test_runtime_pipeline.py`
+
+- `PRJ-328` Add identity and language continuity regressions across session and API fallback boundaries.
+  - Result:
+    - identity/language continuity is pinned across multi-session behavior,
+      ambiguous turns, and API user-id fallback paths
+    - drift between profile state and response behavior becomes visible quickly
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_language_runtime.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+
+- `PRJ-329` Sync docs/context for identity, language, and profile boundary hardening.
+  - Result:
+    - canonical docs, implementation reality, and project context describe the
+      same identity continuity baseline
+    - future identity work can build on explicit ownership boundaries
+  - Validation:
+    - doc-and-context sync plus targeted identity-boundary cross-doc review
+      recorded in this slice
+
+## Group 28 - Relation Lifecycle And Trust Influence
+
+This group closes the gap between relation storage and relation-driven behavior
+by making decay, revalidation, and trust influence explicit in code.
+
+- `PRJ-330` Implement relation decay and confidence revalidation policy.
+  - Result:
+    - relation records can weaken, refresh, or expire based on evidence age and
+      repeated interaction quality
+    - relation memory becomes lifecycle-aware instead of purely additive
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py`
+
+- `PRJ-331` Extend planning, motivation, and proactive logic with governed trust signals.
+  - Result:
+    - relation cues can shape interruption cost, planning confidence, and
+      outreach tone through explicit trust rules
+    - trust influence becomes a coded behavior path instead of a future note
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_motivation_engine.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+- `PRJ-332` Add relation lifecycle and trust-influence regressions.
+  - Result:
+    - decay, refresh, and trust-driven behavior expectations are pinned end to
+      end
+    - relation drift becomes test-visible before it affects production behavior
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_reflection_worker.py tests/test_runtime_pipeline.py tests/test_expression_agent.py`
+
+- `PRJ-333` Sync docs/context for relation lifecycle and trust influence.
+  - Result:
+    - docs, planning, and project state align on how relations evolve and where
+      they influence behavior
+    - future relational capability work starts from one explicit baseline
+  - Validation:
+    - doc-and-context sync plus targeted relation-lifecycle cross-doc review
+      recorded in this slice
+
+## Group 29 - Goal/Task Inference And Typed-Intent Expansion
+
+This group grows internal planning capability in code while preserving explicit
+intent ownership and action-layer control.
+
+- `PRJ-334` Add inferred goal/task promotion rules to planning.
+  - Result:
+    - planning can propose bounded inferred goals/tasks from repeated evidence
+      instead of relying only on explicit user declarations
+    - internal planning growth becomes a deliberate coded behavior rather than a
+      future aspiration
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_memory_repository.py`
+
+- `PRJ-335` Expand typed domain intents for inferred planning state and controlled maintenance writes.
+  - Result:
+    - inferred goal/task promotion and related maintenance writes stay blocked
+      behind explicit typed intents
+    - action remains the sole owner of durable planning-state side effects
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+
+- `PRJ-336` Add regressions for inferred planning growth and no-duplicate/no-unsafe promotion behavior.
+  - Result:
+    - inferred planning growth is pinned against duplicate, unsafe, or weakly
+      evidenced promotions
+    - architecture drift on internal planning autonomy fails fast
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_reflection_worker.py`
+
+- `PRJ-337` Sync docs/context for goal/task inference and typed-intent expansion.
+  - Result:
+    - docs, planning, and project state align on how internal planning can grow
+      while staying subordinate to typed intent ownership
+    - later autonomy work can build on explicit internal planning rules
+  - Validation:
+    - doc-and-context sync plus targeted planning-autonomy cross-doc review
+      recorded in this slice
+
 - `PRJ-308` is complete.
   - Result:
     - scheduler/proactive follow-up now has one explicit target posture for
@@ -1529,11 +1731,10 @@ can prove whether AION feels alive rather than only structurally compliant.
 ## Next Derived Slice
 
 Runtime behavior-validation queue is now complete through `PRJ-317`.
-There is no remaining `READY` slice in this lane.
+Next implementation queue is now seeded through `PRJ-337`.
 Before the next implementation slice:
 
-- derive the next smallest queue item from
-  `.codex/context/TASK_BOARD.md` + `docs/planning/open-decisions.md`
+- take `PRJ-318` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 
@@ -1560,6 +1761,14 @@ Runtime behavior validation queue:
   scenarios.
 - `PRJ-317` is complete: make runtime behavior validation part of release-readiness and
   sync docs/context/runbook.
+
+Next architecture-to-code queue:
+
+- `PRJ-318..PRJ-321` Internal debug ingress migration
+- `PRJ-322..PRJ-325` Scheduler externalization and attention ownership
+- `PRJ-326..PRJ-329` Identity, language, and profile boundary hardening
+- `PRJ-330..PRJ-333` Relation lifecycle and trust influence
+- `PRJ-334..PRJ-337` Goal/task inference and typed-intent expansion
 
 ## Parallel-Ready Lanes
 
@@ -1595,10 +1804,15 @@ group locks the production and release baseline for the converged runtime.
 8. `PRJ-306..PRJ-309` Post-reflection hardening decisions
 9. `PRJ-310..PRJ-313` Runtime behavior testing architecture
 10. `PRJ-314..PRJ-317` Memory, continuity, and failure validation
+11. `PRJ-318..PRJ-321` Internal debug ingress migration
+12. `PRJ-322..PRJ-325` Scheduler externalization and attention ownership
+13. `PRJ-326..PRJ-329` Identity, language, and profile boundary hardening
+14. `PRJ-330..PRJ-333` Relation lifecycle and trust influence
+15. `PRJ-334..PRJ-337` Goal/task inference and typed-intent expansion
 
 The queue should still be treated as intentionally open after those items.
 Additional small architecture-alignment slices may still be discovered while
-executing Groups 17 through 24.
+executing Groups 17 through 29.
 
 ## Handoff Rules For Execution Agents
 
@@ -1630,4 +1844,7 @@ This phase is complete when:
   whether memory, continuity, and decision-making work across time
 - memory is considered correct only when stored state influences later context
   and response behavior
+- internal debug, scheduler ownership, identity continuity, relation lifecycle,
+  and internal planning growth are all reflected in code rather than only in
+  planning decisions
 - docs, code, and `.codex/context/` describe the same runtime truth
