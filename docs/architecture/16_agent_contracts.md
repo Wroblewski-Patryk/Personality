@@ -487,6 +487,10 @@ Decide what should happen next.
     "steps": [],
     "needs_action": true,
     "needs_response": true,
+    "inferred_promotion_diagnostics": [
+      "reason=gate_open|trust_gate_low_confidence|missing_issue_marker|missing_repeated_signal|mode_not_supported|empty_event_text",
+      "result=promote_inferred_task|promote_inferred_goal|maintain_task_status|no_goal_candidate|duplicate_goal_candidate|active_goal_already_present|goal_intent_already_present"
+    ],
     "proposal_handoffs": [],
     "accepted_proposals": [],
     "connector_permission_gates": [],

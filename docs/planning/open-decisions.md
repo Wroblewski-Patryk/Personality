@@ -48,11 +48,13 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-339..PRJ-342`: manual runtime reliability fixes
     (`3`, `13`) - complete
   - `PRJ-343..PRJ-346`: relation-aware inferred promotion governance
-    (`9a`, `10a`) - queued
+    (`9a`, `10a`) - complete
+  - `PRJ-347..PRJ-350`: behavior-validation CI-ingestion follow-up
+    (`13`) - queued
 - reflection deployment lane is complete through `PRJ-304`, and
   post-reflection hardening decisions are now complete through `PRJ-309`.
 - runtime behavior-validation lane is now complete through `PRJ-317`.
-- next architecture-to-code queue is now seeded through `PRJ-346`.
+- next architecture-to-code queue is now seeded through `PRJ-350`.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -640,11 +642,12 @@ The current repo already works as an MVP slice, but several architecture-level d
       adaptive policy owners
   - low-confidence relation cues remain descriptive-only and must not directly
     drive trust-sensitive planning/expression/proactive behavior.
-- Follow-up decision:
-  - relation-aware inferred planning governance follow-up is now queued in
-    `PRJ-343..PRJ-346` to decide and implement whether delivery-reliability
-    posture should tighten inferred promotion thresholds while preserving typed
-    intent ownership boundaries.
+- Follow-up implementation (resolved in `PRJ-343..PRJ-346`, 2026-04-21):
+  - inferred goal/task promotion now applies delivery-reliability-aware trust
+    thresholds (`low_trust|medium_trust|high_trust`) while explicit
+    user-declared intent paths remain unaffected
+  - inferred promotion gate diagnostics (`reason=...`, `result=...`) are now
+    explicit in planning and runtime debug surfaces
 
 ### 10. Preference Influence Scope
 
@@ -875,5 +878,6 @@ The current repo already works as an MVP slice, but several architecture-level d
     - multi-session continuity and personality stability
     - contradiction, missing-data, and noisy-input resilience
 - Remaining follow-up decision:
-  - should behavior-validation outcomes become machine-ingested CI release
-    gates, or remain command-and-evidence release checks for now?
+  - behavior-validation CI-ingestion follow-up is now queued in
+    `PRJ-347..PRJ-350` to decide and implement machine-readable artifact and
+    gate posture without removing existing command-and-evidence release checks.

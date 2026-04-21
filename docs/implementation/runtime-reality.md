@@ -546,6 +546,9 @@ Today the runtime can already:
 - create lightweight tasks from explicit user phrasing
 - promote bounded inferred goals/tasks from repeated blocker evidence when
   explicit declarations are absent
+- apply delivery-reliability-aware trust gates to inferred promotion thresholds
+  (`low_trust` uses stricter importance and repeated-signal requirements;
+  `high_trust` allows bounded lower-threshold promotion)
 - update task status from explicit progress signals
 - maintain matching task status from inferred blocker evidence without creating
   duplicate task records
@@ -556,8 +559,12 @@ Current intent-ownership boundary:
 - planning emits explicit `domain_intents` (goal/task/task-status plus
   inferred-promotion and maintenance intents, plus preference intents, or
   `noop`)
+- planning also emits `inferred_promotion_diagnostics`
+  (`reason=...`, `result=...`) so inferred trust-gate posture is machine-visible
 - action executes those typed intents and no longer reparses raw user text for
   durable domain writes
+- runtime `system_debug.plan` now carries those inferred diagnostics for
+  operator-facing debug triage
 
 Reflection also derives lightweight operational signals such as:
 

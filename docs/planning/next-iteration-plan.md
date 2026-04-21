@@ -49,8 +49,12 @@ Completed on 2026-04-21:
   natural inline phrasing, Telegram webhook/listen smoke workflow is now
   operator-facing, and planning/context/ops docs are synchronized for this
   reliability lane.
-- next derived queue is now seeded through `PRJ-346` for relation-aware
-  inferred planning promotion governance follow-up.
+- `PRJ-343..PRJ-346` are complete: inferred planning promotion now has
+  delivery-reliability-aware trust gates, machine-visible gate diagnostics in
+  planning/runtime debug surfaces, regression coverage, and synchronized
+  docs/context truth.
+- next derived queue is now seeded through `PRJ-350` for behavior-validation
+  CI-ingestion follow-up.
 
 Completed on 2026-04-17:
 
@@ -1772,18 +1776,31 @@ This group applies the open relation/trust follow-up to inferred planning
 promotion thresholds so inferred goal/task growth remains bounded by trust
 posture without weakening explicit intent ownership.
 
-- `PRJ-343` Add delivery-reliability-aware inferred promotion thresholds in planning.
-- `PRJ-344` Add planning/runtime regressions for trust-aware inferred promotion gates.
-- `PRJ-345` Add planning diagnostics for inferred-promotion gate decisions.
-- `PRJ-346` Sync docs/context for relation-aware inferred promotion governance.
+Status update (2026-04-21): `PRJ-343..PRJ-346` are complete.
+
+- `PRJ-343` Add delivery-reliability-aware inferred promotion thresholds in planning. (complete)
+- `PRJ-344` Add planning diagnostics for inferred-promotion gate decisions. (complete)
+- `PRJ-345` Add planning/runtime/API regressions for trust-aware inferred promotion gates and diagnostics. (complete)
+- `PRJ-346` Sync docs/context for relation-aware inferred promotion governance. (complete)
+
+## Group 32 - Behavior Validation CI-Ingestion Follow-up
+
+This group converts behavior-validation outcomes from command-and-evidence-only
+release posture into machine-ingestable CI artifacts without weakening the
+current local/operator workflow.
+
+- `PRJ-347` Add machine-readable behavior-validation artifact output for CI consumers.
+- `PRJ-348` Add release/ops script support for behavior-validation CI gate posture.
+- `PRJ-349` Add regressions for behavior-validation artifact and gate semantics.
+- `PRJ-350` Sync docs/context for behavior-validation CI-ingestion lane.
 
 ## Next Derived Slice
 
 Runtime behavior-validation queue is now complete through `PRJ-317`.
-Next implementation queue is now seeded through `PRJ-346`.
+Next implementation queue is now seeded through `PRJ-350`.
 Before the next implementation slice:
 
-- take `PRJ-343` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-347` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 
@@ -1820,6 +1837,7 @@ Next architecture-to-code queue:
 - `PRJ-334..PRJ-337` Goal/task inference and typed-intent expansion
 - `PRJ-339..PRJ-342` Manual runtime reliability fixes
 - `PRJ-343..PRJ-346` Relation-aware inferred promotion governance
+- `PRJ-347..PRJ-350` Behavior-validation CI-ingestion follow-up
 
 ## Parallel-Ready Lanes
 
@@ -1862,10 +1880,11 @@ group locks the production and release baseline for the converged runtime.
 15. `PRJ-334..PRJ-337` Goal/task inference and typed-intent expansion
 16. `PRJ-339..PRJ-342` Manual runtime reliability fixes
 17. `PRJ-343..PRJ-346` Relation-aware inferred promotion governance
+18. `PRJ-347..PRJ-350` Behavior-validation CI-ingestion follow-up
 
 The queue should still be treated as intentionally open after those items.
 Additional small architecture-alignment slices may still be discovered while
-executing Groups 17 through 31.
+executing Groups 17 through 32.
 
 ## Handoff Rules For Execution Agents
 

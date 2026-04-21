@@ -1358,8 +1358,21 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-345` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_reflection_worker.py`
   passed with `251 passed`.
-- 2026-04-21: `PRJ-346` is now the next `READY` slice, focused on docs/context
-  synchronization for relation-aware inferred promotion governance.
+- 2026-04-21: `PRJ-346` is complete: architecture/runtime/planning/context
+  docs now align on trust-aware inferred promotion thresholds and
+  machine-visible inferred gate diagnostics posture.
+- 2026-04-21: `PRJ-346` also seeds the next derived queue
+  (`PRJ-347..PRJ-350`) for behavior-validation CI-ingestion follow-up.
+- 2026-04-21: `PRJ-346` validation is recorded as doc-and-context sync plus
+  targeted cross-reference checks across
+  `docs/architecture/16_agent_contracts.md`,
+  `docs/implementation/runtime-reality.md`,
+  `docs/planning/next-iteration-plan.md`,
+  `docs/planning/open-decisions.md`,
+  `.codex/context/TASK_BOARD.md`, and
+  `.codex/context/PROJECT_STATE.md`.
+- 2026-04-21: `PRJ-347` is now the next `READY` slice, focused on
+  machine-readable behavior-validation artifact output for CI consumers.
 
 ## Working Agreements
 

@@ -36,21 +36,20 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-346 Sync docs/context for relation-aware inferred promotion governance lane
+- [ ] PRJ-347 Add machine-readable behavior-validation artifact output for CI consumers
   - Status: READY
-  - Group: Relation-Aware Inferred Promotion Governance
-  - Owner: Product Docs
-  - Depends on: PRJ-345
+  - Group: Behavior Validation CI-Ingestion Follow-up
+  - Owner: Backend Builder
+  - Depends on: PRJ-346
   - Priority: P1
   - Result:
-    - planning docs, open-decision notes, and context truth align on
-      trust-aware inferred promotion gates and diagnostics boundaries
-    - queue/project-state continuity remains explicit for the next derived
-      architecture slices
+    - behavior validation run path now emits one machine-readable artifact
+      payload suitable for CI ingestion (`json` contract with summary,
+      scenario-level results, and failure counts)
+    - current human-readable behavior-validation flow remains intact and
+      backward-compatible for local/operator usage
   - Validation:
-    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
-      `docs/architecture/`, and `docs/implementation/` with targeted
-      cross-reference checks
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py`
 
 ## BACKLOG
 
@@ -58,7 +57,48 @@ Last updated: 2026-04-21
 
 ## FUTURE
 
-- [ ] (none)
+- [ ] PRJ-348 Add release/ops script support for behavior-validation CI gate posture
+  - Status: FUTURE
+  - Group: Behavior Validation CI-Ingestion Follow-up
+  - Owner: Ops/Release
+  - Depends on: PRJ-347
+  - Priority: P1
+  - Result:
+    - release/ops scripts now expose explicit CI gate posture for behavior
+      validation artifact pass/fail semantics
+    - operator mode remains available while CI mode can fail fast on artifact
+      violations
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_main_runtime_policy.py tests/test_api_routes.py`
+
+- [ ] PRJ-349 Add regressions for behavior-validation artifact and CI gate semantics
+  - Status: FUTURE
+  - Group: Behavior Validation CI-Ingestion Follow-up
+  - Owner: QA/Test
+  - Depends on: PRJ-348
+  - Priority: P1
+  - Result:
+    - regression coverage now pins behavior artifact schema and CI gate
+      fail/pass semantics
+    - fallback posture between local evidence mode and CI gate mode is
+      explicitly test-visible
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
+
+- [ ] PRJ-350 Sync docs/context for behavior-validation CI-ingestion lane
+  - Status: FUTURE
+  - Group: Behavior Validation CI-Ingestion Follow-up
+  - Owner: Product Docs
+  - Depends on: PRJ-349
+  - Priority: P1
+  - Result:
+    - planning, ops, and context truth align on behavior-validation artifact
+      contract and CI gate posture
+    - next derived queue continuity is explicit after CI-ingestion rollout
+  - Validation:
+    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
+      `docs/operations/`, and `docs/engineering/` with targeted
+      cross-reference checks
 
 ## IN_PROGRESS
 
@@ -73,6 +113,22 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-346 Sync docs/context for relation-aware inferred promotion governance lane
+  - Status: DONE
+  - Group: Relation-Aware Inferred Promotion Governance
+  - Owner: Product Docs
+  - Depends on: PRJ-345
+  - Priority: P1
+  - Result:
+    - architecture/runtime/planning/context docs now align on trust-aware
+      inferred promotion gates and machine-visible diagnostics boundaries
+    - next derived queue is now seeded for behavior-validation CI-ingestion
+      follow-up (`PRJ-347..PRJ-350`)
+  - Validation:
+    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
+      `docs/architecture/`, and `docs/implementation/` with targeted
+      cross-reference checks
 
 - [x] PRJ-345 Add regressions for trust-aware inferred promotion gates and diagnostics
   - Status: DONE
