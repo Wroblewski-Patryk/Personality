@@ -1696,8 +1696,21 @@ Last updated: 2026-04-21
 - 2026-04-21: Group 47 validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`
   passed with `172 passed`.
-- 2026-04-21: `PRJ-407` is now the first `READY` task, focused on defining the
-  durable attention contract-store shape and persistence responsibilities.
+- 2026-04-21: `PRJ-407..PRJ-410` are complete: durable attention now has a
+  repository-backed contract store through `aion_attention_turn`,
+  `MemoryRepository` attention primitives, and durable-mode coordinator usage
+  without changing burst coalescing semantics.
+- 2026-04-21: `/health.attention` now exposes repository-backed contract-store
+  posture and cleanup visibility (`contract_store_mode`,
+  `contract_store_state`, cleanup candidates) instead of parity-only owner
+  metadata.
+- 2026-04-21: Group 48 validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_graph_state_contract.py`
+  passed with `122 passed`, and
+  `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py`
+  passed with `79 passed`.
+- 2026-04-21: there is no remaining seeded `READY`; the next architecture slice
+  should be derived from planning docs and open decisions.
 
 ## Working Agreements
 

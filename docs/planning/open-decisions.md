@@ -74,7 +74,7 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-395..PRJ-398`: role-selection evidence baseline (`4`, `10b`) - complete
   - `PRJ-399..PRJ-402`: affective-assessment rollout policy (`4a`) - complete
   - `PRJ-403..PRJ-406`: reflection scope governance (`5c`) - complete
-  - `PRJ-407..PRJ-410`: durable attention contract-store rollout (`12a`) - planned
+  - `PRJ-407..PRJ-410`: durable attention contract-store rollout (`12a`) - complete
 - reflection deployment lane is complete through `PRJ-304`, and
   post-reflection hardening decisions are now complete through `PRJ-309`.
 - runtime behavior-validation lane is now complete through `PRJ-317`.
@@ -82,8 +82,8 @@ The current repo already works as an MVP slice, but several architecture-level d
 - post-Group-44 state now has no remaining `READY` task; the next convergence
   queue should again be derived from planning docs plus the still-open
   architecture decisions below.
-- post-Group-47 state now has `PRJ-407` as the first `READY` task, focused on
-  durable attention contract-store ownership and persistence boundaries.
+- post-Group-48 state has no remaining seeded `READY`; the next architecture
+  slice should be derived from the remaining open decisions below.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -930,13 +930,14 @@ The current repo already works as an MVP slice, but several architecture-level d
     not-ready posture
   - `/health.attention` now exposes `persistence_owner` and `parity_state` so
     durable rollout parity is explicit and operator-visible
-- Remaining follow-up decision:
-  - when should the repo add a true repository-backed durable inbox owner
-    instead of the current parity-preserving rollout baseline?
-- Planned implementation lane:
-  - `PRJ-407..PRJ-410` will define and begin the durable attention
-    contract-store rollout so parity mode can evolve toward a true repository
-    owner through bounded slices.
+- Decision (resolved in `PRJ-407..PRJ-410`, 2026-04-21):
+  - `durable_inbox` now uses a repository-backed `aion_attention_turn`
+    contract store keyed by `(user_id, conversation_key)`.
+  - attention boundary still owns burst coalescing, claim, answer, and cleanup
+    timing semantics; repository code owns the durable storage primitives.
+  - `/health.attention` now exposes contract-store posture and cleanup
+    visibility so the rollout stays observable before any production-default
+    switch.
 
 ### 12b. Conscious vs Subconscious Coordination Boundary
 

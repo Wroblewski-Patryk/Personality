@@ -50,75 +50,15 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-407 Define the durable attention contract-store shape and persistence responsibilities
-  - Group: Durable Attention Contract-Store Rollout
-  - Owner: Planner
-  - Depends on: PRJ-406
-  - Priority: P1
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_graph_state_contract.py`
+- [ ] (none)
 
 ## BACKLOG
 
-- [ ] PRJ-408 Add repository-backed durable attention store primitives behind owner-mode rollout
-  - Group: Durable Attention Contract-Store Rollout
-  - Owner: Backend Builder
-  - Depends on: PRJ-407
-  - Priority: P1
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
-
-- [ ] PRJ-409 Add regressions for durable attention contract-store parity and cleanup behavior
-  - Group: Durable Attention Contract-Store Rollout
-  - Owner: QA/Test
-  - Depends on: PRJ-408
-  - Priority: P1
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
-
-- [ ] PRJ-410 Sync docs/context for durable attention contract-store rollout
-  - Group: Durable Attention Contract-Store Rollout
-  - Owner: Product Docs
-  - Depends on: PRJ-409
-  - Priority: P1
-  - Validation:
-    - doc-and-context sync across `docs/architecture/`,
-      `docs/implementation/`, `docs/planning/`, and `.codex/context/`
+- [ ] (none)
 
 ## FUTURE
 
-- [ ] PRJ-407 Define the durable attention contract-store shape and persistence responsibilities
-  - Group: Durable Attention Contract-Store Rollout
-  - Owner: Planner
-  - Depends on: PRJ-406
-  - Priority: P1
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_graph_state_contract.py`
-
-- [ ] PRJ-408 Add repository-backed durable attention store primitives behind owner-mode rollout
-  - Group: Durable Attention Contract-Store Rollout
-  - Owner: Backend Builder
-  - Depends on: PRJ-407
-  - Priority: P1
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
-
-- [ ] PRJ-409 Add regressions for durable attention contract-store parity and cleanup behavior
-  - Group: Durable Attention Contract-Store Rollout
-  - Owner: QA/Test
-  - Depends on: PRJ-408
-  - Priority: P1
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
-
-- [ ] PRJ-410 Sync docs/context for durable attention contract-store rollout
-  - Group: Durable Attention Contract-Store Rollout
-  - Owner: Product Docs
-  - Depends on: PRJ-409
-  - Priority: P1
-  - Validation:
-    - doc-and-context sync across `docs/architecture/`,
-      `docs/implementation/`, `docs/planning/`, and `.codex/context/`
+- [ ] (none)
 
 ## IN_PROGRESS
 
@@ -133,6 +73,75 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-410 Sync docs/context for durable attention contract-store rollout
+  - Status: DONE
+  - Group: Durable Attention Contract-Store Rollout
+  - Owner: Product Docs
+  - Depends on: PRJ-409
+  - Priority: P1
+  - Result:
+    - architecture, runtime-reality, planning docs, testing guidance, and
+      context truth now align on repository-backed durable attention
+      contract-store ownership plus cleanup visibility
+    - there is no remaining seeded `READY`; the next architecture slice must
+      be derived from planning docs and open decisions
+  - Validation:
+    - doc-and-context sync across `docs/architecture/`,
+      `docs/implementation/`, `docs/planning/`, `docs/engineering/`, and
+      `.codex/context/`
+
+- [x] PRJ-409 Add regressions for durable attention contract-store parity and cleanup behavior
+  - Status: DONE
+  - Group: Durable Attention Contract-Store Rollout
+  - Owner: QA/Test
+  - Depends on: PRJ-408
+  - Priority: P1
+  - Result:
+    - repository-backed attention rows, cleanup candidates, and durable
+      owner-mode burst parity are now regression-pinned before any production
+      default switch
+    - cleanup visibility remains operator-visible through `/health.attention`
+      rather than hidden behind repository-only behavior
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+      (`201 passed`)
+
+- [x] PRJ-408 Add repository-backed durable attention store primitives behind owner-mode rollout
+  - Status: DONE
+  - Group: Durable Attention Contract-Store Rollout
+  - Owner: Backend Builder
+  - Depends on: PRJ-407
+  - Priority: P1
+  - Result:
+    - `MemoryRepository` now owns durable attention-turn rows and cleanup
+      primitives through `aion_attention_turn`
+    - `AttentionTurnCoordinator` in `durable_inbox` mode now uses the
+      repository-backed contract store while preserving existing burst
+      coalescing semantics
+  - Validation:
+    - Group 48 consolidated validation:
+      `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_graph_state_contract.py`
+      (`122 passed`)
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py`
+      (`79 passed`)
+
+- [x] PRJ-407 Define the durable attention contract-store shape and persistence responsibilities
+  - Status: DONE
+  - Group: Durable Attention Contract-Store Rollout
+  - Owner: Planner
+  - Depends on: PRJ-406
+  - Priority: P1
+  - Result:
+    - durable attention now has one explicit contract-store shape keyed by
+      `(user_id, conversation_key)` with `pending|claimed|answered` state,
+      assembled text, source counts, coalesced event ids, and cleanup posture
+    - persistence responsibility is explicit: the attention boundary owns turn
+      state mutation while `MemoryRepository` owns durable storage and cleanup
+      primitives
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_graph_state_contract.py`
+      (`122 passed`)
 
 - [x] PRJ-406 Sync docs/context for reflection scope governance
   - Status: DONE

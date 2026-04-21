@@ -20,6 +20,7 @@ from app.memory.embeddings import (
     resolve_embedding_posture,
 )
 from app.memory.models import (
+    AionAttentionTurn,
     AionConclusion,
     AionGoal,
     AionGoalMilestone,
@@ -1144,6 +1145,157 @@ class MemoryRepository:
 
         return self._serialize_goal_milestone_history(row)
 
+    async def get_attention_turn(self, *, user_id: str, conversation_key: str) -> dict | None:
+        normalized_conversation_key = str(conversation_key).strip()[:96]
+        if not normalized_conversation_key:
+            return None
+        async with self.session_factory() as session:
+            statement = (
+                select(AionAttentionTurn)
+                .where(
+                    AionAttentionTurn.user_id == user_id,
+                    AionAttentionTurn.conversation_key == normalized_conversation_key,
+                )
+                .limit(1)
+            )
+            result = await session.execute(statement)
+            row = result.scalar_one_or_none()
+        if row is None:
+            return None
+        return self._serialize_attention_turn(row)
+
+    async def upsert_attention_turn(
+        self,
+        *,
+        user_id: str,
+        conversation_key: str,
+        turn_id: str,
+        status: str,
+        source_count: int,
+        messages: list[str] | None = None,
+        event_ids: list[str] | None = None,
+        update_keys: list[str] | None = None,
+        assembled_text: str | None = None,
+        owner_mode: str = "durable_inbox",
+    ) -> dict:
+        normalized_conversation_key = str(conversation_key).strip()[:96]
+        normalized_turn_id = str(turn_id).strip()[:64]
+        normalized_status = str(status).strip().lower()[:24] or "pending"
+        normalized_owner_mode = str(owner_mode).strip().lower()[:24] or "durable_inbox"
+        normalized_messages = [str(item).strip() for item in (messages or []) if str(item).strip()]
+        normalized_event_ids = [str(item).strip()[:64] for item in (event_ids or []) if str(item).strip()]
+        normalized_update_keys = [str(item).strip()[:96] for item in (update_keys or []) if str(item).strip()]
+        normalized_source_count = max(1, int(source_count))
+        normalized_assembled_text = str(assembled_text).strip() if assembled_text else None
+
+        async with self.session_factory() as session:
+            statement = (
+                select(AionAttentionTurn)
+                .where(
+                    AionAttentionTurn.user_id == user_id,
+                    AionAttentionTurn.conversation_key == normalized_conversation_key,
+                )
+                .limit(1)
+            )
+            result = await session.execute(statement)
+            row = result.scalar_one_or_none()
+
+            if row is None:
+                row = AionAttentionTurn(
+                    user_id=user_id,
+                    conversation_key=normalized_conversation_key,
+                    turn_id=normalized_turn_id,
+                    status=normalized_status,
+                    source_count=normalized_source_count,
+                    assembled_text=normalized_assembled_text,
+                    owner_mode=normalized_owner_mode,
+                    messages_json=normalized_messages,
+                    event_ids_json=normalized_event_ids,
+                    update_keys_json=normalized_update_keys,
+                )
+                session.add(row)
+            else:
+                row.turn_id = normalized_turn_id
+                row.status = normalized_status
+                row.source_count = normalized_source_count
+                row.assembled_text = normalized_assembled_text
+                row.owner_mode = normalized_owner_mode
+                row.messages_json = normalized_messages
+                row.event_ids_json = normalized_event_ids
+                row.update_keys_json = normalized_update_keys
+
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_attention_turn(row)
+
+    async def get_attention_turn_stats(
+        self,
+        *,
+        answered_ttl_seconds: float,
+        stale_turn_seconds: float,
+        now: datetime | None = None,
+    ) -> dict:
+        async with self.session_factory() as session:
+            result = await session.execute(select(AionAttentionTurn))
+            rows = result.scalars().all()
+
+        current_time = self._coerce_datetime(now or datetime.now(timezone.utc))
+        stats = {
+            "pending": 0,
+            "claimed": 0,
+            "answered": 0,
+            "active_turns": 0,
+            "stale_cleanup_candidates": 0,
+            "answered_cleanup_candidates": 0,
+        }
+        for row in rows:
+            updated_at = self._coerce_datetime(row.updated_at)
+            age_seconds = max(0.0, (current_time - updated_at).total_seconds())
+            if row.status == "answered" and age_seconds > float(answered_ttl_seconds):
+                stats["answered_cleanup_candidates"] += 1
+                continue
+            if age_seconds > float(stale_turn_seconds):
+                stats["stale_cleanup_candidates"] += 1
+                continue
+            if row.status == "pending":
+                stats["pending"] += 1
+            elif row.status == "claimed":
+                stats["claimed"] += 1
+            else:
+                stats["answered"] += 1
+            stats["active_turns"] += 1
+        return stats
+
+    async def cleanup_attention_turns(
+        self,
+        *,
+        answered_ttl_seconds: float,
+        stale_turn_seconds: float,
+        now: datetime | None = None,
+    ) -> dict:
+        current_time = self._coerce_datetime(now or datetime.now(timezone.utc))
+        deleted_answered = 0
+        deleted_stale = 0
+        async with self.session_factory() as session:
+            result = await session.execute(select(AionAttentionTurn))
+            rows = result.scalars().all()
+            for row in rows:
+                updated_at = self._coerce_datetime(row.updated_at)
+                age_seconds = max(0.0, (current_time - updated_at).total_seconds())
+                if row.status == "answered" and age_seconds > float(answered_ttl_seconds):
+                    await session.delete(row)
+                    deleted_answered += 1
+                    continue
+                if age_seconds > float(stale_turn_seconds):
+                    await session.delete(row)
+                    deleted_stale += 1
+            await session.commit()
+        return {
+            "deleted_answered": deleted_answered,
+            "deleted_stale": deleted_stale,
+        }
+
     async def get_user_runtime_preferences(
         self,
         user_id: str,
@@ -1949,6 +2101,23 @@ class MemoryRepository:
             "risk_level": row.risk_level,
             "completion_criteria": row.completion_criteria,
             "source_event_id": row.source_event_id,
+            "created_at": row.created_at,
+        }
+
+    def _serialize_attention_turn(self, row: AionAttentionTurn) -> dict:
+        return {
+            "id": row.id,
+            "user_id": row.user_id,
+            "conversation_key": row.conversation_key,
+            "turn_id": row.turn_id,
+            "status": row.status,
+            "source_count": row.source_count,
+            "assembled_text": row.assembled_text,
+            "owner_mode": row.owner_mode,
+            "messages": list(row.messages_json or []),
+            "event_ids": list(row.event_ids_json or []),
+            "update_keys": list(row.update_keys_json or []),
+            "updated_at": row.updated_at,
             "created_at": row.created_at,
         }
 

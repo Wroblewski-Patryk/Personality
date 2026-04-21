@@ -2480,7 +2480,7 @@ This group starts the move from parity-only durable attention posture to a real
 repository-backed contract store while preserving current owner-mode rollout
 guardrails.
 
-- `PRJ-407` Define the durable attention contract-store shape and persistence responsibilities.
+- `PRJ-407` Define the durable attention contract-store shape and persistence responsibilities. (complete)
   - Result:
     - attention inbox persistence and cleanup responsibilities gain one
       explicit repository-backed contract shape
@@ -2489,7 +2489,7 @@ guardrails.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_graph_state_contract.py`
 
-- `PRJ-408` Add repository-backed durable attention store primitives behind owner-mode rollout.
+- `PRJ-408` Add repository-backed durable attention store primitives behind owner-mode rollout. (complete)
   - Result:
     - runtime gains the first real durable attention primitives behind the
       existing owner-mode boundary
@@ -2498,7 +2498,7 @@ guardrails.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
 
-- `PRJ-409` Add regressions for durable attention contract-store parity and cleanup behavior.
+- `PRJ-409` Add regressions for durable attention contract-store parity and cleanup behavior. (complete)
   - Result:
     - contract-store parity and stale/answered cleanup behavior become
       regression-pinned before any production default switch
@@ -2506,7 +2506,7 @@ guardrails.
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
 
-- `PRJ-410` Sync docs/context for durable attention contract-store rollout.
+- `PRJ-410` Sync docs/context for durable attention contract-store rollout. (complete)
   - Result:
     - architecture, runtime-reality, planning docs, and context truth align on
       durable attention contract-store rollout posture
@@ -2514,6 +2514,11 @@ guardrails.
       instead of parity-only scaffolding
   - Validation:
     - doc-and-context sync plus targeted durable-attention cross-doc review
+    - Group 48 consolidated validation:
+      `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_graph_state_contract.py`
+      (`122 passed`)
+      `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py`
+      (`79 passed`)
 
 ## Parallel-Ready Lanes
 

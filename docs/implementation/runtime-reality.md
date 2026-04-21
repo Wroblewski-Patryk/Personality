@@ -725,6 +725,12 @@ What is already live:
   (`persistence_owner`, `parity_state`), and `durable_inbox` mode preserves the
   same burst coalescing / claimed-turn / answered-turn semantics as
   `in_process`
+- `durable_inbox` mode now also persists active turn-assembly state through a
+  repository-backed `aion_attention_turn` contract store instead of remaining
+  parity-only scaffolding
+- `/health.attention` now exposes durable contract-store posture and cleanup
+  visibility (`contract_store_mode`, `contract_store_state`,
+  `stale_cleanup_candidates`, `answered_cleanup_candidates`)
 - attention turn timing is now runtime-configurable through
   `ATTENTION_BURST_WINDOW_MS`, `ATTENTION_ANSWERED_TTL_SECONDS`, and
   `ATTENTION_STALE_TURN_SECONDS`

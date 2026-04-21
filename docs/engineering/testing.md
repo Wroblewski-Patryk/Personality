@@ -142,6 +142,10 @@ For meaningful repo changes, leave behind:
       adaptive outputs
 - for durable attention contract-store slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+  - coverage should pin:
+    - repository-backed attention turn persistence
+    - durable-inbox route parity with burst coalescing semantics
+    - cleanup-candidate visibility and answered/stale row cleanup
 - for CI-sensitive slices, behavior gate evidence from:
   - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
   - `./scripts/run_behavior_validation.sh --gate-mode ci --artifact-path artifacts/behavior_validation/report.json`

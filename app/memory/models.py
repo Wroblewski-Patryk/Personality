@@ -270,6 +270,36 @@ class AionGoalMilestoneHistory(Base):
     )
 
 
+class AionAttentionTurn(Base):
+    __tablename__ = "aion_attention_turn"
+    __table_args__ = (
+        UniqueConstraint("user_id", "conversation_key", name="uq_aion_attention_turn_user_conversation"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    conversation_key: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    turn_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="pending", index=True)
+    source_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    assembled_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    owner_mode: Mapped[str] = mapped_column(String(24), nullable=False, default="durable_inbox")
+    messages_json: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    event_ids_json: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    update_keys_json: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
 class AionReflectionTask(Base):
     __tablename__ = "aion_reflection_task"
     __table_args__ = (UniqueConstraint("event_id", name="uq_aion_reflection_task_event_id"),)

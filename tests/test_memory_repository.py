@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.memory.models import (
+    AionAttentionTurn,
     AionConclusion,
     AionGoal,
     AionGoalMilestone,
@@ -78,6 +79,87 @@ async def test_memory_repository_exposes_memory_layer_vocabulary_and_conclusion_
     assert repository.conclusion_memory_layer("affective_support_pattern") == "affective"
     assert repository.conclusion_memory_layer("goal_milestone_risk") == "operational"
     assert repository.conclusion_memory_layer("custom_semantic_fact") == "semantic"
+
+
+async def test_memory_repository_persists_attention_turn_contract_store_and_cleans_up_answered_rows(tmp_path) -> None:
+    database_path = tmp_path / "memory-attention-turn-store.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    stored = await repository.upsert_attention_turn(
+        user_id="u-1",
+        conversation_key="telegram:123",
+        turn_id="turn-1",
+        status="pending",
+        messages=["first message"],
+        event_ids=["evt-1"],
+        update_keys=["update:1"],
+        source_count=1,
+        owner_mode="durable_inbox",
+    )
+    claimed = await repository.upsert_attention_turn(
+        user_id="u-1",
+        conversation_key="telegram:123",
+        turn_id="turn-1",
+        status="claimed",
+        messages=["first message", "second message"],
+        event_ids=["evt-1", "evt-2"],
+        update_keys=["update:1", "update:2"],
+        source_count=2,
+        assembled_text="first message\nsecond message",
+        owner_mode="durable_inbox",
+    )
+
+    loaded = await repository.get_attention_turn(user_id="u-1", conversation_key="telegram:123")
+    stats = await repository.get_attention_turn_stats(
+        answered_ttl_seconds=5.0,
+        stale_turn_seconds=30.0,
+    )
+
+    assert stored["status"] == "pending"
+    assert claimed["status"] == "claimed"
+    assert loaded is not None
+    assert loaded["assembled_text"] == "first message\nsecond message"
+    assert loaded["source_count"] == 2
+    assert stats["pending"] == 0
+    assert stats["claimed"] == 1
+    assert stats["answered"] == 0
+    assert stats["active_turns"] == 1
+
+    answered = await repository.upsert_attention_turn(
+        user_id="u-1",
+        conversation_key="telegram:123",
+        turn_id="turn-1",
+        status="answered",
+        messages=["first message", "second message"],
+        event_ids=["evt-1", "evt-2"],
+        update_keys=["update:1", "update:2"],
+        source_count=2,
+        assembled_text="first message\nsecond message",
+        owner_mode="durable_inbox",
+    )
+
+    async with session_factory() as session:
+        row = await session.get(AionAttentionTurn, int(answered["id"]))
+        assert row is not None
+        row.updated_at = datetime.now(timezone.utc) - timedelta(seconds=10)
+        await session.commit()
+
+    stale_stats = await repository.get_attention_turn_stats(
+        answered_ttl_seconds=5.0,
+        stale_turn_seconds=30.0,
+    )
+    cleanup = await repository.cleanup_attention_turns(
+        answered_ttl_seconds=5.0,
+        stale_turn_seconds=30.0,
+    )
+    after_cleanup = await repository.get_attention_turn(user_id="u-1", conversation_key="telegram:123")
+
+    assert stale_stats["answered_cleanup_candidates"] == 1
+    assert cleanup == {"deleted_answered": 1, "deleted_stale": 0}
+    assert after_cleanup is None
 
     await engine.dispose()
 

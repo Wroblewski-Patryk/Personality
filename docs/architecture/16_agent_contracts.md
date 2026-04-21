@@ -311,6 +311,19 @@ Durable attention rollout baseline:
 3. durable mode must preserve the same burst/claim/answer semantics unless a
    later contract revision explicitly changes turn assembly behavior
 
+Durable attention contract-store rollout:
+
+1. `durable_inbox` now uses one repository-backed turn contract store keyed by
+   `(user_id, conversation_key)`.
+2. the durable store must preserve `pending|claimed|answered` semantics,
+   `source_count`, coalesced `event_ids`, `update_keys`, and optional
+   `assembled_text`.
+3. attention boundary remains the only owner of turn-state mutation and
+   cleanup timing, while repository code owns durable storage primitives.
+4. `/health.attention` should expose contract-store posture and cleanup
+   candidate visibility before any production-default switch to durable owner
+   mode.
+
 Canonical ownership baseline:
 
 1. attention boundary owns `attention_inbox` and `pending_turn` state mutation

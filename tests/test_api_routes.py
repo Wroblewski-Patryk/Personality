@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from threading import Thread
 from time import sleep
 
@@ -350,6 +350,7 @@ class FakeMemoryRepository:
             "exhausted_failed": 0,
             "stuck_processing": 0,
         }
+        self.attention_turns: dict[tuple[str, str], dict] = {}
 
     async def get_reflection_task_stats(
         self,
@@ -363,6 +364,108 @@ class FakeMemoryRepository:
         assert stuck_after_seconds == 180
         assert retry_backoff_seconds == (5, 30, 120)
         return self.stats
+
+    async def get_attention_turn(self, *, user_id: str, conversation_key: str) -> dict | None:
+        row = self.attention_turns.get((user_id, conversation_key))
+        return dict(row) if row is not None else None
+
+    async def upsert_attention_turn(
+        self,
+        *,
+        user_id: str,
+        conversation_key: str,
+        turn_id: str,
+        status: str,
+        source_count: int,
+        messages: list[str] | None = None,
+        event_ids: list[str] | None = None,
+        update_keys: list[str] | None = None,
+        assembled_text: str | None = None,
+        owner_mode: str = "durable_inbox",
+    ) -> dict:
+        now = datetime.now(timezone.utc)
+        existing = self.attention_turns.get((user_id, conversation_key), {})
+        payload = {
+            "id": existing.get("id", len(self.attention_turns) + 1),
+            "user_id": user_id,
+            "conversation_key": conversation_key,
+            "turn_id": turn_id,
+            "status": status,
+            "source_count": source_count,
+            "assembled_text": assembled_text,
+            "owner_mode": owner_mode,
+            "messages": list(messages or []),
+            "event_ids": list(event_ids or []),
+            "update_keys": list(update_keys or []),
+            "created_at": existing.get("created_at", now),
+            "updated_at": now,
+        }
+        self.attention_turns[(user_id, conversation_key)] = payload
+        return dict(payload)
+
+    async def get_attention_turn_stats(
+        self,
+        *,
+        answered_ttl_seconds: float,
+        stale_turn_seconds: float,
+        now: datetime | None = None,
+    ) -> dict[str, int]:
+        current_time = now or datetime.now(timezone.utc)
+        pending = 0
+        claimed = 0
+        answered = 0
+        active_turns = 0
+        stale_cleanup_candidates = 0
+        answered_cleanup_candidates = 0
+        for row in self.attention_turns.values():
+            updated_at = row.get("updated_at", current_time)
+            age_seconds = max(0.0, (current_time - updated_at).total_seconds())
+            if row.get("status") == "answered" and age_seconds > answered_ttl_seconds:
+                answered_cleanup_candidates += 1
+                continue
+            if age_seconds > stale_turn_seconds:
+                stale_cleanup_candidates += 1
+                continue
+            if row.get("status") == "pending":
+                pending += 1
+            elif row.get("status") == "claimed":
+                claimed += 1
+            else:
+                answered += 1
+            active_turns += 1
+        return {
+            "pending": pending,
+            "claimed": claimed,
+            "answered": answered,
+            "active_turns": active_turns,
+            "stale_cleanup_candidates": stale_cleanup_candidates,
+            "answered_cleanup_candidates": answered_cleanup_candidates,
+        }
+
+    async def cleanup_attention_turns(
+        self,
+        *,
+        answered_ttl_seconds: float,
+        stale_turn_seconds: float,
+        now: datetime | None = None,
+    ) -> dict[str, int]:
+        current_time = now or datetime.now(timezone.utc)
+        deleted_answered = 0
+        deleted_stale = 0
+        stale_keys: list[tuple[str, str]] = []
+        for key, row in self.attention_turns.items():
+            updated_at = row.get("updated_at", current_time)
+            age_seconds = max(0.0, (current_time - updated_at).total_seconds())
+            if row.get("status") == "answered" and age_seconds > answered_ttl_seconds:
+                stale_keys.append(key)
+                deleted_answered += 1
+                continue
+            if age_seconds > stale_turn_seconds:
+                stale_keys.append(key)
+                deleted_stale += 1
+        for key in stale_keys:
+            self.attention_turns.pop(key, None)
+        return {"deleted_answered": deleted_answered, "deleted_stale": deleted_stale}
 
 
 class FakeReflectionWorker:
@@ -575,6 +678,7 @@ def _client(
         answered_ttl_seconds=attention_answered_ttl_seconds,
         stale_turn_seconds=attention_stale_turn_seconds,
         coordination_mode=attention_coordination_mode,
+        memory_repository=memory_repository,
     )
     return TestClient(app), runtime, telegram_client
 
@@ -1083,8 +1187,14 @@ def test_health_endpoint_exposes_attention_snapshot() -> None:
     assert body["attention"]["durable_inbox_expected"] is False
     assert body["attention"]["persistence_owner"] == "in_process_coordinator_store"
     assert body["attention"]["parity_state"] == "in_process_baseline_active"
+    assert body["attention"]["contract_store_mode"] == "in_process_only"
+    assert body["attention"]["active_turns"] == 0
     assert body["attention"]["deployment_readiness"]["ready"] is True
     assert body["attention"]["deployment_readiness"]["turn_state_owner"] == "in_process_coordinator"
+    assert body["attention"]["deployment_readiness"]["contract_store_state"] == "in_process_only"
+    assert body["attention"]["deployment_readiness"]["store_available"] is True
+    assert body["attention"]["deployment_readiness"]["stale_cleanup_candidates"] == 0
+    assert body["attention"]["deployment_readiness"]["answered_cleanup_candidates"] == 0
     assert body["attention"]["timing_policy"] == {
         "production_baseline": {
             "burst_window_ms": 120,
@@ -1148,10 +1258,13 @@ def test_health_endpoint_exposes_durable_attention_owner_mode_posture() -> None:
     assert body["attention"]["durable_inbox_expected"] is True
     assert body["attention"]["healthy"] is True
     assert body["attention"]["persistence_owner"] == "durable_attention_contract_store"
-    assert body["attention"]["parity_state"] == "durable_inbox_parity_baseline_active"
+    assert body["attention"]["parity_state"] == "durable_attention_contract_store_active"
+    assert body["attention"]["contract_store_mode"] == "repository_backed"
     assert body["attention"]["deployment_readiness"]["selected_coordination_mode"] == "durable_inbox"
     assert body["attention"]["deployment_readiness"]["ready"] is True
     assert body["attention"]["deployment_readiness"]["blocking_signals"] == []
+    assert body["attention"]["deployment_readiness"]["contract_store_state"] == "repository_backed_contract_store_active"
+    assert body["attention"]["deployment_readiness"]["store_available"] is True
 
 
 def test_health_endpoint_exposes_runtime_policy_flags() -> None:
@@ -2274,6 +2387,54 @@ def test_event_endpoint_preserves_attention_parity_in_durable_inbox_mode() -> No
     assert second_body["queue"]["source_count"] == 2
     assert len(runtime.events) == 1
     assert runtime.events[0].payload["text"] == "durable first burst\ndurable second burst"
+
+
+def test_health_endpoint_exposes_repository_backed_attention_cleanup_candidates() -> None:
+    client, _, _ = _client(
+        attention_coordination_mode="durable_inbox",
+    )
+    memory_repository = client.app.state.memory_repository
+    current_time = datetime.now(timezone.utc)
+    memory_repository.attention_turns[("u-active", "telegram:123")] = {
+        "id": 1,
+        "user_id": "u-active",
+        "conversation_key": "telegram:123",
+        "turn_id": "turn-1",
+        "status": "claimed",
+        "source_count": 1,
+        "assembled_text": "active",
+        "owner_mode": "durable_inbox",
+        "messages": ["active"],
+        "event_ids": ["evt-1"],
+        "update_keys": ["update:1"],
+        "created_at": current_time,
+        "updated_at": current_time,
+    }
+    memory_repository.attention_turns[("u-cleanup", "telegram:999")] = {
+        "id": 2,
+        "user_id": "u-cleanup",
+        "conversation_key": "telegram:999",
+        "turn_id": "turn-2",
+        "status": "answered",
+        "source_count": 1,
+        "assembled_text": "stale answered",
+        "owner_mode": "durable_inbox",
+        "messages": ["stale answered"],
+        "event_ids": ["evt-2"],
+        "update_keys": ["update:2"],
+        "created_at": current_time,
+        "updated_at": current_time - timedelta(seconds=10),
+    }
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["attention"]["contract_store_mode"] == "repository_backed"
+    assert body["attention"]["active_turns"] == 1
+    assert body["attention"]["answered_cleanup_candidates"] == 1
+    assert body["attention"]["stale_cleanup_candidates"] == 0
+    assert body["attention"]["deployment_readiness"]["answered_cleanup_candidates"] == 1
 
 
 def test_event_endpoint_ignores_duplicate_telegram_update_during_pending_turn() -> None:

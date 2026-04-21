@@ -92,14 +92,15 @@ def _attention_coordinator_from_request(request: Request) -> AttentionTurnCoordi
         answered_ttl_seconds=float(getattr(settings, "attention_answered_ttl_seconds", 5.0)),
         stale_turn_seconds=float(getattr(settings, "attention_stale_turn_seconds", 30.0)),
         coordination_mode=str(getattr(settings, "attention_coordination_mode", "in_process")),
+        memory_repository=_memory_repository_from_request(request),
     )
     request.app.state.attention_turn_coordinator = coordinator
     return coordinator
 
 
-def _attention_snapshot_from_request(request: Request) -> dict[str, Any]:
+async def _attention_snapshot_from_request(request: Request) -> dict[str, Any]:
     coordinator = _attention_coordinator_from_request(request)
-    snapshot = coordinator.snapshot()
+    snapshot = await coordinator.snapshot()
     burst_window_ms = int(round(coordinator.burst_window_seconds * 1000))
     answered_ttl_seconds = float(coordinator.answered_ttl_seconds)
     stale_turn_seconds = float(coordinator.stale_turn_seconds)
@@ -107,6 +108,12 @@ def _attention_snapshot_from_request(request: Request) -> dict[str, Any]:
         coordination_mode=coordinator.coordination_mode,
         pending=int(snapshot.get("pending", 0)),
         claimed=int(snapshot.get("claimed", 0)),
+        store_available=bool(
+            snapshot.get("contract_store_mode") == "repository_backed"
+            or coordinator.coordination_mode != "durable_inbox"
+        ),
+        stale_cleanup_candidates=int(snapshot.get("stale_cleanup_candidates", 0)),
+        answered_cleanup_candidates=int(snapshot.get("answered_cleanup_candidates", 0)),
     )
     timing_policy = attention_timing_policy_snapshot(
         burst_window_ms=burst_window_ms,
@@ -386,7 +393,7 @@ async def health(request: Request) -> dict[str, Any]:
         "cadence_execution": scheduler_execution,
     }
     scheduler_healthy = bool(scheduler_execution["ready"])
-    attention_snapshot = _attention_snapshot_from_request(request)
+    attention_snapshot = await _attention_snapshot_from_request(request)
     memory_retrieval_snapshot = _memory_retrieval_snapshot_from_settings(settings)
     release_readiness = release_readiness_snapshot(runtime_policy)
     return {
