@@ -36,20 +36,19 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-350 Sync docs/context for behavior-validation CI-ingestion lane
+- [ ] PRJ-351 Add artifact schema versioning and gate reason taxonomy for behavior-validation reports
   - Status: READY
-  - Group: Behavior Validation CI-Ingestion Follow-up
-  - Owner: Product Docs
-  - Depends on: PRJ-349
+  - Group: Behavior Validation Artifact Governance
+  - Owner: Backend Builder
+  - Depends on: PRJ-350
   - Priority: P1
   - Result:
-    - planning, ops, and context truth align on behavior-validation artifact
-      contract and CI gate posture
-    - next derived queue continuity is explicit after CI-ingestion rollout
+    - behavior-validation artifact now exposes explicit schema version and
+      deterministic gate reason taxonomy for stable CI ingestion
+    - operator and CI consumers can distinguish contract changes from runtime
+      failures without inference from free-text fields
   - Validation:
-    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
-      `docs/operations/`, and `docs/engineering/` with targeted
-      cross-reference checks
+    - `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_runtime_pipeline.py`
 
 ## BACKLOG
 
@@ -57,7 +56,48 @@ Last updated: 2026-04-21
 
 ## FUTURE
 
-- [ ] (none)
+- [ ] PRJ-352 Add local artifact gate-evaluation mode for CI consumers without rerunning pytest
+  - Status: FUTURE
+  - Group: Behavior Validation Artifact Governance
+  - Owner: Backend Builder
+  - Depends on: PRJ-351
+  - Priority: P1
+  - Result:
+    - behavior-validation script can evaluate an existing artifact in local
+      gate-check mode (`ci`) without invoking pytest again
+    - CI pipelines can split test execution and gate-evaluation stages while
+      preserving one gate contract owner
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_main_runtime_policy.py tests/test_api_routes.py`
+
+- [ ] PRJ-353 Add regressions for schema-version and local artifact gate-evaluation semantics
+  - Status: FUTURE
+  - Group: Behavior Validation Artifact Governance
+  - Owner: QA/Test
+  - Depends on: PRJ-352
+  - Priority: P1
+  - Result:
+    - regression coverage now pins schema-version presence, normalized gate
+      reasons, and artifact-only evaluation posture
+    - fallback behavior for malformed artifacts is test-visible in CI gate mode
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
+
+- [ ] PRJ-354 Sync docs/context for behavior-validation artifact-governance lane
+  - Status: FUTURE
+  - Group: Behavior Validation Artifact Governance
+  - Owner: Product Docs
+  - Depends on: PRJ-353
+  - Priority: P1
+  - Result:
+    - planning, ops, testing guidance, and context truth align on schema
+      versioning and artifact-only gate-evaluation posture
+    - next derived queue continuity remains explicit after artifact governance
+      rollout
+  - Validation:
+    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
+      `docs/operations/`, and `docs/engineering/` with targeted
+      cross-reference checks
 
 ## IN_PROGRESS
 
@@ -72,6 +112,22 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-350 Sync docs/context for behavior-validation CI-ingestion lane
+  - Status: DONE
+  - Group: Behavior Validation CI-Ingestion Follow-up
+  - Owner: Product Docs
+  - Depends on: PRJ-349
+  - Priority: P1
+  - Result:
+    - planning, ops, testing docs, and context truth now align on
+      behavior-validation artifact contract and `operator|ci` gate posture
+    - next derived queue continuity is now explicit through
+      `PRJ-351..PRJ-354` for artifact-governance follow-up
+  - Validation:
+    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
+      `docs/operations/`, and `docs/engineering/` with targeted
+      cross-reference checks
 
 - [x] PRJ-349 Add regressions for behavior-validation artifact and CI gate semantics
   - Status: DONE

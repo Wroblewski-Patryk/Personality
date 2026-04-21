@@ -50,11 +50,13 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-343..PRJ-346`: relation-aware inferred promotion governance
     (`9a`, `10a`) - complete
   - `PRJ-347..PRJ-350`: behavior-validation CI-ingestion follow-up
+    (`13`) - complete
+  - `PRJ-351..PRJ-354`: behavior-validation artifact governance
     (`13`) - queued
 - reflection deployment lane is complete through `PRJ-304`, and
   post-reflection hardening decisions are now complete through `PRJ-309`.
 - runtime behavior-validation lane is now complete through `PRJ-317`.
-- next architecture-to-code queue is now seeded through `PRJ-350`.
+- next architecture-to-code queue is now seeded through `PRJ-354`.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -877,7 +879,16 @@ The current repo already works as an MVP slice, but several architecture-level d
     - memory `write -> retrieve -> influence -> delayed recall`
     - multi-session continuity and personality stability
     - contradiction, missing-data, and noisy-input resilience
+- Decision (resolved in `PRJ-347..PRJ-350`, 2026-04-21):
+  - behavior validation now emits a machine-readable artifact contract with
+    summary counts, per-test status, and explicit gate snapshot
+    (`mode`, `status`, `violations`).
+  - release/ops behavior-validation wrappers now support explicit
+    `operator|ci` posture so local evidence mode and CI fail-fast mode share
+    one command family.
+  - regression coverage now pins artifact gate semantics, including CI
+    fail-fast behavior for empty test collection when required.
 - Remaining follow-up decision:
-  - behavior-validation CI-ingestion follow-up is now queued in
-    `PRJ-347..PRJ-350` to decide and implement machine-readable artifact and
-    gate posture without removing existing command-and-evidence release checks.
+  - behavior-validation artifact governance follow-up is now queued in
+    `PRJ-351..PRJ-354` to formalize schema-version posture and local
+    artifact-gate evaluation flow for CI consumers.

@@ -338,8 +338,14 @@ Release smoke ownership:
   `POST /event` roundtrip).
 - release-readiness now also requires behavior-validation evidence for the
   living-system baseline:
-  - Windows: `.\scripts\run_behavior_validation.ps1`
-  - Debian/bash: `./scripts/run_behavior_validation.sh`
+  - operator evidence mode (local/manual):
+    - Windows: `.\scripts\run_behavior_validation.ps1 -GateMode operator`
+    - Debian/bash: `./scripts/run_behavior_validation.sh --gate-mode operator`
+  - CI gate mode (fail-fast on gate violations):
+    - Windows:
+      `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+    - Debian/bash:
+      `./scripts/run_behavior_validation.sh --gate-mode ci --artifact-path artifacts/behavior_validation/report.json`
   - required focus: internal `system_debug` surface plus scenario checks for
     memory influence, multi-session continuity, and failure-mode stability.
 

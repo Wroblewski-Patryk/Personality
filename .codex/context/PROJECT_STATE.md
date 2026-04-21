@@ -1411,8 +1411,21 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-349` required regression scope is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
   passed with `176 passed`.
-- 2026-04-21: `PRJ-350` is now the next `READY` slice, focused on docs/context
-  synchronization for behavior-validation CI-ingestion posture.
+- 2026-04-21: `PRJ-350` is complete: planning, operations runbook, testing
+  guidance, and context truth now align on behavior-validation artifact
+  contract and `operator|ci` gate posture.
+- 2026-04-21: `PRJ-350` also seeds the next derived queue
+  (`PRJ-351..PRJ-354`) for behavior-validation artifact-governance follow-up.
+- 2026-04-21: `PRJ-350` validation is recorded as doc-and-context sync plus
+  targeted cross-reference checks across
+  `docs/planning/next-iteration-plan.md`,
+  `docs/planning/open-decisions.md`,
+  `docs/operations/runtime-ops-runbook.md`,
+  `docs/engineering/testing.md`,
+  `.codex/context/TASK_BOARD.md`, and
+  `.codex/context/PROJECT_STATE.md`.
+- 2026-04-21: `PRJ-351` is now the next `READY` slice, focused on
+  behavior-validation artifact schema-version and gate-reason taxonomy posture.
 
 ## Working Agreements
 

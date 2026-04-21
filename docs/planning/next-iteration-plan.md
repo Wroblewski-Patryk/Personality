@@ -53,8 +53,11 @@ Completed on 2026-04-21:
   delivery-reliability-aware trust gates, machine-visible gate diagnostics in
   planning/runtime debug surfaces, regression coverage, and synchronized
   docs/context truth.
-- next derived queue is now seeded through `PRJ-350` for behavior-validation
-  CI-ingestion follow-up.
+- `PRJ-347..PRJ-350` are complete: behavior-validation CI-ingestion now has a
+  machine-readable artifact contract, explicit `operator|ci` gate posture, and
+  regression coverage for gate semantics.
+- next derived queue is now seeded through `PRJ-354` for behavior-validation
+  artifact governance follow-up.
 
 Completed on 2026-04-17:
 
@@ -1789,18 +1792,30 @@ This group converts behavior-validation outcomes from command-and-evidence-only
 release posture into machine-ingestable CI artifacts without weakening the
 current local/operator workflow.
 
-- `PRJ-347` Add machine-readable behavior-validation artifact output for CI consumers.
-- `PRJ-348` Add release/ops script support for behavior-validation CI gate posture.
-- `PRJ-349` Add regressions for behavior-validation artifact and gate semantics.
-- `PRJ-350` Sync docs/context for behavior-validation CI-ingestion lane.
+Status update (2026-04-21): `PRJ-347..PRJ-350` are complete.
+
+- `PRJ-347` Add machine-readable behavior-validation artifact output for CI consumers. (complete)
+- `PRJ-348` Add release/ops script support for behavior-validation CI gate posture. (complete)
+- `PRJ-349` Add regressions for behavior-validation artifact and gate semantics. (complete)
+- `PRJ-350` Sync docs/context for behavior-validation CI-ingestion lane. (complete)
+
+## Group 33 - Behavior Validation Artifact Governance
+
+This group hardens artifact lifecycle and CI consumption posture so release
+evidence can be validated consistently across operator and automation paths.
+
+- `PRJ-351` Add explicit artifact schema versioning and gate reason taxonomy.
+- `PRJ-352` Add local artifact gate-evaluation mode for CI consumers without rerunning pytest.
+- `PRJ-353` Add regressions for artifact schema-version and local gate-evaluation semantics.
+- `PRJ-354` Sync docs/context for behavior-validation artifact-governance lane.
 
 ## Next Derived Slice
 
 Runtime behavior-validation queue is now complete through `PRJ-317`.
-Next implementation queue is now seeded through `PRJ-350`.
+Next implementation queue is now seeded through `PRJ-354`.
 Before the next implementation slice:
 
-- take `PRJ-347` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-351` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 
@@ -1838,6 +1853,7 @@ Next architecture-to-code queue:
 - `PRJ-339..PRJ-342` Manual runtime reliability fixes
 - `PRJ-343..PRJ-346` Relation-aware inferred promotion governance
 - `PRJ-347..PRJ-350` Behavior-validation CI-ingestion follow-up
+- `PRJ-351..PRJ-354` Behavior-validation artifact governance
 
 ## Parallel-Ready Lanes
 
@@ -1881,6 +1897,7 @@ group locks the production and release baseline for the converged runtime.
 16. `PRJ-339..PRJ-342` Manual runtime reliability fixes
 17. `PRJ-343..PRJ-346` Relation-aware inferred promotion governance
 18. `PRJ-347..PRJ-350` Behavior-validation CI-ingestion follow-up
+19. `PRJ-351..PRJ-354` Behavior-validation artifact governance
 
 The queue should still be treated as intentionally open after those items.
 Additional small architecture-alignment slices may still be discovered while

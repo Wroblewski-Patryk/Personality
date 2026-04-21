@@ -25,7 +25,13 @@ Primary command:
 Behavior-validation command (system-debug + scenario harness baseline):
 
 ```powershell
-.\scripts\run_behavior_validation.ps1
+.\scripts\run_behavior_validation.ps1 -GateMode operator
+```
+
+CI gate behavior-validation command (artifact + fail-fast gate posture):
+
+```powershell
+.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json
 ```
 
 ## Testing Layers For This Repo
@@ -85,8 +91,11 @@ For meaningful repo changes, leave behind:
   reflection, planning, language continuity, relation influence, or proactive
   behavior
 - for release-readiness-sensitive slices, behavior validation evidence from:
-  - `.\scripts\run_behavior_validation.ps1`
-  - `./scripts/run_behavior_validation.sh`
+  - `.\scripts\run_behavior_validation.ps1 -GateMode operator`
+  - `./scripts/run_behavior_validation.sh --gate-mode operator`
+- for CI-sensitive slices, behavior gate evidence from:
+  - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+  - `./scripts/run_behavior_validation.sh --gate-mode ci --artifact-path artifacts/behavior_validation/report.json`
 
 Useful migration verification command:
 
