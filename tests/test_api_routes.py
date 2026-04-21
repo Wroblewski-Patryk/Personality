@@ -719,6 +719,28 @@ def test_health_endpoint_returns_ok() -> None:
         "relation_fallback_identity_write": "disallowed",
         "supported_language_codes": ["en", "pl"],
         "multilingual_posture": "mvp_supported_languages_only",
+        "language_continuity": {
+            "policy_owner": "language_continuity",
+            "profile_owner_field": "preferred_language",
+            "supported_language_codes": ["en", "pl"],
+            "precedence": [
+                "explicit_request",
+                "diacritic_signal",
+                "strong_keyword_signal",
+                "continuity_resolution",
+                "weak_keyword_signal",
+                "default",
+            ],
+            "continuity_sources": [
+                "explicit_request",
+                "diacritic_signal",
+                "keyword_signal",
+                "recent_memory",
+                "user_profile",
+                "default",
+            ],
+            "multilingual_posture": "mvp_supported_languages_only",
+        },
     }
     assert body["memory_retrieval"]["semantic_retrieval_mode"] == "hybrid_vector_lexical"
     assert body["memory_retrieval"]["retrieval_depth_policy"] == {

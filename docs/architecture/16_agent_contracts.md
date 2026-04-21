@@ -208,7 +208,10 @@ continuity and learned runtime preferences.
    they must not rewrite identity-owned profile continuity
 4. runtime visibility should expose the shared policy owner through
    `/health.identity` and `system_debug.adaptive_state.identity_policy`
-5. multilingual posture remains explicit and bounded to currently supported
+5. language continuity should also expose one explicit posture snapshot with
+   precedence order, supported language codes, and current event-level
+   continuity diagnostics through runtime debug
+6. multilingual posture remains explicit and bounded to currently supported
    runtime language codes until a broader language model is intentionally added
 
 ---

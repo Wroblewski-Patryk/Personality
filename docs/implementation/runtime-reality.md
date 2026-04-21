@@ -144,6 +144,10 @@ The live runtime now enforces explicit identity and language ownership:
 - `app/core/identity_policy.py` is now the shared owner for that boundary, and
   `/health.identity` plus `system_debug.adaptive_state.identity_policy` expose
   the same ownership snapshot for operator/debug visibility
+- `/health.identity.language_continuity` now exposes the language-continuity
+  policy baseline (precedence, supported codes, source families), while
+  `system_debug.adaptive_state.language_continuity` exposes selected source,
+  candidate continuity inputs, and fallback posture for the current event
 
 Language decision precedence is now explicit:
 

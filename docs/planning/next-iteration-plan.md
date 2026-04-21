@@ -2529,8 +2529,8 @@ This group makes the identity/profile boundary explicit through one shared
 policy owner, then follows it with more visible language-continuity posture
 before any broader multilingual or profile-surface expansion.
 
-Status update (2026-04-21): `PRJ-411` is complete and `PRJ-412` is the next
-derived `READY` task.
+Status update (2026-04-21): `PRJ-411..PRJ-412` are complete and `PRJ-413` is
+the next derived `READY` task.
 
 - `PRJ-411` Define a shared identity/profile ownership policy and baseline visibility. (complete)
   - Result:
@@ -2544,11 +2544,15 @@ derived `READY` task.
       (`149 passed`)
 
 - `PRJ-412` Expose language-continuity posture diagnostics through health and runtime debug.
-  - Result:
-    - operators should be able to see whether current language continuity is
-      coming from turn-level evidence, recent memory continuity, profile
-      continuity, or fallback posture
-    - broader multilingual rollout can then extend one visible baseline
+  - Result: (complete)
+    - `/health.identity.language_continuity` now exposes precedence baseline,
+      supported codes, and continuity source families for operators
+    - runtime `system_debug.adaptive_state.language_continuity` now exposes
+      selected source, candidate continuity inputs, and fallback posture for
+      the current event
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+      (`149 passed`)
 
 - `PRJ-413` Add regressions for language-continuity posture and supported-language boundaries.
   - Result:

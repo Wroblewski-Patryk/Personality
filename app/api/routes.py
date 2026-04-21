@@ -40,6 +40,7 @@ from app.integrations.telegram.client import TelegramClient
 from app.memory.embeddings import embedding_strategy_snapshot, normalize_embedding_source_kinds
 from app.memory.repository import MemoryRepository
 from app.reflection.worker import ReflectionWorker
+from app.utils.language import language_continuity_policy_snapshot
 from app.workers.scheduler import SchedulerWorker
 
 router = APIRouter()
@@ -401,7 +402,10 @@ async def health(request: Request) -> dict[str, Any]:
         "status": "ok",
         "runtime_policy": runtime_policy,
         "release_readiness": release_readiness,
-        "identity": identity_policy_snapshot(),
+        "identity": {
+            **identity_policy_snapshot(),
+            "language_continuity": language_continuity_policy_snapshot(),
+        },
         "memory_retrieval": memory_retrieval_snapshot,
         "scheduler": {
             "healthy": scheduler_healthy,

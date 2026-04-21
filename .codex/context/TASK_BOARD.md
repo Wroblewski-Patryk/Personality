@@ -54,23 +54,17 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-412 Expose language-continuity posture diagnostics through health and runtime debug
-  - Group: Identity And Language Ownership Baseline
-  - Owner: Backend Builder
-  - Depends on: PRJ-411
-  - Priority: P1
-  - Scope:
-    - add one shared snapshot for current-turn, memory-continuity, profile,
-      and fallback language posture
-    - expose that posture through `/health` and runtime `system_debug`
-
-## BACKLOG
-
 - [ ] PRJ-413 Add regressions for language-continuity posture and supported-language boundaries
   - Group: Identity And Language Ownership Baseline
   - Owner: QA/Test
   - Depends on: PRJ-412
   - Priority: P1
+  - Scope:
+    - pin explicit-request, profile-only continuity, and default posture
+      diagnostics through runtime and API-visible surfaces
+    - keep unsupported-language fallback bounded to the current MVP language set
+
+## BACKLOG
 
 - [ ] PRJ-414 Sync docs/context for identity and language ownership baseline
   - Group: Identity And Language Ownership Baseline
@@ -95,6 +89,22 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-412 Expose language-continuity posture diagnostics through health and runtime debug
+  - Status: DONE
+  - Group: Identity And Language Ownership Baseline
+  - Owner: Backend Builder
+  - Depends on: PRJ-411
+  - Priority: P1
+  - Result:
+    - `/health.identity.language_continuity` now exposes precedence baseline,
+      supported codes, and continuity source families
+    - runtime `system_debug.adaptive_state.language_continuity` now exposes
+      selected source, candidate continuity inputs, continuity resolution, and
+      fallback posture for the current event
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+      (`149 passed`)
 
 - [x] PRJ-411 Define a shared identity/profile ownership policy and baseline visibility
   - Status: DONE

@@ -36,6 +36,7 @@ from app.memory.embeddings import deterministic_embedding, resolve_embedding_pos
 from app.memory.repository import MemoryRepository
 from app.motivation.engine import MotivationEngine
 from app.reflection.worker import ReflectionWorker
+from app.utils.language import detect_language_with_diagnostics
 
 T = TypeVar("T")
 
@@ -838,6 +839,11 @@ class RuntimeOrchestrator:
         )
         adaptive_state = {
             "identity_policy": identity_policy_snapshot(),
+            "language_continuity": detect_language_with_diagnostics(
+                text=text,
+                recent_memory=memory,
+                user_profile=user_profile,
+            )[1],
             "background_adaptive_outputs": summarize_loaded_adaptive_state(
                 user_conclusions=user_conclusions,
                 relations=relations,

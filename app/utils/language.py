@@ -43,6 +43,14 @@ LANGUAGE_HINT_WORDS = {
     },
 }
 SUPPORTED_LANGUAGE_CODES = frozenset(LANGUAGE_HINT_WORDS.keys())
+LANGUAGE_CONTINUITY_PRECEDENCE = (
+    "explicit_request",
+    "diacritic_signal",
+    "strong_keyword_signal",
+    "continuity_resolution",
+    "weak_keyword_signal",
+    "default",
+)
 
 LANGUAGE_NAMES = {
     "en": {"english", "angielski"},
@@ -130,23 +138,78 @@ def detect_language(
     recent_memory: list[dict] | None = None,
     user_profile: dict | None = None,
 ) -> LanguageDecision:
+    decision, _ = detect_language_with_diagnostics(
+        text=text,
+        recent_memory=recent_memory,
+        user_profile=user_profile,
+    )
+    return decision
+
+
+def language_continuity_policy_snapshot() -> dict[str, object]:
+    return {
+        "policy_owner": "language_continuity",
+        "profile_owner_field": "preferred_language",
+        "supported_language_codes": sorted(SUPPORTED_LANGUAGE_CODES),
+        "precedence": list(LANGUAGE_CONTINUITY_PRECEDENCE),
+        "continuity_sources": [
+            "explicit_request",
+            "diacritic_signal",
+            "keyword_signal",
+            "recent_memory",
+            "user_profile",
+            "default",
+        ],
+        "multilingual_posture": "mvp_supported_languages_only",
+    }
+
+
+def detect_language_with_diagnostics(
+    text: str,
+    recent_memory: list[dict] | None = None,
+    user_profile: dict | None = None,
+) -> tuple[LanguageDecision, dict[str, object]]:
     normalized = normalize_for_matching(text)
 
     explicit = _detect_explicit_language_request(normalized)
     if explicit:
-        return LanguageDecision(code=explicit, confidence=0.98, source="explicit_request")
+        decision = LanguageDecision(code=explicit, confidence=0.98, source="explicit_request")
+        return decision, _build_language_diagnostics(
+            selected=decision,
+            current_turn_posture="explicit_request",
+            keyword_candidate=None,
+            memory_candidate=_memory_language_decision(recent_memory or []),
+            profile_candidate=_profile_language_decision(user_profile),
+            continuity_resolution="not_needed_current_turn_signal",
+        )
 
-    if _contains_polish_diacritic(text):
-        return LanguageDecision(code="pl", confidence=0.94, source="diacritic_signal")
+    diacritic_signal = _contains_polish_diacritic(text)
+    if diacritic_signal:
+        decision = LanguageDecision(code="pl", confidence=0.94, source="diacritic_signal")
+        return decision, _build_language_diagnostics(
+            selected=decision,
+            current_turn_posture="diacritic_signal",
+            keyword_candidate=None,
+            memory_candidate=_memory_language_decision(recent_memory or []),
+            profile_candidate=_profile_language_decision(user_profile),
+            continuity_resolution="not_needed_current_turn_signal",
+        )
 
     tokens = tokenize_normalized(text)
     keyword_decision = _keyword_language_decision(tokens)
     if keyword_decision is not None and keyword_decision.confidence >= 0.69:
-        return keyword_decision
+        return keyword_decision, _build_language_diagnostics(
+            selected=keyword_decision,
+            current_turn_posture="strong_keyword_signal",
+            keyword_candidate=keyword_decision,
+            memory_candidate=_memory_language_decision(recent_memory or []),
+            profile_candidate=_profile_language_decision(user_profile),
+            continuity_resolution="not_needed_current_turn_signal",
+        )
 
     memory_decision = _memory_language_decision(recent_memory or [])
     profile_decision = _profile_language_decision(user_profile)
-    continuity_decision = _resolve_continuity_decision(
+    continuity_decision, continuity_resolution = _resolve_continuity_decision_with_reason(
         normalized_text=normalized,
         token_count=len(tokens),
         memory_decision=memory_decision,
@@ -154,12 +217,34 @@ def detect_language(
         user_profile=user_profile,
     )
     if continuity_decision is not None:
-        return continuity_decision
+        return continuity_decision, _build_language_diagnostics(
+            selected=continuity_decision,
+            current_turn_posture="weak_keyword_signal" if keyword_decision is not None else "no_current_turn_signal",
+            keyword_candidate=keyword_decision,
+            memory_candidate=memory_decision,
+            profile_candidate=profile_decision,
+            continuity_resolution=continuity_resolution,
+        )
 
     if keyword_decision is not None:
-        return keyword_decision
+        return keyword_decision, _build_language_diagnostics(
+            selected=keyword_decision,
+            current_turn_posture="weak_keyword_signal",
+            keyword_candidate=keyword_decision,
+            memory_candidate=memory_decision,
+            profile_candidate=profile_decision,
+            continuity_resolution="weak_keyword_fallback",
+        )
 
-    return LanguageDecision(code="en", confidence=0.35, source="default")
+    decision = LanguageDecision(code="en", confidence=0.35, source="default")
+    return decision, _build_language_diagnostics(
+        selected=decision,
+        current_turn_posture="no_current_turn_signal",
+        keyword_candidate=keyword_decision,
+        memory_candidate=memory_decision,
+        profile_candidate=profile_decision,
+        continuity_resolution="default_fallback",
+    )
 
 
 def infer_language_from_memory(recent_memory: list[dict]) -> str | None:
@@ -282,21 +367,41 @@ def _resolve_continuity_decision(
     profile_decision: LanguageDecision | None,
     user_profile: dict | None,
 ) -> LanguageDecision | None:
+    decision, _ = _resolve_continuity_decision_with_reason(
+        normalized_text=normalized_text,
+        token_count=token_count,
+        memory_decision=memory_decision,
+        profile_decision=profile_decision,
+        user_profile=user_profile,
+    )
+    return decision
+
+
+def _resolve_continuity_decision_with_reason(
+    *,
+    normalized_text: str,
+    token_count: int,
+    memory_decision: LanguageDecision | None,
+    profile_decision: LanguageDecision | None,
+    user_profile: dict | None,
+) -> tuple[LanguageDecision | None, str]:
     if memory_decision is None:
-        return profile_decision
+        if profile_decision is None:
+            return None, "no_continuity_candidate"
+        return profile_decision, "profile_only"
     if profile_decision is None:
-        return memory_decision
+        return memory_decision, "memory_only"
 
     if memory_decision.code == profile_decision.code:
         if profile_decision.confidence > memory_decision.confidence + 0.12:
-            return profile_decision
-        return memory_decision
+            return profile_decision, "aligned_profile_stronger"
+        return memory_decision, "aligned_memory_preferred"
 
     if _is_ambiguous_follow_up(normalized_text=normalized_text, token_count=token_count):
         profile_source = str((user_profile or {}).get("language_source", "")).strip().lower()
         if profile_source == "explicit_request" and profile_decision.confidence >= 0.9:
-            return profile_decision
-    return memory_decision
+            return profile_decision, "profile_explicit_request_override_on_ambiguous_follow_up"
+    return memory_decision, "memory_preferred_over_profile"
 
 
 def _is_ambiguous_follow_up(*, normalized_text: str, token_count: int) -> bool:
@@ -311,3 +416,36 @@ def _normalize_language_code(value: object) -> str | None:
     if code in SUPPORTED_LANGUAGE_CODES:
         return code
     return None
+
+
+def _build_language_diagnostics(
+    *,
+    selected: LanguageDecision,
+    current_turn_posture: str,
+    keyword_candidate: LanguageDecision | None,
+    memory_candidate: LanguageDecision | None,
+    profile_candidate: LanguageDecision | None,
+    continuity_resolution: str,
+) -> dict[str, object]:
+    return {
+        **language_continuity_policy_snapshot(),
+        "selected_language": selected.code,
+        "selected_source": selected.source,
+        "selected_confidence": selected.confidence,
+        "current_turn_posture": current_turn_posture,
+        "continuity_resolution": continuity_resolution,
+        "fallback_posture": "selected_default" if selected.source == "default" else "not_used",
+        "keyword_candidate": _decision_payload(keyword_candidate),
+        "memory_candidate": _decision_payload(memory_candidate),
+        "profile_candidate": _decision_payload(profile_candidate),
+    }
+
+
+def _decision_payload(decision: LanguageDecision | None) -> dict[str, object] | None:
+    if decision is None:
+        return None
+    return {
+        "code": decision.code,
+        "confidence": decision.confidence,
+        "source": decision.source,
+    }

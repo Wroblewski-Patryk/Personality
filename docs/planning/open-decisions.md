@@ -708,6 +708,10 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-411` now defines a shared `identity_policy` owner and exposes the
     current boundary through `/health.identity` and
     `system_debug.adaptive_state.identity_policy`.
+  - `PRJ-412` now exposes `language_continuity` posture through
+    `/health.identity` and runtime debug, including precedence baseline,
+    supported codes, selected source, candidate continuity inputs, and
+    fallback posture.
 - Decision (interim baseline resolved in `PRJ-411`, 2026-04-21):
   - language handling stays heuristic-plus-profile for the MVP
   - multilingual posture remains explicitly bounded to supported runtime codes

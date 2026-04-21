@@ -2510,6 +2510,16 @@ async def test_runtime_pipeline_uses_user_profile_language_for_ambiguous_turn_wi
     assert openai.calls[0]["response_style"] == ""
     assert openai.calls[0]["response_tone"] == "supportive"
     assert openai.calls[0]["collaboration_preference"] == ""
+    assert result.system_debug is not None
+    assert result.system_debug.adaptive_state["language_continuity"]["selected_language"] == "pl"
+    assert result.system_debug.adaptive_state["language_continuity"]["selected_source"] == "user_profile"
+    assert result.system_debug.adaptive_state["language_continuity"]["continuity_resolution"] == "profile_only"
+    assert result.system_debug.adaptive_state["language_continuity"]["profile_candidate"] == {
+        "code": "pl",
+        "confidence": 0.92,
+        "source": "user_profile",
+    }
+    assert result.system_debug.adaptive_state["language_continuity"]["memory_candidate"] is None
 
 
 async def test_runtime_pipeline_preserves_language_continuity_across_session_restart_without_recent_memory() -> None:
@@ -2588,6 +2598,10 @@ async def test_runtime_pipeline_preserves_language_continuity_across_session_res
     assert second.perception.language == "pl"
     assert second.perception.language_source == "user_profile"
     assert second.expression.language == "pl"
+    assert second.system_debug is not None
+    assert second.system_debug.adaptive_state["language_continuity"]["selected_source"] == "user_profile"
+    assert second.system_debug.adaptive_state["language_continuity"]["current_turn_posture"] == "no_current_turn_signal"
+    assert second.system_debug.adaptive_state["language_continuity"]["fallback_posture"] == "not_used"
 
 
 async def test_runtime_pipeline_applies_structured_response_preference_from_conclusion_memory() -> None:

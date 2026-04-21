@@ -72,6 +72,11 @@ Last updated: 2026-04-21
   language continuity versus conclusion-owned learned preferences, and the
   same baseline is exposed through `/health.identity` and runtime
   `system_debug.adaptive_state.identity_policy`.
+- 2026-04-21: language continuity now also has explicit operator/debug
+  posture: `/health.identity.language_continuity` exposes the baseline
+  precedence and supported codes, while runtime
+  `system_debug.adaptive_state.language_continuity` exposes selected source,
+  candidate continuity inputs, and fallback posture for the current event.
 - 2026-04-19: runtime now carries a first-class affective contract slot
   (`affect_label`, `intensity`, `needs_support`, `confidence`, `source`,
   `evidence`) populated by deterministic perception placeholders.
@@ -1722,8 +1727,14 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-411` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
   passed with `149 passed`.
-- 2026-04-21: `PRJ-412` is now the first `READY` task, focused on
-  language-continuity posture diagnostics across health and runtime debug.
+- 2026-04-21: `PRJ-412` is complete: language continuity posture is now
+  explicit through `/health.identity.language_continuity` and runtime
+  `system_debug.adaptive_state.language_continuity`.
+- 2026-04-21: `PRJ-412` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+  passed with `149 passed`.
+- 2026-04-21: `PRJ-413` is now the first `READY` task, focused on regression
+  coverage for language-continuity posture and supported-language boundaries.
 
 ## Working Agreements
 
