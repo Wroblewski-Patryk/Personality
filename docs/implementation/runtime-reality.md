@@ -141,6 +141,9 @@ The live runtime now enforces explicit identity and language ownership:
   preference inputs, not durable profile fields
 - relation fallback cues may shape stage-level tie-break behavior, but they do
   not rewrite identity profile continuity fields
+- `app/core/identity_policy.py` is now the shared owner for that boundary, and
+  `/health.identity` plus `system_debug.adaptive_state.identity_policy` expose
+  the same ownership snapshot for operator/debug visibility
 
 Language decision precedence is now explicit:
 

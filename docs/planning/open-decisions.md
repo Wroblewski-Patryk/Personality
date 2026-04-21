@@ -75,6 +75,8 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-399..PRJ-402`: affective-assessment rollout policy (`4a`) - complete
   - `PRJ-403..PRJ-406`: reflection scope governance (`5c`) - complete
   - `PRJ-407..PRJ-410`: durable attention contract-store rollout (`12a`) - complete
+  - `PRJ-411..PRJ-414`: identity/profile ownership and language continuity
+    governance (`8`, `9`)
 - reflection deployment lane is complete through `PRJ-304`, and
   post-reflection hardening decisions are now complete through `PRJ-309`.
 - runtime behavior-validation lane is now complete through `PRJ-317`.
@@ -84,6 +86,9 @@ The current repo already works as an MVP slice, but several architecture-level d
   architecture decisions below.
 - post-Group-48 state has no remaining seeded `READY`; the next architecture
   slice should be derived from the remaining open decisions below.
+- post-`PRJ-411` state now has the next convergence queue seeded through
+  `PRJ-414`, starting with language-continuity posture diagnostics on top of
+  the new identity/profile ownership baseline.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -700,8 +705,17 @@ The current repo already works as an MVP slice, but several architecture-level d
   - API identity fallback is now explicit and request-scoped
     (`meta.user_id` -> `X-AION-User-Id` -> `anonymous`), reducing accidental
     language/profile bleed from shared anonymous traffic.
-- Decision needed:
-  - should language handling stay heuristic-plus-profile for the MVP, or should it move to a richer user preference model and broader multilingual support once more channels are added?
+  - `PRJ-411` now defines a shared `identity_policy` owner and exposes the
+    current boundary through `/health.identity` and
+    `system_debug.adaptive_state.identity_policy`.
+- Decision (interim baseline resolved in `PRJ-411`, 2026-04-21):
+  - language handling stays heuristic-plus-profile for the MVP
+  - multilingual posture remains explicitly bounded to supported runtime codes
+    (`en|pl`) until a broader language model is intentionally added
+- Remaining follow-up decision:
+  - when should language continuity move from the current heuristic-plus-profile
+    baseline to a richer multilingual preference model with broader channel
+    support?
 
 ### 9. Lightweight Profile Scope
 
@@ -714,8 +728,19 @@ The current repo already works as an MVP slice, but several architecture-level d
     fields.
   - runtime builds a lightweight `IdentitySnapshot` from profile language plus
     conclusion/theta inputs without merging those ownership surfaces.
-- Decision needed:
-  - should `aion_profile` remain limited to durable interaction preferences such as language, while `aion_conclusion` carries generalized learned preferences, or should those concerns merge into one wider identity-linked profile later?
+  - `PRJ-411` now centralizes that boundary in `app/core/identity_policy.py`
+    and exposes the same owner snapshot through `/health` and runtime debug.
+- Decision (interim baseline resolved in `PRJ-411`, 2026-04-21):
+  - `aion_profile` remains limited to durable interaction continuity such as
+    language preference
+  - generalized learned preferences stay conclusion-owned in
+    `aion_conclusion`
+  - relation fallback cues remain foreground tie-break inputs only, not
+    durable profile identity writes
+- Remaining follow-up decision:
+  - should the repo keep this split permanently, or should a later
+    identity-linked profile model merge some conclusion-owned preferences into
+    a wider profile surface?
 
 ### 9a. Relation System Rollout
 

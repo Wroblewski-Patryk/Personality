@@ -96,6 +96,9 @@ Completed on 2026-04-21:
 - `PRJ-399..PRJ-402` are complete: affective assessment now has explicit
   rollout ownership, health/debug visibility, and deterministic fallback
   gating for policy-disabled versus classifier-unavailable posture.
+- after Group 48 closed, the next architecture-convergence queue is now seeded
+  through `PRJ-414`, with a new group focused on identity/profile ownership
+  visibility and the next language-continuity governance follow-up.
 
 Completed on 2026-04-17:
 
@@ -2520,6 +2523,47 @@ guardrails.
       `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py`
       (`79 passed`)
 
+## Group 49 - Identity And Language Ownership Baseline
+
+This group makes the identity/profile boundary explicit through one shared
+policy owner, then follows it with more visible language-continuity posture
+before any broader multilingual or profile-surface expansion.
+
+Status update (2026-04-21): `PRJ-411` is complete and `PRJ-412` is the next
+derived `READY` task.
+
+- `PRJ-411` Define a shared identity/profile ownership policy and baseline visibility. (complete)
+  - Result:
+    - runtime now has one shared owner for profile-versus-conclusion identity
+      preferences in `app/core/identity_policy.py`
+    - `/health.identity` and `system_debug.adaptive_state.identity_policy` now
+      expose that baseline so the split is machine-visible instead of living
+      only in scattered implementation details
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+      (`149 passed`)
+
+- `PRJ-412` Expose language-continuity posture diagnostics through health and runtime debug.
+  - Result:
+    - operators should be able to see whether current language continuity is
+      coming from turn-level evidence, recent memory continuity, profile
+      continuity, or fallback posture
+    - broader multilingual rollout can then extend one visible baseline
+
+- `PRJ-413` Add regressions for language-continuity posture and supported-language boundaries.
+  - Result:
+    - language-source precedence and unsupported-code fallback should become
+      regression-pinned across runtime and API-visible diagnostics
+    - later multilingual expansion should inherit explicit continuity tests
+
+- `PRJ-414` Sync docs/context for identity and language ownership baseline.
+  - Result:
+    - architecture, runtime-reality, planning docs, testing guidance, and
+      context truth should align on the shared identity-policy owner and the
+      resulting language/profile baseline
+    - later identity-profile changes can extend one explicit owner instead of
+      reopening the split ad hoc
+
 ## Parallel-Ready Lanes
 
 The next three groups intentionally stay sequential because they define shared
@@ -2578,10 +2622,11 @@ group locks the production and release baseline for the converged runtime.
 32. `PRJ-399..PRJ-402` Affective-assessment rollout policy
 33. `PRJ-403..PRJ-406` Reflection scope governance
 34. `PRJ-407..PRJ-410` Durable attention contract-store rollout
+35. `PRJ-411..PRJ-414` Identity and language ownership baseline
 
 The queue should still be treated as intentionally open after those items.
 Additional small architecture-alignment slices may still be discovered while
-executing Groups 17 through 48.
+executing Groups 17 through 49.
 
 ## Handoff Rules For Execution Agents
 

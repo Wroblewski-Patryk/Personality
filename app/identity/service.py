@@ -1,4 +1,5 @@
 from app.core.contracts import IdentityOutput
+from app.core.identity_policy import resolve_identity_preferences
 
 
 class IdentityService:
@@ -18,9 +19,13 @@ class IdentityService:
         user_preferences: dict | None = None,
         user_theta: dict | None = None,
     ) -> IdentityOutput:
-        preferred_language = self._clean(user_profile, "preferred_language")
-        response_style = self._clean(user_preferences, "response_style")
-        collaboration_preference = self._clean(user_preferences, "collaboration_preference")
+        resolved_preferences = resolve_identity_preferences(
+            user_profile=user_profile,
+            user_preferences=user_preferences,
+        )
+        preferred_language = resolved_preferences["preferred_language"]
+        response_style = resolved_preferences["response_style"]
+        collaboration_preference = resolved_preferences["collaboration_preference"]
         theta_orientation = self._theta_orientation(user_theta)
 
         return IdentityOutput(
@@ -39,12 +44,6 @@ class IdentityService:
                 theta_orientation=theta_orientation,
             ),
         )
-
-    def _clean(self, payload: dict | None, key: str) -> str | None:
-        if not payload:
-            return None
-        value = str(payload.get(key, "")).strip().lower()
-        return value or None
 
     def _theta_orientation(self, user_theta: dict | None) -> str | None:
         if not user_theta:

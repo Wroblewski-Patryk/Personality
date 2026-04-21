@@ -194,6 +194,25 @@ logic back into stage-local conventions.
 
 ---
 
+## Identity And Preference Ownership Contract
+
+Identity loading keeps one explicit ownership policy between lightweight profile
+continuity and learned runtime preferences.
+
+1. `preferred_language` remains profile-owned continuity state and is loaded
+   from `aion_profile`
+2. `response_style`, `collaboration_preference`, and `preferred_role` remain
+   conclusion-owned learned preferences and must not be copied into profile
+   storage as identity fields
+3. relation fallback cues may influence stage-level tie-break behavior, but
+   they must not rewrite identity-owned profile continuity
+4. runtime visibility should expose the shared policy owner through
+   `/health.identity` and `system_debug.adaptive_state.identity_policy`
+5. multilingual posture remains explicit and bounded to currently supported
+   runtime language codes until a broader language model is intentionally added
+
+---
+
 ## Adaptive Influence Governance Contract (PRJ-288 Baseline)
 
 Adaptive signals may influence foreground cognition only through one governed

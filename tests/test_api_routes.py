@@ -711,6 +711,15 @@ def test_health_endpoint_returns_ok() -> None:
     assert body["runtime_policy"]["event_debug_shared_ingress_mode"] == "compatibility"
     assert body["runtime_policy"]["compatibility_sunset_ready"] is False
     assert body["runtime_policy"]["event_debug_query_compat_telemetry"]["recent_window_size"] == 20
+    assert body["identity"] == {
+        "policy_owner": "identity_policy",
+        "language_strategy": "heuristic_plus_profile_continuity",
+        "profile_owner_fields": ["preferred_language"],
+        "conclusion_owner_fields": ["response_style", "collaboration_preference", "preferred_role"],
+        "relation_fallback_identity_write": "disallowed",
+        "supported_language_codes": ["en", "pl"],
+        "multilingual_posture": "mvp_supported_languages_only",
+    }
     assert body["memory_retrieval"]["semantic_retrieval_mode"] == "hybrid_vector_lexical"
     assert body["memory_retrieval"]["retrieval_depth_policy"] == {
         "episodic_limit": 12,

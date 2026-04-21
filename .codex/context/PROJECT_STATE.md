@@ -68,6 +68,10 @@ Last updated: 2026-04-21
 - 2026-04-19: API event normalization now supports `X-AION-User-Id` fallback
   (when `meta.user_id` is missing), making user-scoped language/profile memory
   handling safer for multi-user API traffic.
+- 2026-04-21: runtime now has a shared `identity_policy` owner for profile
+  language continuity versus conclusion-owned learned preferences, and the
+  same baseline is exposed through `/health.identity` and runtime
+  `system_debug.adaptive_state.identity_policy`.
 - 2026-04-19: runtime now carries a first-class affective contract slot
   (`affect_label`, `intensity`, `needs_support`, `confidence`, `source`,
   `evidence`) populated by deterministic perception placeholders.
@@ -1709,8 +1713,17 @@ Last updated: 2026-04-21
   passed with `122 passed`, and
   `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py`
   passed with `79 passed`.
-- 2026-04-21: there is no remaining seeded `READY`; the next architecture slice
-  should be derived from planning docs and open decisions.
+- 2026-04-21: the next architecture-to-code queue is now seeded through
+  `PRJ-414`.
+- 2026-04-21: `PRJ-411` is complete: identity/profile ownership now has one
+  shared policy owner in `app/core/identity_policy.py`, and `/health.identity`
+  plus runtime `system_debug.adaptive_state.identity_policy` expose the same
+  boundary for operator/debug visibility.
+- 2026-04-21: `PRJ-411` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+  passed with `149 passed`.
+- 2026-04-21: `PRJ-412` is now the first `READY` task, focused on
+  language-continuity posture diagnostics across health and runtime debug.
 
 ## Working Agreements
 

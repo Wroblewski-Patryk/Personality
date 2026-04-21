@@ -3001,6 +3001,16 @@ async def test_runtime_pipeline_identity_uses_conclusion_owner_not_relation_fall
     assert result.identity.collaboration_preference is None
     assert "Collaboration preference:" not in result.identity.summary
     assert openai.calls[0]["collaboration_preference"] == "guided"
+    assert result.system_debug is not None
+    assert result.system_debug.adaptive_state["identity_policy"] == {
+        "policy_owner": "identity_policy",
+        "language_strategy": "heuristic_plus_profile_continuity",
+        "profile_owner_fields": ["preferred_language"],
+        "conclusion_owner_fields": ["response_style", "collaboration_preference", "preferred_role"],
+        "relation_fallback_identity_write": "disallowed",
+        "supported_language_codes": ["en", "pl"],
+        "multilingual_posture": "mvp_supported_languages_only",
+    }
 
 
 async def test_runtime_pipeline_uses_reflected_goal_execution_state_across_context_motivation_and_plan() -> None:
@@ -4620,6 +4630,8 @@ async def test_runtime_pipeline_exposes_system_debug_surface_for_behavior_valida
     assert "episodic_lexical_hits" in result.system_debug.memory_bundle.diagnostics
     assert result.system_debug.plan.domain_intents
     assert result.system_debug.action_result.status in {"success", "noop"}
+    assert result.system_debug.adaptive_state["identity_policy"]["policy_owner"] == "identity_policy"
+    assert result.system_debug.adaptive_state["identity_policy"]["profile_owner_fields"] == ["preferred_language"]
     assert result.system_debug.adaptive_state["retrieval_depth_policy"]["episodic_limit"] == RuntimeOrchestrator.MEMORY_LOAD_LIMIT
     assert result.system_debug.adaptive_state["background_adaptive_outputs"]["theta_loaded"] is False
     assert result.system_debug.adaptive_state["affective_assessment_policy"]["affective_assessment_owner"] == (

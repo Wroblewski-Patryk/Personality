@@ -122,6 +122,8 @@ For meaningful repo changes, leave behind:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_deployment_trigger_scripts.py`
 - for background adaptive-output convergence slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_graph_state_contract.py`
+- for identity/profile ownership slices, regression evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
 - for durable attention parity slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_memory_repository.py tests/test_config.py`
 - for role-and-skill capability slices, regression evidence from:

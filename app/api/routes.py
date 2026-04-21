@@ -16,6 +16,7 @@ from app.core.debug_compat import (
     debug_query_compat_sunset_snapshot,
 )
 from app.core.events import looks_like_telegram_update, normalize_event
+from app.core.identity_policy import identity_policy_snapshot
 from app.core.runtime_policy import (
     app_environment,
     event_debug_enabled,
@@ -400,6 +401,7 @@ async def health(request: Request) -> dict[str, Any]:
         "status": "ok",
         "runtime_policy": runtime_policy,
         "release_readiness": release_readiness,
+        "identity": identity_policy_snapshot(),
         "memory_retrieval": memory_retrieval_snapshot,
         "scheduler": {
             "healthy": scheduler_healthy,

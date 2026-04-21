@@ -47,14 +47,36 @@ Last updated: 2026-04-21
 - That queue focuses on evidence-driven role selection, affective-assessment
   rollout policy, reflection scope governance, and true durable attention
   contract-store rollout preparation.
+- The next convergence queue is now seeded through `PRJ-414`.
+- That queue focuses on explicit identity/profile ownership visibility first,
+  followed by language-continuity posture diagnostics and the related
+  docs/regression sync.
 
 ## READY
 
-- [ ] (none)
+- [ ] PRJ-412 Expose language-continuity posture diagnostics through health and runtime debug
+  - Group: Identity And Language Ownership Baseline
+  - Owner: Backend Builder
+  - Depends on: PRJ-411
+  - Priority: P1
+  - Scope:
+    - add one shared snapshot for current-turn, memory-continuity, profile,
+      and fallback language posture
+    - expose that posture through `/health` and runtime `system_debug`
 
 ## BACKLOG
 
-- [ ] (none)
+- [ ] PRJ-413 Add regressions for language-continuity posture and supported-language boundaries
+  - Group: Identity And Language Ownership Baseline
+  - Owner: QA/Test
+  - Depends on: PRJ-412
+  - Priority: P1
+
+- [ ] PRJ-414 Sync docs/context for identity and language ownership baseline
+  - Group: Identity And Language Ownership Baseline
+  - Owner: Product Docs
+  - Depends on: PRJ-413
+  - Priority: P1
 
 ## FUTURE
 
@@ -73,6 +95,22 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-411 Define a shared identity/profile ownership policy and baseline visibility
+  - Status: DONE
+  - Group: Identity And Language Ownership Baseline
+  - Owner: Planner
+  - Depends on: PRJ-410
+  - Priority: P1
+  - Result:
+    - runtime now has one shared `identity_policy` owner for
+      `preferred_language` profile continuity versus conclusion-owned
+      `response_style` and `collaboration_preference`
+    - `/health.identity` and runtime `system_debug.adaptive_state.identity_policy`
+      now expose that split so the boundary is machine-visible
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+      (`149 passed`)
 
 - [x] PRJ-410 Sync docs/context for durable attention contract-store rollout
   - Status: DONE

@@ -22,6 +22,7 @@ from app.core.contracts import (
 )
 from app.core.graph_adapters import GraphStageAdapters
 from app.core.graph_state import GraphMemoryState, build_graph_state_seed, expression_to_action_delivery
+from app.core.identity_policy import identity_policy_snapshot
 from app.core.logging import RuntimeLogContext, RuntimeStageLogger, get_logger
 from app.core.retrieval_policy import retrieval_depth_policy_snapshot, theta_influence_snapshot
 from app.core.runtime_graph import ForegroundLangGraphRunner
@@ -836,6 +837,7 @@ class RuntimeOrchestrator:
             hybrid_diagnostics=hybrid_diagnostics,
         )
         adaptive_state = {
+            "identity_policy": identity_policy_snapshot(),
             "background_adaptive_outputs": summarize_loaded_adaptive_state(
                 user_conclusions=user_conclusions,
                 relations=relations,
