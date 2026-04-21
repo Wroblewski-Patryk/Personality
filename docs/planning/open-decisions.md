@@ -89,6 +89,8 @@ The current repo already works as an MVP slice, but several architecture-level d
 - post-`PRJ-411` state now has the next convergence queue seeded through
   `PRJ-414`, starting with language-continuity posture diagnostics on top of
   the new identity/profile ownership baseline.
+- post-Group-49 state has no remaining seeded `READY`; the next architecture
+  slice should again be derived from the remaining open decisions below.
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

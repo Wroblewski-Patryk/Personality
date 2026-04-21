@@ -2529,8 +2529,7 @@ This group makes the identity/profile boundary explicit through one shared
 policy owner, then follows it with more visible language-continuity posture
 before any broader multilingual or profile-surface expansion.
 
-Status update (2026-04-21): `PRJ-411..PRJ-413` are complete and `PRJ-414` is
-the next derived `READY` task.
+Status update (2026-04-21): `PRJ-411..PRJ-414` are complete.
 
 - `PRJ-411` Define a shared identity/profile ownership policy and baseline visibility. (complete)
   - Result:
@@ -2566,12 +2565,14 @@ the next derived `READY` task.
       (`165 passed`)
 
 - `PRJ-414` Sync docs/context for identity and language ownership baseline.
-  - Result:
+  - Result: (complete)
     - architecture, runtime-reality, planning docs, testing guidance, and
-      context truth should align on the shared identity-policy owner and the
-      resulting language/profile baseline
-    - later identity-profile changes can extend one explicit owner instead of
-      reopening the split ad hoc
+      context truth now align on the shared identity-policy owner plus
+      language-continuity diagnostics baseline
+    - Group 49 closes in a clean state, so later identity-profile changes can
+      extend one explicit owner instead of reopening the split ad hoc
+  - Validation:
+    - doc-and-context sync plus targeted identity/language cross-doc review
 
 ## Parallel-Ready Lanes
 

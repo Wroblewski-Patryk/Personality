@@ -54,15 +54,7 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-414 Sync docs/context for identity and language ownership baseline
-  - Group: Identity And Language Ownership Baseline
-  - Owner: Product Docs
-  - Depends on: PRJ-413
-  - Priority: P1
-  - Scope:
-    - align architecture, runtime-reality, planning docs, and context truth on
-      the identity-policy owner plus language-continuity diagnostics baseline
-    - leave Group 49 in a clean complete state with no stale `READY` drift
+- [ ] (none)
 
 ## BACKLOG
 
@@ -85,6 +77,22 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-414 Sync docs/context for identity and language ownership baseline
+  - Status: DONE
+  - Group: Identity And Language Ownership Baseline
+  - Owner: Product Docs
+  - Depends on: PRJ-413
+  - Priority: P1
+  - Result:
+    - architecture, runtime-reality, planning docs, testing guidance, and
+      context truth now align on the shared identity-policy owner plus
+      language-continuity diagnostics baseline
+    - Group 49 is now complete and no seeded `READY` task remains
+  - Validation:
+    - doc-and-context sync across `docs/architecture/`,
+      `docs/implementation/`, `docs/planning/`, `docs/engineering/`, and
+      `.codex/context/`
 
 - [x] PRJ-413 Add regressions for language-continuity posture and supported-language boundaries
   - Status: DONE
