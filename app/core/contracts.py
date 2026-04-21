@@ -331,6 +331,7 @@ class PlanOutput(BaseModel):
     needs_action: bool
     needs_response: bool
     domain_intents: list[DomainActionIntent] = Field(default_factory=list)
+    inferred_promotion_diagnostics: list[str] = Field(default_factory=list)
     proactive_decision: ProactiveDecisionOutput | None = None
     proactive_delivery_guard: ProactiveDeliveryGuardOutput | None = None
     proposal_handoffs: list[ProposalHandoffDecisionOutput] = Field(default_factory=list)
@@ -434,6 +435,7 @@ class RuntimeSystemDebugPlanView(BaseModel):
     needs_action: bool
     needs_response: bool
     domain_intents: list[dict[str, Any]] = Field(default_factory=list)
+    inferred_promotion_diagnostics: list[str] = Field(default_factory=list)
 
 
 class RuntimeSystemDebugOutput(BaseModel):

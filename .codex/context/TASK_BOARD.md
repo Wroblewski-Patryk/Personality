@@ -36,29 +36,8 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-344 Add inferred-promotion gate diagnostics for planning and runtime debug surfaces
-  - Status: READY
-  - Group: Relation-Aware Inferred Promotion Governance
-  - Owner: Backend Builder
-  - Depends on: PRJ-343
-  - Priority: P1
-  - Result:
-    - planning now emits explicit inferred-gate diagnostics
-      (for example `reason=trust_gate_low_confidence`) for blocked or promoted
-      inferred intents
-    - runtime/system-debug visibility now includes inferred-gate posture so
-      trust-driven promotion decisions are operator-traceable
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-345 Add regressions for trust-aware inferred promotion gates and diagnostics
-  - Status: FUTURE
+  - Status: READY
   - Group: Relation-Aware Inferred Promotion Governance
   - Owner: QA/Test
   - Depends on: PRJ-344
@@ -70,6 +49,12 @@ Last updated: 2026-04-21
       across planning/runtime paths
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_reflection_worker.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-346 Sync docs/context for relation-aware inferred promotion governance lane
   - Status: FUTURE
@@ -100,6 +85,22 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-344 Add inferred-promotion gate diagnostics for planning and runtime debug surfaces
+  - Status: DONE
+  - Group: Relation-Aware Inferred Promotion Governance
+  - Owner: Backend Builder
+  - Depends on: PRJ-343
+  - Priority: P1
+  - Result:
+    - planning now emits explicit inferred-promotion gate diagnostics
+      (`reason=...`, `result=...`) for blocked and promoted inference paths
+    - runtime/system-debug plan payload now surfaces
+      `inferred_promotion_diagnostics` so trust-driven inference decisions are
+      operator-visible in debug responses
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+      (`200 passed`)
 
 - [x] PRJ-343 Add delivery-reliability-aware gates for inferred goal/task promotion
   - Status: DONE

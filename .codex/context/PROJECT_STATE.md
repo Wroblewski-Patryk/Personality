@@ -1339,8 +1339,17 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-343` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_adaptive_policy.py`
   passed with `145 passed`.
-- 2026-04-21: `PRJ-344` is now the next `READY` slice, focused on inferred
-  promotion gate diagnostics across planning/runtime debug surfaces.
+- 2026-04-21: `PRJ-344` is complete: inferred-promotion gate diagnostics are
+  now explicit in planning output (`reason=...`, `result=...`) and available in
+  runtime `system_debug.plan.inferred_promotion_diagnostics`.
+- 2026-04-21: `PRJ-344` also extends API debug contract coverage so
+  `/internal/event/debug` plan payload remains stable while exposing inferred
+  promotion diagnostics for operator triage.
+- 2026-04-21: `PRJ-344` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+  passed with `200 passed`.
+- 2026-04-21: `PRJ-345` is now the next `READY` slice, focused on regression
+  hardening for trust-aware inferred promotion gates and diagnostics.
 
 ## Working Agreements
 

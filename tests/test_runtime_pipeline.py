@@ -1868,6 +1868,9 @@ async def test_runtime_pipeline_persists_inferred_goal_and_task_promotions_from_
     assert result.active_goals[0].description.startswith("Inferred goal from repeated execution evidence:")
     assert result.active_tasks[0].description.startswith("Inferred task from repeated execution evidence:")
     assert result.active_tasks[0].status == "blocked"
+    assert "reason=gate_open" in result.plan.inferred_promotion_diagnostics
+    assert "result=promote_inferred_task" in result.plan.inferred_promotion_diagnostics
+    assert "result=promote_inferred_goal" in result.plan.inferred_promotion_diagnostics
 
 
 async def test_runtime_pipeline_blocks_inferred_promotion_under_low_trust_with_borderline_importance() -> None:
@@ -1918,6 +1921,8 @@ async def test_runtime_pipeline_blocks_inferred_promotion_under_low_trust_with_b
     assert result.plan.domain_intents[0].intent_type == "noop"
     assert not any(intent.intent_type == "promote_inferred_goal" for intent in result.plan.domain_intents)
     assert not any(intent.intent_type == "promote_inferred_task" for intent in result.plan.domain_intents)
+    assert "reason=trust_gate_low_confidence" in result.plan.inferred_promotion_diagnostics
+    assert "reason=trust_gate_low_confidence" in result.system_debug.plan.inferred_promotion_diagnostics
     assert result.active_goals == []
     assert result.active_tasks == []
 

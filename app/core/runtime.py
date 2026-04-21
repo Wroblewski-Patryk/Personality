@@ -141,6 +141,7 @@ class RuntimeOrchestrator:
                 needs_action=plan.needs_action,
                 needs_response=plan.needs_response,
                 domain_intents=[intent.model_dump(mode="json") for intent in plan.domain_intents],
+                inferred_promotion_diagnostics=list(plan.inferred_promotion_diagnostics),
             ),
             expression=expression,
             action_result=action_result,

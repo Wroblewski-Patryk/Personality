@@ -326,7 +326,7 @@ class PlanningAgent:
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, step)
 
-        domain_intents = self._build_domain_action_intents(
+        domain_intents, inferred_promotion_diagnostics = self._build_domain_action_intents(
             event_text=event_text,
             context_summary=context.summary,
             motivation=motivation,
@@ -343,6 +343,7 @@ class PlanningAgent:
             needs_action=needs_action,
             needs_response=needs_response,
             domain_intents=domain_intents,
+            inferred_promotion_diagnostics=inferred_promotion_diagnostics,
             proposal_handoffs=proposal_handoffs,
             accepted_proposals=accepted_proposals,
             connector_permission_gates=connector_permission_gates,
@@ -452,8 +453,9 @@ class PlanningAgent:
         active_goals: list[dict],
         active_tasks: list[dict],
         relation_delivery: str | None,
-    ) -> list[DomainActionIntent]:
+    ) -> tuple[list[DomainActionIntent], list[str]]:
         intents: list[DomainActionIntent] = []
+        inferred_promotion_diagnostics: list[str] = []
         lowered_text = event_text.strip().lower()
 
         goal_signal = detect_goal_signal(event_text)
@@ -517,21 +519,20 @@ class PlanningAgent:
         if connected_drive_intent is not None:
             intents.append(connected_drive_intent)
 
-        intents.extend(
-            self._build_inferred_goal_task_intents(
-                event_text=event_text,
-                context_summary=context_summary,
-                motivation=motivation,
-                active_goals=active_goals,
-                active_tasks=active_tasks,
-                existing_intents=intents,
-                relation_delivery=relation_delivery,
-            )
+        inferred_intents, inferred_promotion_diagnostics = self._build_inferred_goal_task_intents(
+            event_text=event_text,
+            context_summary=context_summary,
+            motivation=motivation,
+            active_goals=active_goals,
+            active_tasks=active_tasks,
+            existing_intents=intents,
+            relation_delivery=relation_delivery,
         )
+        intents.extend(inferred_intents)
 
         if not intents:
-            return [NoopDomainIntent()]
-        return intents
+            return [NoopDomainIntent()], inferred_promotion_diagnostics
+        return intents, inferred_promotion_diagnostics
 
     def _build_inferred_goal_task_intents(
         self,
@@ -543,14 +544,16 @@ class PlanningAgent:
         active_tasks: list[dict],
         existing_intents: list[DomainActionIntent],
         relation_delivery: str | None,
-    ) -> list[DomainActionIntent]:
-        if not self._can_infer_goal_task_promotion(
+    ) -> tuple[list[DomainActionIntent], list[str]]:
+        gate_reason = self._inferred_promotion_gate_reason(
             event_text=event_text,
             context_summary=context_summary,
             motivation=motivation,
             relation_delivery=relation_delivery,
-        ):
-            return []
+        )
+        diagnostics = [f"reason={gate_reason}"]
+        if gate_reason != "gate_open":
+            return [], diagnostics
 
         has_goal_intent = any(isinstance(intent, UpsertGoalDomainIntent) for intent in existing_intents)
         has_task_intent = any(isinstance(intent, UpsertTaskDomainIntent) for intent in existing_intents)
@@ -597,19 +600,23 @@ class PlanningAgent:
             )
 
         if has_goal_intent:
-            return inferred_intents
+            diagnostics.append("result=goal_intent_already_present")
+            return inferred_intents, diagnostics
 
         inferred_goal_name = self._infer_goal_name_from_repeated_evidence(
             event_text=event_text,
             inferred_task_name=inferred_task_name,
         )
         if inferred_goal_name is None:
-            return inferred_intents
+            diagnostics.append("result=no_goal_candidate")
+            return inferred_intents, diagnostics
         if self._is_duplicate_goal_candidate(inferred_goal_name, active_goals):
-            return inferred_intents
+            diagnostics.append("result=duplicate_goal_candidate")
+            return inferred_intents, diagnostics
 
         if active_goals:
-            return inferred_intents
+            diagnostics.append("result=active_goal_already_present")
+            return inferred_intents, diagnostics
 
         inferred_intents.append(
             PromoteInferredGoalDomainIntent(
@@ -619,7 +626,13 @@ class PlanningAgent:
                 goal_type=self._inferred_goal_type(normalized),
             )
         )
-        return inferred_intents
+        if any(isinstance(intent, PromoteInferredTaskDomainIntent) for intent in inferred_intents):
+            diagnostics.append("result=promote_inferred_task")
+        if any(isinstance(intent, MaintainTaskStatusDomainIntent) for intent in inferred_intents):
+            diagnostics.append("result=maintain_task_status")
+        if any(isinstance(intent, PromoteInferredGoalDomainIntent) for intent in inferred_intents):
+            diagnostics.append("result=promote_inferred_goal")
+        return inferred_intents, diagnostics
 
     def _can_infer_goal_task_promotion(
         self,
@@ -629,15 +642,33 @@ class PlanningAgent:
         motivation: MotivationOutput,
         relation_delivery: str | None,
     ) -> bool:
+        return (
+            self._inferred_promotion_gate_reason(
+                event_text=event_text,
+                context_summary=context_summary,
+                motivation=motivation,
+                relation_delivery=relation_delivery,
+            )
+            == "gate_open"
+        )
+
+    def _inferred_promotion_gate_reason(
+        self,
+        *,
+        event_text: str,
+        context_summary: str,
+        motivation: MotivationOutput,
+        relation_delivery: str | None,
+    ) -> str:
         if motivation.mode not in {"respond", "analyze", "execute"}:
-            return False
+            return "mode_not_supported"
         if motivation.importance < self._inferred_promotion_importance_min(relation_delivery or ""):
-            return False
+            return "trust_gate_low_confidence"
 
         normalized_event = normalize_for_matching(event_text)
         normalized_context = normalize_for_matching(context_summary)
         if not normalized_event:
-            return False
+            return "empty_event_text"
 
         issue_markers = (
             "blocked",
@@ -674,7 +705,7 @@ class PlanningAgent:
 
         has_issue = any(marker in normalized_event for marker in issue_markers)
         if not has_issue:
-            return False
+            return "missing_issue_marker"
         has_repeated = any(marker in normalized_event for marker in repeated_markers)
         if (
             not has_repeated
@@ -683,8 +714,8 @@ class PlanningAgent:
                 or "relevant recent memory" not in normalized_context
             )
         ):
-            return False
-        return True
+            return "missing_repeated_signal"
+        return "gate_open"
 
     def _inferred_promotion_importance_min(self, relation_delivery: str) -> float:
         if relation_delivery == "low_trust":

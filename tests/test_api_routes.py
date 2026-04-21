@@ -2312,7 +2312,14 @@ def test_event_debug_endpoint_exposes_system_debug_behavior_contract() -> None:
     assert system_debug["event"]["event_id"] == body["event_id"]
     assert system_debug["event"]["trace_id"] == body["trace_id"]
     assert set(system_debug["memory_bundle"].keys()) == {"episodic", "semantic", "affective", "relations", "diagnostics"}
-    assert set(system_debug["plan"].keys()) == {"goal", "steps", "needs_action", "needs_response", "domain_intents"}
+    assert set(system_debug["plan"].keys()) == {
+        "goal",
+        "steps",
+        "needs_action",
+        "needs_response",
+        "domain_intents",
+        "inferred_promotion_diagnostics",
+    }
     assert system_debug["action_result"]["status"] == "success"
     assert "x-aion-debug-shared-compat" not in debug_response.headers
 

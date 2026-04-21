@@ -231,6 +231,7 @@ def test_planning_agent_blocks_inferred_promotion_on_low_trust_with_borderline_i
 
     assert len(result.domain_intents) == 1
     assert result.domain_intents[0].intent_type == "noop"
+    assert "reason=trust_gate_low_confidence" in result.inferred_promotion_diagnostics
 
 
 def test_planning_agent_allows_inferred_promotion_on_high_trust_with_lower_importance() -> None:
@@ -258,6 +259,9 @@ def test_planning_agent_allows_inferred_promotion_on_high_trust_with_lower_impor
 
     assert any(isinstance(intent, PromoteInferredGoalDomainIntent) for intent in result.domain_intents)
     assert any(isinstance(intent, PromoteInferredTaskDomainIntent) for intent in result.domain_intents)
+    assert "reason=gate_open" in result.inferred_promotion_diagnostics
+    assert "result=promote_inferred_task" in result.inferred_promotion_diagnostics
+    assert "result=promote_inferred_goal" in result.inferred_promotion_diagnostics
 
 
 def test_planning_agent_emits_maintenance_task_status_intent_when_repeated_blocker_matches_existing_task() -> None:
