@@ -36,27 +36,8 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-353 Add regressions for schema-version and local artifact gate-evaluation semantics
-  - Status: READY
-  - Group: Behavior Validation Artifact Governance
-  - Owner: QA/Test
-  - Depends on: PRJ-352
-  - Priority: P1
-  - Result:
-    - regression coverage now pins schema-version presence, normalized gate
-      reasons, and artifact-only evaluation posture
-    - fallback behavior for malformed artifacts is test-visible in CI gate mode
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-354 Sync docs/context for behavior-validation artifact-governance lane
-  - Status: FUTURE
+  - Status: READY
   - Group: Behavior Validation Artifact Governance
   - Owner: Product Docs
   - Depends on: PRJ-353
@@ -71,6 +52,14 @@ Last updated: 2026-04-21
       `docs/operations/`, and `docs/engineering/` with targeted
       cross-reference checks
 
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
+
+- [ ] (none)
+
 ## IN_PROGRESS
 
 - [ ] (none)
@@ -84,6 +73,21 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-353 Add regressions for schema-version and local artifact gate-evaluation semantics
+  - Status: DONE
+  - Group: Behavior Validation Artifact Governance
+  - Owner: QA/Test
+  - Depends on: PRJ-352
+  - Priority: P1
+  - Result:
+    - regressions now pin normalized gate reason taxonomy for failed/error/exit
+      paths and schema-version contract presence in generated artifacts
+    - malformed artifact-input paths (`missing`, `summary_missing`,
+      `summary_invalid`) are now test-visible in CI gate mode
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
+      (`186 passed`)
 
 - [x] PRJ-352 Add local artifact gate-evaluation mode for CI consumers without rerunning pytest
   - Status: DONE

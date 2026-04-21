@@ -1447,8 +1447,14 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-352` artifact-input smoke is green:
   `.\.venv\Scripts\python .\scripts\run_behavior_validation.py --artifact-input-path artifacts/behavior_validation/prj352-input.json --artifact-path artifacts/behavior_validation/prj352-output.json --gate-mode ci`
   produced `gate_status=pass`.
-- 2026-04-21: `PRJ-353` is now the next `READY` slice, focused on additional
-  regressions for schema-version and artifact-input gate-evaluation semantics.
+- 2026-04-21: `PRJ-353` is complete: regression coverage now pins
+  schema-version metadata, normalized gate reason codes, and artifact-input
+  failure posture (`missing`, `summary_missing`, `summary_invalid`).
+- 2026-04-21: `PRJ-353` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
+  passed with `186 passed`.
+- 2026-04-21: `PRJ-354` is now the next `READY` slice, focused on docs/context
+  synchronization for behavior-validation artifact-governance posture.
 
 ## Working Agreements
 

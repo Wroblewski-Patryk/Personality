@@ -54,6 +54,27 @@ def test_ci_gate_allows_empty_collection_when_requirement_is_disabled() -> None:
     assert context["summary_total"] == 0
 
 
+def test_ci_gate_uses_normalized_reason_codes_for_failed_and_error_paths() -> None:
+    status, violations, context = MODULE._evaluate_gate(
+        gate_mode="ci",
+        summary=_summary(total=4, passed=1, failed=2, errors=1, skipped=0, exit_code=1),
+        ci_require_tests=True,
+    )
+
+    assert status == "fail"
+    assert violations == [
+        MODULE.GATE_REASON_FAILED_CASES_DETECTED,
+        MODULE.GATE_REASON_ERROR_CASES_DETECTED,
+        MODULE.GATE_REASON_PYTEST_EXIT_CODE_NON_ZERO,
+    ]
+    assert context == {
+        "summary_total": 4,
+        "summary_failed": 2,
+        "summary_errors": 1,
+        "pytest_exit_code": 1,
+    }
+
+
 def test_operator_gate_tracks_pytest_exit_only() -> None:
     status, violations, context = MODULE._evaluate_gate(
         gate_mode="operator",
@@ -211,3 +232,76 @@ def test_main_marks_ci_gate_failed_when_existing_artifact_summary_is_missing(
     assert exit_code == 1
     assert payload["gate"]["status"] == "fail"
     assert payload["gate"]["violations"] == [MODULE.GATE_REASON_ARTIFACT_SUMMARY_MISSING]
+
+
+def test_main_marks_artifact_input_unreadable_for_missing_artifact_path(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    artifact_path = tmp_path / "missing-output.json"
+    missing_input = tmp_path / "does-not-exist.json"
+
+    monkeypatch.setattr(
+        MODULE,
+        "_parse_args",
+        lambda: Namespace(
+            python_exe="python",
+            artifact_path=str(artifact_path),
+            artifact_input_path=str(missing_input),
+            print_artifact_json=False,
+            gate_mode="ci",
+            ci_require_tests=True,
+        ),
+    )
+
+    exit_code = MODULE.main()
+
+    payload = MODULE.json.loads(artifact_path.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert payload["gate"]["status"] == "fail"
+    assert MODULE.GATE_REASON_ARTIFACT_INPUT_UNREADABLE in payload["gate"]["violations"]
+    assert MODULE.GATE_REASON_ARTIFACT_SUMMARY_MISSING in payload["gate"]["violations"]
+
+
+def test_main_marks_artifact_summary_invalid_when_existing_summary_is_not_numeric(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    input_artifact_path = tmp_path / "invalid-summary-input.json"
+    output_artifact_path = tmp_path / "invalid-summary-output.json"
+    input_artifact_path.write_text(
+        MODULE.json.dumps(
+            {
+                "kind": "behavior_validation_artifact",
+                "summary": {
+                    "total": "x",
+                    "passed": 0,
+                    "failed": 0,
+                    "errors": 0,
+                    "skipped": 0,
+                    "exit_code": 0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        MODULE,
+        "_parse_args",
+        lambda: Namespace(
+            python_exe="python",
+            artifact_path=str(output_artifact_path),
+            artifact_input_path=str(input_artifact_path),
+            print_artifact_json=False,
+            gate_mode="ci",
+            ci_require_tests=True,
+        ),
+    )
+
+    exit_code = MODULE.main()
+
+    payload = MODULE.json.loads(output_artifact_path.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert payload["gate"]["status"] == "fail"
+    assert payload["gate"]["violations"] == [MODULE.GATE_REASON_ARTIFACT_SUMMARY_INVALID]
