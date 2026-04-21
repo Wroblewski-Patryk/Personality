@@ -36,28 +36,8 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-348 Add release/ops script support for behavior-validation CI gate posture
-  - Status: READY
-  - Group: Behavior Validation CI-Ingestion Follow-up
-  - Owner: Ops/Release
-  - Depends on: PRJ-347
-  - Priority: P1
-  - Result:
-    - release/ops scripts now expose explicit CI gate posture for behavior
-      validation artifact pass/fail semantics
-    - operator mode remains available while CI mode can fail fast on artifact
-      violations
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_main_runtime_policy.py tests/test_api_routes.py`
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-349 Add regressions for behavior-validation artifact and CI gate semantics
-  - Status: FUTURE
+  - Status: READY
   - Group: Behavior Validation CI-Ingestion Follow-up
   - Owner: QA/Test
   - Depends on: PRJ-348
@@ -69,6 +49,12 @@ Last updated: 2026-04-21
       explicitly test-visible
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-350 Sync docs/context for behavior-validation CI-ingestion lane
   - Status: FUTURE
@@ -98,6 +84,27 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-348 Add release/ops script support for behavior-validation CI gate posture
+  - Status: DONE
+  - Group: Behavior Validation CI-Ingestion Follow-up
+  - Owner: Ops/Release
+  - Depends on: PRJ-347
+  - Priority: P1
+  - Result:
+    - `run_behavior_validation` wrappers now expose explicit gate posture
+      controls (`operator|ci`) while preserving backward-compatible local
+      evidence flow
+    - behavior-validation artifact now includes machine-readable gate outcome
+      metadata (`gate.mode`, `gate.status`, `gate.violations`) and CI mode can
+      fail fast on artifact-level violations
+  - Validation:
+    - `.\.venv\Scripts\python .\scripts\run_behavior_validation.py --artifact-path artifacts/behavior_validation/prj348-operator.json --gate-mode operator`
+      (`6 passed`)
+    - `.\.venv\Scripts\python .\scripts\run_behavior_validation.py --artifact-path artifacts/behavior_validation/prj348-ci.json --gate-mode ci`
+      (`6 passed`)
+    - `.\.venv\Scripts\python -m pytest -q tests/test_main_runtime_policy.py tests/test_api_routes.py`
+      (`101 passed`)
 
 - [x] PRJ-347 Add machine-readable behavior-validation artifact output for CI consumers
   - Status: DONE

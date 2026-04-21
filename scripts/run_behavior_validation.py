@@ -52,6 +52,21 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Also print artifact JSON payload to stdout.",
     )
+    parser.add_argument(
+        "--gate-mode",
+        choices=("operator", "ci"),
+        default="operator",
+        help=(
+            "Gate posture: operator keeps pytest exit-code behavior; ci enables "
+            "artifact-driven gate semantics."
+        ),
+    )
+    parser.add_argument(
+        "--ci-require-tests",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="In ci mode, fail when no behavior-validation tests were collected.",
+    )
     return parser.parse_args()
 
 
@@ -143,6 +158,32 @@ def _artifact_payload(*, exit_code: int, pytest_cmd: list[str], results: list[Va
     }
 
 
+def _evaluate_gate(
+    *,
+    gate_mode: str,
+    summary: dict[str, int],
+    ci_require_tests: bool,
+) -> tuple[str, list[str]]:
+    if gate_mode == "operator":
+        if int(summary.get("exit_code", 1)) == 0:
+            return "pass", []
+        return "fail", [f"pytest_exit_code_non_zero:{summary.get('exit_code', 1)}"]
+
+    violations: list[str] = []
+    if int(summary.get("failed", 0)) > 0:
+        violations.append("failed_cases_detected")
+    if int(summary.get("errors", 0)) > 0:
+        violations.append("error_cases_detected")
+    if int(summary.get("exit_code", 1)) != 0:
+        violations.append(f"pytest_exit_code_non_zero:{summary.get('exit_code', 1)}")
+    if ci_require_tests and int(summary.get("total", 0)) == 0:
+        violations.append("no_behavior_validation_tests_collected")
+
+    if violations:
+        return "fail", violations
+    return "pass", []
+
+
 def main() -> int:
     args = _parse_args()
     artifact_path = Path(args.artifact_path)
@@ -157,19 +198,33 @@ def main() -> int:
     )
     results = _parse_junit_results(junit_path=junit_path)
     payload = _artifact_payload(exit_code=exit_code, pytest_cmd=pytest_cmd, results=results)
+    summary = payload["summary"]
+    gate_status, gate_violations = _evaluate_gate(
+        gate_mode=str(args.gate_mode),
+        summary=summary,
+        ci_require_tests=bool(args.ci_require_tests),
+    )
+    payload["gate"] = {
+        "mode": str(args.gate_mode),
+        "status": gate_status,
+        "violations": gate_violations,
+        "ci_require_tests": bool(args.ci_require_tests),
+    }
     artifact_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    summary = payload["summary"]
     print(
         (
             "behavior_validation_artifact "
             f"path={artifact_path} total={summary['total']} passed={summary['passed']} "
             f"failed={summary['failed']} errors={summary['errors']} skipped={summary['skipped']} "
-            f"exit_code={summary['exit_code']}"
+            f"exit_code={summary['exit_code']} gate_mode={args.gate_mode} "
+            f"gate_status={gate_status} gate_violations={len(gate_violations)}"
         )
     )
     if args.print_artifact_json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
+    if str(args.gate_mode) == "ci" and gate_status != "pass":
+        return 1
     return int(exit_code)
 
 
