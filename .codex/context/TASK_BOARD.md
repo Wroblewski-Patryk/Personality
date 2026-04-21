@@ -36,31 +36,8 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-340 Expand goal/task signal detection beyond prefix-only phrasing
-  - Status: READY
-  - Group: Manual Runtime Reliability Fixes
-  - Owner: Backend Builder
-  - Depends on: PRJ-339
-  - Priority: P1
-  - Result:
-    - planning intent detection handles natural inline phrasing
-      (for example `utworz cel ...`, `dodaj zadanie ...`) in addition to strict
-      prefix forms (`cel:`, `zadanie:`)
-    - domain-intent extraction remains deterministic and keeps false-positive
-      guardrails across Polish and English patterns
-  - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
-    - targeted manual debug checks confirm `upsert_goal|upsert_task` intent
-      extraction for both strict-prefix and natural-phrase variants
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-341 Add Telegram integration smoke workflow for webhook/listen mode switching
-  - Status: FUTURE
+  - Status: READY
   - Group: Manual Runtime Reliability Fixes
   - Owner: QA/Test
   - Depends on: PRJ-340
@@ -76,6 +53,12 @@ Last updated: 2026-04-21
     - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_event_normalization.py tests/test_delivery_router.py`
     - runbook-aligned manual smoke evidence recorded for
       `getWebhookInfo/getUpdates/setWebhook`
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-342 Sync docs/context for manual runtime reliability fix lane
   - Status: FUTURE
@@ -105,6 +88,23 @@ Last updated: 2026-04-21
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-340 Expand goal/task signal detection beyond prefix-only phrasing
+  - Status: DONE
+  - Group: Manual Runtime Reliability Fixes
+  - Owner: Backend Builder
+  - Depends on: PRJ-339
+  - Priority: P1
+  - Result:
+    - planning intent detection now supports deterministic inline command
+      phrasing (for example `add goal ...`, `add task ...`, `dodaj cel ...`,
+      `dodaj zadanie ...`) in addition to strict prefix forms
+    - detection now keeps explicit false-positive guardrails for non-command
+      mentions and preserves deterministic domain-intent extraction flow
+      (`upsert_goal|upsert_task`)
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_goal_task_signals.py`
+      (`204 passed`)
 
 - [x] PRJ-338 Harden Telegram delivery failure boundary to prevent 500 runtime crashes
   - Status: DONE

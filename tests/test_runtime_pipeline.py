@@ -1800,6 +1800,39 @@ async def test_runtime_pipeline_returns_refreshed_goal_and_task_state_after_expl
     assert done_result.stage_timings_ms["state_refresh"] >= 0
 
 
+async def test_runtime_pipeline_detects_inline_goal_and_task_commands() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())
+    openai = FakeOpenAIClient()
+    reflection = FakeReflectionWorker()
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=openai),
+        action_executor=action,
+        memory_repository=memory,
+        reflection_worker=reflection,
+    )
+
+    event = Event(
+        event_id="evt-inline-goal-task",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={"text": "Prosze, dodaj cel: ship the MVP this week i dodaj zadanie: fix deployment blocker."},
+        meta=EventMeta(user_id="u-1", trace_id="t-inline-goal-task"),
+    )
+    result = await runtime.run(event)
+
+    assert any(intent.intent_type == "upsert_goal" for intent in result.plan.domain_intents)
+    assert any(intent.intent_type == "upsert_task" for intent in result.plan.domain_intents)
+    assert any(goal.name == "ship the MVP this week" for goal in result.active_goals)
+    assert any(task.name == "fix deployment blocker" for task in result.active_tasks)
+
+
 async def test_runtime_pipeline_persists_inferred_goal_and_task_promotions_from_repeated_blocker_evidence() -> None:
     memory = FakeMemoryRepository(recent_memory=[])
     action = ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient())

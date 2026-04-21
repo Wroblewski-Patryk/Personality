@@ -110,6 +110,24 @@ def test_planning_agent_emits_goal_upsert_domain_intent() -> None:
     assert any(isinstance(intent, UpsertGoalDomainIntent) for intent in result.domain_intents)
 
 
+def test_planning_agent_emits_goal_and_task_upsert_intents_for_inline_command_phrasing() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Can you add goal ship the MVP this week and add task fix deployment blocker?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.79,
+            urgency=0.37,
+            valence=0.0,
+            arousal=0.41,
+            mode="analyze",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.72),
+    )
+
+    assert any(isinstance(intent, UpsertGoalDomainIntent) for intent in result.domain_intents)
+    assert any(isinstance(intent, UpsertTaskDomainIntent) for intent in result.domain_intents)
+
+
 def test_planning_agent_emits_task_status_domain_intent() -> None:
     result = PlanningAgent().run(
         event=_event(text="I fixed the deployment blocker."),

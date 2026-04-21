@@ -1296,8 +1296,19 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-339` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_affective_assessor.py tests/test_openai_client.py tests/test_affective_contract.py tests/test_expression_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
   passed with `165 passed`.
-- 2026-04-21: `PRJ-340` is now the next `READY` slice, focused on expanding
-  goal/task signal detection beyond prefix-only phrasing.
+- 2026-04-21: `PRJ-340` is complete: planning goal/task detection now supports
+  deterministic natural inline command phrasing in English and Polish
+  (for example `add goal ...`, `add task ...`, `dodaj cel ...`,
+  `dodaj zadanie ...`) in addition to strict prefix-only forms.
+- 2026-04-21: `PRJ-340` also keeps false-positive guardrails for non-command
+  mentions and preserves typed domain-intent extraction boundaries
+  (`upsert_goal|upsert_task`) through shared signal utilities.
+- 2026-04-21: `PRJ-340` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_goal_task_signals.py`
+  passed with `204 passed`.
+- 2026-04-21: `PRJ-341` is now the next `READY` slice, focused on Telegram
+  integration smoke workflow coverage for webhook/listen mode switching and
+  manual runbook evidence.
 
 ## Working Agreements
 

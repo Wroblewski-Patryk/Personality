@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 
 from app.utils.language import normalize_for_matching
@@ -30,7 +31,7 @@ def detect_goal_signal(text: str) -> GoalSignal | None:
     if not normalized:
         return None
 
-    patterns = (
+    prefix_patterns = (
         "my goal is to ",
         "the goal is to ",
         "goal: ",
@@ -40,12 +41,32 @@ def detect_goal_signal(text: str) -> GoalSignal | None:
         "cel: ",
         "chce osiagnac ",
     )
-    for pattern in patterns:
-        if normalized.startswith(pattern):
-            raw = text[len(pattern):].strip() if text.lower().startswith(pattern) else text.strip()
-            cleaned = _clean_signal_text(raw, fallback=text)
-            if not cleaned:
-                return None
+    raw = _extract_prefixed_signal_text(text=text, normalized=normalized, patterns=prefix_patterns)
+    if not raw:
+        raw = _extract_inline_signal_text(
+            text=text,
+            patterns=(
+                (
+                    r"(?i)(?:^|[,.!?;:\n]\s*|\b(?:please|can you|could you|and|oraz|i)\s+)"
+                    r"(?:create|add|set|define)\s+(?:a\s+|new\s+|the\s+)?goal"
+                    r"(?:\s*(?::|-)\s*|\s+(?:to|for)\s+|\s+)"
+                    r"(?P<value>.+?)(?=(?:[.!?\n]|$|\b(?:and|oraz|i)\s+"
+                    r"(?:create|add|set|define|utw[oó]rz|dodaj|ustaw|zdefiniuj)\s+"
+                    r"(?:a\s+|new\s+|the\s+|nowe\s+|nowy\s+|ten\s+)?(?:goal|task|cel|zadanie)\b))"
+                ),
+                (
+                    r"(?i)(?:^|[,.!?;:\n]\s*|\b(?:prosze|mozesz|czy mozesz|and|oraz|i)\s+)"
+                    r"(?:utw[oó]rz|dodaj|ustaw|zdefiniuj)\s+(?:nowy\s+|ten\s+)?cel"
+                    r"(?:\s*(?::|-)\s*|\s+(?:aby|zeby|na)\s+|\s+)"
+                    r"(?P<value>.+?)(?=(?:[.!?\n]|$|\b(?:and|oraz|i)\s+"
+                    r"(?:create|add|set|define|utw[oó]rz|dodaj|ustaw|zdefiniuj)\s+"
+                    r"(?:a\s+|new\s+|the\s+|nowe\s+|nowy\s+|ten\s+)?(?:goal|task|cel|zadanie)\b))"
+                ),
+            ),
+        )
+    if raw:
+        cleaned = _clean_signal_text(raw, fallback="")
+        if cleaned:
             return GoalSignal(
                 name=cleaned[:160],
                 description=f"User-declared goal: {cleaned[:220]}",
@@ -60,21 +81,42 @@ def detect_task_signal(text: str) -> TaskSignal | None:
     if not normalized:
         return None
 
-    patterns = (
+    prefix_patterns = (
         "i need to ",
         "next task is ",
         "task: ",
         "we need to ",
         "musze ",
+        "musze zrobic ",
         "mam zrobic ",
         "zadanie: ",
     )
-    for pattern in patterns:
-        if normalized.startswith(pattern):
-            raw = text[len(pattern):].strip() if text.lower().startswith(pattern) else text.strip()
-            cleaned = _clean_signal_text(raw, fallback=text)
-            if not cleaned:
-                return None
+    raw = _extract_prefixed_signal_text(text=text, normalized=normalized, patterns=prefix_patterns)
+    if not raw:
+        raw = _extract_inline_signal_text(
+            text=text,
+            patterns=(
+                (
+                    r"(?i)(?:^|[,.!?;:\n]\s*|\b(?:please|can you|could you|and|oraz|i)\s+)"
+                    r"(?:create|add|set|define)\s+(?:a\s+|new\s+|the\s+)?task"
+                    r"(?:\s*(?::|-)\s*|\s+(?:to|for)\s+|\s+)"
+                    r"(?P<value>.+?)(?=(?:[.!?\n]|$|\b(?:and|oraz|i)\s+"
+                    r"(?:create|add|set|define|utw[oó]rz|dodaj|ustaw|zdefiniuj)\s+"
+                    r"(?:a\s+|new\s+|the\s+|nowe\s+|nowy\s+|ten\s+)?(?:goal|task|cel|zadanie)\b))"
+                ),
+                (
+                    r"(?i)(?:^|[,.!?;:\n]\s*|\b(?:prosze|mozesz|czy mozesz|and|oraz|i)\s+)"
+                    r"(?:utw[oó]rz|dodaj|ustaw|zdefiniuj)\s+(?:nowe\s+|ten\s+)?zadanie"
+                    r"(?:\s*(?::|-)\s*|\s+(?:aby|zeby|na)\s+|\s+)"
+                    r"(?P<value>.+?)(?=(?:[.!?\n]|$|\b(?:and|oraz|i)\s+"
+                    r"(?:create|add|set|define|utw[oó]rz|dodaj|ustaw|zdefiniuj)\s+"
+                    r"(?:a\s+|new\s+|the\s+|nowe\s+|nowy\s+|ten\s+)?(?:goal|task|cel|zadanie)\b))"
+                ),
+            ),
+        )
+    if raw:
+        cleaned = _clean_signal_text(raw, fallback="")
+        if cleaned:
             return TaskSignal(
                 name=cleaned[:160],
                 description=f"User-declared task: {cleaned[:220]}",
@@ -195,3 +237,21 @@ def _clean_signal_text(value: str, fallback: str) -> str:
     if not text:
         text = " ".join(fallback.split()).strip(" .,:;!-")
     return text
+
+
+def _extract_prefixed_signal_text(*, text: str, normalized: str, patterns: tuple[str, ...]) -> str:
+    for pattern in patterns:
+        if normalized.startswith(pattern):
+            return text[len(pattern) :].strip()
+    return ""
+
+
+def _extract_inline_signal_text(*, text: str, patterns: tuple[str, ...]) -> str:
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match is None:
+            continue
+        value = _clean_signal_text(match.group("value"), fallback="")
+        if value:
+            return value
+    return ""
