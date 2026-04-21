@@ -36,28 +36,8 @@ Last updated: 2026-04-21
 
 ## READY
 
-- [ ] PRJ-337 Sync docs/context for goal/task inference and typed-intent expansion
-  - Status: READY
-  - Group: Goal/Task Inference And Typed-Intent Expansion
-  - Owner: Product Docs
-  - Depends on: PRJ-336
-  - Priority: P1
-  - Result:
-    - docs, planning, and project state align on how internal planning can grow
-      while staying subordinate to typed intent ownership
-    - later autonomy work can build on explicit internal planning rules
-  - Validation:
-    - doc-and-context sync plus targeted planning-autonomy cross-doc review
-      recorded in this slice
-
-## BACKLOG
-
-- [ ] (none)
-
-## FUTURE
-
 - [ ] PRJ-339 Enforce structured affective-classifier output parsing and fallback diagnostics
-  - Status: FUTURE
+  - Status: READY
   - Group: Manual Runtime Reliability Fixes
   - Owner: Backend Builder
   - Depends on: PRJ-338
@@ -73,6 +53,12 @@ Last updated: 2026-04-21
     - targeted manual emotional-turn debug validation through
       `POST /internal/event/debug` with `system_debug.perception.affective`
       evidence notes
+
+## BACKLOG
+
+- [ ] (none)
+
+## FUTURE
 
 - [ ] PRJ-340 Expand goal/task signal detection beyond prefix-only phrasing
   - Status: FUTURE
@@ -274,6 +260,27 @@ Last updated: 2026-04-21
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_reflection_worker.py`
       (`202 passed`)
+
+- [x] PRJ-337 Sync docs/context for goal/task inference and typed-intent expansion
+  - Status: DONE
+  - Group: Goal/Task Inference And Typed-Intent Expansion
+  - Owner: Product Docs
+  - Depends on: PRJ-336
+  - Priority: P1
+  - Result:
+    - docs, planning notes, and context truth now align on bounded inferred
+      planning growth, typed inferred/maintenance intents, and action ownership
+      boundaries for durable state writes
+    - queue progression is synchronized so manual runtime reliability fixes
+      start from `PRJ-339`
+  - Validation:
+    - doc-and-context sync plus targeted planning-autonomy cross-doc review
+      across `docs/architecture/16_agent_contracts.md`,
+      `docs/implementation/runtime-reality.md`,
+      `docs/planning/open-decisions.md`,
+      `docs/planning/next-iteration-plan.md`,
+      `.codex/context/TASK_BOARD.md`, and
+      `.codex/context/PROJECT_STATE.md`
 
 - [x] PRJ-330 Implement relation decay and confidence revalidation policy
   - Status: DONE

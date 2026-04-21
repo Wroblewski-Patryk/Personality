@@ -1278,8 +1278,20 @@ Last updated: 2026-04-21
 - 2026-04-21: `PRJ-336` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_reflection_worker.py`
   passed with `202 passed`.
-- 2026-04-21: `PRJ-337` is now the next `READY` slice, focused on docs/context
-  synchronization for goal/task inference and typed-intent expansion.
+- 2026-04-21: `PRJ-337` is complete: architecture/planning/runtime-reality
+  docs plus context truth now share one baseline for bounded inferred
+  goal/task promotion, typed inferred and maintenance intents, and action-owned
+  durable execution boundaries.
+- 2026-04-21: `PRJ-337` validation is recorded as doc-and-context sync plus
+  targeted planning-autonomy cross-doc review across
+  `docs/architecture/16_agent_contracts.md`,
+  `docs/implementation/runtime-reality.md`,
+  `docs/planning/open-decisions.md`,
+  `docs/planning/next-iteration-plan.md`,
+  `.codex/context/TASK_BOARD.md`, and
+  `.codex/context/PROJECT_STATE.md`.
+- 2026-04-21: `PRJ-339` is now the next `READY` slice, focused on
+  structured affective-classifier parsing and fallback diagnostics hardening.
 
 ## Working Agreements
 

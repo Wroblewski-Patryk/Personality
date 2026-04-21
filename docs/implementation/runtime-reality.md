@@ -544,13 +544,18 @@ Today the runtime can already:
 - use goal and task relevance during context, motivation, and planning
 - create lightweight goals from explicit user phrasing
 - create lightweight tasks from explicit user phrasing
+- promote bounded inferred goals/tasks from repeated blocker evidence when
+  explicit declarations are absent
 - update task status from explicit progress signals
+- maintain matching task status from inferred blocker evidence without creating
+  duplicate task records
 - refresh returned goal and task state after action-layer writes
 
 Current intent-ownership boundary:
 
 - planning emits explicit `domain_intents` (goal/task/task-status plus
-  preference intents, or `noop`)
+  inferred-promotion and maintenance intents, plus preference intents, or
+  `noop`)
 - action executes those typed intents and no longer reparses raw user text for
   durable domain writes
 

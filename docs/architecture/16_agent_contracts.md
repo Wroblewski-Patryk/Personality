@@ -504,6 +504,28 @@ Decide what should happen next.
         "task_hint": "..."
       },
       {
+        "intent_type": "promote_inferred_goal",
+        "name": "...",
+        "description": "Inferred goal from repeated execution evidence: ...",
+        "priority": "medium|high",
+        "goal_type": "tactical|operational",
+        "evidence": "repeated_execution_blocker"
+      },
+      {
+        "intent_type": "promote_inferred_task",
+        "name": "...",
+        "description": "Inferred task from repeated execution evidence: ...",
+        "priority": "medium|high",
+        "status": "todo|blocked",
+        "evidence": "repeated_execution_blocker"
+      },
+      {
+        "intent_type": "maintain_task_status",
+        "status": "blocked",
+        "task_hint": "...",
+        "reason": "inferred_repeated_blocker_evidence"
+      },
+      {
         "intent_type": "calendar_scheduling_intent",
         "operation": "read_availability|suggest_slots|create_event|update_event|cancel_event",
         "provider_hint": "google_calendar|generic",

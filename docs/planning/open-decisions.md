@@ -660,14 +660,23 @@ The current repo already works as an MVP slice, but several architecture-level d
 ### 10a. Action Intent Ownership
 
 - Current repo fact:
-  - planning now emits explicit typed `domain_intents` for goal/task/task-status
-    and preference updates, plus `noop` when no domain write should occur.
+  - planning now emits explicit typed `domain_intents` for goal/task/task-status,
+    inferred promotion (`promote_inferred_goal`, `promote_inferred_task`),
+    maintenance status alignment (`maintain_task_status`), and preference
+    updates, plus `noop` when no domain write should occur.
   - action now executes only explicit intents and no longer reparses raw user
     text for durable domain writes.
-- Decision needed:
-  - should additional future writes (for example relation updates or proactive
-    scheduling state) also be blocked behind explicit typed intents from
-    planning?
+- Decision (baseline expanded in `PRJ-334..PRJ-336`, 2026-04-21):
+  - inferred goal/task growth now remains subordinate to explicit typed-intent
+    ownership in planning contracts
+  - repeated-blocker maintenance writes now also require explicit typed
+    intents before action can mutate durable task state
+  - duplicate/no-unsafe inferred promotion behavior is now regression-pinned
+    in planning and runtime suites.
+- Follow-up decision:
+  - decide whether additional future writes (for example relation lifecycle
+    maintenance or proactive scheduling state) should also require dedicated
+    typed intents instead of reusing generic intent families.
 
 ### 10b. Adaptive Signal Governance
 

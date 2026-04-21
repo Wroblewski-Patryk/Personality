@@ -40,8 +40,12 @@ Completed on 2026-04-21:
   influence now governs proactive/planning confidence posture through shared
   policy owners, and relation-lifecycle regressions plus docs/context sync are
   now in place.
-- queue progression is now synchronized so execution moves to `PRJ-334`
-  (goal/task inference and typed-intent expansion).
+- `PRJ-334..PRJ-337` are complete: bounded inferred goal/task promotion is now
+  implemented with typed inferred/maintenance intents, no-duplicate/no-unsafe
+  regressions, and synchronized docs/context ownership for internal planning
+  growth.
+- queue progression is now synchronized so execution moves to `PRJ-339`
+  (manual runtime reliability fixes).
 
 Completed on 2026-04-17:
 
@@ -1750,7 +1754,7 @@ Runtime behavior-validation queue is now complete through `PRJ-317`.
 Next implementation queue is now seeded through `PRJ-342`.
 Before the next implementation slice:
 
-- take `PRJ-334` directly from `.codex/context/TASK_BOARD.md`
+- take `PRJ-339` directly from `.codex/context/TASK_BOARD.md`
 - keep the implementation scope bounded to one reversible slice
 - preserve target-state architecture bias when resolving local runtime choices
 
