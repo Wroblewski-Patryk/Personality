@@ -81,11 +81,25 @@ mode from repository-backed durable inbox behavior and cleanup pressure.
 baseline (`120ms` burst window, `5s` answered TTL, `30s` stale cleanup) plus
 alignment posture for the currently selected config values.
 
+`GET /health` now also includes an `affective` object for live affective-turn
+triage:
+
+- heuristic affective-input ownership posture from perception
+- assessment rollout posture and fallback visibility for the current runtime
+
+When investigating empathy/support behavior drift, pair `/health.affective`
+with runtime `system_debug.adaptive_state.affective_input_policy` and
+`system_debug.adaptive_state.affective_resolution` so you can distinguish
+heuristic input, policy-disabled fallback, classifier-unavailable fallback,
+and final affective outcome.
+
 `GET /health` now also includes a `memory_retrieval` object with semantic
 retrieval posture:
 
 - `semantic_vector_enabled`
 - `semantic_retrieval_mode` (`hybrid_vector_lexical|lexical_only`)
+- `semantic_embedding_execution_class`
+  (`deterministic_baseline|local_provider_owned|fallback_to_deterministic`)
 - `semantic_embedding_provider_ready`
 - `semantic_embedding_posture` (`ready|fallback_deterministic`)
 - `semantic_embedding_provider_requested`
@@ -677,10 +691,16 @@ Important health surfaces for current release checks:
 
 - `runtime_policy.startup_schema_removal_window`
 - `runtime_policy.event_debug_shared_ingress_enforcement_window`
+- `affective`
+  - heuristic-input ownership baseline
+  - assessment rollout/fallback posture for live empathy triage
 - `runtime_topology`
 - `planning_governance`
   - inferred goal/task growth posture
   - fixed proposal-decision baseline
+- `memory_retrieval.semantic_embedding_execution_class`
+  - whether retrieval is currently running as deterministic baseline,
+    local provider-owned execution, or provider-requested fallback
 - `connectors`
   - connector authorization matrix
   - capability-proposal posture for not-yet-authorized expansion

@@ -89,6 +89,9 @@ Completed on 2026-04-22:
 - `PRJ-458..PRJ-460` are complete: runtime reality and operator docs now
   converge on persisted subconscious proposal inventory plus the concrete
   meaning of post-convergence health surfaces used during release and triage.
+- `PRJ-461..PRJ-463` are complete: operator docs and planning/context now
+  converge on affective health visibility plus retrieval execution-class
+  diagnostics as first-class post-convergence triage surfaces.
 
 ## Post-Convergence Operating Mode
 

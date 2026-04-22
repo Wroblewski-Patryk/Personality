@@ -1797,6 +1797,11 @@ Last updated: 2026-04-22
   runbook plus planning/context surfaces now describe the concrete operator
   meaning of post-convergence health surfaces for planning, connectors,
   adaptive identity governance, and deployment.
+- 2026-04-22: `PRJ-461..PRJ-463` are complete: the runbook and
+  planning/context surfaces now treat `/health.affective` and
+  `memory_retrieval.semantic_embedding_execution_class` as explicit
+  operator-facing diagnostics for empathy triage and retrieval execution
+  posture.
 
 ## Working Agreements
 

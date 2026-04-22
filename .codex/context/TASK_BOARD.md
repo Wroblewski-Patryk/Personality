@@ -40,6 +40,10 @@ Last updated: 2026-04-22
 - Persisted subconscious proposals and post-convergence operator health
   surfaces are now described consistently across runtime reality, runbook, and
   planning/context truth.
+- Post-convergence Group 62 is now complete through `PRJ-463`.
+- Affective health visibility and retrieval execution-class triage are now
+  described consistently across the runbook and planning/context truth instead
+  of being discoverable only through runtime reality and tests.
 
 ## READY
 
@@ -66,6 +70,47 @@ Last updated: 2026-04-22
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-463 Sync planning/context for affective and retrieval health visibility docs convergence
+  - Status: DONE
+  - Group: Affective And Retrieval Health Visibility Docs Convergence
+  - Owner: Product Docs
+  - Depends on: PRJ-462
+  - Priority: P1
+  - Result:
+    - task board, project state, next-iteration plan, and open decisions now
+      describe one shared post-`PRJ-463` stance for operator-facing affective
+      and retrieval health visibility
+    - future follow-up discovery no longer needs to reconcile runbook drift
+      around empathy triage and embedding execution posture
+  - Validation:
+    - doc-and-context sync across `.codex/context/` and `docs/planning/`
+
+- [x] PRJ-462 Expand runbook guidance for affective health and retrieval execution-class triage
+  - Status: DONE
+  - Group: Affective And Retrieval Health Visibility Docs Convergence
+  - Owner: Ops/Release
+  - Depends on: PRJ-461
+  - Priority: P1
+  - Result:
+    - runbook now explicitly calls out `/health.affective` and
+      `memory_retrieval.semantic_embedding_execution_class` as operator-facing
+      triage surfaces for empathy behavior and retrieval execution posture
+  - Validation:
+    - doc sync in `docs/operations/runtime-ops-runbook.md`
+
+- [x] PRJ-461 Record post-convergence operator triage baseline for affective and retrieval health surfaces
+  - Status: DONE
+  - Group: Affective And Retrieval Health Visibility Docs Convergence
+  - Owner: Planner
+  - Depends on: PRJ-460
+  - Priority: P1
+  - Result:
+    - the post-convergence runbook baseline now treats affective health and
+      retrieval execution class as first-class operator diagnostics instead of
+      runtime-only implementation details
+  - Validation:
+    - targeted runbook and planning-surface cross-review
 
 - [x] PRJ-460 Sync planning/context for proposal inventory and operator health docs convergence
   - Status: DONE
