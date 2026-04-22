@@ -100,9 +100,14 @@ Last updated: 2026-04-22
   guidance now explicitly treat `/health.scheduler.external_owner_policy` as
   target-policy truth until recent last-run and duplicate-protection evidence
   becomes machine-visible.
-- 2026-04-22: `PRJ-533` is now the first `READY` task; the next slice should
-  expose recent external cadence execution and bounded idempotency posture
-  through runtime-visible evidence.
+- 2026-04-22: `PRJ-533` is complete:
+  `/health.scheduler.external_owner_policy` now exposes maintenance and
+  proactive external run evidence, bounded duplicate-protection posture, and
+  `cutover_proof_ready` so proven cutover is distinct from target-mode
+  selection.
+- 2026-04-22: `PRJ-534` is now the first `READY` task; the next slice should
+  add release-smoke and behavior evidence for the new external cadence
+  cutover fields.
 - 2026-04-22: Group 76 (`PRJ-516..PRJ-519`) is now complete, and the next
   `READY` task is `PRJ-520` for dedicated debug-ingress compatibility
   retirement.

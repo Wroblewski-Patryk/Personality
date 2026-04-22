@@ -398,7 +398,11 @@ duplicate-protection posture.
   recent maintenance/proactive last-run evidence, duplicate-protection
   posture, stale-or-missing evidence state, release visibility, and rollback
   posture.
-- the next active slice in this lane is `PRJ-533`.
+- `PRJ-533` is complete: `/health.scheduler.external_owner_policy` now
+  exposes per-cadence external run evidence plus bounded duplicate-protection
+  posture and `cutover_proof_ready`, so selected target mode is distinct from
+  proven external cutover readiness.
+- the next active slice in this lane is `PRJ-534`.
 
 - `PRJ-532` Define the external cadence cutover proof baseline.
   - Result:

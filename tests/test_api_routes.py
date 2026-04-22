@@ -504,6 +504,10 @@ class FakeSchedulerWorker:
         reflection_interval_seconds: int = 900,
         maintenance_interval_seconds: int = 3600,
         proactive_interval_seconds: int = 1800,
+        last_maintenance_tick_at: str | None = None,
+        last_proactive_tick_at: str | None = None,
+        last_maintenance_summary: dict | None = None,
+        last_proactive_summary: dict | None = None,
     ):
         self.enabled = enabled
         self.running = running
@@ -514,6 +518,10 @@ class FakeSchedulerWorker:
         self.reflection_interval_seconds = reflection_interval_seconds
         self.maintenance_interval_seconds = maintenance_interval_seconds
         self.proactive_interval_seconds = proactive_interval_seconds
+        self.last_maintenance_tick_at = last_maintenance_tick_at
+        self.last_proactive_tick_at = last_proactive_tick_at
+        self.last_maintenance_summary = dict(last_maintenance_summary or {})
+        self.last_proactive_summary = dict(last_proactive_summary or {})
 
     def snapshot(self) -> dict:
         cadence_execution = {
@@ -574,11 +582,11 @@ class FakeSchedulerWorker:
             "next_maintenance_due_at": None,
             "next_proactive_due_at": None,
             "last_reflection_tick_at": None,
-            "last_maintenance_tick_at": None,
-            "last_proactive_tick_at": None,
+            "last_maintenance_tick_at": self.last_maintenance_tick_at,
+            "last_proactive_tick_at": self.last_proactive_tick_at,
             "last_reflection_summary": {},
-            "last_maintenance_summary": {},
-            "last_proactive_summary": {},
+            "last_maintenance_summary": dict(self.last_maintenance_summary),
+            "last_proactive_summary": dict(self.last_proactive_summary),
             "proactive_policy": {
                 "policy_owner": "proactive_runtime_policy",
                 "selected_execution_mode": self.execution_mode,
@@ -653,6 +661,10 @@ def _client(
     maintenance_interval: int = 3600,
     proactive_enabled: bool = False,
     proactive_interval: int = 1800,
+    scheduler_last_maintenance_tick_at: str | None = None,
+    scheduler_last_proactive_tick_at: str | None = None,
+    scheduler_last_maintenance_summary: dict | None = None,
+    scheduler_last_proactive_summary: dict | None = None,
     attention_burst_window_ms: int = 120,
     attention_answered_ttl_seconds: float = 0.5,
     attention_stale_turn_seconds: float = 3.0,
@@ -680,6 +692,10 @@ def _client(
         reflection_interval_seconds=reflection_interval,
         maintenance_interval_seconds=maintenance_interval,
         proactive_interval_seconds=proactive_interval,
+        last_maintenance_tick_at=scheduler_last_maintenance_tick_at,
+        last_proactive_tick_at=scheduler_last_proactive_tick_at,
+        last_maintenance_summary=scheduler_last_maintenance_summary,
+        last_proactive_summary=scheduler_last_proactive_summary,
     )
     app.state.runtime = runtime
     app.state.telegram_client = telegram_client
@@ -1333,6 +1349,62 @@ def test_health_endpoint_exposes_externalized_scheduler_execution_mode_posture()
     assert body["proactive"]["selected_cadence_owner"] == "external_scheduler"
     assert body["proactive"]["production_baseline_state"] == "external_scheduler_target_owner"
     assert body["scheduler"]["healthy"] is True
+    assert body["scheduler"]["external_owner_policy"]["cutover_proof_ready"] is False
+    assert (
+        body["scheduler"]["external_owner_policy"]["maintenance_run_evidence"]["evidence_state"]
+        == "missing_external_run_evidence"
+    )
+    assert (
+        body["scheduler"]["external_owner_policy"]["duplicate_protection_posture"]["state"]
+        == "single_owner_boundary_clear"
+    )
+
+
+def test_health_endpoint_exposes_external_scheduler_cutover_proof_when_recent_runs_exist() -> None:
+    recent_maintenance = datetime.now(timezone.utc).isoformat()
+    recent_proactive = datetime.now(timezone.utc).isoformat()
+    client, _, _ = _client(
+        scheduler_enabled=True,
+        scheduler_running=False,
+        scheduler_execution_mode="externalized",
+        proactive_enabled=True,
+        scheduler_last_maintenance_tick_at=recent_maintenance,
+        scheduler_last_proactive_tick_at=recent_proactive,
+        scheduler_last_maintenance_summary={
+            "executed": True,
+            "reason": "external_scheduler_owner",
+            "trigger": "external_maintenance",
+            "entrypoint_owner": "external_scheduler",
+            "idempotency_baseline": "single_tick_summary_per_invocation",
+        },
+        scheduler_last_proactive_summary={
+            "executed": True,
+            "reason": "external_scheduler_owner",
+            "trigger": "external_proactive",
+            "entrypoint_owner": "external_scheduler",
+            "idempotency_baseline": "single_tick_candidate_evaluation_per_invocation",
+        },
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    policy = body["scheduler"]["external_owner_policy"]
+    assert policy["cutover_proof_ready"] is True
+    assert policy["cutover_proof_state"] == "external_scheduler_cutover_proven"
+    assert policy["maintenance_run_evidence"]["recent_success"] is True
+    assert policy["maintenance_run_evidence"]["evidence_state"] == "recent_external_run_evidence"
+    assert policy["proactive_run_evidence"]["recent_success"] is True
+    assert policy["proactive_run_evidence"]["evidence_state"] == "recent_external_run_evidence"
+    assert (
+        policy["duplicate_protection_posture"]["maintenance_entrypoint_idempotency_baseline"]
+        == "single_tick_summary_per_invocation"
+    )
+    assert (
+        policy["duplicate_protection_posture"]["proactive_entrypoint_idempotency_baseline"]
+        == "single_tick_candidate_evaluation_per_invocation"
+    )
 
 
 def test_health_endpoint_exposes_attention_snapshot() -> None:

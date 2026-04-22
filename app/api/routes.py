@@ -208,7 +208,15 @@ async def _incident_evidence_from_request(
     scheduler_external_owner_policy = external_scheduler_policy_snapshot(
         scheduler_execution_mode=str(
             scheduler_snapshot.get("execution_mode", scheduler_execution_mode)
-        )
+        ),
+        scheduler_running=bool(scheduler_snapshot.get("running", False)),
+        maintenance_last_run_at=scheduler_snapshot.get("last_maintenance_tick_at"),
+        maintenance_last_summary=scheduler_snapshot.get("last_maintenance_summary", {}),
+        maintenance_interval_seconds=int(scheduler_snapshot.get("maintenance_interval_seconds", 3600)),
+        proactive_enabled=bool(scheduler_snapshot.get("proactive_enabled", False)),
+        proactive_last_run_at=scheduler_snapshot.get("last_proactive_tick_at"),
+        proactive_last_summary=scheduler_snapshot.get("last_proactive_summary", {}),
+        proactive_interval_seconds=int(scheduler_snapshot.get("proactive_interval_seconds", 1800)),
     )
     reflection_snapshot = reflection_worker.snapshot()
     reflection_stats = await memory_repository.get_reflection_task_stats(
@@ -476,7 +484,15 @@ async def health(request: Request) -> dict[str, Any]:
         "external_owner_policy": external_scheduler_policy_snapshot(
             scheduler_execution_mode=str(
                 scheduler_snapshot.get("execution_mode", scheduler_execution_mode)
-            )
+            ),
+            scheduler_running=scheduler_running,
+            maintenance_last_run_at=scheduler_snapshot.get("last_maintenance_tick_at"),
+            maintenance_last_summary=scheduler_snapshot.get("last_maintenance_summary", {}),
+            maintenance_interval_seconds=int(scheduler_snapshot.get("maintenance_interval_seconds", 3600)),
+            proactive_enabled=bool(scheduler_snapshot.get("proactive_enabled", proactive_enabled)),
+            proactive_last_run_at=scheduler_snapshot.get("last_proactive_tick_at"),
+            proactive_last_summary=scheduler_snapshot.get("last_proactive_summary", {}),
+            proactive_interval_seconds=int(scheduler_snapshot.get("proactive_interval_seconds", 1800)),
         ),
     }
     scheduler_healthy = bool(scheduler_execution["ready"])

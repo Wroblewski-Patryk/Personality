@@ -406,7 +406,12 @@ The current repo already works as an MVP slice, but several architecture-level d
   - runtime reality and ops guidance now explicitly describe
     `/health.scheduler.external_owner_policy` as target-policy posture until
     those proof items become machine-visible
-  - the next active slice is `PRJ-533` for external cadence evidence
+- `PRJ-533` is now complete:
+  - `/health.scheduler.external_owner_policy` exposes maintenance and
+    proactive run-evidence posture plus bounded duplicate-protection evidence
+  - external cadence target-mode selection is now distinct from proven cutover
+    readiness through `cutover_proof_ready`
+  - the next active slice is `PRJ-534` for smoke and behavior evidence
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

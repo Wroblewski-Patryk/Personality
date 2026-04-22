@@ -461,15 +461,23 @@ Last updated: 2026-04-22
   - Validation:
     - scheduler, runtime policy, and ops cross-review
 
-- [ ] PRJ-533 Implement machine-visible last-run and idempotency evidence for external cadence entrypoints
+- [x] PRJ-533 Implement machine-visible last-run and idempotency evidence for external cadence entrypoints
   - Owner: Backend Builder
   - Group: External Cadence Cutover Proof
   - Depends on: PRJ-532
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Done when:
     - health or runtime evidence shows recent external cadence execution and
       bounded duplicate-protection posture instead of only selected target mode
+  - Result:
+    - `/health.scheduler.external_owner_policy` now exposes per-cadence
+      external run evidence for maintenance and proactive entrypoints,
+      including recent-success vs missing/stale posture, last-run timestamps,
+      and stale thresholds
+    - external cadence policy now also exposes bounded duplicate-protection
+      posture plus `cutover_proof_ready`, so target-mode selection and proven
+      cutover are no longer conflated into one field
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
 
@@ -478,7 +486,7 @@ Last updated: 2026-04-22
   - Group: External Cadence Cutover Proof
   - Depends on: PRJ-533
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - release and behavior evidence can prove external cadence ownership
       posture through the agreed cutover fields and failure cases
