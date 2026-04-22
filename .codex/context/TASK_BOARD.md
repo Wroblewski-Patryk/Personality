@@ -165,10 +165,11 @@ Last updated: 2026-04-22
     synchronized in docs/context truth.
 
 - Group 77 note:
-  - `PRJ-520..PRJ-521` are now complete.
-  - shared debug retirement now has one explicit checklist plus enforced
-    dedicated-admin-only default posture, and `PRJ-522` is the next evidence
-    slice.
+  - `PRJ-520..PRJ-522` are now complete.
+  - shared debug retirement now has one explicit checklist, enforced
+    dedicated-admin-only default posture, and machine-readable release plus
+    behavior evidence for dedicated-admin-only incident-evidence posture.
+  - `PRJ-523` is the next docs/context sync slice.
 
 - [x] PRJ-520 Freeze the shared debug compatibility retirement gate
   - Owner: Planner
@@ -210,15 +211,23 @@ Last updated: 2026-04-22
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_policy.py tests/test_main_runtime_policy.py`
 
-- [ ] PRJ-522 Add release and behavior evidence for dedicated-admin-only debug posture
+- [x] PRJ-522 Add release and behavior evidence for dedicated-admin-only debug posture
   - Owner: Ops/Release
   - Group: Dedicated Debug Ingress Compatibility Retirement
   - Depends on: PRJ-521
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Done when:
     - smoke and policy evidence prove dedicated-admin-only debug posture and
       make any fallback or rollback exception explicit
+  - Result:
+    - `run_release_smoke.ps1` now verifies dedicated-admin-only debug posture
+      directly from runtime `incident_evidence` and bundle-attached
+      `incident_evidence.json`, not only from `/health.runtime_policy`
+    - `run_behavior_validation.py` now treats incident-evidence debug posture
+      drift and missing explicit rollback-exception state as CI gate
+      violations, with machine-visible context fields for admin target,
+      shared-route posture, and exception state
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_api_routes.py`
 
@@ -227,7 +236,7 @@ Last updated: 2026-04-22
   - Group: Dedicated Debug Ingress Compatibility Retirement
   - Depends on: PRJ-522
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - canonical docs, runtime reality, ops notes, testing guidance, and
       context truth all describe the same post-compat debug ingress posture

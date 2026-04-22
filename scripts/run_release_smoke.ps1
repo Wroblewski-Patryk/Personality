@@ -156,6 +156,8 @@ function Validate-IncidentEvidenceBundle {
         behavior_report_attached = $false
         policy_surface_complete  = $null
         health_status            = $null
+        debug_posture_state      = $null
+        debug_exception_state    = $null
     }
 
     if (-not $Path) {
@@ -227,6 +229,8 @@ function Validate-IncidentEvidenceBundle {
         throw "Incident evidence bundle verification failed: policy surface coverage is incomplete."
     }
 
+    $debugPosture = Assert-DedicatedAdminDebugPosture -RuntimePolicy $incidentEvidence.policy_posture.runtime_policy -FailurePrefix "Incident evidence bundle verification failed"
+
     return @{
         checked                  = $true
         path                     = $Path
@@ -237,6 +241,55 @@ function Validate-IncidentEvidenceBundle {
         behavior_report_attached = $behaviorReportAttached
         policy_surface_complete  = $policySurfaceComplete
         health_status            = [string]$healthSnapshot.status
+        debug_posture_state      = [string]$debugPosture.debug_posture_state
+        debug_exception_state    = [string]$debugPosture.debug_exception_state
+    }
+}
+
+function Assert-DedicatedAdminDebugPosture {
+    param(
+        [object]$RuntimePolicy,
+        [Parameter(Mandatory = $true)][string]$FailurePrefix
+    )
+
+    if ($null -eq $RuntimePolicy) {
+        throw "${FailurePrefix}: incident evidence runtime_policy posture is missing."
+    }
+    if ([string]$RuntimePolicy.event_debug_admin_policy_owner -ne "dedicated_admin_debug_ingress_policy") {
+        throw "${FailurePrefix}: unexpected incident-evidence debug admin policy owner '$($RuntimePolicy.event_debug_admin_policy_owner)'."
+    }
+    if ([string]$RuntimePolicy.event_debug_admin_ingress_target_path -ne "/internal/event/debug") {
+        throw "${FailurePrefix}: unexpected incident-evidence debug admin ingress target '$($RuntimePolicy.event_debug_admin_ingress_target_path)'."
+    }
+    if ([string]$RuntimePolicy.event_debug_shared_ingress_mode -ne "break_glass_only") {
+        throw "${FailurePrefix}: incident-evidence shared debug ingress is not retired to break-glass-only mode."
+    }
+    if ([string]$RuntimePolicy.event_debug_shared_ingress_posture -ne "shared_route_break_glass_only") {
+        throw "${FailurePrefix}: unexpected incident-evidence shared debug posture '$($RuntimePolicy.event_debug_shared_ingress_posture)'."
+    }
+    if ([bool]$RuntimePolicy.event_debug_query_compat_enabled) {
+        throw "${FailurePrefix}: incident-evidence query debug compatibility route is still enabled."
+    }
+    if (-not [bool]$RuntimePolicy.event_debug_shared_ingress_retirement_ready) {
+        throw "${FailurePrefix}: incident-evidence shared debug retirement gate is not ready."
+    }
+    if (-not [bool]$RuntimePolicy.event_debug_shared_ingress_sunset_ready) {
+        throw "${FailurePrefix}: incident-evidence shared debug sunset posture is not ready."
+    }
+
+    $debugExceptionReason = [string]$RuntimePolicy.event_debug_shared_ingress_sunset_reason
+    $debugExceptionState = switch ($debugExceptionReason) {
+        "shared_debug_route_disabled_with_debug_payload_off" { "shared_debug_disabled" }
+        "shared_debug_route_break_glass_only" { "shared_debug_break_glass_only" }
+        default { "" }
+    }
+    if (-not $debugExceptionState) {
+        throw "${FailurePrefix}: incident-evidence debug rollback exception posture is not explicit."
+    }
+
+    return @{
+        debug_posture_state   = "dedicated_admin_only"
+        debug_exception_state = $debugExceptionState
     }
 }
 
@@ -737,6 +790,7 @@ if ($IncludeDebug -and -not $response.debug) {
 }
 
 $incidentEvidence = $null
+$incidentDebugPosture = $null
 if ($IncludeDebug) {
     if (-not (Has-Property -Object $response -Name "incident_evidence")) {
         throw "Smoke request failed: debug request is missing incident_evidence."
@@ -770,6 +824,9 @@ if ($IncludeDebug) {
     if (-not (Has-Property -Object $incidentEvidence -Name "policy_posture")) {
         throw "Smoke request failed: incident_evidence is missing policy_posture."
     }
+    $incidentDebugPosture = Assert-DedicatedAdminDebugPosture `
+        -RuntimePolicy $incidentEvidence.policy_posture.runtime_policy `
+        -FailurePrefix "Smoke request failed"
 }
 
 $summary = @{
@@ -835,6 +892,8 @@ $summary = @{
     incident_evidence_duration_ms = if ($null -ne $incidentEvidence) { [int]$incidentEvidence.duration_ms } else { $null }
     incident_evidence_stage_count = if ($null -ne $incidentEvidence) { @($incidentEvidence.stage_timings_ms.PSObject.Properties).Count } else { $null }
     incident_evidence_policy_surface_complete = if ($null -ne $incidentEvidence) { [bool]$incidentEvidence.policy_surface_coverage.complete } else { $null }
+    incident_evidence_debug_posture_state = if ($null -ne $incidentDebugPosture) { [string]$incidentDebugPosture.debug_posture_state } else { $null }
+    incident_evidence_debug_exception_state = if ($null -ne $incidentDebugPosture) { [string]$incidentDebugPosture.debug_exception_state } else { $null }
     incident_bundle_checked = [bool]$incidentEvidenceBundleCheck.checked
     incident_bundle_path = [string]$incidentEvidenceBundleCheck.path
     incident_bundle_manifest_schema_version = $incidentEvidenceBundleCheck.manifest_schema_version
@@ -844,6 +903,8 @@ $summary = @{
     incident_bundle_behavior_report_attached = $incidentEvidenceBundleCheck.behavior_report_attached
     incident_bundle_policy_surface_complete = $incidentEvidenceBundleCheck.policy_surface_complete
     incident_bundle_health_status = $incidentEvidenceBundleCheck.health_status
+    incident_bundle_debug_posture_state = $incidentEvidenceBundleCheck.debug_posture_state
+    incident_bundle_debug_exception_state = $incidentEvidenceBundleCheck.debug_exception_state
     deployment_evidence_checked = [bool]$deploymentEvidenceCheck.checked
     deployment_evidence_path = [string]$deploymentEvidenceCheck.path
     deployment_evidence_age_minutes = $deploymentEvidenceCheck.age_minutes

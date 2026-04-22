@@ -2638,6 +2638,21 @@ def test_event_debug_endpoint_exposes_runtime_incident_evidence_export() -> None
     assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_admin_policy_owner"] == (
         "dedicated_admin_debug_ingress_policy"
     )
+    assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_admin_ingress_target_path"] == (
+        "/internal/event/debug"
+    )
+    assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_shared_ingress_mode"] == (
+        "break_glass_only"
+    )
+    assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_shared_ingress_posture"] == (
+        "shared_route_break_glass_only"
+    )
+    assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_query_compat_enabled"] is False
+    assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_shared_ingress_retirement_ready"] is True
+    assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_shared_ingress_sunset_ready"] is True
+    assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_shared_ingress_sunset_reason"] == (
+        "shared_debug_route_break_glass_only"
+    )
     assert incident_evidence["policy_posture"]["memory_retrieval"]["retrieval_lifecycle_policy_owner"] == (
         "retrieval_lifecycle_policy"
     )

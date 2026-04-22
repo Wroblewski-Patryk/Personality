@@ -217,6 +217,13 @@ def stub_aion_server() -> _StubAionServer:
             "policy_posture": {
                 "runtime_policy": {
                     "event_debug_admin_policy_owner": "dedicated_admin_debug_ingress_policy",
+                    "event_debug_admin_ingress_target_path": "/internal/event/debug",
+                    "event_debug_shared_ingress_mode": "break_glass_only",
+                    "event_debug_shared_ingress_posture": "shared_route_break_glass_only",
+                    "event_debug_query_compat_enabled": False,
+                    "event_debug_shared_ingress_retirement_ready": True,
+                    "event_debug_shared_ingress_sunset_ready": True,
+                    "event_debug_shared_ingress_sunset_reason": "shared_debug_route_break_glass_only",
                 },
                 "memory_retrieval": {
                     "retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy",
@@ -321,13 +328,20 @@ def _write_incident_bundle(
             "missing": [],
             "complete": policy_surface_complete,
         },
-        "policy_posture": {
-            "runtime_policy": {
-                "event_debug_admin_policy_owner": "dedicated_admin_debug_ingress_policy",
-            },
-            "memory_retrieval": {
-                "retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy",
-            },
+            "policy_posture": {
+                "runtime_policy": {
+                    "event_debug_admin_policy_owner": "dedicated_admin_debug_ingress_policy",
+                    "event_debug_admin_ingress_target_path": "/internal/event/debug",
+                    "event_debug_shared_ingress_mode": "break_glass_only",
+                    "event_debug_shared_ingress_posture": "shared_route_break_glass_only",
+                    "event_debug_query_compat_enabled": False,
+                    "event_debug_shared_ingress_retirement_ready": True,
+                    "event_debug_shared_ingress_sunset_ready": True,
+                    "event_debug_shared_ingress_sunset_reason": "shared_debug_route_break_glass_only",
+                },
+                "memory_retrieval": {
+                    "retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy",
+                },
             "scheduler.external_owner_policy": {
                 "policy_owner": "external_scheduler_cadence_policy",
             },
@@ -525,6 +539,8 @@ def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_r
     assert summary["incident_evidence_stage_count"] == 4
     assert summary["incident_evidence_duration_ms"] == 12
     assert summary["incident_evidence_policy_surface_complete"] is True
+    assert summary["incident_evidence_debug_posture_state"] == "dedicated_admin_only"
+    assert summary["incident_evidence_debug_exception_state"] == "shared_debug_break_glass_only"
 
 
 def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_provided(
@@ -553,6 +569,8 @@ def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_pro
     assert summary["incident_bundle_behavior_report_attached"] is True
     assert summary["incident_bundle_policy_surface_complete"] is True
     assert summary["incident_bundle_health_status"] == "ok"
+    assert summary["incident_bundle_debug_posture_state"] == "dedicated_admin_only"
+    assert summary["incident_bundle_debug_exception_state"] == "shared_debug_break_glass_only"
 
 
 def test_release_smoke_fails_when_incident_evidence_bundle_is_partial(
@@ -575,6 +593,38 @@ def test_release_smoke_fails_when_incident_evidence_bundle_is_partial(
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "Incident evidence bundle verification failed" in combined_output
     assert "required file missing" in combined_output
+
+
+def test_release_smoke_fails_when_incident_evidence_debug_posture_is_not_dedicated_admin_only(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    incident_evidence = _StubAionHandler.event_payload["incident_evidence"]
+    assert isinstance(incident_evidence, dict)
+    policy_posture = dict(incident_evidence["policy_posture"])
+    runtime_policy = dict(policy_posture["runtime_policy"])
+    runtime_policy["event_debug_shared_ingress_mode"] = "compatibility"
+    runtime_policy["event_debug_shared_ingress_posture"] = "shared_route_compatibility"
+    runtime_policy["event_debug_query_compat_enabled"] = True
+    runtime_policy["event_debug_shared_ingress_retirement_ready"] = False
+    runtime_policy["event_debug_shared_ingress_sunset_ready"] = False
+    runtime_policy["event_debug_shared_ingress_sunset_reason"] = "shared_debug_route_still_in_compatibility_mode"
+    policy_posture["runtime_policy"] = runtime_policy
+    _StubAionHandler.event_payload["incident_evidence"] = {
+        **incident_evidence,
+        "policy_posture": policy_posture,
+    }
+
+    result = _run_release_smoke(
+        "-BaseUrl",
+        stub_aion_server.base_url,
+        "-IncludeDebug",
+        cwd=ROOT,
+    )
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "Smoke request failed" in combined_output
+    assert "shared debug ingress is not retired to break-glass-only mode" in combined_output
 
 
 def test_release_smoke_fails_when_deployment_evidence_is_stale(

@@ -346,6 +346,14 @@ The current repo already works as an MVP slice, but several architecture-level d
   - shared `/event/debug` now defaults to `break_glass_only`, and query compat
     `POST /event?debug=true` now defaults to disabled unless explicitly
     re-enabled for bounded rollback or migration handling
+- `PRJ-522` is now complete:
+  - release smoke now validates dedicated-admin-only debug posture directly
+    from live `incident_evidence` and bundle-attached
+    `incident_evidence.json`, not only from `/health.runtime_policy`
+  - behavior-validation gates now fail when incident evidence drifts away from
+    dedicated-admin-only debug posture or omits an explicit rollback-exception
+    state (`shared_debug_break_glass_only|shared_debug_disabled`)
+  - the next active slice in this lane is `PRJ-523`
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

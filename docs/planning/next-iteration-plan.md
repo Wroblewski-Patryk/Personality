@@ -238,7 +238,12 @@ Completed on 2026-04-22:
 - `PRJ-521` is complete: dedicated-admin debug ingress is now the default
   posture across environments, with shared `/event/debug` break-glass-only by
   default and query compat disabled by default unless explicitly re-enabled.
-- the next active slice in this lane is `PRJ-522`.
+- `PRJ-522` is complete: release smoke now validates dedicated-admin-only
+  debug posture from both live debug `incident_evidence` and bundle-attached
+  `incident_evidence.json`, while behavior-validation gate logic now blocks
+  incident-evidence debug posture drift and missing explicit rollback
+  exception state.
+- the next active slice in this lane is `PRJ-523`.
 
 - `PRJ-520` Freeze the shared debug compatibility retirement gate.
   - Result:

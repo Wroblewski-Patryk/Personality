@@ -49,9 +49,14 @@ Last updated: 2026-04-22
   default posture across environments, shared `/event/debug` defaults to
   break-glass-only, and query compat `POST /event?debug=true` is now
   disabled-by-default unless explicitly re-enabled.
-- 2026-04-22: `PRJ-522` is now the first `READY` task; the next slice should
-  add release-smoke and behavior evidence for this dedicated-admin-only debug
-  posture.
+- 2026-04-22: `PRJ-522` is complete: release smoke now validates
+  dedicated-admin-only debug posture from both live `incident_evidence` and
+  bundle-attached `incident_evidence.json`, while behavior-validation gates
+  now fail on incident-evidence debug posture drift or missing explicit
+  rollback-exception state.
+- 2026-04-22: `PRJ-523` is now the first `READY` task; the next slice should
+  synchronize docs, runtime reality, ops notes, testing guidance, and context
+  truth around the post-compat dedicated-admin debug evidence baseline.
 - 2026-04-22: Group 76 (`PRJ-516..PRJ-519`) is now complete, and the next
   `READY` task is `PRJ-520` for dedicated debug-ingress compatibility
   retirement.

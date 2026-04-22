@@ -37,6 +37,8 @@ GATE_REASON_INCIDENT_EVIDENCE_INPUT_UNREADABLE = "incident_evidence_input_unread
 GATE_REASON_INCIDENT_EVIDENCE_KIND_INVALID = "incident_evidence_kind_invalid"
 GATE_REASON_INCIDENT_EVIDENCE_SCHEMA_MAJOR_VERSION_MISMATCH = "incident_evidence_schema_major_version_mismatch"
 GATE_REASON_INCIDENT_EVIDENCE_POLICY_SURFACE_INCOMPLETE = "incident_evidence_policy_surface_incomplete"
+GATE_REASON_INCIDENT_EVIDENCE_DEBUG_POSTURE_INVALID = "incident_evidence_debug_posture_invalid"
+GATE_REASON_INCIDENT_EVIDENCE_DEBUG_EXCEPTION_STATE_INVALID = "incident_evidence_debug_exception_state_invalid"
 
 
 @dataclass(frozen=True)
@@ -277,6 +279,14 @@ def _evaluate_incident_evidence_input(
     *,
     incident_evidence_payload: dict[str, Any],
 ) -> tuple[list[str], dict[str, Any]]:
+    expected_debug_admin_policy_owner = "dedicated_admin_debug_ingress_policy"
+    expected_debug_admin_ingress_target_path = "/internal/event/debug"
+    expected_debug_shared_ingress_mode = "break_glass_only"
+    expected_debug_shared_ingress_posture = "shared_route_break_glass_only"
+    allowed_debug_exception_reasons = {
+        "shared_debug_route_break_glass_only",
+        "shared_debug_route_disabled_with_debug_payload_off",
+    }
     context: dict[str, Any] = {
         "incident_evidence_schema_version": incident_evidence_payload.get("schema_version"),
         "incident_evidence_schema_major": _schema_major(incident_evidence_payload.get("schema_version")),
@@ -284,6 +294,15 @@ def _evaluate_incident_evidence_input(
         "incident_evidence_policy_owner": incident_evidence_payload.get("policy_owner"),
         "incident_evidence_policy_surface_complete": False,
         "incident_evidence_stage_count": 0,
+        "incident_evidence_debug_admin_policy_owner": None,
+        "incident_evidence_debug_admin_ingress_target_path": None,
+        "incident_evidence_debug_shared_ingress_mode": None,
+        "incident_evidence_debug_shared_ingress_posture": None,
+        "incident_evidence_debug_query_compat_enabled": None,
+        "incident_evidence_debug_retirement_ready": None,
+        "incident_evidence_debug_sunset_ready": None,
+        "incident_evidence_debug_exception_reason": None,
+        "incident_evidence_debug_exception_state": None,
     }
     violations: list[str] = []
 
@@ -303,6 +322,52 @@ def _evaluate_incident_evidence_input(
     stage_timings = incident_evidence_payload.get("stage_timings_ms")
     if isinstance(stage_timings, dict):
         context["incident_evidence_stage_count"] = len(stage_timings)
+
+    runtime_policy = {}
+    policy_posture = incident_evidence_payload.get("policy_posture")
+    if isinstance(policy_posture, dict):
+        candidate_runtime_policy = policy_posture.get("runtime_policy")
+        if isinstance(candidate_runtime_policy, dict):
+            runtime_policy = candidate_runtime_policy
+
+    context["incident_evidence_debug_admin_policy_owner"] = runtime_policy.get("event_debug_admin_policy_owner")
+    context["incident_evidence_debug_admin_ingress_target_path"] = runtime_policy.get(
+        "event_debug_admin_ingress_target_path"
+    )
+    context["incident_evidence_debug_shared_ingress_mode"] = runtime_policy.get("event_debug_shared_ingress_mode")
+    context["incident_evidence_debug_shared_ingress_posture"] = runtime_policy.get(
+        "event_debug_shared_ingress_posture"
+    )
+    context["incident_evidence_debug_query_compat_enabled"] = runtime_policy.get("event_debug_query_compat_enabled")
+    context["incident_evidence_debug_retirement_ready"] = runtime_policy.get(
+        "event_debug_shared_ingress_retirement_ready"
+    )
+    context["incident_evidence_debug_sunset_ready"] = runtime_policy.get("event_debug_shared_ingress_sunset_ready")
+    context["incident_evidence_debug_exception_reason"] = runtime_policy.get(
+        "event_debug_shared_ingress_sunset_reason"
+    )
+
+    debug_posture_valid = (
+        runtime_policy.get("event_debug_admin_policy_owner") == expected_debug_admin_policy_owner
+        and runtime_policy.get("event_debug_admin_ingress_target_path") == expected_debug_admin_ingress_target_path
+        and runtime_policy.get("event_debug_shared_ingress_mode") == expected_debug_shared_ingress_mode
+        and runtime_policy.get("event_debug_shared_ingress_posture") == expected_debug_shared_ingress_posture
+        and runtime_policy.get("event_debug_query_compat_enabled") is False
+        and runtime_policy.get("event_debug_shared_ingress_retirement_ready") is True
+        and runtime_policy.get("event_debug_shared_ingress_sunset_ready") is True
+    )
+    if not debug_posture_valid:
+        violations.append(GATE_REASON_INCIDENT_EVIDENCE_DEBUG_POSTURE_INVALID)
+
+    debug_exception_reason = runtime_policy.get("event_debug_shared_ingress_sunset_reason")
+    if debug_exception_reason in allowed_debug_exception_reasons:
+        context["incident_evidence_debug_exception_state"] = (
+            "shared_debug_disabled"
+            if debug_exception_reason == "shared_debug_route_disabled_with_debug_payload_off"
+            else "shared_debug_break_glass_only"
+        )
+    else:
+        violations.append(GATE_REASON_INCIDENT_EVIDENCE_DEBUG_EXCEPTION_STATE_INVALID)
 
     return violations, context
 
@@ -417,6 +482,7 @@ def main() -> int:
         "policy_owner": None,
         "policy_surface_complete": None,
         "stage_count": None,
+        "debug_exception_state": None,
     }
     if incident_evidence_input_path is not None:
         incident_payload, incident_read_violations = _load_incident_evidence_payload(
@@ -435,6 +501,7 @@ def main() -> int:
                 "policy_owner": incident_context.get("incident_evidence_policy_owner"),
                 "policy_surface_complete": incident_context.get("incident_evidence_policy_surface_complete"),
                 "stage_count": incident_context.get("incident_evidence_stage_count"),
+                "debug_exception_state": incident_context.get("incident_evidence_debug_exception_state"),
             }
         else:
             incident_evidence_summary = {
@@ -444,6 +511,7 @@ def main() -> int:
                 "policy_owner": None,
                 "policy_surface_complete": False,
                 "stage_count": 0,
+                "debug_exception_state": None,
             }
         if incident_read_violations or incident_violations:
             gate_status = "fail"
