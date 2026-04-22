@@ -393,6 +393,13 @@ This group turns externalized scheduler ownership from a target-policy surface
 into an actual cutover-readiness contract with evidence for last-run and
 duplicate-protection posture.
 
+- `PRJ-532` is complete: canonical contracts now freeze the minimum external
+  cadence cutover-proof categories before runtime fields are added:
+  recent maintenance/proactive last-run evidence, duplicate-protection
+  posture, stale-or-missing evidence state, release visibility, and rollback
+  posture.
+- the next active slice in this lane is `PRJ-533`.
+
 - `PRJ-532` Define the external cadence cutover proof baseline.
   - Result:
     - one explicit contract records what evidence is required before

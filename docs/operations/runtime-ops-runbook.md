@@ -785,6 +785,24 @@ Rollout guardrails before production cadence externalization:
 3. release smoke coverage verifies selected cadence owner path and alerting
    visibility
 
+Cutover proof baseline for treating the external scheduler as the real owner:
+
+1. `external_owner_policy.selected_execution_mode=externalized`
+2. recent successful maintenance tick evidence from the canonical external
+   entrypoint
+3. recent successful proactive tick evidence from the canonical external
+   entrypoint
+4. bounded duplicate-protection or idempotency evidence for both cadence
+   entrypoints
+5. explicit stale-or-missing evidence posture visible in health or release
+   evidence
+6. rollback posture that keeps app-local scheduler ownership as the explicit
+   recovery baseline when any proof item is missing
+
+Until those proof items are machine-visible, treat
+`/health.scheduler.external_owner_policy` as target-policy posture only, not
+as sufficient evidence that production cadence has fully cut over.
+
 ## Post-Reflection Hardening Baseline (PRJ-309)
 
 Post-reflection hardening decisions are synchronized through `PRJ-309`:

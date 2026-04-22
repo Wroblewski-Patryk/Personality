@@ -439,15 +439,25 @@ Last updated: 2026-04-22
       planning, and context
 
 - [ ] PRJ-532 Define the external cadence cutover proof baseline
+- [x] PRJ-532 Define the external cadence cutover proof baseline
   - Owner: Planner
   - Group: External Cadence Cutover Proof
   - Depends on: PRJ-531
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Done when:
     - one explicit contract defines what evidence is required before
       production can treat externalized maintenance and proactive cadence as
       the real owner instead of policy-only target posture
+  - Result:
+    - canonical contracts now freeze one external cadence cutover-proof
+      baseline that requires recent maintenance/proactive last-run evidence,
+      duplicate-protection posture, stale-or-missing evidence state, release
+      visibility, and explicit rollback posture before production can treat
+      the external scheduler as the real cadence owner
+    - runtime reality and ops guidance now explicitly say that
+      `/health.scheduler.external_owner_policy` is still target-policy truth
+      until those proof items become machine-visible
   - Validation:
     - scheduler, runtime policy, and ops cross-review
 
@@ -456,7 +466,7 @@ Last updated: 2026-04-22
   - Group: External Cadence Cutover Proof
   - Depends on: PRJ-532
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - health or runtime evidence shows recent external cadence execution and
       bounded duplicate-protection posture instead of only selected target mode

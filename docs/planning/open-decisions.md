@@ -399,7 +399,14 @@ The current repo already works as an MVP slice, but several architecture-level d
   - canonical contracts, runtime reality, testing guidance, ops notes,
     planning, and context truth all describe the same bounded Google Drive
     metadata-read baseline
-  - the next active slice is `PRJ-532` for external cadence cutover proof
+- `PRJ-532` is now complete:
+  - canonical contracts now freeze one external cadence cutover-proof
+    baseline before runtime fields are added for recent last-run or
+    duplicate-protection evidence
+  - runtime reality and ops guidance now explicitly describe
+    `/health.scheduler.external_owner_policy` as target-policy posture until
+    those proof items become machine-visible
+  - the next active slice is `PRJ-533` for external cadence evidence
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

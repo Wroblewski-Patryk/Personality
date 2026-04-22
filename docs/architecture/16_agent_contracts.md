@@ -385,6 +385,29 @@ Deferred reflection supervision baseline:
    blocking signals plus recovery actions, so deferred durability posture does
    not depend on manual interpretation of raw task counts.
 
+External cadence cutover proof baseline:
+
+1. `scheduler_execution_mode=externalized` alone is not sufficient proof that
+   maintenance and proactive cadence are production-owned by the external
+   scheduler.
+2. one explicit cutover-proof contract must define the minimum machine-visible
+   evidence required before production treats the external scheduler as the
+   real cadence owner.
+3. that cutover-proof contract must cover both cadence families:
+   - maintenance cadence
+   - proactive cadence
+4. minimum evidence categories are:
+   - recent successful external last-run evidence for each cadence family
+   - bounded duplicate-protection or idempotency posture for each canonical
+     entrypoint
+   - explicit stale-or-missing evidence state for operator triage
+   - release/smoke visibility for the same fields
+   - rollback posture showing that app-local cadence remains the explicit
+     recovery owner when cutover proof is missing
+5. until that evidence is present, `/health.scheduler.external_owner_policy`
+   remains target-policy posture only and production must treat app-local
+   cadence ownership as the active fallback baseline.
+
 Durable attention rollout baseline:
 
 1. owner mode may be `in_process` or `durable_inbox`

@@ -95,9 +95,14 @@ Last updated: 2026-04-22
   testing guidance, ops notes, and context truth now describe the same
   bounded Google Drive metadata-read baseline plus its
   `cloud_drive.google_drive_list_files` health posture.
-- 2026-04-22: `PRJ-532` is now the first `READY` task; the next slice should
-  freeze the external cadence cutover proof baseline before adding more
-  scheduler ownership evidence.
+- 2026-04-22: `PRJ-532` is complete: canonical contracts now freeze one
+  external cadence cutover-proof baseline, and runtime reality plus ops
+  guidance now explicitly treat `/health.scheduler.external_owner_policy` as
+  target-policy truth until recent last-run and duplicate-protection evidence
+  becomes machine-visible.
+- 2026-04-22: `PRJ-533` is now the first `READY` task; the next slice should
+  expose recent external cadence execution and bounded idempotency posture
+  through runtime-visible evidence.
 - 2026-04-22: Group 76 (`PRJ-516..PRJ-519`) is now complete, and the next
   `READY` task is `PRJ-520` for dedicated debug-ingress compatibility
   retirement.

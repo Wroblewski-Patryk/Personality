@@ -626,6 +626,9 @@ Scheduler-facing runtime contracts are now explicit:
   `maintenance_entrypoint_path=scripts/run_maintenance_tick_once.py`, canonical
   `proactive_entrypoint_path=scripts/run_proactive_tick_once.py`, and explicit
   in-process fallback posture
+- this surface is still target-policy truth, not full cutover proof:
+  it does not yet show recent successful external last-run evidence or
+  duplicate-protection posture for the canonical cadence entrypoints
 - `/health.proactive` now exposes the shared proactive runtime policy owner,
   selected cadence owner, delivery-target baseline, candidate-selection
   baseline, anti-spam thresholds, and latest proactive tick summary
