@@ -351,7 +351,10 @@ cloud-drive reads rather than durable file or write semantics.
   the bounded Google Drive metadata-read path with machine-visible
   `credentials_missing|provider_backed_ready` posture under one shared
   `provider_backed_when_configured` contract.
-- the next active slice in this lane is `PRJ-531`.
+- `PRJ-531` is complete: canonical contracts, runtime reality, testing
+  guidance, ops notes, planning, and context truth now describe the same
+  bounded Google Drive metadata-read baseline.
+- the next active slice is `PRJ-532` in the external cadence cutover lane.
 
 - `PRJ-528` Define the first bounded cloud-drive metadata read baseline.
   - Result:

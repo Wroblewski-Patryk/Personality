@@ -479,8 +479,9 @@ Rules:
      `task_system:list_tasks` with `provider_hint=clickup`, so the repo can
      widen provider-backed connector coverage without reopening calendar or
      cloud-drive read scope first
-   - `calendar` and `cloud_drive` remain permission-gated planning surfaces
-     without provider adapters
+   - `calendar` and `cloud_drive` remain permission-gated planning surfaces;
+     only the explicitly approved bounded read paths below may execute through
+     provider adapters
    - other `task_system` operations remain policy-only until pre-action read
      paths and additional provider adapters are introduced
 7. `/health.connectors.execution_baseline` must expose whether the selected
@@ -511,8 +512,7 @@ Rules:
     - `state=credentials_missing|provider_backed_ready`
     - all other calendar operations remain policy-only until separately
       approved through their own contract slices
-11. the first bounded cloud-drive metadata-read baseline is now frozen before
-    implementation:
+11. the first bounded cloud-drive metadata-read baseline is now implemented:
     - selected operation: `cloud_drive:list_files`
     - selected provider hint: `google_drive`
     - permission posture remains `read_only` with explicit user opt-in and
@@ -525,6 +525,13 @@ Rules:
       - optional next-page or truncation note
     - provider-backed execution must not expose document body content, file
       download payloads, or become a new pre-planning retrieval surface
+12. bounded cloud-drive live-read posture must be visible in
+    `/health.connectors.execution_baseline` through one explicit provider path:
+    - `cloud_drive.google_drive_list_files`
+    - `execution_mode=provider_backed_when_configured`
+    - `state=credentials_missing|provider_backed_ready`
+    - all other cloud-drive operations remain policy-only until separately
+      approved through their own contract slices
 
 ---
 

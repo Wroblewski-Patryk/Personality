@@ -91,10 +91,13 @@ Last updated: 2026-04-22
   `provider_backed_when_configured` contract and machine-visible
   `credentials_missing|provider_backed_ready` posture for the bounded
   cloud-drive metadata-read path.
-- 2026-04-22: `PRJ-531` is now the first `READY` task; the next slice should
-  synchronize the cloud-drive metadata-read baseline across canonical docs,
-  runtime reality, ops guidance, testing guidance, and planning/context
-  truth.
+- 2026-04-22: `PRJ-531` is complete: canonical contracts, runtime reality,
+  testing guidance, ops notes, and context truth now describe the same
+  bounded Google Drive metadata-read baseline plus its
+  `cloud_drive.google_drive_list_files` health posture.
+- 2026-04-22: `PRJ-532` is now the first `READY` task; the next slice should
+  freeze the external cadence cutover proof baseline before adding more
+  scheduler ownership evidence.
 - 2026-04-22: Group 76 (`PRJ-516..PRJ-519`) is now complete, and the next
   `READY` task is `PRJ-520` for dedicated debug-ingress compatibility
   retirement.

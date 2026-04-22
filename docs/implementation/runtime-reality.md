@@ -915,7 +915,18 @@ What is already live:
   `calendar.google_calendar_read_availability` with machine-visible
   `credentials_missing|provider_backed_ready` posture for that bounded read
   adapter
-- `cloud_drive` and all non-selected calendar or task-system operations remain
+- `ActionExecutor` can now also execute the first bounded cloud-drive
+  metadata-read path for
+  `ConnectedDriveAccessDomainIntent(operation="list_files",
+  provider_hint="google_drive", mode="read_only")`
+- bounded cloud-drive execution remains action-owned and returns only metadata
+  previews such as file name, provider id, mime type, and modified-time hints
+  instead of document body content, downloads, or write semantics
+- `/health.connectors.execution_baseline` now also exposes
+  `cloud_drive.google_drive_list_files` with machine-visible
+  `credentials_missing|provider_backed_ready` posture for that bounded read
+  adapter
+- all non-selected calendar, task-system, and cloud-drive operations remain
   policy-only by design until broader read-scope boundaries and more provider
   adapters are introduced
 - `/health.runtime_topology` now exposes the reflection/attention switch policy

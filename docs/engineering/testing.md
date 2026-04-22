@@ -178,6 +178,9 @@ For meaningful repo changes, leave behind:
     - bounded provider-backed execution notes for the selected read path
     - `/health.connectors.execution_baseline` readiness posture
       (`credentials_missing|provider_backed_ready`) for the same path
+  - current live bounded read paths that should remain pinned are:
+    - `calendar.google_calendar_read_availability`
+    - `cloud_drive.google_drive_list_files`
 - for external-scheduler ownership slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
   - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_main_runtime_policy.py`

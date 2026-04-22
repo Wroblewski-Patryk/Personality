@@ -557,13 +557,15 @@ Next bounded connector-read baseline selected for implementation:
   explicit `read_only` availability intents; create/update/cancel operations
   remain policy-only unless separately approved
 
-Next bounded cloud-drive metadata-read baseline selected for implementation:
+Current bounded cloud-drive metadata-read baseline:
 
 - `cloud_drive:list_files`
 - provider hint target: `google_drive`
-- expected operator posture after implementation:
-  - `policy_only` when no adapter is present yet
-  - `credentials_missing` when adapter lands without provider credentials
+- current live bounded path is now `cloud_drive.google_drive_list_files` in
+  `/health.connectors.execution_baseline`
+- expected operator posture:
+  - `credentials_missing` when runtime lacks provider credentials for bounded
+    metadata-read execution
   - `provider_backed_ready` when the selected provider path is configured
 - safe output contract must stay metadata-only:
   - bounded file-name preview
@@ -573,6 +575,12 @@ Next bounded cloud-drive metadata-read baseline selected for implementation:
   - optional truncation or next-page note
 - document body content, downloads, and write semantics remain out of scope
   for this lane
+- treat `state=credentials_missing` as configuration drift only for the
+  bounded Google Drive metadata adapter, not as permission to widen other
+  cloud-drive operations
+- treat `state=provider_backed_ready` as permission for action to execute only
+  explicit `read_only` `list_files` typed intents through the Google Drive
+  metadata adapter
 
 Recommended when Telegram webhooks are enabled:
 
@@ -1031,6 +1039,13 @@ Important health surfaces for current release checks:
     means action may execute only bounded `read_availability` typed intents
     through the Google Calendar adapter
   - `calendar.other_operations` should remain policy-only after this slice
+  - `cloud_drive.google_drive_list_files.state=credentials_missing` means the
+    bounded cloud-drive metadata adapter exists but runtime lacks provider
+    credentials for execution
+  - `cloud_drive.google_drive_list_files.state=provider_backed_ready` means
+    action may execute only bounded `list_files` typed intents through the
+    Google Drive metadata adapter
+  - `cloud_drive.other_operations` should remain policy-only after this slice
 - `identity.adaptive_governance`
   - bounded authority model for role horizon, affective rollout,
     preferences, theta, and multilingual/profile posture

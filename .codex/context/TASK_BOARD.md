@@ -190,7 +190,7 @@ Last updated: 2026-04-22
     metadata read contract.
 
 - Group 79 note:
-  - `PRJ-528..PRJ-530` are now complete.
+  - `PRJ-528..PRJ-531` are now complete.
   - the next bounded cloud-drive live-read path is frozen as
     `cloud_drive:list_files` with `provider_hint=google_drive`.
   - safe output is intentionally metadata-only, leaving document contents,
@@ -201,8 +201,10 @@ Last updated: 2026-04-22
     now exposes one shared `provider_backed_when_configured` readiness
     contract with machine-visible `credentials_missing|provider_backed_ready`
     posture for the bounded cloud-drive metadata-read path.
-  - `PRJ-531` is the next active slice for docs/context sync of the
-    cloud-drive metadata-read baseline.
+  - canonical contracts, runtime reality, testing guidance, ops notes, and
+    context truth now describe the same bounded Google Drive metadata-read
+    baseline.
+  - `PRJ-532` is the next active slice for external cadence cutover proof.
 
 - [x] PRJ-520 Freeze the shared debug compatibility retirement gate
   - Owner: Planner
@@ -416,15 +418,22 @@ Last updated: 2026-04-22
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
 
-- [ ] PRJ-531 Sync docs/context for the cloud-drive metadata read baseline
+- [x] PRJ-531 Sync docs/context for the cloud-drive metadata read baseline
   - Owner: Product Docs
   - Group: Cloud-Drive Metadata Read Baseline
   - Depends on: PRJ-530
   - Priority: P2
-  - Status: READY
+  - Status: DONE
   - Done when:
     - canonical contracts, runtime reality, ops notes, testing guidance, and
       context truth all describe the same cloud-drive metadata-read baseline
+  - Result:
+    - canonical contracts now record `cloud_drive.google_drive_list_files` as
+      the first live bounded metadata-read path with action-owned metadata-only
+      output and `credentials_missing|provider_backed_ready` health posture
+    - runtime reality, testing guidance, ops notes, and planning/context truth
+      now describe the same bounded Google Drive baseline instead of mixing
+      implementation-ready wording with rollout-era future tense
   - Validation:
     - doc-and-context sync across architecture, implementation, ops, testing,
       planning, and context
@@ -434,7 +443,7 @@ Last updated: 2026-04-22
   - Group: External Cadence Cutover Proof
   - Depends on: PRJ-531
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - one explicit contract defines what evidence is required before
       production can treat externalized maintenance and proactive cadence as

@@ -395,7 +395,11 @@ The current repo already works as an MVP slice, but several architecture-level d
   - operator posture now distinguishes `credentials_missing` from
     `provider_backed_ready` instead of leaving cloud-drive under one generic
     policy-only hint
-  - the next active slice in this lane is `PRJ-531`
+- `PRJ-531` is now complete:
+  - canonical contracts, runtime reality, testing guidance, ops notes,
+    planning, and context truth all describe the same bounded Google Drive
+    metadata-read baseline
+  - the next active slice is `PRJ-532` for external cadence cutover proof
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
