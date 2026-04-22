@@ -330,10 +330,21 @@ Post-convergence minimum scenario families now also include:
   scheduler-owned proactive follow-up
 - metadata-only role/skill boundary behavior
 - connector execution and guardrail posture
+- approved bounded tool-slice behavior for:
+  - DuckDuckGo web search
+  - generic HTTP page read
+  - ClickUp task update
 - proactive delivery-ready versus anti-spam-blocked posture
 - deferred reflection enqueue and non-blocking background expectations
 - exported `incident_evidence` consumption through smoke or validation tooling
   whenever observability-sensitive runtime or release slices change
+
+Current scenario anchors:
+
+- `T13.1`: no-UI `v1` reminder capture -> continuity -> proactive follow-up
+- `T14.1`: analyst-driven bounded web search via action-owned tool path
+- `T14.2`: analyst-driven bounded page read via action-owned tool path
+- `T14.3`: executor-aligned ClickUp update via action-owned connector path
 
 When behavior validation is used during release or incident triage, the
 resulting artifact should attach to the same operator incident-evidence bundle

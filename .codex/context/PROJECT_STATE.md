@@ -194,6 +194,14 @@ Last updated: 2026-04-22
   synchronize contracts, runtime reality, testing guidance, ops notes, and
   planning/context truth around the approved bounded search, browser, and
   organization tool slices plus their new behavior-level proof.
+- 2026-04-22: `PRJ-559` is complete: canonical contracts, behavior-testing
+  guidance, runtime reality, ops notes, and planning/context truth now all
+  describe the same live bounded tool slices and point to behavior-validation
+  proof through `T14.1..T14.3` instead of describing search/browser as
+  policy-only placeholders.
+- 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
+  freeze the backend work-partner role baseline so future orchestration can
+  grow from one explicit role contract instead of diffuse product wording.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

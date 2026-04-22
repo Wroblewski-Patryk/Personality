@@ -389,14 +389,27 @@ Last updated: 2026-04-22
   - Group: Search, Browser, And Organization Tool Expansion
   - Depends on: PRJ-558
   - Priority: P2
-  - Status: READY
+  - Status: DONE
+  - Result:
+    - contracts, runtime reality, behavior-testing guidance, ops notes, and
+      planning/context truth now all describe the same live bounded tool
+      slices:
+      - DuckDuckGo web search
+      - generic HTTP page read
+      - ClickUp task update
+    - the same docs now point to scenario-level proof through behavior
+      validation `T14.1..T14.3` instead of describing search and browser as
+      policy-only placeholders
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
 
 - [ ] PRJ-560 Freeze the backend work-partner role baseline
   - Owner: Planner
   - Group: Work-Partner Role And Capability Orchestration
   - Depends on: PRJ-559
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
 
 - [ ] PRJ-564 Freeze the `v1` release gate and production acceptance bundle
   - Owner: Planner

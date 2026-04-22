@@ -985,17 +985,22 @@ What is already live:
   adapter
 - `/health.connectors.web_knowledge_tools` now exposes the shared
   web-knowledge tooling owner, metadata-only skill boundary, fallback posture,
-  and the current `policy_only` execution state for:
-  - `knowledge_search`
-  - `web_browser`
-- `/health.connectors.execution_baseline` now also exposes explicit policy-only
-  placeholders for:
-  - `knowledge_search.search_web`
-  - `knowledge_search.suggest_search`
-  - `web_browser.read_page`
-  - `web_browser.suggest_page_review`
-  so operator health and future UI can distinguish "authorized by contract"
-  from "provider-backed execution not selected yet"
+  and the first selected provider-backed execution posture for:
+  - `knowledge_search` via `duckduckgo_html`
+  - `web_browser` via `generic_http`
+- `/health.connectors.execution_baseline` now also exposes:
+  - `knowledge_search.search_web` as
+    `provider_backed_without_credentials/provider_backed_ready`
+  - `knowledge_search.suggest_search` as a planning-only suggestion surface
+  - `web_browser.read_page` as
+    `provider_backed_without_credentials/provider_backed_ready`
+  - `web_browser.suggest_page_review` as a planning-only suggestion surface
+  - `task_system.clickup_update_task` as the first bounded organization
+    mutation slice beyond task creation and task listing
+- these live tool slices still remain bounded:
+  - search returns result evidence only
+  - browser returns page-read evidence only
+  - ClickUp updates return status-level mutation evidence only
 - all non-selected calendar, task-system, and cloud-drive operations remain
   policy-only by design until broader read-scope boundaries and more provider
   adapters are introduced
@@ -1105,8 +1110,12 @@ Current limitation:
   health-level owner or path contract so release smoke and behavior-validation
   gates can verify future-UI inspection readiness from exported evidence too
 - runtime `system_debug.adaptive_state["web_knowledge_tools"]` now mirrors the
-  same policy-only readiness posture as `/health.connectors.web_knowledge_tools`
+  same selected provider-backed posture as `/health.connectors.web_knowledge_tools`
   for operator triage and future UI bootstrap
+- behavior validation now proves these live bounded tool slices through:
+  - `T14.1` analyst-driven DuckDuckGo search
+  - `T14.2` analyst-driven generic HTTP page read
+  - `T14.3` executor-aligned ClickUp task update
 
 ---
 

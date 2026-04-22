@@ -593,6 +593,15 @@ Rules:
 19. these slices must not execute JavaScript, submit forms, follow login flows,
     widen memory retrieval ownership, or expose raw provider payloads beyond
     the bounded evidence contract
+20. the live execution path for these slices remains unchanged architecturally:
+    - role and selected skills may shape planning posture
+    - planning must emit explicit typed intents
+    - permission gates and execution envelopes remain authoritative
+    - action remains the only provider-call owner
+21. behavior validation for this lane should prove the live bounded slices as:
+    - `T14.1` analyst-driven web search via `duckduckgo_html`
+    - `T14.2` analyst-driven page read via `generic_http`
+    - `T14.3` executor-aligned ClickUp task update through the action layer
 
 ---
 

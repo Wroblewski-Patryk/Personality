@@ -159,6 +159,11 @@ posture:
   follow-up behavior, attach behavior-validation evidence that covers the
   bounded `v1` workflow (`T13.1`) alongside incident evidence instead of
   relying on live `/health` alone
+- when a release or incident touches search, browser, or ClickUp tool usage,
+  attach behavior-validation evidence for:
+  - `T14.1` analyst-driven DuckDuckGo search
+  - `T14.2` analyst-driven generic HTTP page read
+  - `T14.3` executor-aligned ClickUp task update
 
 `GET /health` now also includes a `memory_retrieval` object with semantic
 retrieval posture:
@@ -1121,10 +1126,9 @@ Important health surfaces for current release checks:
   - capability-proposal posture for not-yet-authorized expansion
   - `execution_baseline` shows whether the current live provider-backed
     task-system paths are configured
-  - `web_knowledge_tools` shows whether `knowledge_search` and `web_browser`
-    are still policy-only by design, which fallback posture applies, and which
-    operations are already authorized at the contract level before provider
-    execution exists
+  - `web_knowledge_tools` shows the selected provider-backed search/browser
+    posture, the fallback posture, and the metadata-only skill boundary for
+    those action-owned tool families
   - `task_system.clickup_create_task.state=credentials_missing` means the repo
     is still in policy-only posture for task creation at runtime
   - `task_system.clickup_create_task.state=provider_backed_ready` means action
@@ -1138,6 +1142,12 @@ Important health surfaces for current release checks:
   - `task_system.read_capable_live_paths` versus
     `task_system.mutation_live_paths` shows which live surfaces already exist
     under the task-system family
+  - `task_system.clickup_update_task.state=credentials_missing` means the
+    bounded ClickUp update path exists but runtime lacks provider credentials
+    for mutation execution
+  - `task_system.clickup_update_task.state=provider_backed_ready` means action
+    may execute bounded `update_task` intents for matched ClickUp tasks while
+    keeping the mutation evidence status-level only
   - `calendar.google_calendar_read_availability.state=credentials_missing`
     means the bounded calendar live-read adapter exists but runtime lacks
     credentials for provider-backed execution
@@ -1152,6 +1162,15 @@ Important health surfaces for current release checks:
     action may execute only bounded `list_files` typed intents through the
     Google Drive metadata adapter
   - `cloud_drive.other_operations` should remain policy-only after this slice
+  - `knowledge_search.search_web.state=provider_backed_ready` means the
+    DuckDuckGo HTML adapter is live and action may execute bounded web-search
+    intents without extra credentials
+  - `knowledge_search.suggest_search.state=planning_only_allowed` remains the
+    non-executing suggestion posture for the same tool family
+  - `web_browser.read_page.state=provider_backed_ready` means the generic HTTP
+    page-read adapter is live and action may execute bounded page-read intents
+  - `web_browser.suggest_page_review.state=planning_only_allowed` remains the
+    non-executing suggestion posture for browser guidance
 - `identity.adaptive_governance`
   - bounded authority model for role horizon, affective rollout,
     preferences, theta, and multilingual/profile posture

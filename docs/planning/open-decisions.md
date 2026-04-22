@@ -52,11 +52,16 @@ The current repo already works as an MVP slice, but several architecture-level d
     `web_browser`
   - `/health.connectors.web_knowledge_tools` and
     `system_debug.adaptive_state["web_knowledge_tools"]` now expose the same
-    policy-only posture before any provider-backed slice is selected
+    selected provider-backed posture for the approved first live slices
 - `PRJ-556` now freezes the first provider-backed expansion choices:
   - `duckduckgo_html` for bounded web search
   - `generic_http` for bounded page-read browsing
   - `clickup:update_task` as the next organization mutation path
+- `PRJ-557..PRJ-558` now make those slices execution- and behavior-real:
+  - DuckDuckGo web search, generic HTTP page reads, and ClickUp task updates
+    execute through the existing planning -> permission-gate -> action path
+  - behavior validation now proves the same boundary through `T14.1..T14.3`
+    instead of relying only on unit or integration regressions
 - the next execution queue therefore prioritizes:
   - production conversation reliability
   - life-assistant workflow activation
