@@ -54,19 +54,25 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-512 Define the minimum exportable observability baseline beyond local logs and `/health`
+- [x] PRJ-512 Define the minimum exportable observability baseline beyond local logs and `/health`
   - Owner: Planner
   - Group: Observability Export And Incident-Evidence Baseline
   - Depends on: PRJ-511
   - Priority: P1
+  - Status: DONE
   - Why now:
     - reflection supervision is now fully closed, so the next remaining hardening
       lane is exportable observability and incident evidence
   - Done when:
     - one explicit contract records which runtime evidence must be exportable
       for incidents and releases beyond local logs and `/health`
+  - Result:
+    - the repo now has one shared observability export policy owner in
+      `app/core/observability_policy.py`, and `/health.observability` exposes
+      the minimum incident-evidence contract together with the remaining
+      machine-readable export gaps
   - Validation:
-    - observability cross-review across architecture, ops, and logging docs
+    - `.\.venv\Scripts\python -m pytest -q tests/test_observability_policy.py tests/test_api_routes.py`
 
 - [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release

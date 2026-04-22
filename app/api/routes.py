@@ -33,6 +33,7 @@ from app.core.connector_policy import (
 from app.core.connector_execution import connector_execution_baseline_snapshot
 from app.core.deployment_policy import deployment_policy_snapshot
 from app.core.external_scheduler_policy import external_scheduler_policy_snapshot
+from app.core.observability_policy import observability_export_policy_snapshot
 from app.core.planning_governance import planning_governance_snapshot
 from app.core.proactive_policy import proactive_runtime_policy_snapshot
 from app.core.role_skill_policy import role_skill_policy_snapshot
@@ -452,11 +453,18 @@ async def health(request: Request) -> dict[str, Any]:
         reflection_readiness=reflection_deployment_readiness,
         attention_snapshot=attention_snapshot,
     )
+    observability = observability_export_policy_snapshot(
+        structured_logs_available=True,
+        health_surface_available=True,
+        system_debug_available=True,
+        export_artifact_available=False,
+    )
     return {
         "status": "ok",
         "runtime_policy": runtime_policy,
         "release_readiness": release_readiness,
         "runtime_topology": topology_policy,
+        "observability": observability,
         "identity": {
             **identity_policy_snapshot(),
             "language_continuity": language_continuity_policy_snapshot(),

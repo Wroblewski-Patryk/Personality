@@ -272,6 +272,12 @@ The current repo already works as an MVP slice, but several architecture-level d
   - canonical contracts, runtime reality, ops guidance, testing guidance,
     planning, and context truth now describe the same supervised deferred
     reflection baseline
+- `PRJ-512` is now complete:
+  - the repo now has one explicit observability export policy owner for the
+    minimum incident-evidence contract beyond local logs and `/health`
+  - `/health.observability` now exposes the required runtime evidence fields,
+    required policy-posture surfaces, and the remaining machine-readable
+    export gaps before artifact-based evidence is implemented
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

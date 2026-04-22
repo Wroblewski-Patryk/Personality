@@ -722,6 +722,13 @@ Completed on 2026-04-22:
   - Validation:
     - observability cross-review across architecture, ops, and logging docs
 
+Completed on 2026-04-22:
+
+- `PRJ-512` is complete: the repo now has one shared observability export
+  policy owner in `app/core/observability_policy.py`, and
+  `/health.observability` exposes the minimum incident-evidence contract plus
+  the remaining machine-readable export gaps before artifact work lands.
+
 - `PRJ-513` Implement exportable runtime evidence for stage timings and policy posture.
   - Result:
     - the repo can produce machine-readable incident or release evidence for

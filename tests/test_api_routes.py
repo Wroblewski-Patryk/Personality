@@ -2721,6 +2721,45 @@ def test_health_endpoint_exposes_repository_backed_attention_cleanup_candidates(
     assert body["attention"]["deployment_readiness"]["answered_cleanup_candidates"] == 1
 
 
+def test_health_endpoint_exposes_observability_export_policy_baseline() -> None:
+    client, _, _ = _client()
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["observability"] == {
+        "policy_owner": "incident_evidence_export_policy",
+        "incident_evidence_contract_version": 1,
+        "required_incident_evidence_fields": [
+            "trace_id",
+            "event_id",
+            "duration_ms",
+            "stage_timings_ms",
+        ],
+        "required_policy_posture_surfaces": [
+            "runtime_policy",
+            "memory_retrieval",
+            "scheduler.external_owner_policy",
+            "reflection.supervision",
+            "connectors.execution_baseline",
+        ],
+        "local_surfaces": [
+            "structured_runtime_logs",
+            "health_policy_surfaces",
+            "system_debug_runtime_payload",
+        ],
+        "export_artifact_available": False,
+        "incident_export_ready": False,
+        "incident_export_state": "local_only_surfaces_pending_export_artifact",
+        "incident_export_hint": "implement_machine_readable_incident_evidence_export",
+        "missing_export_capabilities": [
+            "machine_readable_incident_evidence_artifact",
+            "machine_readable_release_evidence_attachment",
+        ],
+    }
+
+
 def test_event_endpoint_ignores_duplicate_telegram_update_during_pending_turn() -> None:
     client, runtime, _ = _client(attention_burst_window_ms=160)
     first_response: dict[str, object] = {}

@@ -2050,8 +2050,14 @@ Last updated: 2026-04-22
   shared supervised deferred-reflection baseline with queue-health,
   blocking-signal, and recovery-action posture.
 - 2026-04-22: Group 74 (`PRJ-508..PRJ-511`) is now complete.
-- 2026-04-22: `PRJ-512` is now the next `READY` task, focused on defining the
-  minimum exportable observability baseline beyond local logs and `/health`.
+- 2026-04-22: `PRJ-512` is complete: the repo now has one shared
+  `incident_evidence_export_policy` owner in
+  `app/core/observability_policy.py`, and `/health.observability` exposes the
+  minimum exportable incident-evidence contract together with the remaining
+  machine-readable export gaps.
+- 2026-04-22: `PRJ-513` is now the next `READY` task, focused on implementing
+  exportable runtime evidence for stage timings and policy posture on top of
+  the shared observability contract.
 
 ## Working Agreements
 
