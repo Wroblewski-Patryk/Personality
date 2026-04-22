@@ -149,6 +149,13 @@ green across:
 That acceptance bundle belongs to backend runtime truth, incident evidence,
 release smoke, and behavior validation. It does not require a dedicated UI.
 
+Canonical no-UI `v1` readiness surfaces:
+
+- `/health.v1_readiness`
+- `/health.conversation_channels.telegram`
+- `/health.learned_state`
+- debug or exported `incident_evidence.policy_posture["v1_readiness"]`
+
 ---
 
 ### v2 – UI And Work / Business Partner Surface
@@ -163,6 +170,16 @@ release smoke, and behavior validation. It does not require a dedicated UI.
 Work-partner remains a role of the same personality.  
 It may use bounded skills and authorized tools through the existing action boundary.  
 It is not a separate persona.  
+
+Backend API-readiness seed for later `v2` UI:
+
+- `/health.api_readiness`
+- internal `GET /internal/state/inspect?user_id=...`
+- current-turn debug boundary at `/internal/event/debug`
+
+These backend surfaces must exist before a dedicated UI is treated as the next
+product stage, so future UI reads backend-owned truth instead of rebuilding
+personality state client-side.
 
 Backend work-partner baseline:
 

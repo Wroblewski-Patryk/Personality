@@ -733,14 +733,21 @@ Canonical introspection surfaces for that baseline:
    - exposes the shared policy owner for learned-state inspection
    - exposes the stable internal inspection path used by admin or future UI
      callers
-2. `GET /internal/state/inspect?user_id=...`
+2. `/health.api_readiness`
+   - exposes the shared backend API-readiness owner for later `v2` UI
+     consumers
+   - freezes canonical health, internal inspection, connector, and current-turn
+     debug surfaces instead of leaving UI integration to infer them
+3. `GET /internal/state/inspect?user_id=...`
    - remains an internal debug-boundary surface
+   - includes an `api_readiness` snapshot alongside bounded learned-state
+     families
    - returns bounded backend-owned snapshots for:
      - `identity_state`
      - `learned_knowledge`
      - `role_skill_state`
      - `planning_state`
-3. exported `incident_evidence.policy_posture["learned_state"]`
+4. exported `incident_evidence.policy_posture["learned_state"]`
    - must carry the same policy owner and internal inspection path as
      `/health.learned_state`
    - exists so release smoke, behavior validation, and future UI readiness do

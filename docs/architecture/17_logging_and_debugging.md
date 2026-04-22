@@ -237,6 +237,7 @@ Canonical evidence surfaces for that bundle may include:
 - `/health.v1_readiness`
 - `/health.conversation_channels.telegram`
 - `/health.learned_state`
+- `/health.api_readiness`
 - debug/exported `incident_evidence.policy_posture["v1_readiness"]`
 - behavior-validation scenario anchors for the current `v1` baseline
 
@@ -373,6 +374,18 @@ Learned-state inspection evidence is part of that bundle contract too:
   - `internal_inspection_path = /internal/state/inspect`
 - bundle validation must fail when learned-state posture is missing or drifts
   away from the shared owner/path contract
+
+Backend API-readiness evidence for later `v2` UI bootstrap is now frozen too:
+
+- `/health.api_readiness` must expose:
+  - `policy_owner = v2_backend_api_readiness_policy`
+  - stable health surfaces for learned-state, role-skill, connectors, and
+    `v1` readiness
+  - the canonical internal inspection path
+  - the canonical current-turn debug path
+- internal `GET /internal/state/inspect?user_id=...` must carry the same
+  `api_readiness` snapshot so backend inspection and health posture do not
+  drift between admin or future UI entrypoints
 
 Canonical naming posture:
 

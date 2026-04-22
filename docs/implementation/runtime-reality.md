@@ -1105,8 +1105,12 @@ Current limitation:
   than only from live `/health`
 - `/health.learned_state` now exposes the shared learned-state inspection
   policy owner plus the canonical internal inspection path
+- `/health.api_readiness` now exposes the shared backend API-readiness owner
+  plus the health, inspection, connector, and current-turn debug surfaces that
+  later `v2` UI callers should consume
 - `GET /internal/state/inspect?user_id=...` now exposes bounded backend-owned
   snapshots for:
+  - `api_readiness`
   - `identity_state`
   - `learned_knowledge`
   - `role_skill_state`

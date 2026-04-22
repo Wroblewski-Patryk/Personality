@@ -9,7 +9,7 @@ Last updated: 2026-04-22
   structured pipeline, replies through API or Telegram, and learns lightweight
   user preferences over time
 - Commercial model: TBD
-- Current phase: V1 productization planning and production hardening
+- Current phase: no-UI V1 baseline achieved; awaiting next production/runtime analysis
 - 2026-04-22: product staging is now explicit:
   - `MVP` is already exceeded by the current runtime
   - `v1` means a no-UI but production-usable life assistant over Telegram or
@@ -254,6 +254,13 @@ Last updated: 2026-04-22
   synchronize architecture notes, runtime reality, testing guidance, ops
   notes, planning, and context around the completed no-UI `v1` baseline plus
   the new backend API-readiness contract for later `v2` UI work.
+- 2026-04-22: `PRJ-567` is complete: canonical architecture docs, runtime
+  reality, testing guidance, ops notes, planning, and context now all
+  describe the same completed no-UI `v1` baseline plus the backend API
+  readiness seed for future `v2` UI work.
+- 2026-04-22: the seeded `v1` queue is complete through `PRJ-567`; no seeded
+  `READY` task remains and the next lane should be derived from fresh
+  production/runtime analysis.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

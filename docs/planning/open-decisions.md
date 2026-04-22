@@ -81,7 +81,14 @@ The current repo already works as an MVP slice, but several architecture-level d
   - approved tooling and work-partner posture
   must be readable from one backend-facing acceptance bundle before `v1` is
   treated as closed
-- the next execution queue therefore prioritizes:
+- `PRJ-565..PRJ-567` now close that lane:
+  - `/health.v1_readiness` is the explicit no-UI `v1` acceptance surface
+  - `/health.api_readiness` and internal
+    `GET /internal/state/inspect?user_id=...` are the backend-owned starting
+    point for later `v2` UI integration
+  - the seeded `v1` queue is complete; any next queue should come from fresh
+    production/runtime analysis rather than from unfinished `v1` backlog
+- the completed `v1` execution queue prioritized:
   - production conversation reliability
   - life-assistant workflow activation
   - learned-state inspection surfaces

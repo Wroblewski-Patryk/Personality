@@ -155,8 +155,10 @@ For meaningful repo changes, leave behind:
   - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
   - coverage should pin:
     - `/health.learned_state` owner and internal inspection path
+    - `/health.api_readiness` owner and stable backend-surface contract for
+      later `v2` UI callers
     - internal `GET /internal/state/inspect?user_id=...` access and bounded
-      payload shape
+      payload shape, including `api_readiness`
     - exported `incident_evidence.policy_posture["learned_state"]`
     - release-smoke and behavior-validation rejection when learned-state
       posture is missing or carries the wrong owner/path contract

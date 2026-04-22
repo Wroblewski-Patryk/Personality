@@ -422,6 +422,14 @@ surface that a later `v2` UI can consume.
     - doc-and-context sync across architecture, implementation, ops, testing,
       planning, and context
 
+Group 88 completion note:
+
+- no-UI `v1` is now closed through one explicit backend acceptance bundle
+- later `v2` UI work starts from `/health.api_readiness`,
+  `/health.learned_state`, `/health.role_skill`, `/health.connectors`, and
+  internal `GET /internal/state/inspect?user_id=...`
+- no seeded follow-up queue remains after `PRJ-567`
+
 ## Progress Update
 
 Historical planning note (2026-04-22):

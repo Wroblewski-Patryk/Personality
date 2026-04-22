@@ -85,6 +85,10 @@ Last updated: 2026-04-22
   - then architecture-first web search and browser tooling
   - then bounded tool expansion and work-partner role orchestration
   - finally `v1` release closure and `v2` backend API readiness
+- the seeded `v1` productization queue is now complete through `PRJ-567`
+- no seeded `READY`, `BACKLOG`, or `FUTURE` queue remains after the no-UI `v1`
+  closure lane; the next task should be derived from fresh production/runtime
+  analysis
 
 ## READY
 
@@ -522,7 +526,18 @@ Last updated: 2026-04-22
   - Group: V1 Release Closure And V2 API Readiness
   - Depends on: PRJ-566
   - Priority: P1
-  - Status: READY
+  - Status: DONE
+  - Result:
+    - canonical architecture notes, runtime reality, testing guidance, ops
+      notes, and planning/context truth now describe the same completed no-UI
+      `v1` acceptance bundle plus the backend API-readiness contract for later
+      `v2` UI integration
+    - `/health.v1_readiness`, `/health.api_readiness`, and internal
+      `GET /internal/state/inspect?user_id=...` are now documented together as
+      the stable backend-owned starting point for future UI work
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
 
 - [x] PRJ-516 Define the operator-facing incident evidence bundle and retention baseline
   - Owner: Planner

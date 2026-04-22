@@ -1102,6 +1102,12 @@ Important health surfaces for current release checks:
   - pair it with internal `GET /internal/state/inspect?user_id=...` when you
     need bounded snapshots of identity state, learned knowledge, role/skill
     metadata, and planning state
+- `api_readiness`
+  - shared backend API-readiness owner for later `v2` UI callers
+  - canonical health surfaces for learned-state, role-skill, connectors, and
+    `v1` readiness
+  - canonical current-turn debug path and internal inspection path so future UI
+    bootstrap does not guess where backend truth lives
 - `proactive`
   - shared proactive policy owner and selected cadence owner
   - delivery-target baseline and candidate-selection baseline
