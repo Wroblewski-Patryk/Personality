@@ -149,6 +149,20 @@ For meaningful repo changes, leave behind:
     - delivery success/failure telemetry in the shared delivery boundary
     - incident-evidence and smoke validation of
       `conversation_channels.telegram`
+- for no-UI `v1` life-assistant workflow slices, regression and behavior
+  evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_goal_task_signals.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`
+  - `.\scripts\run_behavior_validation.ps1 -GateMode operator`
+  - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+  - coverage should pin:
+    - explicit reminder phrasing creates a bounded internal task anchor
+    - explicit reminder/check-in phrasing persists `proactive_opt_in` through
+      the action-owned conclusion path
+    - explicit planning phrasing creates the bounded task anchor
+      `plan tomorrow`
+    - scenario-level proof that reminder capture, planning continuity, and
+      scheduler-owned proactive follow-up still compose into one end-to-end
+      `v1` workflow (`T13.1`)
 - for runtime-topology, adaptive-governance, planning-governance, or
   deployment-policy surface changes, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`

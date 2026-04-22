@@ -147,6 +147,19 @@ you whether the webhook reached the service, whether the secret was rejected,
 whether the turn was coalesced into a queue, and whether outbound delivery
 ever ran.
 
+For no-UI `v1` life-assistant triage, pair Telegram reliability with workflow
+posture:
+
+- use `/health.conversation_channels.telegram` first to confirm round-trip
+  viability before treating reminder silence as planning drift
+- use `/health.proactive` and the latest proactive tick summary to distinguish
+  `opt_in_required`, attention-gate deferral, anti-spam throttling, and normal
+  proactive delivery
+- when a release or incident touches reminder capture, daily planning, or
+  follow-up behavior, attach behavior-validation evidence that covers the
+  bounded `v1` workflow (`T13.1`) alongside incident evidence instead of
+  relying on live `/health` alone
+
 `GET /health` now also includes a `memory_retrieval` object with semantic
 retrieval posture:
 

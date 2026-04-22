@@ -206,14 +206,14 @@ Last updated: 2026-04-22
   - Group: Life Assistant Workflow Activation
   - Depends on: PRJ-546
   - Priority: P1
-  - Status: READY
+  - Status: DONE
 
 - [ ] PRJ-548 Freeze the learned-state model for `v1`
   - Owner: Planner
   - Group: Learned-State And Skill Introspection
   - Depends on: PRJ-547
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
 
 - [ ] PRJ-552 Define the architecture baseline for web search and browser tool families
   - Owner: Planner

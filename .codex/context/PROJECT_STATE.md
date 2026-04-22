@@ -91,6 +91,15 @@ Last updated: 2026-04-22
 - 2026-04-22: `PRJ-547` is now the first `READY` task; the next slice should
   sync architecture, runtime reality, testing, ops, and planning/context around
   the newly proven `v1` workflow baseline and its validation evidence.
+- 2026-04-22: `PRJ-547` is complete: architecture, runtime reality, testing,
+  ops, and context truth now describe the same bounded no-UI `v1` workflow
+  contract, including reminder capture, persisted `proactive_opt_in`, the
+  `plan tomorrow` task anchor, and scenario-level proof through behavior
+  validation `T13.1`.
+- 2026-04-22: `PRJ-548` is now the first `READY` task; the next slice should
+  freeze the learned-state introspection baseline for roles, skills, learned
+  preferences, and other operator-visible growth surfaces needed before `v2`
+  UI/API work.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

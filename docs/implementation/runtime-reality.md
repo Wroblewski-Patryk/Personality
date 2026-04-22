@@ -770,6 +770,18 @@ Selected workflow baseline:
   active work retrieval, task-status updates, proactive `time_checkin` or
   `goal_stagnation` events, and scoped reflection continuity
 
+Current proven bounded examples:
+
+- explicit reminder phrasing such as `Remind me to send the release summary
+  tomorrow.` creates an internal active task anchor and persists
+  `proactive_opt_in=true` through the normal planning -> action -> conclusions
+  path
+- explicit daily-support phrasing such as `Help me plan tomorrow.` creates the
+  bounded task anchor `plan tomorrow` instead of a separate planning subsystem
+- behavior-validation scenario `T13.1` proves the combined path:
+  reminder capture -> daily planning capture -> scheduler-owned proactive
+  follow-up delivery
+
 Explicit non-goals for this `v1` lane:
 
 - no separate reminder subsystem outside goals/tasks plus proactive cadence

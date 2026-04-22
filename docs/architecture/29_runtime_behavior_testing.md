@@ -325,6 +325,9 @@ also include:
 
 Post-convergence minimum scenario families now also include:
 
+- no-UI `v1` life-assistant workflow continuity:
+  reminder capture -> learned proactive preference -> daily planning anchor ->
+  scheduler-owned proactive follow-up
 - metadata-only role/skill boundary behavior
 - connector execution and guardrail posture
 - proactive delivery-ready versus anti-spam-blocked posture
