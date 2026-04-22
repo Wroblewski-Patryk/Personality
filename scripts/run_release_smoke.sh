@@ -129,9 +129,9 @@ if shared_break_glass_required != expected_shared_break_glass_required:
 
 shared_ingress_posture = str(runtime_policy.get("event_debug_shared_ingress_posture", "")).strip()
 expected_shared_ingress_posture = (
-    "transitional_break_glass_only"
+    "shared_route_break_glass_only"
     if expected_shared_break_glass_required
-    else "transitional_compatibility"
+    else "shared_route_compatibility"
 )
 if shared_ingress_posture != expected_shared_ingress_posture:
     raise SystemExit(

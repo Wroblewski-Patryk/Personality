@@ -58,10 +58,10 @@ def event_debug_shared_ingress_mode_source(settings: Any) -> Literal["explicit",
 
 def event_debug_shared_ingress_posture(
     settings: Any,
-) -> Literal["transitional_compatibility", "transitional_break_glass_only"]:
+) -> Literal["shared_route_compatibility", "shared_route_break_glass_only"]:
     if event_debug_shared_ingress_mode(settings) == "break_glass_only":
-        return "transitional_break_glass_only"
-    return "transitional_compatibility"
+        return "shared_route_break_glass_only"
+    return "shared_route_compatibility"
 
 
 def event_debug_token_missing_in_production(settings: Any) -> bool:

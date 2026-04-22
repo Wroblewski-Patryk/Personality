@@ -206,10 +206,10 @@ if (-not (Has-Property -Object $runtimePolicy -Name "event_debug_shared_ingress_
 }
 $sharedIngressPosture = [string]$runtimePolicy.event_debug_shared_ingress_posture
 $expectedSharedIngressPosture = if ($expectedSharedBreakGlassRequired) {
-    "transitional_break_glass_only"
+    "shared_route_break_glass_only"
 }
 else {
-    "transitional_compatibility"
+    "shared_route_compatibility"
 }
 if ($sharedIngressPosture -ne $expectedSharedIngressPosture) {
     throw "Health check failed: inconsistent shared ingress posture '$sharedIngressPosture'."

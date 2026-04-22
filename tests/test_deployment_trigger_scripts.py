@@ -101,7 +101,7 @@ def stub_aion_server() -> _StubAionServer:
             "event_debug_shared_ingress_path": "/event/debug",
             "event_debug_shared_ingress_mode": "compatibility",
             "event_debug_shared_ingress_break_glass_required": False,
-            "event_debug_shared_ingress_posture": "transitional_compatibility",
+            "event_debug_shared_ingress_posture": "shared_route_compatibility",
             "event_debug_enabled": False,
             "event_debug_shared_ingress_sunset_ready": True,
             "event_debug_shared_ingress_sunset_reason": "shared_debug_route_disabled_with_debug_payload_off",

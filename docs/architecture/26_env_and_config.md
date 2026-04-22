@@ -498,7 +498,7 @@ Shared compatibility route `POST /event/debug` emits:
 - `X-AION-Debug-Shared-Compat: shared_debug_route_is_compatibility_use_internal_event_debug`
 - `X-AION-Debug-Shared-Compat-Deprecated: true`
 - `X-AION-Debug-Shared-Mode: compatibility|break_glass_only`
-- `X-AION-Debug-Shared-Posture: transitional_compatibility|transitional_break_glass_only`
+- `X-AION-Debug-Shared-Posture: shared_route_compatibility|shared_route_break_glass_only`
 
 `REFLECTION_INTERVAL`
 

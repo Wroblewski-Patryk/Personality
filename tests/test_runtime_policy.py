@@ -54,7 +54,7 @@ def test_runtime_policy_snapshot_defaults_to_no_production_mismatches_outside_pr
         "event_debug_shared_ingress_mode": "compatibility",
         "event_debug_shared_ingress_mode_source": "environment_default",
         "event_debug_shared_ingress_break_glass_required": False,
-        "event_debug_shared_ingress_posture": "transitional_compatibility",
+        "event_debug_shared_ingress_posture": "shared_route_compatibility",
         "event_debug_shared_ingress_sunset_ready": False,
         "event_debug_shared_ingress_sunset_reason": "shared_debug_route_still_in_compatibility_mode",
         "event_debug_shared_ingress_enforcement_window": "after_group_51_release_evidence_green",
@@ -102,7 +102,7 @@ def test_runtime_policy_snapshot_includes_all_production_mismatches() -> None:
     assert snapshot["event_debug_shared_ingress_mode"] == "break_glass_only"
     assert snapshot["event_debug_shared_ingress_mode_source"] == "environment_default"
     assert snapshot["event_debug_shared_ingress_break_glass_required"] is True
-    assert snapshot["event_debug_shared_ingress_posture"] == "transitional_break_glass_only"
+    assert snapshot["event_debug_shared_ingress_posture"] == "shared_route_break_glass_only"
     assert snapshot["event_debug_shared_ingress_sunset_ready"] is True
     assert snapshot["event_debug_shared_ingress_sunset_reason"] == "shared_debug_route_break_glass_only"
     assert snapshot["event_debug_shared_ingress_enforcement_window"] == "after_group_51_release_evidence_green"
@@ -181,7 +181,7 @@ def test_runtime_policy_snapshot_marks_event_debug_source_as_environment_default
     assert snapshot["event_debug_shared_ingress_mode"] == "break_glass_only"
     assert snapshot["event_debug_shared_ingress_mode_source"] == "environment_default"
     assert snapshot["event_debug_shared_ingress_break_glass_required"] is True
-    assert snapshot["event_debug_shared_ingress_posture"] == "transitional_break_glass_only"
+    assert snapshot["event_debug_shared_ingress_posture"] == "shared_route_break_glass_only"
     assert snapshot["event_debug_shared_ingress_sunset_ready"] is True
     assert (
         snapshot["event_debug_shared_ingress_sunset_reason"]
@@ -332,7 +332,7 @@ def test_runtime_policy_snapshot_marks_break_glass_shared_ingress_posture() -> N
 
     assert snapshot["event_debug_shared_ingress_mode"] == "break_glass_only"
     assert snapshot["event_debug_shared_ingress_break_glass_required"] is True
-    assert snapshot["event_debug_shared_ingress_posture"] == "transitional_break_glass_only"
+    assert snapshot["event_debug_shared_ingress_posture"] == "shared_route_break_glass_only"
     assert snapshot["event_debug_shared_ingress_sunset_ready"] is True
     assert snapshot["event_debug_shared_ingress_sunset_reason"] == "shared_debug_route_break_glass_only"
     assert snapshot["compatibility_sunset_ready"] is True
