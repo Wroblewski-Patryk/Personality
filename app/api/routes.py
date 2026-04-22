@@ -29,6 +29,7 @@ from app.core.connector_policy import (
 )
 from app.core.connector_execution import connector_execution_baseline_snapshot
 from app.core.deployment_policy import deployment_policy_snapshot
+from app.core.external_scheduler_policy import external_scheduler_policy_snapshot
 from app.core.planning_governance import planning_governance_snapshot
 from app.core.proactive_policy import proactive_runtime_policy_snapshot
 from app.core.role_skill_policy import role_skill_policy_snapshot
@@ -410,6 +411,11 @@ async def health(request: Request) -> dict[str, Any]:
         "maintenance_cadence_owner": scheduler_execution["maintenance_cadence_owner"],
         "proactive_cadence_owner": scheduler_execution["proactive_cadence_owner"],
         "cadence_execution": scheduler_execution,
+        "external_owner_policy": external_scheduler_policy_snapshot(
+            scheduler_execution_mode=str(
+                scheduler_snapshot.get("execution_mode", scheduler_execution_mode)
+            )
+        ),
     }
     scheduler_healthy = bool(scheduler_execution["ready"])
     attention_snapshot = await _attention_snapshot_from_request(request)

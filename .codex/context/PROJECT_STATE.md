@@ -1984,8 +1984,14 @@ Last updated: 2026-04-22
 - 2026-04-22: `PRJ-497` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
   passed with `170 passed`.
-- 2026-04-22: `PRJ-498` is now the next `READY` task, focused on `/health` and
-  release evidence for external scheduler ownership posture.
+- 2026-04-22: `PRJ-498` is complete: `/health.scheduler.external_owner_policy`,
+  startup logs, and release smoke now expose the same external cadence-owner
+  policy with target entrypoints and baseline readiness posture.
+- 2026-04-22: `PRJ-498` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_main_runtime_policy.py`
+  passed with `120 passed`.
+- 2026-04-22: `PRJ-499` is now the next `READY` task, focused on docs/context
+  sync for the external scheduler ownership lane.
 
 ## Working Agreements
 

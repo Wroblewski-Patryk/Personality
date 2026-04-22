@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 from app.main import (
     _log_embedding_strategy_warnings,
+    _log_external_scheduler_policy,
     _log_reflection_external_driver_policy,
     _log_runtime_policy_warnings,
 )
@@ -50,6 +51,23 @@ def test_startup_logs_reflection_external_driver_policy_for_deferred_mode(caplog
     assert any("selected_runtime_mode=deferred" in message for message in messages)
     assert any("production_baseline_ready=True" in message for message in messages)
     assert any("entrypoint_path=scripts/run_reflection_queue_once.py" in message for message in messages)
+
+
+def test_startup_logs_external_scheduler_policy_snapshot(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("INFO", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        scheduler_execution_mode="externalized",
+    )
+
+    _log_external_scheduler_policy(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("external_scheduler_policy" in message for message in messages)
+    assert any("selected_execution_mode=externalized" in message for message in messages)
+    assert any("maintenance_entrypoint=scripts/run_maintenance_tick_once.py" in message for message in messages)
+    assert any("proactive_entrypoint=scripts/run_proactive_tick_once.py" in message for message in messages)
 
 
 def test_startup_logs_warning_when_production_enables_query_compat_debug_route(caplog) -> None:

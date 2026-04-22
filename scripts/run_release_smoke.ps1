@@ -525,6 +525,29 @@ if (-not (Has-Property -Object $deployment -Name "hosting_baseline")) {
 if (-not (Has-Property -Object $deployment -Name "deployment_trigger_slo")) {
     throw "Health check failed: deployment is missing deployment_trigger_slo."
 }
+$scheduler = $health.scheduler
+if ($null -eq $scheduler) {
+    throw "Health check failed: response is missing scheduler."
+}
+if (-not (Has-Property -Object $scheduler -Name "external_owner_policy")) {
+    throw "Health check failed: scheduler is missing external_owner_policy."
+}
+$externalSchedulerPolicy = $scheduler.external_owner_policy
+if (-not (Has-Property -Object $externalSchedulerPolicy -Name "policy_owner")) {
+    throw "Health check failed: scheduler.external_owner_policy is missing policy_owner."
+}
+if ([string]$externalSchedulerPolicy.policy_owner -ne "external_scheduler_cadence_policy") {
+    throw "Health check failed: unexpected external scheduler policy owner '$($externalSchedulerPolicy.policy_owner)'."
+}
+if (-not (Has-Property -Object $externalSchedulerPolicy -Name "maintenance_entrypoint_path")) {
+    throw "Health check failed: scheduler.external_owner_policy is missing maintenance_entrypoint_path."
+}
+if (-not (Has-Property -Object $externalSchedulerPolicy -Name "proactive_entrypoint_path")) {
+    throw "Health check failed: scheduler.external_owner_policy is missing proactive_entrypoint_path."
+}
+if (-not (Has-Property -Object $externalSchedulerPolicy -Name "production_baseline_ready")) {
+    throw "Health check failed: scheduler.external_owner_policy is missing production_baseline_ready."
+}
 
 $response = Invoke-JsonUtf8 -Method POST -Uri $eventUrl -BodyBytes $bodyBytes
 
@@ -583,6 +606,11 @@ $summary = @{
     topology_release_window = [string]$runtimeTopology.release_window
     deployment_hosting_baseline = [string]$deployment.hosting_baseline
     deployment_manual_fallback_exception_rate_percent = [double]$deployment.deployment_trigger_slo.manual_redeploy_exception_rate_percent
+    scheduler_external_policy_owner = [string]$externalSchedulerPolicy.policy_owner
+    scheduler_external_maintenance_entrypoint = [string]$externalSchedulerPolicy.maintenance_entrypoint_path
+    scheduler_external_proactive_entrypoint = [string]$externalSchedulerPolicy.proactive_entrypoint_path
+    scheduler_external_baseline_ready = [bool]$externalSchedulerPolicy.production_baseline_ready
+    scheduler_external_baseline_state = [string]$externalSchedulerPolicy.production_baseline_state
     debug_included       = [bool]$response.debug
     deployment_evidence_checked = [bool]$deploymentEvidenceCheck.checked
     deployment_evidence_path = [string]$deploymentEvidenceCheck.path

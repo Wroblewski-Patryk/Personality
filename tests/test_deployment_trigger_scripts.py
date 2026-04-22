@@ -132,6 +132,16 @@ def stub_aion_server() -> _StubAionServer:
                 "evidence_owner": "coolify_webhook_plus_release_smoke",
             },
         },
+        "scheduler": {
+            "healthy": True,
+            "external_owner_policy": {
+                "policy_owner": "external_scheduler_cadence_policy",
+                "maintenance_entrypoint_path": "scripts/run_maintenance_tick_once.py",
+                "proactive_entrypoint_path": "scripts/run_proactive_tick_once.py",
+                "production_baseline_ready": False,
+                "production_baseline_state": "in_process_scheduler_transitional_fallback",
+            },
+        },
         "reflection": {
             "healthy": True,
             "deployment_readiness": {
@@ -304,6 +314,11 @@ def test_release_smoke_allows_optional_deployment_evidence_to_be_omitted(
     assert summary["topology_release_window"] == "after_group_50_evidence_green"
     assert summary["deployment_hosting_baseline"] == "coolify_medium_term_standard"
     assert summary["deployment_manual_fallback_exception_rate_percent"] == 5.0
+    assert summary["scheduler_external_policy_owner"] == "external_scheduler_cadence_policy"
+    assert summary["scheduler_external_maintenance_entrypoint"] == "scripts/run_maintenance_tick_once.py"
+    assert summary["scheduler_external_proactive_entrypoint"] == "scripts/run_proactive_tick_once.py"
+    assert summary["scheduler_external_baseline_ready"] is False
+    assert summary["scheduler_external_baseline_state"] == "in_process_scheduler_transitional_fallback"
     assert summary["reflection_external_driver_policy_owner"] == "deferred_reflection_external_worker"
     assert summary["reflection_external_driver_entrypoint_path"] == "scripts/run_reflection_queue_once.py"
     assert summary["reflection_external_driver_baseline_ready"] is False

@@ -17,6 +17,7 @@ from app.core.background_worker_policy import (
 from app.core.config import get_settings
 from app.core.database import Database
 from app.core.debug_compat import DebugQueryCompatTelemetry
+from app.core.external_scheduler_policy import external_scheduler_policy_snapshot
 from app.core.logging import get_logger, setup_logging
 from app.core.runtime_policy import (
     app_environment,
@@ -412,6 +413,22 @@ def _log_reflection_external_driver_policy(
     )
 
 
+def _log_external_scheduler_policy(*, settings, logger) -> None:
+    snapshot = external_scheduler_policy_snapshot(
+        scheduler_execution_mode=str(getattr(settings, "scheduler_execution_mode", "in_process"))
+    )
+    logger.info(
+        "external_scheduler_policy policy_owner=%s selected_execution_mode=%s production_baseline_ready=%s production_baseline_state=%s maintenance_entrypoint=%s proactive_entrypoint=%s hint=%s",
+        str(snapshot["policy_owner"]),
+        str(snapshot["selected_execution_mode"]),
+        bool(snapshot["production_baseline_ready"]),
+        str(snapshot["production_baseline_state"]),
+        str(snapshot["maintenance_entrypoint_path"]),
+        str(snapshot["proactive_entrypoint_path"]),
+        str(snapshot["production_baseline_hint"]),
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
@@ -494,6 +511,7 @@ async def lifespan(app: FastAPI):
         logger=logger,
         worker_running=reflection_worker.is_running(),
     )
+    _log_external_scheduler_policy(settings=settings, logger=logger)
     if scheduler_worker.enabled:
         await scheduler_worker.start()
         logger.info(

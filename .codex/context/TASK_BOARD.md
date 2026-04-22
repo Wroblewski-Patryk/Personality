@@ -54,19 +54,32 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-498 Add release and health evidence for external scheduler ownership posture
+- [ ] PRJ-499 Sync docs/context for external scheduler ownership rollout
+  - Owner: Product Docs
+  - Group: External Scheduler Ownership Rollout
+  - Depends on: PRJ-498
+  - Priority: P1
+  - Why now:
+    - runtime, startup, and release evidence are aligned, so the scheduler lane
+      now needs canonical docs/context closure before connector expansion
+  - Done when:
+    - planning, implementation notes, ops guidance, and context truth all
+      describe the same external scheduler target baseline and fallback posture
+  - Validation:
+    - doc-and-context sync across planning, ops, implementation, and context
+
+- [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release
   - Group: External Scheduler Ownership Rollout
   - Depends on: PRJ-497
   - Priority: P1
-  - Why now:
-    - once the entrypoints exist, operators need `/health` and smoke evidence
-      that can distinguish external-owner alignment from app-local fallback
-  - Done when:
-    - `/health.scheduler` exposes the external cadence policy owner and target
-      entrypoints
-    - release evidence can distinguish externalized baseline alignment from
-      in-process transitional fallback
+  - Status: DONE
+  - Result:
+    - `/health.scheduler.external_owner_policy`, startup logs, and release
+      smoke now expose one shared external cadence-owner policy with target
+      entrypoints and baseline readiness posture
+    - operators can now distinguish `externalized` target alignment from
+      in-process fallback without reading scheduler code
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_main_runtime_policy.py`
 
