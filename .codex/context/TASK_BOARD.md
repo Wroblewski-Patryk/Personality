@@ -52,23 +52,24 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-464 Audit model-vs-migration parity and define the missing Alembic delta set
+- [ ] PRJ-468 Audit canonical architecture docs for flow/order drift against `02`, `15`, and `16`
   - Owner: Planner
-  - Group: Migration Parity And Schema Governance
-  - Depends on: PRJ-463
-  - Priority: P0
+  - Group: Canonical Docs Consistency Sweep
+  - Depends on: PRJ-467
+  - Priority: P1
   - Why now:
-    - current `models.py` includes durable tables and fields that are not yet
-      fully represented in Alembic revisions, creating deployment-truth drift
-      between runtime schema and migration path
+    - migration parity is now restored, so the next biggest architecture risk
+      is stale canonical-doc wording that still contradicts the current
+      `expression -> action` boundary or dual-loop ownership
   - Done when:
-    - one explicit migration-parity inventory exists for every live table and
-      current column family
-    - the repo records the exact missing migration deltas before code changes
+    - one explicit inventory identifies which older architecture docs still
+      conflict with the current canonical contract set
+    - the repo has a bounded rewrite target before touching docs content
   - Validation:
-    - targeted review across `app/memory/models.py`,
-      `migrations/versions/`, `docs/implementation/runtime-reality.md`, and
-      `docs/operations/runtime-ops-runbook.md`
+    - targeted cross-review across `docs/architecture/02_architecture.md`,
+      `docs/architecture/15_runtime_flow.md`,
+      `docs/architecture/16_agent_contracts.md`, and older numbered
+      architecture docs
 
 ## BACKLOG
 
@@ -91,6 +92,73 @@ Last updated: 2026-04-22
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-467 Sync docs/context for migration parity and schema governance
+  - Status: DONE
+  - Group: Migration Parity And Schema Governance
+  - Owner: Product Docs
+  - Depends on: PRJ-466
+  - Priority: P0
+  - Result:
+    - planning, implementation reality, ops guidance, testing guidance, and
+      context truth now describe one migration-first schema baseline for the
+      full live model set, including durable attention and subconscious
+      proposal storage
+    - migration parity is no longer implied only by metadata/docs; it is now a
+      recorded release expectation with regression evidence
+  - Validation:
+    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
+      `docs/implementation/`, `docs/operations/`, and `docs/engineering/`
+
+- [x] PRJ-466 Add schema-parity regressions for migration-first startup against the current model baseline
+  - Status: DONE
+  - Group: Migration Parity And Schema Governance
+  - Owner: QA/Test
+  - Depends on: PRJ-465
+  - Priority: P0
+  - Result:
+    - schema-baseline coverage now proves a fresh database can reach the
+      current runtime schema via `alembic upgrade head` instead of relying only
+      on `Base.metadata` expectations
+    - migration drift for durable attention/proposal storage becomes
+      release-visible before production startup or deploy smoke
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_schema_baseline.py tests/test_main_lifespan_policy.py tests/test_main_runtime_policy.py`
+
+- [x] PRJ-465 Add Alembic revisions for durable attention and subconscious proposal persistence
+  - Status: DONE
+  - Group: Migration Parity And Schema Governance
+  - Owner: DB/Migrations
+  - Depends on: PRJ-464
+  - Priority: P0
+  - Result:
+    - Alembic head now creates `aion_attention_turn` and
+      `aion_subconscious_proposal` with the same table/index/constraint
+      expectations as the live repository-backed runtime
+    - migration-first bootstrap no longer lags the actual durable attention and
+      proposal contract-store surfaces
+  - Validation:
+    - `.\.venv\Scripts\python -m alembic upgrade head --sql`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_schema_baseline.py tests/test_memory_repository.py`
+
+- [x] PRJ-464 Audit model-vs-migration parity and define the missing Alembic delta set
+  - Status: DONE
+  - Group: Migration Parity And Schema Governance
+  - Owner: Planner
+  - Depends on: PRJ-463
+  - Priority: P0
+  - Result:
+    - audit confirmed the migration chain already covered
+      `aion_memory.payload`, scoped conclusions, semantic embeddings, and
+      relation storage, but still missed `aion_attention_turn` and
+      `aion_subconscious_proposal`
+    - the missing delta set is now explicit before implementation:
+      add durable attention table, add subconscious proposal table, and add a
+      migration-parity regression that exercises fresh `upgrade head`
+  - Validation:
+    - targeted review across `app/memory/models.py`,
+      `migrations/versions/`, `docs/implementation/runtime-reality.md`, and
+      `docs/operations/runtime-ops-runbook.md`
 
 - [x] PRJ-463 Sync planning/context for affective and retrieval health visibility docs convergence
   - Status: DONE

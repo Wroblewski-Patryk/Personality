@@ -1811,6 +1811,16 @@ Last updated: 2026-04-22
   behavior-validation breadth).
 - 2026-04-22: a new post-convergence queue is now seeded through `PRJ-491`,
   starting with Group 63 for migration parity and schema governance.
+- 2026-04-22: `PRJ-464..PRJ-467` are complete: Alembic head now includes
+  durable attention (`aion_attention_turn`) and subconscious proposal
+  (`aion_subconscious_proposal`) tables, and schema-baseline regressions now
+  exercise a fresh `alembic upgrade head` instead of trusting metadata alone.
+- 2026-04-22: migration-first schema ownership is now explicit as a release
+  truth for the full current model set, reducing deployment drift between live
+  runtime tables and bootstrap path.
+- 2026-04-22: the next `READY` lane is Group 64 (`PRJ-468..PRJ-471`),
+  focused on canonical architecture-doc consistency after schema truth was
+  restored.
 
 ## Working Agreements
 

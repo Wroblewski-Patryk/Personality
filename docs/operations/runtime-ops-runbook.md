@@ -247,6 +247,14 @@ On startup, production also emits an explicit warning when
 `STARTUP_SCHEMA_MODE=create_tables`. Treat this as a temporary compatibility
 path warning: production should normally run migration-first startup mode.
 
+Migration-first schema parity baseline:
+
+- treat Alembic head as the bootstrap owner for the full live runtime schema,
+  including `aion_attention_turn` and `aion_subconscious_proposal`
+- when schema-affecting slices land, require both migration evidence and a
+  fresh migration-parity regression before treating docs/runtime inventory as
+  release truth
+
 `PRODUCTION_POLICY_ENFORCEMENT` controls whether these production-policy
 mismatches are warning-only (`warn`) or startup-blocking (`strict`).
 Runtime default is now environment-aware: production defaults to `strict`,
@@ -332,6 +340,9 @@ all of these must be true:
    - release smoke passes without compatibility bootstrap fallback
 4. migration smoke (`alembic upgrade` + startup + release smoke) is the only
    approved bootstrap path in release evidence
+5. migration smoke must reach the full live model set, including durable
+   attention and subconscious proposal tables, without relying on
+   `create_tables`
 
 Removal rollout order:
 

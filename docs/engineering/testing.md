@@ -83,6 +83,11 @@ Artifact-input gate evaluation command (CI split-stage, no pytest rerun):
     posture, and smoke compatibility behavior
   - verify Windows PowerShell execution path in this workspace
   - keep bash logic symmetric and document when live bash execution is blocked
+- Migration/schema parity changes:
+  - require one regression that exercises fresh `alembic upgrade head`
+    against a new database
+  - verify new durable tables or named constraints through inspector-level
+    assertions, not only `Base.metadata`
 - Health/governance snapshot changes:
   - extend endpoint-level coverage for new policy or alignment fields
   - pin both baseline and customized-override posture when the contract is

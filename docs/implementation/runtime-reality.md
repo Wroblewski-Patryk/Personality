@@ -580,6 +580,13 @@ The codebase currently persists these concrete tables:
 
 These names describe implementation reality, not the canonical abstraction layer.
 
+Migration parity note:
+
+- Alembic head now also creates the full table set above, including
+  `aion_attention_turn` and `aion_subconscious_proposal`
+- schema-baseline regressions exercise fresh `alembic upgrade head` so
+  migration-first bootstrap stays aligned with the live runtime inventory
+
 ---
 
 ## Current Goal and Task Capability

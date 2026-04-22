@@ -92,6 +92,10 @@ Completed on 2026-04-22:
 - `PRJ-461..PRJ-463` are complete: operator docs and planning/context now
   converge on affective health visibility plus retrieval execution-class
   diagnostics as first-class post-convergence triage surfaces.
+- `PRJ-464..PRJ-467` are complete: migration parity is now restored for the
+  full live model set, Alembic head creates durable attention and subconscious
+  proposal tables, and schema-baseline regressions now prove fresh
+  migration-first bootstrap against the current metadata baseline.
 
 Planned on 2026-04-22 after full architecture-conformance analysis:
 
@@ -127,6 +131,21 @@ Why this order:
 Detailed queue:
 
 ## Group 63 - Migration Parity And Schema Governance
+
+Completed on 2026-04-22:
+
+- `PRJ-464` audited model-vs-migration parity and confirmed the missing Alembic
+  delta set was limited to `aion_attention_turn` and
+  `aion_subconscious_proposal`, while earlier revisions already covered memory
+  payload, scoped conclusions, semantic embeddings, and relation storage.
+- `PRJ-465` added the missing Alembic revision for durable attention and
+  subconscious proposal persistence, including indexes and named attention
+  uniqueness constraint parity.
+- `PRJ-466` expanded schema-baseline coverage so tests now exercise a fresh
+  `alembic upgrade head` and inspect the resulting schema instead of checking
+  `Base.metadata` only.
+- `PRJ-467` synchronized planning/context and docs so migration-first schema
+  ownership now describes the full live model set.
 
 - `PRJ-464` Audit model-vs-migration parity and define the missing Alembic delta set.
   - Result:

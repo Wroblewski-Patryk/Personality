@@ -119,7 +119,7 @@ The current repo already works as an MVP slice, but several architecture-level d
 - architecture-conformance analysis on 2026-04-22 identified seven new
   post-convergence lanes that should be handled before another broad planning
   pass:
-  - `PRJ-464..PRJ-467`: migration parity and schema governance
+  - `PRJ-464..PRJ-467`: migration parity and schema governance - complete
   - `PRJ-468..PRJ-471`: canonical docs consistency sweep
   - `PRJ-472..PRJ-475`: connector execution productionization
   - `PRJ-476..PRJ-479`: retrieval provider completion
@@ -130,6 +130,11 @@ The current repo already works as an MVP slice, but several architecture-level d
   deployment/schema truth first, then canonical docs consistency, then
   productionization of still-rollout subsystems, and finally behavior-proof
   expansion.
+- `PRJ-464..PRJ-467` are now complete:
+  - Alembic head matches the full live durable-table baseline again
+  - migration parity is regression-tested through fresh `upgrade head`
+    instead of inferred only from metadata or runtime docs
+  - the next active lane is canonical architecture-doc consistency
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -230,6 +235,11 @@ The current repo already works as an MVP slice, but several architecture-level d
 - Resolved in `PRJ-419..PRJ-422` (2026-04-22):
   - runtime policy now exposes the scheduled removal window as
     `after_group_51_release_evidence_green`.
+- Resolved follow-up in `PRJ-464..PRJ-467` (2026-04-22):
+  - Alembic head now covers the full current live schema, including
+    `aion_attention_turn` and `aion_subconscious_proposal`.
+  - migration parity is now regression-pinned by exercising fresh
+    `alembic upgrade head` instead of trusting metadata/docs parity alone.
 - Planned implementation lane:
   - `PRJ-375..PRJ-378` will make migration-only removal readiness
     machine-visible before an actual release-window removal is scheduled.

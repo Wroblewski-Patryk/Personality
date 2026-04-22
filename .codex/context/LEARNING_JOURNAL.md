@@ -25,6 +25,32 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-22 - Runtime table additions must ship with Alembic parity proof
+- Context:
+  - post-convergence slices had already introduced durable attention and
+    subconscious proposal tables in runtime code and docs.
+- Symptom:
+  - `Base.metadata` and runtime-reality inventory looked current, but the
+    Alembic chain still lagged behind the actual live schema surface.
+- Root cause:
+  - durable-table work was validated through runtime behavior and docs sync
+    before migration parity was explicitly exercised from a fresh database.
+- Guardrail:
+  - every new persisted table or named constraint family must ship with:
+    - an Alembic revision
+    - a regression that runs fresh `alembic upgrade head`
+    - docs/context sync only after migration parity is proven
+- Preferred pattern:
+  - treat migration-first bootstrap as the release truth for schema changes
+  - inspect the migrated schema with tests instead of trusting metadata alone
+- Avoid:
+  - assuming runtime behavior plus `Base.metadata` means deploy/bootstrap truth
+    is already aligned
+- Evidence:
+  - `PRJ-464..PRJ-467`
+  - `tests/test_schema_baseline.py`
+  - `migrations/versions/20260422_0006_add_attention_and_subconscious_tables.py`
+
 ### 2026-04-21 - App-lifespan debug smoke can fail early when external DB DNS is unreachable
 - Context:
   - validating manual `/internal/event/debug` behavior against full app
