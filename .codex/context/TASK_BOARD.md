@@ -120,14 +120,26 @@ Last updated: 2026-04-22
   - Group: Production Conversation Reliability
   - Depends on: PRJ-540
   - Priority: P0
-  - Status: READY
+  - Status: DONE
+  - Result:
+    - Telegram conversation reliability now has one shared owner-level
+      telemetry surface in `app/integrations/telegram/telemetry.py`
+    - webhook ingress records received, rejected, queued, processed, and
+      runtime-failed states, while Telegram delivery records attempt, success,
+      and failure posture through the same bounded telemetry owner
+    - `/health.conversation_channels.telegram` now exposes machine-visible
+      round-trip readiness (`provider_backed_ready|missing_bot_token`) plus the
+      latest ingress and delivery evidence for operator triage
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_delivery_router.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_action_executor.py tests/test_runtime_pipeline.py`
 
 - [ ] PRJ-542 Add Telegram round-trip smoke and incident-evidence coverage
   - Owner: QA/Test
   - Group: Production Conversation Reliability
   - Depends on: PRJ-541
   - Priority: P0
-  - Status: BACKLOG
+  - Status: READY
 
 - [ ] PRJ-543 Sync docs/context for the `v1` conversation-reliability baseline
   - Owner: Product Docs

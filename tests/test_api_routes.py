@@ -251,6 +251,10 @@ class FakeTelegramClient:
     def __init__(self):
         self.calls: list[dict[str, str | None]] = []
 
+    async def send_message(self, chat_id: int | str, text: str) -> dict:
+        self.calls.append({"chat_id": str(chat_id), "text": text})
+        return {"ok": True}
+
     async def set_webhook(self, webhook_url: str, secret_token: str | None) -> dict:
         self.calls.append({"webhook_url": webhook_url, "secret_token": secret_token})
         return {"ok": True, "result": True}
@@ -264,6 +268,7 @@ class FakeSettings:
         app_env: str = "development",
         affective_assessment_enabled: bool | None = None,
         openai_api_key: str | None = None,
+        telegram_bot_token: str | None = "test-telegram-token",
         event_debug_enabled: bool | None = True,
         event_debug_token: str | None = None,
         production_debug_token_required: bool = True,
@@ -298,6 +303,7 @@ class FakeSettings:
         self.app_env = app_env
         self.affective_assessment_enabled = affective_assessment_enabled
         self.openai_api_key = openai_api_key
+        self.telegram_bot_token = telegram_bot_token
         self.event_debug_enabled = event_debug_enabled
         self.event_debug_token = event_debug_token
         self.production_debug_token_required = production_debug_token_required
@@ -627,6 +633,7 @@ def _client(
     app_env: str = "development",
     affective_assessment_enabled: bool | None = None,
     openai_api_key: str | None = None,
+    telegram_bot_token: str | None = "test-telegram-token",
     reflection_triggered: bool = False,
     run_delay_seconds: float = 0.0,
     runtime_action_status: str = "success",
@@ -704,6 +711,7 @@ def _client(
         app_env=app_env,
         affective_assessment_enabled=affective_assessment_enabled,
         openai_api_key=openai_api_key,
+        telegram_bot_token=telegram_bot_token,
         event_debug_enabled=event_debug_enabled,
         event_debug_token=event_debug_token,
         production_debug_token_required=production_debug_token_required,
@@ -3086,6 +3094,55 @@ def test_event_endpoint_rejects_telegram_payload_with_wrong_secret() -> None:
     assert response.status_code == 403
     assert response.json()["detail"] == "Invalid Telegram webhook secret token."
     assert runtime.last_event is None
+
+    health = client.get("/health")
+    assert health.status_code == 200
+    telegram = health.json()["conversation_channels"]["telegram"]
+    assert telegram["ingress_attempts"] == 1
+    assert telegram["ingress_rejections"] == 1
+    assert telegram["last_ingress"]["state"] == "rejected"
+    assert telegram["last_ingress"]["reason"] == "invalid_webhook_secret"
+    assert telegram["last_ingress"]["update_id"] == 1
+    assert telegram["last_ingress"]["chat_id"] == 123
+
+
+def test_health_endpoint_exposes_telegram_round_trip_readiness_state() -> None:
+    client, _, _ = _client(
+        secret="expected-secret",
+        telegram_bot_token=None,
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    telegram = response.json()["conversation_channels"]["telegram"]
+    assert telegram["policy_owner"] == "telegram_conversation_reliability_telemetry"
+    assert telegram["bot_token_configured"] is False
+    assert telegram["webhook_secret_configured"] is True
+    assert telegram["round_trip_ready"] is False
+    assert telegram["round_trip_state"] == "missing_bot_token"
+    assert telegram["round_trip_hint"] == "configure_telegram_bot_token_for_v1_round_trip"
+
+
+def test_event_endpoint_records_processed_telegram_ingress_telemetry() -> None:
+    client, runtime, _ = _client()
+
+    response = client.post("/event", json=_telegram_update(10, "hello from telegram"))
+
+    assert response.status_code == 200
+    assert runtime.last_event is not None
+    health = client.get("/health")
+    assert health.status_code == 200
+    telegram = health.json()["conversation_channels"]["telegram"]
+    assert telegram["ingress_attempts"] == 1
+    assert telegram["ingress_processed"] == 1
+    assert telegram["ingress_queued"] == 0
+    assert telegram["last_ingress"]["state"] == "processed"
+    assert telegram["last_ingress"]["reason"] == "runtime_result_ready"
+    assert telegram["last_ingress"]["update_id"] == 10
+    assert telegram["last_ingress"]["chat_id"] == 123
+    assert telegram["last_ingress"]["action_status"] == "success"
+    assert telegram["last_ingress"]["reflection_triggered"] is False
 
 
 def test_set_webhook_uses_request_secret_or_settings_default() -> None:

@@ -59,6 +59,7 @@ from app.core.scheduler_contracts import (
 )
 from app.core.topology_policy import runtime_topology_policy_snapshot
 from app.integrations.telegram.client import TelegramClient
+from app.integrations.telegram.telemetry import TelegramChannelTelemetry
 from app.memory.embeddings import embedding_strategy_snapshot, normalize_embedding_source_kinds
 from app.memory.repository import MemoryRepository
 from app.reflection.worker import ReflectionWorker
@@ -92,6 +93,15 @@ def _telegram_from_request(request: Request) -> TelegramClient:
 
 def _settings_from_request(request: Request):
     return request.app.state.settings
+
+
+def _telegram_telemetry_from_request(request: Request) -> TelegramChannelTelemetry:
+    telemetry = getattr(request.app.state, "telegram_channel_telemetry", None)
+    if isinstance(telemetry, TelegramChannelTelemetry):
+        return telemetry
+    telemetry = TelegramChannelTelemetry()
+    request.app.state.telegram_channel_telemetry = telemetry
+    return telemetry
 
 
 def _memory_repository_from_request(request: Request) -> MemoryRepository:
@@ -279,9 +289,22 @@ async def _handle_event_request(
 ) -> dict[str, Any]:
     settings = _settings_from_request(request)
     looks_like_telegram = looks_like_telegram_update(payload)
+    telegram_update_id = payload.get("update_id") if looks_like_telegram else None
+    telegram_chat_id = None
+    if looks_like_telegram:
+        telegram_chat_id = ((payload.get("message") or {}).get("chat") or {}).get("id")
+        _telegram_telemetry_from_request(request).record_ingress_attempt(
+            update_id=telegram_update_id,
+            chat_id=telegram_chat_id,
+        )
     if looks_like_telegram and settings.telegram_webhook_secret:
         received_secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
         if received_secret != settings.telegram_webhook_secret:
+            _telegram_telemetry_from_request(request).record_ingress_rejection(
+                reason="invalid_webhook_secret",
+                update_id=telegram_update_id,
+                chat_id=telegram_chat_id,
+            )
             raise HTTPException(status_code=403, detail="Invalid Telegram webhook secret token.")
     if include_debug:
         _enforce_debug_access(request=request, settings=settings)
@@ -294,6 +317,13 @@ async def _handle_event_request(
     turn_decision = await attention_coordinator.prepare_event(event)
     if not turn_decision.should_process:
         queue_reason = turn_decision.queue_reason or "queued"
+        if looks_like_telegram:
+            _telegram_telemetry_from_request(request).record_ingress_queued(
+                reason=queue_reason,
+                update_id=telegram_update_id,
+                chat_id=telegram_chat_id,
+                source_count=turn_decision.source_count,
+            )
         queued_response = EventResponse(
             event_id=turn_decision.event.event_id,
             trace_id=turn_decision.event.meta.trace_id,
@@ -310,9 +340,26 @@ async def _handle_event_request(
     runtime_event = turn_decision.event
     runtime = _runtime_from_request(request)
     try:
-        result = await runtime.run(runtime_event)
+        try:
+            result = await runtime.run(runtime_event)
+        except Exception as exc:
+            if looks_like_telegram:
+                _telegram_telemetry_from_request(request).record_ingress_runtime_failure(
+                    reason=f"runtime_exception:{type(exc).__name__}",
+                    update_id=telegram_update_id,
+                    chat_id=telegram_chat_id,
+                )
+            raise
     finally:
         await attention_coordinator.finalize_event(runtime_event)
+
+    if looks_like_telegram:
+        _telegram_telemetry_from_request(request).record_ingress_processed(
+            update_id=telegram_update_id,
+            chat_id=telegram_chat_id,
+            action_status=result.action_result.status,
+            reflection_triggered=result.reflection_triggered,
+        )
 
     incident_evidence = None
     if include_debug:
@@ -534,6 +581,10 @@ async def health(request: Request) -> dict[str, Any]:
         export_artifact_available=True,
         bundle_helper_available=True,
     )
+    telegram_channel = _telegram_telemetry_from_request(request).snapshot(
+        bot_token_configured=bool(getattr(settings, "telegram_bot_token", "")),
+        webhook_secret_configured=bool(getattr(settings, "telegram_webhook_secret", "")),
+    )
     return {
         "status": "ok",
         "runtime_policy": runtime_policy,
@@ -557,6 +608,9 @@ async def health(request: Request) -> dict[str, Any]:
             "execution_baseline": connector_execution_baseline_snapshot(settings),
         },
         "deployment": deployment_policy_snapshot(),
+        "conversation_channels": {
+            "telegram": telegram_channel,
+        },
         "scheduler": {
             "healthy": scheduler_healthy,
             **scheduler_snapshot,

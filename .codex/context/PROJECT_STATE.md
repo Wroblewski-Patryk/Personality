@@ -42,6 +42,15 @@ Last updated: 2026-04-22
 - 2026-04-22: `PRJ-541` is now the first `READY` task; the next slice should
   repair and instrument the Telegram ingress-to-delivery path so production
   no-response incidents become machine-visible instead of log-only.
+- 2026-04-22: `PRJ-541` is complete: Telegram ingress and delivery now share
+  one bounded telemetry owner in `app/integrations/telegram/telemetry.py`,
+  `/health.conversation_channels.telegram` exposes round-trip readiness plus
+  latest ingress or delivery evidence, and wrong-secret versus missing-token
+  posture is now machine-visible instead of log-only.
+- 2026-04-22: `PRJ-542` is now the first `READY` task; the next slice should
+  prove Telegram round-trip reliability through release smoke and
+  incident-evidence coverage instead of relying only on route and delivery
+  regressions.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

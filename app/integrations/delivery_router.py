@@ -1,11 +1,18 @@
 from app.core.action_delivery import summarize_action_delivery_envelope
 from app.core.contracts import ActionDelivery, ActionResult
 from app.integrations.telegram.client import TelegramClient
+from app.integrations.telegram.telemetry import TelegramChannelTelemetry
 
 
 class DeliveryRouter:
-    def __init__(self, telegram_client: TelegramClient):
+    def __init__(
+        self,
+        telegram_client: TelegramClient,
+        *,
+        telegram_telemetry: TelegramChannelTelemetry | None = None,
+    ):
         self.telegram_client = telegram_client
+        self.telegram_telemetry = telegram_telemetry
 
     async def deliver(self, delivery: ActionDelivery) -> ActionResult:
         envelope_note = summarize_action_delivery_envelope(delivery.execution_envelope)
@@ -27,6 +34,12 @@ class DeliveryRouter:
 
     async def _deliver_telegram(self, delivery: ActionDelivery, *, envelope_note: str) -> ActionResult:
         if delivery.chat_id is None:
+            if self.telegram_telemetry is not None:
+                self.telegram_telemetry.record_delivery_failure(
+                    state="missing_chat_id",
+                    note="telegram_chat_id_missing",
+                    chat_id=None,
+                )
             return ActionResult(
                 status="fail",
                 actions=[],
@@ -36,12 +49,20 @@ class DeliveryRouter:
                 ),
             )
 
+        if self.telegram_telemetry is not None:
+            self.telegram_telemetry.record_delivery_attempt(chat_id=delivery.chat_id)
         try:
             telegram_result = await self.telegram_client.send_message(
                 chat_id=delivery.chat_id,
                 text=delivery.message,
             )
         except Exception as exc:
+            if self.telegram_telemetry is not None:
+                self.telegram_telemetry.record_delivery_failure(
+                    state="delivery_exception",
+                    note=f"{type(exc).__name__}: {exc}",
+                    chat_id=delivery.chat_id,
+                )
             return ActionResult(
                 status="fail",
                 actions=["send_telegram_message"],
@@ -51,10 +72,18 @@ class DeliveryRouter:
                 ),
             )
         if telegram_result.get("ok"):
+            if self.telegram_telemetry is not None:
+                self.telegram_telemetry.record_delivery_success(chat_id=delivery.chat_id)
             return ActionResult(
                 status="success",
                 actions=["send_telegram_message"],
                 notes=self._with_envelope_note("Telegram message sent.", envelope_note),
+            )
+        if self.telegram_telemetry is not None:
+            self.telegram_telemetry.record_delivery_failure(
+                state="telegram_api_error",
+                note=str(telegram_result.get("description", "telegram_api_error")),
+                chat_id=delivery.chat_id,
             )
         return ActionResult(
             status="fail",

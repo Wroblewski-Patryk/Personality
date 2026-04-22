@@ -36,6 +36,7 @@ from app.integrations.cloud_drive.google_drive_client import GoogleDriveMetadata
 from app.integrations.openai.client import OpenAIClient
 from app.integrations.task_system.clickup_client import ClickUpTaskClient
 from app.integrations.telegram.client import TelegramClient
+from app.integrations.telegram.telemetry import TelegramChannelTelemetry
 from app.memory.embeddings import embedding_strategy_snapshot, normalize_embedding_source_kinds
 from app.memory.openai_embedding_client import OpenAIEmbeddingClient
 from app.memory.repository import MemoryRepository
@@ -498,6 +499,7 @@ async def lifespan(app: FastAPI):
         )
 
     telegram_client = TelegramClient(settings.telegram_bot_token)
+    telegram_channel_telemetry = TelegramChannelTelemetry()
     openai_client = OpenAIClient(
         api_key=settings.openai_api_key,
         model=settings.openai_model,
@@ -526,6 +528,7 @@ async def lifespan(app: FastAPI):
             access_token=getattr(settings, "google_drive_access_token", None),
             folder_id=getattr(settings, "google_drive_folder_id", None),
         ),
+        telegram_telemetry=telegram_channel_telemetry,
     )
     reflection_worker = ReflectionWorker(memory_repository=memory_repository)
     scheduler_worker = SchedulerWorker(
@@ -625,6 +628,7 @@ async def lifespan(app: FastAPI):
     app.state.database = database
     app.state.memory_repository = memory_repository
     app.state.telegram_client = telegram_client
+    app.state.telegram_channel_telemetry = telegram_channel_telemetry
     app.state.reflection_worker = reflection_worker
     app.state.scheduler_worker = scheduler_worker
     app.state.reflection_runtime_mode = settings.reflection_runtime_mode

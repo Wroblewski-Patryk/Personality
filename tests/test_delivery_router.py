@@ -4,6 +4,7 @@ from app.core.contracts import (
     ActionDeliveryExecutionEnvelope,
 )
 from app.integrations.delivery_router import DeliveryRouter
+from app.integrations.telegram.telemetry import TelegramChannelTelemetry
 
 
 class FakeTelegramClient:
@@ -71,7 +72,11 @@ async def test_delivery_router_appends_execution_envelope_note_for_connector_saf
 
 async def test_delivery_router_handles_telegram_channel() -> None:
     telegram_client = FakeTelegramClient(ok=True)
-    router = DeliveryRouter(telegram_client=telegram_client)
+    telemetry = TelegramChannelTelemetry()
+    router = DeliveryRouter(
+        telegram_client=telegram_client,
+        telegram_telemetry=telemetry,
+    )
 
     result = await router.deliver(
         ActionDelivery(
@@ -86,10 +91,20 @@ async def test_delivery_router_handles_telegram_channel() -> None:
     assert result.status == "success"
     assert result.actions == ["send_telegram_message"]
     assert telegram_client.calls == [{"chat_id": 42, "text": "hello"}]
+    snapshot = telemetry.snapshot(bot_token_configured=True, webhook_secret_configured=False)
+    assert snapshot["delivery_attempts"] == 1
+    assert snapshot["delivery_successes"] == 1
+    assert snapshot["delivery_failures"] == 0
+    assert snapshot["last_delivery"]["state"] == "sent"
+    assert snapshot["last_delivery"]["chat_id"] == 42
 
 
 async def test_delivery_router_requires_chat_id_for_telegram() -> None:
-    router = DeliveryRouter(telegram_client=FakeTelegramClient())
+    telemetry = TelegramChannelTelemetry()
+    router = DeliveryRouter(
+        telegram_client=FakeTelegramClient(),
+        telegram_telemetry=telemetry,
+    )
 
     result = await router.deliver(
         ActionDelivery(
@@ -103,11 +118,19 @@ async def test_delivery_router_requires_chat_id_for_telegram() -> None:
     assert result.status == "fail"
     assert result.actions == []
     assert "chat_id is missing" in result.notes
+    snapshot = telemetry.snapshot(bot_token_configured=True, webhook_secret_configured=False)
+    assert snapshot["delivery_attempts"] == 0
+    assert snapshot["delivery_failures"] == 1
+    assert snapshot["last_delivery"]["state"] == "missing_chat_id"
 
 
 async def test_delivery_router_surfaces_telegram_api_errors() -> None:
     telegram_client = FakeTelegramClient(ok=False)
-    router = DeliveryRouter(telegram_client=telegram_client)
+    telemetry = TelegramChannelTelemetry()
+    router = DeliveryRouter(
+        telegram_client=telegram_client,
+        telegram_telemetry=telemetry,
+    )
 
     result = await router.deliver(
         ActionDelivery(
@@ -122,11 +145,19 @@ async def test_delivery_router_surfaces_telegram_api_errors() -> None:
     assert result.status == "fail"
     assert result.actions == ["send_telegram_message"]
     assert "telegram error" in result.notes
+    snapshot = telemetry.snapshot(bot_token_configured=True, webhook_secret_configured=False)
+    assert snapshot["delivery_attempts"] == 1
+    assert snapshot["delivery_failures"] == 1
+    assert snapshot["last_delivery"]["state"] == "telegram_api_error"
 
 
 async def test_delivery_router_handles_telegram_delivery_exception_as_fail_result() -> None:
     telegram_client = FakeTelegramClient(error=TimeoutError("upstream timeout"))
-    router = DeliveryRouter(telegram_client=telegram_client)
+    telemetry = TelegramChannelTelemetry()
+    router = DeliveryRouter(
+        telegram_client=telegram_client,
+        telegram_telemetry=telemetry,
+    )
 
     result = await router.deliver(
         ActionDelivery(
@@ -142,3 +173,7 @@ async def test_delivery_router_handles_telegram_delivery_exception_as_fail_resul
     assert result.actions == ["send_telegram_message"]
     assert "TimeoutError" in result.notes
     assert "upstream timeout" in result.notes
+    snapshot = telemetry.snapshot(bot_token_configured=True, webhook_secret_configured=False)
+    assert snapshot["delivery_attempts"] == 1
+    assert snapshot["delivery_failures"] == 1
+    assert snapshot["last_delivery"]["state"] == "delivery_exception"

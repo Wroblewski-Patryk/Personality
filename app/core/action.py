@@ -35,6 +35,7 @@ from app.integrations.cloud_drive.google_drive_client import GoogleDriveMetadata
 from app.integrations.delivery_router import DeliveryRouter
 from app.integrations.task_system.clickup_client import ClickUpTaskClient
 from app.integrations.telegram.client import TelegramClient
+from app.integrations.telegram.telemetry import TelegramChannelTelemetry
 from app.memory.embeddings import (
     materialize_embedding,
     normalize_embedding_refresh_mode,
@@ -66,9 +67,13 @@ class ActionExecutor:
         clickup_task_client: ClickUpTaskClient | None = None,
         google_calendar_client: GoogleCalendarAvailabilityClient | None = None,
         google_drive_client: GoogleDriveMetadataClient | None = None,
+        telegram_telemetry: TelegramChannelTelemetry | None = None,
     ):
         self.memory_repository = memory_repository
-        self.delivery_router = DeliveryRouter(telegram_client=telegram_client)
+        self.delivery_router = DeliveryRouter(
+            telegram_client=telegram_client,
+            telegram_telemetry=telegram_telemetry,
+        )
         self.semantic_vector_enabled = semantic_vector_enabled
         self.embedding_dimensions = max(1, int(embedding_dimensions))
         self.embedding_refresh_mode = normalize_embedding_refresh_mode(embedding_refresh_mode)
