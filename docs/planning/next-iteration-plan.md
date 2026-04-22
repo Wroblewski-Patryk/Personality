@@ -243,7 +243,10 @@ Completed on 2026-04-22:
   `incident_evidence.json`, while behavior-validation gate logic now blocks
   incident-evidence debug posture drift and missing explicit rollback
   exception state.
-- the next active slice in this lane is `PRJ-523`.
+- `PRJ-523` is complete: canonical docs, runtime reality, testing guidance,
+  ops guidance, planning, and context truth now all describe the same
+  incident-evidence-backed debug retirement proof.
+- the next active slice in this lane is `PRJ-524`.
 
 - `PRJ-520` Freeze the shared debug compatibility retirement gate.
   - Result:

@@ -342,6 +342,16 @@ Bundle expectation for behavior-sensitive incident work:
 - when release smoke validates `-IncidentEvidenceBundlePath`, the bundle
   directory itself becomes part of the repeatable evidence contract
 
+For dedicated debug-ingress retirement work, behavior validation must also
+treat incident evidence as a policy gate:
+
+- CI posture must fail if `incident_evidence.policy_posture.runtime_policy`
+  stops proving dedicated-admin-only debug ingress
+- CI posture must fail if incident evidence no longer records an explicit
+  rollback-exception state through
+  `shared_debug_route_break_glass_only` or
+  `shared_debug_route_disabled_with_debug_payload_off`
+
 ---
 
 ## Final Principle

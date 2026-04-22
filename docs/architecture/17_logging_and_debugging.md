@@ -368,6 +368,17 @@ Machine-visible gate state belongs to `/health.runtime_policy` through:
 - `event_debug_shared_ingress_retirement_gate_checklist`
 - `event_debug_shared_ingress_retirement_gate_state`
 - `event_debug_shared_ingress_retirement_blockers`
+
+Release and validation evidence for this retirement lane must also prove the
+same posture from exported incident evidence, not only from `/health`:
+
+- release smoke must validate dedicated-admin-only debug posture directly from
+  live `incident_evidence.policy_posture.runtime_policy`
+- bundle verification must validate the same posture from
+  `incident_evidence.json`
+- behavior-validation CI gates must fail when incident evidence drifts away
+  from dedicated-admin-only posture or omits an explicit rollback-exception
+  state (`shared_debug_break_glass_only|shared_debug_disabled`)
 - `event_debug_shared_ingress_retirement_ready`
 
 ---

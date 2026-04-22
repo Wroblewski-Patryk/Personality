@@ -353,7 +353,11 @@ The current repo already works as an MVP slice, but several architecture-level d
   - behavior-validation gates now fail when incident evidence drifts away from
     dedicated-admin-only debug posture or omits an explicit rollback-exception
     state (`shared_debug_break_glass_only|shared_debug_disabled`)
-  - the next active slice in this lane is `PRJ-523`
+- `PRJ-523` is now complete:
+  - canonical docs, runtime reality, testing guidance, ops notes, and context
+    truth now all describe debug retirement proof through incident-evidence
+    posture plus `/health.runtime_policy`
+  - the next active slice in this lane is `PRJ-524`
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

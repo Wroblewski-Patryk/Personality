@@ -54,9 +54,13 @@ Last updated: 2026-04-22
   bundle-attached `incident_evidence.json`, while behavior-validation gates
   now fail on incident-evidence debug posture drift or missing explicit
   rollback-exception state.
-- 2026-04-22: `PRJ-523` is now the first `READY` task; the next slice should
-  synchronize docs, runtime reality, ops notes, testing guidance, and context
-  truth around the post-compat dedicated-admin debug evidence baseline.
+- 2026-04-22: `PRJ-523` is complete: canonical docs, runtime reality, testing
+  guidance, ops notes, and context truth now all describe dedicated-admin
+  debug retirement proof through incident-evidence posture as well as
+  `/health.runtime_policy`.
+- 2026-04-22: `PRJ-524` is now the first `READY` task; the next slice should
+  define the first bounded provider-backed calendar read contract, safe output
+  shape, and read-only permission posture.
 - 2026-04-22: Group 76 (`PRJ-516..PRJ-519`) is now complete, and the next
   `READY` task is `PRJ-520` for dedicated debug-ingress compatibility
   retirement.

@@ -960,6 +960,14 @@ baseline:
 - release smoke now validates this export directly in debug mode
 - behavior-validation artifacts can optionally ingest an exported
   `incident_evidence` JSON file and record its summary in the same gate output
+- dedicated debug-ingress retirement evidence is now checked from exported
+  incident evidence too:
+  - release smoke validates dedicated-admin-only debug posture from live
+    `incident_evidence.policy_posture.runtime_policy`
+  - bundle verification validates the same posture from
+    `incident_evidence.json`
+  - behavior-validation CI gates fail on debug-posture drift or missing
+    explicit rollback-exception state
 
 Current limitation:
 

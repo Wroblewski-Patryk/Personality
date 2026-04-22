@@ -801,6 +801,14 @@ With `-IncludeDebug`, release smoke now also validates exported
 `incident_evidence` directly and records its schema version, stage count, and
 policy-surface coverage in the smoke summary.
 
+For dedicated debug-ingress retirement, `-IncludeDebug` now also proves:
+
+- dedicated-admin target path remains `/internal/event/debug`
+- shared debug posture remains `break_glass_only`
+- query compatibility remains disabled in incident evidence
+- rollback exception is explicit as either
+  `shared_debug_break_glass_only` or `shared_debug_disabled`
+
 ## Incident Evidence Bundle Baseline
 
 Operator-ready incident evidence should be captured as one bounded bundle:
@@ -851,6 +859,10 @@ Bundle verification through release smoke:
   -BaseUrl "http://localhost:8000" `
   -IncidentEvidenceBundlePath "artifacts/incident_evidence/<captured_at_utc>_<trace_id_or_event_id>"
 ```
+
+Bundle verification now also checks the same dedicated-admin debug posture
+from `incident_evidence.json`, so retirement proof does not depend only on the
+live `/health.runtime_policy` snapshot.
 
 Optional debug payload with token:
 
@@ -906,6 +918,12 @@ Shared debug retirement gate baseline:
     break-glass-only posture and ready for the next enforcement/removal step
   - `shared_debug_disabled_retirement_gate_satisfied`: debug payload is off, so
     no shared ingress remains to retire operationally
+- treat incident-evidence posture as the release-proof companion to those
+  `/health.runtime_policy` fields:
+  - release smoke must stay green for live debug `incident_evidence`
+  - bundle verification must stay green for `incident_evidence.json`
+  - behavior-validation CI gate must stay green when incident evidence is
+    attached to the same release or incident investigation
 
 ### Run Health Check
 

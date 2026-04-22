@@ -165,11 +165,13 @@ Last updated: 2026-04-22
     synchronized in docs/context truth.
 
 - Group 77 note:
-  - `PRJ-520..PRJ-522` are now complete.
+  - `PRJ-520..PRJ-523` are now complete.
   - shared debug retirement now has one explicit checklist, enforced
     dedicated-admin-only default posture, and machine-readable release plus
     behavior evidence for dedicated-admin-only incident-evidence posture.
-  - `PRJ-523` is the next docs/context sync slice.
+  - docs, runtime reality, testing guidance, ops notes, and context truth now
+    describe the same incident-evidence-backed retirement proof.
+  - `PRJ-524` is the next bounded connector-read planning slice.
 
 - [x] PRJ-520 Freeze the shared debug compatibility retirement gate
   - Owner: Planner
@@ -231,15 +233,20 @@ Last updated: 2026-04-22
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_api_routes.py`
 
-- [ ] PRJ-523 Sync docs/context for dedicated debug-ingress retirement
+- [x] PRJ-523 Sync docs/context for dedicated debug-ingress retirement
   - Owner: Product Docs
   - Group: Dedicated Debug Ingress Compatibility Retirement
   - Depends on: PRJ-522
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Done when:
     - canonical docs, runtime reality, ops notes, testing guidance, and
       context truth all describe the same post-compat debug ingress posture
+  - Result:
+    - architecture docs, runtime reality, testing guidance, ops runbook, and
+      planning/context truth now all describe dedicated-admin-only debug
+      retirement as evidence proven from incident-evidence posture, not only
+      from `/health.runtime_policy`
   - Validation:
     - doc-and-context sync across architecture, implementation, ops, testing,
       planning, and context
@@ -249,7 +256,7 @@ Last updated: 2026-04-22
   - Group: Calendar Read Connector Baseline
   - Depends on: PRJ-523
   - Priority: P2
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - one explicit contract defines the first provider-backed calendar read
       slice, its safe output shape, and its read-only permission posture

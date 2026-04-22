@@ -188,6 +188,7 @@ For meaningful repo changes, leave behind:
 - for dedicated-admin debug-ingress retirement slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
   - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_main_runtime_policy.py tests/test_api_routes.py`
+  - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_api_routes.py`
 - for affective input and resolution diagnostics slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
 - for background adaptive-output convergence slices, regression evidence from:
@@ -233,6 +234,9 @@ For meaningful repo changes, leave behind:
   - optional `incident_evidence` block records whether exported runtime
     incident evidence was checked, which schema/policy owner it used, and
     whether policy-surface coverage was complete
+  - for dedicated-admin debug retirement, that same `incident_evidence` block
+    must also prove dedicated-admin-only posture plus an explicit rollback
+    exception state (`shared_debug_break_glass_only|shared_debug_disabled`)
   - CI artifact-input evaluation now blocks on incompatible
     `artifact_schema_version` major values, while operator mode remains
     backward-compatible for local inspection
