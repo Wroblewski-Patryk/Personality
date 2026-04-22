@@ -66,6 +66,9 @@ Incident-evidence bundle export helper:
 - Behavior-driven system checks:
   - internal debug-mode validation of perception/context/motivation/role/plan
     and retrieved memory (`system_debug` contract surface)
+  - relation-source optional-family posture checks across
+    `/health.memory_retrieval`, `system_debug.adaptive_state`, and release
+    smoke evidence
   - user-simulation scenarios without debug payloads
   - persistence, continuity, and failure-mode scenarios across time
 

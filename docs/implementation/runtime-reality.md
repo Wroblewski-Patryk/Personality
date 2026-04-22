@@ -310,6 +310,13 @@ Retrieval lifecycle interpretation (`PRJ-504..PRJ-507`):
   than pending:
   relation records remain live adaptive inputs for context/role/planning, but
   relation embeddings do not define steady-state retrieval completion
+- `/health.memory_retrieval` now also exposes explicit relation-source policy
+  evidence:
+  `retrieval_lifecycle_relation_source_policy_owner`,
+  `retrieval_lifecycle_relation_source_state`,
+  `retrieval_lifecycle_relation_source_hint`,
+  `retrieval_lifecycle_relation_source_recommendation`, and
+  `retrieval_lifecycle_relation_source_enabled`
 - `retrieval_lifecycle_provider_drift_state` distinguishes whether runtime is
   aligned with the target owner, still on the local transition owner, or still
   on compatibility fallback
@@ -442,9 +449,13 @@ Retrieval-depth governance is now also explicit:
 - `app/core/retrieval_policy.py` owns a shared retrieval-depth policy snapshot
   for runtime and `/health`
 - runtime `system_debug.adaptive_state` now includes retrieval-depth posture,
-  bounded theta influence, and selected/planned skill metadata
+  relation-source optional-family posture, bounded theta influence, and
+  selected/planned skill metadata
 - `/health.memory_retrieval.retrieval_depth_policy` exposes the same policy
   owner instead of leaving load-depth semantics only inside orchestrator code
+- runtime `system_debug.adaptive_state.relation_source_policy` now mirrors the
+  `/health.memory_retrieval` owner/state contract for event-scoped behavior
+  evidence
 
 ### Role and skill boundary
 

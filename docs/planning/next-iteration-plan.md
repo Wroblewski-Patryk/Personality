@@ -460,7 +460,11 @@ state.
   smoke now both require the selected relation-source policy owner/state/
   enabled evidence instead of leaving relation-aware retrieval posture implicit
   in `/health` only.
-- the next active slice in this lane is `PRJ-539`.
+- `PRJ-539` is complete: architecture, runtime reality, ops guidance, testing
+  guidance, and context truth now all describe the same optional-family
+  relation-source posture and its `/health`, `system_debug`, plus release-smoke
+  evidence surfaces.
+- Group 81 is now complete and no seeded `READY` work remains in this queue.
 
 - `PRJ-536` Decide the relation-source retrieval completion posture.
   - Result:

@@ -586,15 +586,21 @@ Last updated: 2026-04-22
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_deployment_trigger_scripts.py tests/test_memory_repository.py`
 
-- [ ] PRJ-539 Sync docs/context for relation retrieval source completion
+- [x] PRJ-539 Sync docs/context for relation retrieval source completion
   - Owner: Product Docs
   - Group: Relation Retrieval Source Completion
   - Depends on: PRJ-538
   - Priority: P2
-  - Status: READY
+  - Status: DONE
   - Done when:
     - architecture, runtime reality, ops guidance, testing guidance, and
       context truth all describe the same relation-source retrieval posture
+  - Result:
+    - architecture, runtime reality, runtime behavior testing, ops guidance,
+      testing guidance, and context truth now all describe the same
+      optional-family relation-source posture plus its `/health`,
+      `system_debug`, and release-smoke evidence surfaces
+    - Group 81 is now complete and no seeded `READY` items remain on the board
   - Validation:
     - doc-and-context sync across architecture, implementation, ops, testing,
       planning, and context

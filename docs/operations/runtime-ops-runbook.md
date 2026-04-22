@@ -247,6 +247,18 @@ Operator interpretation for retrieval lifecycle closure:
   `retrieval_lifecycle_relation_source_posture`
 - treat `retrieval_lifecycle_relation_source_posture=optional_follow_on_family`
   as the intended steady-state posture, not as a rollout gap by itself
+- `retrieval_lifecycle_relation_source_policy_owner=relation_source_retrieval_policy`
+  means runtime is using the explicit optional-family governance owner rather
+  than leaving relation-source posture as an inferred side effect
+- `retrieval_lifecycle_relation_source_state=optional_family_not_enabled` means
+  the semantic+affective foreground baseline is complete and relation remains
+  intentionally disabled
+- `retrieval_lifecycle_relation_source_state=optional_family_enabled` means
+  relation embeddings are enabled, but still do not redefine steady-state
+  rollout completion
+- `retrieval_lifecycle_relation_source_state=enabled_ahead_of_baseline` means
+  relation was turned on before semantic+affective baseline completion and
+  should be treated as a bounded governance warning, not as baseline readiness
 - `retrieval_lifecycle_provider_drift_state=aligned_target_provider` means the
   effective provider owner matches the selected steady-state lifecycle target
 - `retrieval_lifecycle_provider_drift_state=transition_provider_active` means
@@ -511,7 +523,8 @@ Release smoke ownership:
   - required focus: internal `system_debug` surface plus scenario checks for
     memory influence, multi-session continuity, failure-mode stability,
     connector execution posture, proactive cadence posture, metadata-only
-    role/skill boundary, and deferred reflection expectations.
+    role/skill boundary, deferred reflection expectations, and
+    `relation_source_policy` posture versus `/health.memory_retrieval`.
   - artifact contract now includes explicit
     `artifact_schema_version` + `gate_reason_taxonomy_version`, and gate output
     includes `violation_context` for deterministic machine parsing.

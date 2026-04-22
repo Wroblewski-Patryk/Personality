@@ -579,7 +579,10 @@ baseline.
    and rollout guidance must continue to distinguish:
    - steady-state retrieval baseline
    - optional relation-source expansion posture
-6. future promotion of relation embeddings into the steady-state baseline
+6. runtime `system_debug.adaptive_state.relation_source_policy` must expose the
+   same owner-level optional-family posture for behavior-level traces, so
+   event-scoped evidence does not rely only on `/health`.
+7. future promotion of relation embeddings into the steady-state baseline
    requires a separate approved contract slice plus matching health, smoke, and
    behavior evidence.
 

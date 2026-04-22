@@ -126,9 +126,12 @@ Last updated: 2026-04-22
   exposes the same shared relation-source posture as `/health`, while release
   smoke and focused regressions require relation-source policy owner/state/
   enabled evidence instead of treating it as an undocumented optional field.
-- 2026-04-22: `PRJ-539` is now the first `READY` task; the next slice should
-  synchronize architecture, runtime reality, ops, testing, and context truth
-  around the completed relation-source retrieval posture.
+- 2026-04-22: `PRJ-539` is complete: architecture, runtime reality, runtime
+  behavior testing, ops guidance, testing guidance, and context truth now all
+  describe the same optional-family relation-source posture and its `/health`,
+  `system_debug`, plus release-smoke evidence surfaces.
+- 2026-04-22: Group 81 (`PRJ-536..PRJ-539`) is complete, and there are no
+  remaining seeded `READY` tasks in the current planning queue.
 - 2026-04-22: Group 76 (`PRJ-516..PRJ-519`) is now complete, and the next
   `READY` task is `PRJ-520` for dedicated debug-ingress compatibility
   retirement.

@@ -434,7 +434,18 @@ The current repo already works as an MVP slice, but several architecture-level d
   - relation source posture now has one explicit shared owner-level surface
     with machine-visible optional-family state, hint, recommendation, and
     enabled/alignment visibility
-  - the next active slice is `PRJ-538` for regression and release evidence
+- `PRJ-538` is now complete:
+  - runtime `system_debug.adaptive_state` and release smoke now require the
+    same relation-source policy owner/state/enabled evidence as `/health`
+  - focused regressions now pin both the green path and the missing-evidence
+    smoke failure posture
+- `PRJ-539` is now complete:
+  - architecture, runtime reality, runtime behavior testing, ops guidance,
+    testing guidance, and context truth now describe the same optional-family
+    relation-source posture and its `/health`, `system_debug`, plus
+    release-smoke evidence surfaces
+  - Group 81 is complete and no seeded `READY` items remain in the current
+    queue
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

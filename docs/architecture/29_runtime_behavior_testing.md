@@ -45,6 +45,7 @@ Minimum debug-visible fields:
 - normalized event metadata
 - perception output
 - retrieved memory bundle
+- retrieval governance posture when rollout-sensitive
 - context summary
 - motivation state
 - selected role
@@ -61,6 +62,9 @@ Rules:
 - it must remain policy-gated
 - it must preserve the action boundary and traceability rules from the core
   architecture
+- when retrieval-family rollout is under governance, `system_debug` should also
+  expose the owner-level posture needed to explain whether a source family is
+  baseline, optional, or enabled ahead of baseline
 
 ### 2. User Simulation Mode
 
