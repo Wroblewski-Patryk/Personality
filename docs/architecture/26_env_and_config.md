@@ -187,9 +187,10 @@ Controls which embedding provider is requested by runtime configuration.
 
 Allowed values:
 
-- `deterministic` (current effective baseline)
-- `openai` (currently falls back to deterministic until provider-backed
-  embedding execution is implemented)
+- `deterministic` (explicit compatibility baseline)
+- `local_hybrid` (local provider-owned transition path)
+- `openai` (target provider-owned production baseline when `OPENAI_API_KEY`
+  is configured)
 
 Default: `deterministic`.
 
@@ -272,13 +273,16 @@ Allowed values:
 
 Default: `warn`.
 
-### Production Retrieval Baseline (PRJ-284)
+### Production Retrieval Baseline (PRJ-476)
 
 The production retrieval baseline for rollout is:
 
 - provider ownership baseline:
-  - deterministic is the active effective owner until provider-backed
-    execution is implemented
+  - `openai` is the target provider-owned production baseline when
+    `OPENAI_API_KEY` is configured
+  - `local_hybrid` remains an explicit local transition path, not the target
+    production owner
+  - `deterministic` remains the explicit compatibility fallback baseline
 - refresh ownership baseline:
   - `on_write` owns materialization during rollout; `manual` remains explicit
     operator override
@@ -442,6 +446,10 @@ Compatibility `STARTUP_SCHEMA_MODE=create_tables` should be removed only after:
 - `semantic_embedding_provider_requested`
 - `semantic_embedding_provider_effective`
 - `semantic_embedding_provider_hint`
+- `semantic_embedding_execution_class`
+- `semantic_embedding_production_baseline`
+- `semantic_embedding_production_baseline_state`
+- `semantic_embedding_production_baseline_hint`
 - `semantic_embedding_provider_ownership_state`
 - `semantic_embedding_provider_ownership_hint`
 - `semantic_embedding_provider_ownership_enforcement`

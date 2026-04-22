@@ -169,6 +169,7 @@ def _memory_retrieval_snapshot_from_settings(settings) -> dict[str, Any]:
         source_rollout_enforcement=str(
             getattr(settings, "embedding_source_rollout_enforcement", "warn")
         ),
+        openai_api_key=str(getattr(settings, "openai_api_key", "") or ""),
     )
     snapshot["retrieval_depth_policy"] = retrieval_depth_policy_snapshot(
         episodic_limit=RuntimeOrchestrator.MEMORY_LOAD_LIMIT,

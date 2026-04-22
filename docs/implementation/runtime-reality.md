@@ -260,23 +260,36 @@ Hybrid retrieval surfaces are now also explicit:
 - source-family rollout remains explicit through `EMBEDDING_SOURCE_KINDS`
   gating, so each family can be enabled progressively without implicit writes
 
-Production retrieval baseline (`PRJ-284`, planning contract):
+Production retrieval baseline (`PRJ-476`, planning contract):
 
-- provider ownership: deterministic effective owner until provider execution is
-  implemented
+- provider ownership:
+  - `openai` is the target provider-owned production baseline when
+    `OPENAI_API_KEY` is configured
+  - `local_hybrid` remains a local transition path
+  - `deterministic` remains the explicit compatibility fallback baseline
 - refresh ownership: `on_write` during rollout, with `manual` as explicit
   operator override
 - family rollout order: `episodic+semantic` first, then `affective`, then
   `relation`
 - `/health.memory_retrieval.semantic_embedding_execution_class` now exposes
-  `deterministic_baseline`, `local_provider_owned`, or
-  `fallback_to_deterministic` as the current execution posture
+  `deterministic_baseline`, `local_provider_owned`,
+  `provider_owned_openai_api`, or `fallback_to_deterministic` as the current
+  execution posture
+- `/health.memory_retrieval` now also exposes one explicit production-baseline
+  contract:
+  `semantic_embedding_production_baseline=openai_api_embeddings` plus
+  `semantic_embedding_production_baseline_state` and
+  `semantic_embedding_production_baseline_hint`
 
 Current limitation:
 
-- deterministic fallback embeddings are live; requested non-implemented
-  providers still fall back to deterministic execution, and provider-owned
-  embedding lifecycle/tuning are planned follow-up work.
+- OpenAI provider-owned embedding materialization is now live when
+  `EMBEDDING_PROVIDER=openai` and `OPENAI_API_KEY` is configured.
+- when `EMBEDDING_PROVIDER=openai` is requested without `OPENAI_API_KEY`,
+  runtime falls back to deterministic execution with explicit
+  `openai_api_key_missing_fallback_deterministic` posture.
+- provider-owned lifecycle tuning beyond this baseline remains future follow-up
+  work.
 - `/health.memory_retrieval` now exposes explicit warning posture fields
   (`semantic_embedding_warning_state`, `semantic_embedding_warning_hint`) and
   startup warning logs reuse the same warning-state semantics.

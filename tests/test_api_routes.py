@@ -1634,6 +1634,28 @@ def test_health_endpoint_exposes_local_hybrid_embedding_provider_as_ready_owner(
     assert body["memory_retrieval"]["semantic_embedding_provider_ready"] is True
     assert body["memory_retrieval"]["semantic_embedding_provider_hint"] == "local_provider_execution"
     assert body["memory_retrieval"]["semantic_embedding_execution_class"] == "local_provider_owned"
+    assert body["memory_retrieval"]["semantic_embedding_production_baseline"] == "openai_api_embeddings"
+    assert body["memory_retrieval"]["semantic_embedding_production_baseline_state"] == "local_transition_provider_owned"
+
+
+def test_health_endpoint_exposes_openai_embedding_provider_as_ready_owner_when_api_key_is_present() -> None:
+    client, _, _ = _client(
+        embedding_provider="openai",
+        embedding_model="text-embedding-3-small",
+        openai_api_key="test-openai-key",
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["memory_retrieval"]["semantic_embedding_provider_requested"] == "openai"
+    assert body["memory_retrieval"]["semantic_embedding_provider_effective"] == "openai"
+    assert body["memory_retrieval"]["semantic_embedding_provider_ready"] is True
+    assert body["memory_retrieval"]["semantic_embedding_provider_hint"] == "openai_api_embeddings"
+    assert body["memory_retrieval"]["semantic_embedding_execution_class"] == "provider_owned_openai_api"
+    assert body["memory_retrieval"]["semantic_embedding_production_baseline"] == "openai_api_embeddings"
+    assert body["memory_retrieval"]["semantic_embedding_production_baseline_state"] == "aligned_openai_provider_owned"
 
 
 def test_health_endpoint_defaults_to_strict_policy_enforcement_in_production_when_unset() -> None:

@@ -146,6 +146,16 @@ Last updated: 2026-04-22
   `GET /health` exposes `memory_retrieval.semantic_vector_enabled` plus
   `memory_retrieval.semantic_retrieval_mode`
   (`hybrid_vector_lexical|lexical_only`).
+- 2026-04-22: retrieval provider completion now treats `openai` as the target
+  provider-owned production baseline when `OPENAI_API_KEY` is configured,
+  keeps `local_hybrid` as an explicit local transition path, and keeps
+  deterministic execution as the compatibility fallback baseline.
+- 2026-04-22: embedding materialization now has one shared owner path across
+  repository and action persistence; OpenAI provider-owned execution uses a
+  dedicated client, while `/health.memory_retrieval` exposes
+  `semantic_embedding_production_baseline`,
+  `semantic_embedding_production_baseline_state`, and
+  `semantic_embedding_production_baseline_hint` for rollout triage.
 - 2026-04-19: embedding strategy posture is now explicit through
   `EMBEDDING_PROVIDER`, `EMBEDDING_MODEL`, and `EMBEDDING_DIMENSIONS` with
   deterministic-fallback visibility in `GET /health.memory_retrieval`

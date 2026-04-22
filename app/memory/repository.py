@@ -14,12 +14,12 @@ from app.core.reflection_scope_policy import (
 )
 from app.memory.embeddings import (
     cosine_similarity,
-    deterministic_embedding,
-    local_hybrid_embedding,
+    materialize_embedding,
     normalize_embedding_refresh_mode,
     normalize_embedding_source_kinds,
     resolve_embedding_posture,
 )
+from app.memory.openai_embedding_client import OpenAIEmbeddingClient
 from app.memory.models import (
     AionAttentionTurn,
     AionConclusion,
@@ -88,10 +88,15 @@ class MemoryRepository:
         embedding_dimensions: int = 32,
         embedding_source_kinds: tuple[str, ...] | None = None,
         embedding_refresh_mode: str = "on_write",
+        openai_api_key: str | None = None,
+        openai_embedding_client: OpenAIEmbeddingClient | None = None,
     ):
         self.session_factory = session_factory
         self.embedding_dimensions = max(1, int(embedding_dimensions))
         self.embedding_refresh_mode = normalize_embedding_refresh_mode(embedding_refresh_mode)
+        self.openai_embedding_client = openai_embedding_client
+        if self.openai_embedding_client is None and str(openai_api_key or "").strip():
+            self.openai_embedding_client = OpenAIEmbeddingClient(api_key=openai_api_key)
         if embedding_source_kinds is None:
             self.embedding_source_kinds = set(normalize_embedding_source_kinds(None))
         else:
@@ -99,6 +104,7 @@ class MemoryRepository:
         self.embedding_posture = resolve_embedding_posture(
             provider=embedding_provider,
             model=embedding_model,
+            openai_api_key=openai_api_key,
         )
 
     async def create_tables(self, engine: AsyncEngine) -> None:
@@ -260,7 +266,7 @@ class MemoryRepository:
 
         if "relation" in self.embedding_source_kinds:
             relation_content = f"{row.relation_type} {row.relation_value}".strip()
-            relation_embedding, relation_embedding_status = self._materialize_embedding(
+            relation_embedding, relation_embedding_status = await self._materialize_embedding(
                 content=relation_content
             )
             await self.upsert_semantic_embedding(
@@ -1622,7 +1628,7 @@ class MemoryRepository:
                     "updated_at": row.updated_at,
                 }
             if source_kind in {"semantic", "affective"}:
-                embedding, embedding_status = self._materialize_embedding(content=row.content)
+                embedding, embedding_status = await self._materialize_embedding(content=row.content)
             else:
                 embedding = None
                 embedding_status = "pending_vector_materialization"
@@ -2011,17 +2017,13 @@ class MemoryRepository:
             return min(0.99, max(current_confidence, next_confidence))
         return next_confidence
 
-    def _materialize_embedding(self, *, content: str) -> tuple[list[float] | None, str]:
-        if self.embedding_refresh_mode == "manual":
-            return None, "pending_manual_refresh"
-        if self.embedding_posture["provider_effective"] == "local_hybrid":
-            return (
-                local_hybrid_embedding(content, dimensions=self.embedding_dimensions),
-                "materialized_by_local_hybrid_provider",
-            )
-        return (
-            deterministic_embedding(content, dimensions=self.embedding_dimensions),
-            "materialized_on_write",
+    async def _materialize_embedding(self, *, content: str) -> tuple[list[float] | None, str]:
+        return await materialize_embedding(
+            content=content,
+            posture=self.embedding_posture,
+            dimensions=self.embedding_dimensions,
+            refresh_mode=self.embedding_refresh_mode,
+            openai_embedding_client=self.openai_embedding_client,
         )
 
     def _serialize_reflection_task(self, row: AionReflectionTask) -> dict:

@@ -99,7 +99,10 @@ retrieval posture:
 - `semantic_vector_enabled`
 - `semantic_retrieval_mode` (`hybrid_vector_lexical|lexical_only`)
 - `semantic_embedding_execution_class`
-  (`deterministic_baseline|local_provider_owned|fallback_to_deterministic`)
+  (`deterministic_baseline|local_provider_owned|provider_owned_openai_api|fallback_to_deterministic`)
+- `semantic_embedding_production_baseline`
+- `semantic_embedding_production_baseline_state`
+- `semantic_embedding_production_baseline_hint`
 - `semantic_embedding_provider_ready`
 - `semantic_embedding_posture` (`ready|fallback_deterministic`)
 - `semantic_embedding_provider_requested`
@@ -166,11 +169,26 @@ retrieval posture:
 - `semantic_embedding_refresh_alignment_state`
 - `semantic_embedding_refresh_alignment_hint`
 
-When semantic vectors are enabled and a non-implemented provider is requested
-(for example `EMBEDDING_PROVIDER=openai` today), startup emits
-`embedding_strategy_warning` with requested/effective provider-model posture
-and deterministic fallback hint, plus provider-ownership and owner-strategy
-diagnostics.
+When semantic vectors are enabled and `EMBEDDING_PROVIDER=openai` is requested
+without `OPENAI_API_KEY`, startup emits `embedding_strategy_warning` with
+requested/effective provider-model posture, explicit
+`openai_api_key_missing_fallback_deterministic` hint, and the same
+provider-ownership / owner-strategy diagnostics visible in `/health`.
+
+Operator interpretation for retrieval production baseline:
+
+- `semantic_embedding_production_baseline=openai_api_embeddings` is the target
+  steady-state owner for production retrieval
+- `semantic_embedding_production_baseline_state=aligned_openai_provider_owned`
+  means OpenAI provider-owned execution is active and aligned
+- `semantic_embedding_production_baseline_state=requested_openai_fallback_active`
+  means production baseline was requested but runtime is still falling back
+  because OpenAI credentials are missing
+- `semantic_embedding_production_baseline_state=local_transition_provider_owned`
+  means `local_hybrid` is active as a local transition path, not the final
+  production owner
+- `semantic_embedding_production_baseline_state=deterministic_compatibility_baseline`
+  means runtime is still on the explicit compatibility fallback posture
 
 When provider-ownership fallback is active and
 `EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT=strict`, startup emits
@@ -465,7 +483,7 @@ Recommended when Telegram webhooks are enabled:
   vector retrieval/persistence posture (`true` for hybrid vector+lexical,
   `false` for lexical-only)
 - `EMBEDDING_PROVIDER` (optional, default `deterministic`) to declare requested
-  embedding provider posture (`openai` currently falls back to deterministic)
+  embedding provider posture (`deterministic|local_hybrid|openai`)
 - `EMBEDDING_MODEL` (optional, default `deterministic-v1`) to configure
   requested embedding model posture
 - `EMBEDDING_DIMENSIONS` (optional, default `32`) to control embedding/query
@@ -487,9 +505,11 @@ Recommended when Telegram webhooks are enabled:
 - `EMBEDDING_SOURCE_ROLLOUT_ENFORCEMENT` (`warn|strict`, default `warn`) to
   decide whether pending source-rollout posture remains warning-only or blocks
   startup
-- production retrieval rollout baseline (`PRJ-284`):
-  - provider owner baseline stays deterministic until provider execution is
-    implemented
+- production retrieval rollout baseline (`PRJ-476`):
+  - provider owner target is OpenAI API embeddings when `OPENAI_API_KEY` is
+    configured
+  - `local_hybrid` remains a local transition path
+  - deterministic remains the explicit compatibility fallback baseline
   - refresh owner baseline is `on_write` during rollout (`manual` only as
     explicit operator override)
   - family rollout order is `episodic+semantic`, then `affective`, then
@@ -716,7 +736,12 @@ Important health surfaces for current release checks:
   - fixed proposal-decision baseline
 - `memory_retrieval.semantic_embedding_execution_class`
   - whether retrieval is currently running as deterministic baseline,
-    local provider-owned execution, or provider-requested fallback
+    local provider-owned execution, OpenAI provider-owned execution, or
+    provider-requested fallback
+  - pair it with
+    `memory_retrieval.semantic_embedding_production_baseline_state` to tell
+    whether runtime is aligned with the target OpenAI production owner,
+    still on a local transition path, or still on compatibility fallback
 - `connectors`
   - connector authorization matrix
   - capability-proposal posture for not-yet-authorized expansion

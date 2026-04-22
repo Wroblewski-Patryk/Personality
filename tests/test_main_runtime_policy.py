@@ -416,6 +416,24 @@ def test_startup_skips_embedding_strategy_warning_when_requested_provider_is_eff
     assert not any("embedding_strategy_warning" in message for message in messages)
 
 
+def test_startup_skips_embedding_strategy_warning_when_openai_provider_is_configured(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("WARNING", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        semantic_vector_enabled=True,
+        embedding_provider="openai",
+        embedding_model="text-embedding-3-small",
+        openai_api_key="test-openai-key",
+    )
+
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert not any("embedding_strategy_warning" in message for message in messages)
+    assert not any("embedding_strategy_block" in message for message in messages)
+
+
 def test_startup_logs_embedding_model_governance_warning_when_deterministic_custom_model_is_requested(
     caplog,
 ) -> None:

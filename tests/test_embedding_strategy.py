@@ -45,6 +45,12 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
     )
     assert snapshot["semantic_embedding_warning_state"] == "no_warning"
     assert snapshot["semantic_embedding_warning_hint"] == "embedding_strategy_ready"
+    assert snapshot["semantic_embedding_production_baseline"] == "openai_api_embeddings"
+    assert snapshot["semantic_embedding_production_baseline_state"] == "deterministic_compatibility_baseline"
+    assert (
+        snapshot["semantic_embedding_production_baseline_hint"]
+        == "deterministic_owner_active_until_provider_baseline_is_selected"
+    )
     assert snapshot["semantic_embedding_provider_ownership_state"] == "deterministic_baseline_owner"
     assert (
         snapshot["semantic_embedding_provider_ownership_hint"]
@@ -241,6 +247,12 @@ def test_embedding_strategy_snapshot_marks_provider_fallback_warning_state() -> 
         snapshot["semantic_embedding_warning_hint"]
         == "provider_not_implemented_using_deterministic_fallback"
     )
+    assert snapshot["semantic_embedding_production_baseline"] == "openai_api_embeddings"
+    assert snapshot["semantic_embedding_production_baseline_state"] == "requested_openai_fallback_active"
+    assert (
+        snapshot["semantic_embedding_production_baseline_hint"]
+        == "configure_openai_api_key_to_activate_provider_baseline"
+    )
     assert snapshot["semantic_embedding_provider_ownership_state"] == "provider_fallback_active"
     assert (
         snapshot["semantic_embedding_provider_ownership_hint"]
@@ -303,6 +315,30 @@ def test_embedding_strategy_snapshot_marks_provider_fallback_warning_state() -> 
     assert (
         snapshot["semantic_embedding_enforcement_alignment_hint"]
         == "consider_enabling_model_governance_strict"
+    )
+
+
+def test_embedding_strategy_snapshot_marks_openai_provider_as_ready_when_api_key_is_present() -> None:
+    snapshot = embedding_strategy_snapshot(
+        semantic_vector_enabled=True,
+        provider="openai",
+        model="text-embedding-3-small",
+        dimensions=1536,
+        openai_api_key="test-openai-key",
+    )
+
+    assert snapshot["semantic_embedding_provider_ready"] is True
+    assert snapshot["semantic_embedding_posture"] == "ready"
+    assert snapshot["semantic_embedding_provider_effective"] == "openai"
+    assert snapshot["semantic_embedding_provider_hint"] == "openai_api_embeddings"
+    assert snapshot["semantic_embedding_execution_class"] == "provider_owned_openai_api"
+    assert snapshot["semantic_embedding_provider_ownership_state"] == "provider_owned_execution"
+    assert snapshot["semantic_embedding_owner_strategy_state"] == "provider_owned_execution"
+    assert snapshot["semantic_embedding_production_baseline"] == "openai_api_embeddings"
+    assert snapshot["semantic_embedding_production_baseline_state"] == "aligned_openai_provider_owned"
+    assert (
+        snapshot["semantic_embedding_production_baseline_hint"]
+        == "openai_provider_owned_baseline_active"
     )
 
 

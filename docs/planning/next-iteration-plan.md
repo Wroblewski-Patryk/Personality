@@ -278,6 +278,22 @@ Completed on 2026-04-22:
 
 ## Group 66 - Retrieval Provider Completion
 
+Completed on 2026-04-22:
+
+- `PRJ-476` fixed the target provider-owned retrieval baseline explicitly:
+  `openai_api_embeddings` is the intended production owner when
+  `OPENAI_API_KEY` is configured, `local_hybrid` remains a local transition
+  path, and deterministic remains the explicit compatibility fallback.
+- `PRJ-477` implemented provider-owned OpenAI embedding materialization behind
+  one shared repository/action owner path while preserving deterministic and
+  local-hybrid fallback behavior.
+- `PRJ-478` exposed machine-visible readiness posture through
+  `/health.memory_retrieval` and startup warning behavior, including explicit
+  production-baseline state/hint fields.
+- `PRJ-479` synchronized contracts, runtime reality, env/config guidance, ops,
+  testing, and planning/context truth around that retrieval baseline so the
+  next lane can move on to background worker externalization.
+
 - `PRJ-476` Define the target provider-owned retrieval baseline beyond deterministic fallback.
   - Result:
     - one explicit decision records the intended provider, execution mode,

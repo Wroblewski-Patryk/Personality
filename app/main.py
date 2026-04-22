@@ -28,6 +28,7 @@ from app.integrations.openai.client import OpenAIClient
 from app.integrations.task_system.clickup_client import ClickUpTaskClient
 from app.integrations.telegram.client import TelegramClient
 from app.memory.embeddings import embedding_strategy_snapshot, normalize_embedding_source_kinds
+from app.memory.openai_embedding_client import OpenAIEmbeddingClient
 from app.memory.repository import MemoryRepository
 from app.motivation.engine import MotivationEngine
 from app.reflection.worker import ReflectionWorker
@@ -144,6 +145,7 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
         source_rollout_enforcement=str(
             getattr(settings, "embedding_source_rollout_enforcement", "warn")
         ),
+        openai_api_key=str(getattr(settings, "openai_api_key", "") or ""),
     )
     if str(snapshot["semantic_embedding_warning_state"]) == "provider_fallback_active":
         logger.warning(
@@ -383,6 +385,7 @@ async def lifespan(app: FastAPI):
     _log_affective_assessment_policy(settings=settings, logger=logger)
 
     database = Database(settings.database_url)  # type: ignore[arg-type]
+    openai_embedding_client = OpenAIEmbeddingClient(api_key=settings.openai_api_key)
     memory_repository = MemoryRepository(
         database.session_factory,
         embedding_provider=str(getattr(settings, "embedding_provider", "deterministic")),
@@ -390,6 +393,8 @@ async def lifespan(app: FastAPI):
         embedding_dimensions=int(getattr(settings, "embedding_dimensions", 32)),
         embedding_source_kinds=tuple(getattr(settings, "get_embedding_source_kinds", lambda: ("episodic", "semantic", "affective"))()),
         embedding_refresh_mode=str(getattr(settings, "embedding_refresh_mode", "on_write")),
+        openai_api_key=settings.openai_api_key,
+        openai_embedding_client=openai_embedding_client,
     )
     if settings.startup_schema_mode == "create_tables":
         await memory_repository.create_tables(database.engine)
@@ -417,6 +422,8 @@ async def lifespan(app: FastAPI):
         embedding_dimensions=int(getattr(settings, "embedding_dimensions", 32)),
         embedding_source_kinds=tuple(getattr(settings, "get_embedding_source_kinds", lambda: ("episodic", "semantic", "affective"))()),
         embedding_refresh_mode=str(getattr(settings, "embedding_refresh_mode", "on_write")),
+        openai_api_key=settings.openai_api_key,
+        openai_embedding_client=openai_embedding_client,
         clickup_task_client=ClickUpTaskClient(
             api_token=getattr(settings, "clickup_api_token", None),
             list_id=getattr(settings, "clickup_list_id", None),

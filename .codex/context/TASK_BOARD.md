@@ -52,23 +52,22 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-476 Define the target provider-owned retrieval baseline beyond deterministic fallback
+- [ ] PRJ-480 Define the production external-worker baseline for deferred reflection
   - Owner: Planner
-  - Group: Retrieval Provider Completion
-  - Depends on: PRJ-475
+  - Group: Background Worker Externalization
+  - Depends on: PRJ-479
   - Priority: P1
   - Why now:
-    - connector execution now has one narrow live provider-backed path, so the
-      next remaining productionization gap is retrieval, where provider-owned
-      posture is still only partially realized
+    - connector and retrieval now each have one explicit provider-backed
+      production baseline, so the next remaining productionization gap is
+      background execution ownership for deferred reflection
   - Done when:
-    - the repo records which provider-owned retrieval path is the intended
-      production baseline beyond deterministic fallback
-    - runtime policy, health posture, and future implementation can proceed
-      without ambiguity about provider ownership or fallback expectations
+    - the repo records when `REFLECTION_RUNTIME_MODE=deferred` becomes a true
+      production external-worker baseline instead of a monitored rollout mode
+    - runtime policy, health posture, and release evidence can proceed without
+      ambiguity about reflection dispatch ownership
   - Validation:
-    - cross-review across retrieval docs, env/config guidance, and
-      `docs/planning/open-decisions.md`
+    - reflection topology and ops cross-review
 
 ## BACKLOG
 
@@ -91,6 +90,73 @@ Last updated: 2026-04-22
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-479 Sync docs/context for retrieval provider completion
+  - Status: DONE
+  - Group: Retrieval Provider Completion
+  - Owner: Product Docs
+  - Depends on: PRJ-478
+  - Priority: P1
+  - Result:
+    - architecture, implementation reality, ops guidance, testing guidance,
+      and planning/context truth now describe one shared retrieval production
+      baseline:
+      `openai_api_embeddings` is the target provider-owned path,
+      `local_hybrid` remains a local transition owner, and deterministic stays
+      as explicit compatibility fallback
+    - operator docs now call out the health-visible production-baseline fields
+      used to distinguish aligned OpenAI ownership from fallback or transition
+      posture
+  - Validation:
+    - doc-and-context sync across canonical docs, implementation docs,
+      ops/config guidance, and planning surfaces
+
+- [x] PRJ-478 Add rollout/readiness evidence for provider-owned retrieval execution
+  - Status: DONE
+  - Group: Retrieval Provider Completion
+  - Owner: Ops/Release
+  - Depends on: PRJ-477
+  - Priority: P1
+  - Result:
+    - `/health.memory_retrieval` now exposes explicit production-baseline
+      posture through `semantic_embedding_production_baseline`,
+      `semantic_embedding_production_baseline_state`, and
+      `semantic_embedding_production_baseline_hint`
+    - startup warning behavior now distinguishes configured OpenAI ownership
+      from missing-credential fallback posture instead of treating all
+      non-deterministic paths as the same rollout state
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_runtime_policy.py`
+
+- [x] PRJ-477 Implement provider-owned semantic embedding execution for the selected baseline
+  - Status: DONE
+  - Group: Retrieval Provider Completion
+  - Owner: Backend Builder
+  - Depends on: PRJ-476
+  - Priority: P1
+  - Result:
+    - repository and action persistence now share one materialization path that
+      can execute OpenAI provider-owned embeddings when configured
+    - deterministic and `local_hybrid` paths remain explicit bounded fallbacks
+      instead of hidden implementation branches
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_memory_repository.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+- [x] PRJ-476 Define the target provider-owned retrieval baseline beyond deterministic fallback
+  - Status: DONE
+  - Group: Retrieval Provider Completion
+  - Owner: Planner
+  - Depends on: PRJ-475
+  - Priority: P1
+  - Result:
+    - the repo now records one explicit provider-owned retrieval target:
+      OpenAI API embeddings are the intended production baseline when
+      configured
+    - `local_hybrid` remains a local transition owner and deterministic
+      remains the explicit compatibility fallback baseline
+  - Validation:
+    - cross-review across retrieval docs, env/config guidance, and
+      `docs/planning/open-decisions.md`
 
 - [x] PRJ-475 Sync docs/context for connector execution productionization
   - Status: DONE

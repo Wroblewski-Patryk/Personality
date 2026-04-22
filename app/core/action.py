@@ -34,12 +34,13 @@ from app.integrations.delivery_router import DeliveryRouter
 from app.integrations.task_system.clickup_client import ClickUpTaskClient
 from app.integrations.telegram.client import TelegramClient
 from app.memory.embeddings import (
-    deterministic_embedding,
+    materialize_embedding,
     normalize_embedding_refresh_mode,
     normalize_embedding_source_kinds,
     resolve_embedding_posture,
 )
 from app.memory.episodic import build_episode_summary
+from app.memory.openai_embedding_client import OpenAIEmbeddingClient
 from app.memory.repository import MemoryRepository
 
 
@@ -58,6 +59,8 @@ class ActionExecutor:
         embedding_dimensions: int = 32,
         embedding_source_kinds: tuple[str, ...] | None = None,
         embedding_refresh_mode: str = "on_write",
+        openai_api_key: str | None = None,
+        openai_embedding_client: OpenAIEmbeddingClient | None = None,
         clickup_task_client: ClickUpTaskClient | None = None,
     ):
         self.memory_repository = memory_repository
@@ -72,7 +75,11 @@ class ActionExecutor:
         self.embedding_posture = resolve_embedding_posture(
             provider=embedding_provider,
             model=embedding_model,
+            openai_api_key=openai_api_key,
         )
+        self.openai_embedding_client = openai_embedding_client
+        if self.openai_embedding_client is None and str(openai_api_key or "").strip():
+            self.openai_embedding_client = OpenAIEmbeddingClient(api_key=openai_api_key)
         self.clickup_task_client = clickup_task_client
 
     async def execute(self, plan: PlanOutput, delivery: ActionDelivery) -> ActionResult:
@@ -204,11 +211,13 @@ class ActionExecutor:
                 episode_embedding = None
                 embedding_status = "pending_manual_refresh"
             else:
-                episode_embedding = deterministic_embedding(
-                    f"{payload['event']} {payload['context']} {payload['expression']}",
+                episode_embedding, embedding_status = await materialize_embedding(
+                    content=f"{payload['event']} {payload['context']} {payload['expression']}",
+                    posture=self.embedding_posture,
                     dimensions=self.embedding_dimensions,
+                    refresh_mode=self.embedding_refresh_mode,
+                    openai_embedding_client=self.openai_embedding_client,
                 )
-                embedding_status = "materialized_on_write"
             await self.memory_repository.upsert_semantic_embedding(
                 user_id=event.meta.user_id,
                 source_kind="episodic",

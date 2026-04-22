@@ -36,7 +36,7 @@
 - `SEMANTIC_VECTOR_ENABLED` (optional, default `true`) to switch semantic
   retrieval between `hybrid_vector_lexical` and `lexical_only` modes
 - `EMBEDDING_PROVIDER` (optional, default `deterministic`) to declare requested
-  embedding provider posture (`openai` currently falls back to deterministic)
+  embedding provider posture (`deterministic|local_hybrid|openai`)
 - `EMBEDDING_MODEL` (optional, default `deterministic-v1`) to set requested
   embedding model posture for runtime visibility
 - `EMBEDDING_DIMENSIONS` (optional, default `32`) to tune embedding/query

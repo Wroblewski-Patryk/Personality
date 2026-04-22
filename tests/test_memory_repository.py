@@ -20,6 +20,25 @@ from app.memory.models import (
 from app.memory.repository import MemoryRepository
 
 
+class FakeOpenAIEmbeddingClient:
+    def __init__(self):
+        self.calls: list[dict[str, object]] = []
+
+    @property
+    def ready(self) -> bool:
+        return True
+
+    async def create_embedding(self, *, text: str, model: str, dimensions: int) -> list[float]:
+        self.calls.append(
+            {
+                "text": text,
+                "model": model,
+                "dimensions": dimensions,
+            }
+        )
+        return [0.25] * dimensions
+
+
 async def test_memory_repository_persists_structured_episode_payload(tmp_path) -> None:
     database_path = tmp_path / "memory-episodic-payload.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
@@ -345,7 +364,7 @@ async def test_memory_repository_upsert_conclusion_uses_effective_embedding_post
     assert rows[0].metadata_json["embedding_provider_effective"] == "deterministic"
     assert (
         rows[0].metadata_json["embedding_provider_hint"]
-        == "provider_not_implemented_fallback_deterministic"
+        == "openai_api_key_missing_fallback_deterministic"
     )
     assert rows[0].metadata_json["embedding_model_requested"] == "text-embedding-3-small"
     assert rows[0].metadata_json["embedding_model_effective"] == "deterministic-v1"
@@ -429,6 +448,55 @@ async def test_memory_repository_materializes_local_hybrid_embedding_provider_wh
     assert rows[0].metadata_json["embedding_provider_effective"] == "local_hybrid"
     assert rows[0].metadata_json["embedding_provider_hint"] == "local_provider_execution"
     assert rows[0].metadata_json["embedding_status"] == "materialized_by_local_hybrid_provider"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_materializes_openai_embedding_provider_when_selected_and_configured(tmp_path) -> None:
+    database_path = tmp_path / "memory-conclusion-embedding-openai.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    embedding_client = FakeOpenAIEmbeddingClient()
+    repository = MemoryRepository(
+        session_factory=session_factory,
+        embedding_provider="openai",
+        embedding_model="text-embedding-3-small",
+        embedding_dimensions=12,
+        openai_api_key="test-openai-key",
+        openai_embedding_client=embedding_client,
+    )
+    await repository.create_tables(engine)
+
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="custom_semantic_fact",
+        content="provider owned retrieval should use real embeddings when configured",
+        confidence=0.84,
+        source="background_reflection",
+        supporting_event_id="evt-openai-provider",
+    )
+
+    async with session_factory() as session:
+        rows = (
+            await session.execute(
+                select(AionSemanticEmbedding).order_by(AionSemanticEmbedding.id.asc())
+            )
+        ).scalars().all()
+
+    assert len(rows) == 1
+    assert rows[0].embedding_model == "text-embedding-3-small"
+    assert rows[0].embedding_dimensions == 12
+    assert rows[0].metadata_json["embedding_provider_requested"] == "openai"
+    assert rows[0].metadata_json["embedding_provider_effective"] == "openai"
+    assert rows[0].metadata_json["embedding_provider_hint"] == "openai_api_embeddings"
+    assert rows[0].metadata_json["embedding_status"] == "materialized_by_openai_provider"
+    assert embedding_client.calls == [
+        {
+            "text": "provider owned retrieval should use real embeddings when configured",
+            "model": "text-embedding-3-small",
+            "dimensions": 12,
+        }
+    ]
 
     await engine.dispose()
 

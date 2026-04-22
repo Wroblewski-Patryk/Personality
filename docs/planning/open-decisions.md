@@ -151,6 +151,17 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `/health.connectors.execution_baseline` now exposes whether the selected
     live connector path is configured or still in `credentials_missing` posture
   - the next active lane is retrieval provider completion
+- `PRJ-476..PRJ-479` are now complete:
+  - the target provider-owned retrieval baseline is now explicit:
+    `openai_api_embeddings` is the intended production owner when
+    `OPENAI_API_KEY` is configured
+  - `local_hybrid` remains a local transition owner and deterministic remains
+    the explicit compatibility fallback baseline
+  - `/health.memory_retrieval` now exposes machine-readable
+    `semantic_embedding_production_baseline`,
+    `semantic_embedding_production_baseline_state`, and
+    `semantic_embedding_production_baseline_hint` fields for rollout triage
+  - the next active lane is background worker externalization
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -566,14 +577,23 @@ The current repo already works as an MVP slice, but several architecture-level d
     while preserving explicit lexical-only behavior when vectors are disabled
   - keep vector retrieval as the default runtime retrieval path for enabled
     source families
-  - keep deterministic fallback explicit until provider-backed execution is
-    implemented and validated
+  - keep deterministic fallback explicit until a provider-backed production
+    owner is implemented and validated
 - Resolved in `PRJ-423..PRJ-426` (2026-04-22):
   - provider-owned execution is now available through the local `local_hybrid`
   provider path; deterministic remains the fallback baseline.
   - `/health.memory_retrieval.semantic_embedding_execution_class` now exposes
     whether current execution is deterministic baseline, local provider-owned,
     or fallback-to-deterministic posture.
+- Resolved follow-up in `PRJ-476..PRJ-479` (2026-04-22):
+  - OpenAI API embeddings are now the target provider-owned production
+    baseline when `OPENAI_API_KEY` is configured.
+  - `/health.memory_retrieval.semantic_embedding_execution_class` now also
+    exposes `provider_owned_openai_api`, and production-baseline posture is
+    explicit through
+    `semantic_embedding_production_baseline`,
+    `semantic_embedding_production_baseline_state`, and
+    `semantic_embedding_production_baseline_hint`.
 
 ### 5e. Embedding Strategy
 
@@ -700,8 +720,11 @@ The current repo already works as an MVP slice, but several architecture-level d
     `embedding_refresh_hint` when refresh posture deviates from recommendation.
 - Decision (resolved in `PRJ-284`, 2026-04-20):
   - provider ownership baseline:
-    - deterministic remains the effective production owner until requested
-      provider execution is implemented; fallback diagnostics stay explicit
+    - OpenAI API embeddings are the target provider-owned production baseline
+      when configured
+    - `local_hybrid` remains a bounded local transition owner
+    - deterministic remains the explicit compatibility fallback owner;
+      fallback diagnostics stay explicit
   - refresh ownership baseline:
     - `on_write` is the rollout baseline owner for vector materialization;
       `manual` stays an explicit operator override with documented process
@@ -716,6 +739,13 @@ The current repo already works as an MVP slice, but several architecture-level d
 - Resolved in `PRJ-423..PRJ-426` (2026-04-22):
   - provider-backed execution timing is now rollout-owned through explicit
     provider posture instead of a planning-only placeholder.
+- Resolved follow-up in `PRJ-476..PRJ-479` (2026-04-22):
+  - repository and action persistence now share a real OpenAI provider-owned
+    embedding materialization path when `EMBEDDING_PROVIDER=openai` and
+    `OPENAI_API_KEY` are configured
+  - missing OpenAI credentials now produce explicit
+    `openai_api_key_missing_fallback_deterministic` posture instead of a
+    generic non-implemented-provider fallback
 
 ### 5a. Goal And Task Scope
 

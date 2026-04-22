@@ -4,6 +4,7 @@ import hashlib
 import math
 
 DEFAULT_EMBEDDING_PROVIDER = "deterministic"
+OPENAI_EMBEDDING_PROVIDER = "openai"
 DEFAULT_EMBEDDING_MODEL = "deterministic-v1"
 LOCAL_HYBRID_EMBEDDING_PROVIDER = "local_hybrid"
 LOCAL_HYBRID_EMBEDDING_MODEL = "local-hybrid-v1"
@@ -24,9 +25,11 @@ def resolve_embedding_posture(
     *,
     provider: str | None,
     model: str | None,
+    openai_api_key: str | None = None,
 ) -> dict[str, str]:
     requested_provider = str(provider or DEFAULT_EMBEDDING_PROVIDER).strip().lower() or DEFAULT_EMBEDDING_PROVIDER
     requested_model = str(model or DEFAULT_EMBEDDING_MODEL).strip() or DEFAULT_EMBEDDING_MODEL
+    openai_ready = bool(str(openai_api_key or "").strip())
 
     if requested_provider == DEFAULT_EMBEDDING_PROVIDER:
         return {
@@ -48,12 +51,26 @@ def resolve_embedding_posture(
             "execution_class": "local_provider_owned",
         }
 
+    if requested_provider == OPENAI_EMBEDDING_PROVIDER and openai_ready:
+        return {
+            "provider_requested": requested_provider,
+            "provider_effective": OPENAI_EMBEDDING_PROVIDER,
+            "model_requested": requested_model,
+            "model_effective": requested_model,
+            "provider_hint": "openai_api_embeddings",
+            "execution_class": "provider_owned_openai_api",
+        }
+
     return {
         "provider_requested": requested_provider,
         "provider_effective": DEFAULT_EMBEDDING_PROVIDER,
         "model_requested": requested_model,
         "model_effective": DEFAULT_EMBEDDING_MODEL,
-        "provider_hint": "provider_not_implemented_fallback_deterministic",
+        "provider_hint": (
+            "openai_api_key_missing_fallback_deterministic"
+            if requested_provider == OPENAI_EMBEDDING_PROVIDER
+            else "provider_not_implemented_fallback_deterministic"
+        ),
         "execution_class": "fallback_to_deterministic",
     }
 
@@ -70,8 +87,13 @@ def embedding_strategy_snapshot(
     provider_ownership_enforcement: str | None = None,
     model_governance_enforcement: str | None = None,
     source_rollout_enforcement: str | None = None,
+    openai_api_key: str | None = None,
 ) -> dict[str, str | bool | int | list[str]]:
-    posture = resolve_embedding_posture(provider=provider, model=model)
+    posture = resolve_embedding_posture(
+        provider=provider,
+        model=model,
+        openai_api_key=openai_api_key,
+    )
     if source_kinds is None:
         normalized_source_kinds = normalize_embedding_source_kinds(None)
     else:
@@ -159,6 +181,22 @@ def embedding_strategy_snapshot(
     else:
         warning_state = "provider_fallback_active"
         warning_hint = "provider_not_implemented_using_deterministic_fallback"
+
+    if not semantic_vector_enabled:
+        production_baseline_state = "not_applicable_vectors_disabled"
+        production_baseline_hint = "enable_vectors_before_provider_baseline"
+    elif posture["provider_effective"] == OPENAI_EMBEDDING_PROVIDER:
+        production_baseline_state = "aligned_openai_provider_owned"
+        production_baseline_hint = "openai_provider_owned_baseline_active"
+    elif posture["provider_requested"] == OPENAI_EMBEDDING_PROVIDER:
+        production_baseline_state = "requested_openai_fallback_active"
+        production_baseline_hint = "configure_openai_api_key_to_activate_provider_baseline"
+    elif posture["provider_effective"] == LOCAL_HYBRID_EMBEDDING_PROVIDER:
+        production_baseline_state = "local_transition_provider_owned"
+        production_baseline_hint = "local_hybrid_active_but_openai_is_target_production_baseline"
+    else:
+        production_baseline_state = "deterministic_compatibility_baseline"
+        production_baseline_hint = "deterministic_owner_active_until_provider_baseline_is_selected"
 
     if not semantic_vector_enabled:
         provider_ownership_state = "vectors_disabled"
@@ -508,6 +546,9 @@ def embedding_strategy_snapshot(
         "semantic_embedding_source_rollout_enforcement_alignment_hint": source_rollout_enforcement_alignment_hint,
         "semantic_embedding_warning_state": warning_state,
         "semantic_embedding_warning_hint": warning_hint,
+        "semantic_embedding_production_baseline": "openai_api_embeddings",
+        "semantic_embedding_production_baseline_state": production_baseline_state,
+        "semantic_embedding_production_baseline_hint": production_baseline_hint,
         "semantic_embedding_refresh_mode": normalized_refresh_mode,
         "semantic_embedding_refresh_interval_seconds": normalized_refresh_interval_seconds,
         "semantic_embedding_refresh_state": refresh_state,
@@ -604,6 +645,36 @@ def local_hybrid_embedding(text: str, *, dimensions: int = 32) -> list[float]:
         return [0.0] * dimensions
     seeded = f"local-hybrid::{normalized}"
     return deterministic_embedding(seeded, dimensions=dimensions)
+
+
+async def materialize_embedding(
+    *,
+    content: str,
+    posture: dict[str, str],
+    dimensions: int,
+    refresh_mode: str,
+    openai_embedding_client=None,
+) -> tuple[list[float] | None, str]:
+    if refresh_mode == "manual":
+        return None, "pending_manual_refresh"
+    if posture["provider_effective"] == OPENAI_EMBEDDING_PROVIDER:
+        if openai_embedding_client is None or not getattr(openai_embedding_client, "ready", False):
+            return deterministic_embedding(content, dimensions=dimensions), "materialized_on_write"
+        embedding = await openai_embedding_client.create_embedding(
+            text=content,
+            model=posture["model_effective"],
+            dimensions=dimensions,
+        )
+        return embedding, "materialized_by_openai_provider"
+    if posture["provider_effective"] == LOCAL_HYBRID_EMBEDDING_PROVIDER:
+        return (
+            local_hybrid_embedding(content, dimensions=dimensions),
+            "materialized_by_local_hybrid_provider",
+        )
+    return (
+        deterministic_embedding(content, dimensions=dimensions),
+        "materialized_on_write",
+    )
 
 
 def cosine_similarity(left: list[float], right: list[float]) -> float:
