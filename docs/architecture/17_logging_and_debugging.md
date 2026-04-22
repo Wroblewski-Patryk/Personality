@@ -289,6 +289,7 @@ Current post-convergence diagnostics also require:
   - machine-readable posture snapshots for runtime policy, retrieval,
     scheduler external ownership, reflection supervision, and connector
     execution baseline
+  - machine-readable learned-state inspection posture for `learned_state`
   - machine-readable conversation-channel posture for
     `conversation_channels.telegram`
 
@@ -341,6 +342,15 @@ Conversation-reliability evidence is part of that bundle contract too:
   `policy_posture["conversation_channels.telegram"]`
 - bundle validation must fail when Telegram conversation posture is missing or
   carries an invalid round-trip baseline
+
+Learned-state inspection evidence is part of that bundle contract too:
+
+- `incident_evidence.json` must carry `policy_posture["learned_state"]`
+- that posture must expose:
+  - `policy_owner = learned_state_inspection_policy`
+  - `internal_inspection_path = /internal/state/inspect`
+- bundle validation must fail when learned-state posture is missing or drifts
+  away from the shared owner/path contract
 
 Canonical naming posture:
 

@@ -247,14 +247,25 @@ Last updated: 2026-04-22
   - Group: Learned-State And Skill Introspection
   - Depends on: PRJ-550
   - Priority: P1
-  - Status: READY
+  - Status: DONE
+  - Result:
+    - canonical contracts, logging/debugging guidance, runtime reality,
+      testing guidance, ops notes, and planning/context truth now describe the
+      same learned-state inspection baseline for future UI and admin callers
+    - `/health.learned_state`, internal
+      `GET /internal/state/inspect?user_id=...`, and exported
+      `incident_evidence.policy_posture["learned_state"]` are now documented
+      as one shared backend introspection contract
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
 
 - [ ] PRJ-552 Define the architecture baseline for web search and browser tool families
   - Owner: Planner
   - Group: Web Knowledge And Tooling Architecture
   - Depends on: PRJ-551
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
 
 - [ ] PRJ-556 Freeze the first bounded provider-backed search, browser, and organization slices
   - Owner: Planner

@@ -643,6 +643,25 @@ Truthfulness rule for "learned skills":
    - what it is actively planning or tracking
    but not arbitrary self-authored tool logic or code-level skill mutation
 
+Canonical introspection surfaces for that baseline:
+
+1. `/health.learned_state`
+   - exposes the shared policy owner for learned-state inspection
+   - exposes the stable internal inspection path used by admin or future UI
+     callers
+2. `GET /internal/state/inspect?user_id=...`
+   - remains an internal debug-boundary surface
+   - returns bounded backend-owned snapshots for:
+     - `identity_state`
+     - `learned_knowledge`
+     - `role_skill_state`
+     - `planning_state`
+3. exported `incident_evidence.policy_posture["learned_state"]`
+   - must carry the same policy owner and internal inspection path as
+     `/health.learned_state`
+   - exists so release smoke, behavior validation, and future UI readiness do
+     not depend only on live health calls during incident review
+
 ---
 
 ## Relation Retrieval Completion Baseline

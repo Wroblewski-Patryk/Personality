@@ -34,6 +34,12 @@ The current repo already works as an MVP slice, but several architecture-level d
   - exported `incident_evidence` and release smoke now require
     `conversation_channels.telegram` posture instead of treating Telegram
     reliability as log-only evidence
+- `PRJ-548..PRJ-550` now freeze and stabilize learned-state introspection:
+  - `/health.learned_state` is the canonical health-level readiness surface
+  - `GET /internal/state/inspect?user_id=...` is the bounded internal
+    inspection surface for future UI or admin callers
+  - exported `incident_evidence.policy_posture["learned_state"]` now carries
+    the same owner and internal-path contract for release or incident review
 - the next execution queue therefore prioritizes:
   - production conversation reliability
   - life-assistant workflow activation

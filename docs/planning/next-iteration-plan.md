@@ -258,6 +258,7 @@ expressing itself.
       triage, and future UI integration
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_behavior_validation_script.py tests/test_deployment_trigger_scripts.py`
+    - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
 
 - `PRJ-551` Sync docs/context for learned-state and skill introspection.
   - Result:

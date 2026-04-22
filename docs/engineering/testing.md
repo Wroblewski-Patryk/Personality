@@ -149,6 +149,17 @@ For meaningful repo changes, leave behind:
     - delivery success/failure telemetry in the shared delivery boundary
     - incident-evidence and smoke validation of
       `conversation_channels.telegram`
+- for learned-state and skill-introspection slices, regression and evidence
+  checks from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py`
+  - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+  - coverage should pin:
+    - `/health.learned_state` owner and internal inspection path
+    - internal `GET /internal/state/inspect?user_id=...` access and bounded
+      payload shape
+    - exported `incident_evidence.policy_posture["learned_state"]`
+    - release-smoke and behavior-validation rejection when learned-state
+      posture is missing or carries the wrong owner/path contract
 - for no-UI `v1` life-assistant workflow slices, regression and behavior
   evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_goal_task_signals.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`

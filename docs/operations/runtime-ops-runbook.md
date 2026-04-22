@@ -1000,6 +1000,9 @@ live `/health.runtime_policy` snapshot.
 Bundle verification now also checks Telegram conversation posture from
 `incident_evidence.json`, so `v1` conversation reliability does not depend
 only on live `/health` during release or incident review.
+Bundle verification now also checks learned-state inspection posture from
+`incident_evidence.json`, so future UI and admin inspection readiness do not
+depend only on live `/health.learned_state` during release or incident review.
 
 Optional debug payload with token:
 
@@ -1084,6 +1087,12 @@ Important health surfaces for current release checks:
   - shared role/skill policy owner
   - metadata-only execution boundary
   - planning carry-forward posture and action-side execution denial
+- `learned_state`
+  - shared learned-state inspection policy owner
+  - canonical internal inspection path for future UI or admin callers
+  - pair it with internal `GET /internal/state/inspect?user_id=...` when you
+    need bounded snapshots of identity state, learned knowledge, role/skill
+    metadata, and planning state
 - `proactive`
   - shared proactive policy owner and selected cadence owner
   - delivery-target baseline and candidate-selection baseline

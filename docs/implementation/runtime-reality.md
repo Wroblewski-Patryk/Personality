@@ -1032,6 +1032,7 @@ baseline:
   - policy posture snapshots for:
     - `runtime_policy`
     - `memory_retrieval`
+    - `learned_state`
     - `scheduler.external_owner_policy`
     - `reflection.supervision`
     - `connectors.execution_baseline`
@@ -1079,6 +1080,17 @@ Current limitation:
   `conversation_channels.telegram`, so release smoke and behavior-validation
   gates can verify Telegram conversation posture from exported evidence rather
   than only from live `/health`
+- `/health.learned_state` now exposes the shared learned-state inspection
+  policy owner plus the canonical internal inspection path
+- `GET /internal/state/inspect?user_id=...` now exposes bounded backend-owned
+  snapshots for:
+  - `identity_state`
+  - `learned_knowledge`
+  - `role_skill_state`
+  - `planning_state`
+- debug-mode `incident_evidence.policy_posture["learned_state"]` mirrors that
+  health-level owner or path contract so release smoke and behavior-validation
+  gates can verify future-UI inspection readiness from exported evidence too
 
 ---
 

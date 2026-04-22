@@ -125,6 +125,15 @@ Last updated: 2026-04-22
   synchronize learned-state and skill-introspection evidence across canonical
   contracts, runtime reality, testing guidance, ops notes, and planning or
   context truth.
+- 2026-04-22: `PRJ-551` is complete: canonical contracts, logging/debugging
+  guidance, runtime reality, testing guidance, ops notes, planning, and
+  context truth now all describe the same learned-state inspection baseline
+  built around `/health.learned_state`, internal
+  `GET /internal/state/inspect?user_id=...`, and exported
+  `incident_evidence.policy_posture["learned_state"]`.
+- 2026-04-22: `PRJ-552` is now the first `READY` task; the next slice should
+  freeze the architecture baseline for web-search and browser tool families
+  before any provider-backed search or browsing adapter is added.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence
