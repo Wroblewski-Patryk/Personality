@@ -209,6 +209,14 @@ Last updated: 2026-04-22
 - 2026-04-22: `PRJ-561` is now the first `READY` task; the next slice should
   make that work-partner baseline machine-visible in role selection, selected
   skills, planning outputs, and backend inspection surfaces.
+- 2026-04-22: `PRJ-561` is complete: explicit `work_partner` orchestration
+  turns now select a shared backend role, carry a bounded work-partner skill
+  mix, surface a machine-visible role-skill policy baseline, and can
+  orchestrate approved search plus ClickUp tool paths through the existing
+  typed-intent and action boundary.
+- 2026-04-22: `PRJ-562` is now the first `READY` task; the next slice should
+  prove work-partner behavior through work-organization and decision-support
+  scenarios in the shared behavior-validation gate.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

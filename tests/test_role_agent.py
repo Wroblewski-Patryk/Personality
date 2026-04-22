@@ -87,6 +87,21 @@ def test_role_agent_uses_executor_for_direct_action_request() -> None:
     assert any(skill.skill_id == "execution_planning" for skill in result.selected_skills)
 
 
+def test_role_agent_selects_work_partner_for_explicit_work_orchestration_request() -> None:
+    result = RoleAgent().run(
+        event=_event("Be my work partner and organize the release plan in ClickUp while checking the latest notes."),
+        perception=_perception("question", "planning", "request_help"),
+        context=_context(),
+    )
+
+    selected_skill_ids = [skill.skill_id for skill in result.selected_skills]
+    assert result.selected == "work_partner"
+    assert result.selection_reason == "work_partner_explicit_orchestration"
+    assert "structured_reasoning" in selected_skill_ids
+    assert "execution_planning" in selected_skill_ids
+    assert "connector_boundary_review" in selected_skill_ids
+
+
 def test_role_agent_uses_mentor_for_general_questions() -> None:
     result = RoleAgent().run(
         event=_event("How should I approach this bug?"),

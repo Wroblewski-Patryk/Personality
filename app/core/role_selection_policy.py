@@ -45,7 +45,13 @@ EXECUTOR_KEYWORDS = {
     "ustaw",
     "zrob",
 }
-PREFERRED_ROLES = {"friend", "analyst", "executor", "mentor"}
+WORK_PARTNER_EXPLICIT_MARKERS = {
+    "work partner",
+    "business partner",
+    "partner at work",
+    "partner for work",
+}
+PREFERRED_ROLES = {"friend", "analyst", "executor", "mentor", "work_partner"}
 
 
 @dataclass(frozen=True)
@@ -89,6 +95,7 @@ def select_role(
         topic=perception.topic,
     )
     has_active_goal_context = bool(context.related_goals)
+    work_partner_explicit = any(marker in lowered for marker in WORK_PARTNER_EXPLICIT_MARKERS)
 
     if affective_needs_support or affective_label == "support_distress":
         return RoleSelectionDecision(
@@ -120,6 +127,37 @@ def select_role(
                     note="high-support relation keeps the turn in guided-help posture",
                 )
             ],
+        )
+
+    if work_partner_explicit:
+        evidence = [
+            RoleSelectionEvidenceOutput(
+                signal="work_partner_orchestration_signal",
+                source="event_text",
+                value=text,
+                applied=True,
+                note="explicit work-partner phrasing selects the shared work-partner role",
+            )
+        ]
+        if has_active_goal_context:
+            evidence.append(
+                RoleSelectionEvidenceOutput(
+                    signal="active_goal_context",
+                    source="context",
+                    value=context.related_goals[0],
+                    applied=True,
+                    note="active-goal context reinforces explicit work-partner posture",
+                )
+            )
+        return RoleSelectionDecision(
+            selected="work_partner",
+            confidence=0.86 if has_active_goal_context else 0.82,
+            reason=(
+                "work_partner_goal_orchestration"
+                if has_active_goal_context
+                else "work_partner_explicit_orchestration"
+            ),
+            evidence=evidence,
         )
 
     if perception.topic == "planning" or any(keyword in lowered for keyword in ANALYSIS_KEYWORDS):

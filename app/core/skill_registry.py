@@ -43,6 +43,10 @@ def skills_for_role_and_topic(*, role_name: str, topic: str, event_text: str) ->
 
     if normalized_role == "friend":
         skills.append(_skill_output("emotional_support", reason="friend_role_selected"))
+    if normalized_role == "work_partner":
+        skills.append(_skill_output("structured_reasoning", reason="work_partner_role_selected"))
+        skills.append(_skill_output("execution_planning", reason="work_partner_role_selected"))
+        skills.append(_skill_output("connector_boundary_review", reason="work_partner_role_selected"))
     if normalized_role in {"analyst", "mentor"} or normalized_topic == "planning":
         skills.append(_skill_output("structured_reasoning", reason="analysis_or_planning_posture"))
     if normalized_role == "executor":

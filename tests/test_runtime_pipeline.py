@@ -5073,6 +5073,55 @@ async def test_runtime_pipeline_executes_provider_backed_browser_page_read_path(
     assert "Browser page read returned: Release notes [text/html] https://example.com/release-notes." in result.action_result.notes
 
 
+async def test_runtime_pipeline_surfaces_work_partner_orchestration_baseline() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=ActionExecutor(
+            memory_repository=memory,
+            telegram_client=FakeTelegramClient(),
+            clickup_task_client=FakeClickUpTaskClient(),
+            knowledge_search_client=FakeDuckDuckGoSearchClient(),
+        ),
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+    event = Event(
+        event_id="evt-work-partner",
+        source="api",
+        subsource="event_endpoint",
+        timestamp=datetime.now(timezone.utc),
+        payload={
+            "text": "Be my work partner and search the web for release notes, then mark the Release checklist task as done in ClickUp."
+        },
+        meta=EventMeta(user_id="u-1", trace_id="t-work-partner"),
+    )
+
+    result = await runtime.run(event)
+
+    selected_skill_ids = [skill.skill_id for skill in result.role.selected_skills]
+    intent_types = [intent.intent_type for intent in result.plan.domain_intents]
+    assert result.role.selected == "work_partner"
+    assert result.role.selection_reason == "work_partner_explicit_orchestration"
+    assert selected_skill_ids == [
+        "structured_reasoning",
+        "execution_planning",
+        "connector_boundary_review",
+    ]
+    assert "knowledge_search_intent" in intent_types
+    assert "external_task_sync_intent" in intent_types
+    assert "duckduckgo_search_web" in result.action_result.actions
+    assert "clickup_update_task" in result.action_result.actions
+    assert result.system_debug is not None
+    assert result.system_debug.adaptive_state["role_skill_policy"]["current_role_name"] == "work_partner"
+    assert result.system_debug.adaptive_state["role_skill_policy"]["work_partner_role_state"] == "selected"
+
+
 def _build_behavior_runtime(
     memory_repository: FakeMemoryRepository,
     *,

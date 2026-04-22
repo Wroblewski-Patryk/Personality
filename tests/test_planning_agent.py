@@ -14,6 +14,7 @@ from app.core.contracts import (
     PromoteInferredGoalDomainIntent,
     PromoteInferredTaskDomainIntent,
     RoleOutput,
+    SkillCapabilityOutput,
     UpdateCollaborationPreferenceDomainIntent,
     UpdateProactivePreferenceDomainIntent,
     UpdateResponseStyleDomainIntent,
@@ -92,6 +93,53 @@ def test_planning_agent_keeps_supportive_steps_inside_documented_contract() -> N
     assert result.goal == "Provide grounded emotional support and one manageable next step."
     assert "acknowledge_emotion" in result.steps
     assert "reduce_pressure" in result.steps
+
+
+def test_planning_agent_carries_work_partner_skills_and_tool_intents() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Be my work partner and search the web for release notes in ClickUp."),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.81,
+            urgency=0.42,
+            valence=0.02,
+            arousal=0.39,
+            mode="analyze",
+        ),
+        role=RoleOutput(
+            selected="work_partner",
+            confidence=0.84,
+            selected_skills=[
+                SkillCapabilityOutput(
+                    skill_id="structured_reasoning",
+                    label="Structured reasoning",
+                    capability_family="analysis",
+                    reason="work_partner_role_selected",
+                ),
+                SkillCapabilityOutput(
+                    skill_id="execution_planning",
+                    label="Execution planning",
+                    capability_family="execution",
+                    reason="work_partner_role_selected",
+                ),
+                SkillCapabilityOutput(
+                    skill_id="connector_boundary_review",
+                    label="Connector boundary review",
+                    capability_family="connector_boundary",
+                    reason="work_partner_role_selected",
+                ),
+            ],
+        ),
+    )
+
+    selected_skill_ids = [skill.skill_id for skill in result.selected_skills]
+    assert selected_skill_ids == [
+        "structured_reasoning",
+        "execution_planning",
+        "connector_boundary_review",
+    ]
+    assert any(isinstance(intent, ExternalTaskSyncDomainIntent) for intent in result.domain_intents)
+    assert any(intent.intent_type == "knowledge_search_intent" for intent in result.domain_intents)
 
 
 def test_planning_agent_emits_goal_upsert_domain_intent() -> None:

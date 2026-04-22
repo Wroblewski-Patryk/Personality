@@ -426,14 +426,24 @@ Last updated: 2026-04-22
   - Group: Work-Partner Role And Capability Orchestration
   - Depends on: PRJ-560
   - Priority: P1
-  - Status: READY
+  - Status: DONE
+  - Result:
+    - role selection now supports explicit `work_partner` orchestration turns
+      through the shared role-selection owner
+    - work-partner turns now expose a bounded skill mix and machine-visible
+      role-skill policy baseline for backend inspection surfaces
+    - runtime integration now proves that work-partner can orchestrate
+      approved search and ClickUp tool paths through typed intents and the
+      existing action boundary
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
 
 - [ ] PRJ-562 Add behavior validation for work-organization and decision-support scenarios
   - Owner: QA/Test
   - Group: Work-Partner Role And Capability Orchestration
   - Depends on: PRJ-561
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
 
 - [ ] PRJ-563 Sync docs/context for work-partner role orchestration
   - Owner: Product Docs

@@ -894,6 +894,7 @@ class RuntimeOrchestrator:
             "role_skill_policy": role_skill_policy_snapshot(
                 selected_skill_count=len(role.selected_skills),
                 planned_skill_count=len(plan.selected_skills),
+                current_role_name=role.selected,
             ),
             "connector_authorization_matrix": connector_authorization_matrix_snapshot(),
             "connector_capability_proposal": connector_capability_proposal_snapshot(),
