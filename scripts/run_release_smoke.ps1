@@ -594,6 +594,28 @@ if (-not (Has-Property -Object $memoryRetrieval -Name "retrieval_lifecycle_align
 if (-not (Has-Property -Object $memoryRetrieval -Name "retrieval_lifecycle_pending_gaps")) {
     throw "Health check failed: memory_retrieval is missing retrieval_lifecycle_pending_gaps."
 }
+$observability = $health.observability
+if ($null -eq $observability) {
+    throw "Health check failed: response is missing observability."
+}
+if (-not (Has-Property -Object $observability -Name "policy_owner")) {
+    throw "Health check failed: observability is missing policy_owner."
+}
+if ([string]$observability.policy_owner -ne "incident_evidence_export_policy") {
+    throw "Health check failed: unexpected observability.policy_owner '$($observability.policy_owner)'."
+}
+if (-not (Has-Property -Object $observability -Name "export_artifact_available")) {
+    throw "Health check failed: observability is missing export_artifact_available."
+}
+if (-not [bool]$observability.export_artifact_available) {
+    throw "Health check failed: observability export artifact is not available."
+}
+if (-not (Has-Property -Object $observability -Name "incident_export_ready")) {
+    throw "Health check failed: observability is missing incident_export_ready."
+}
+if (-not [bool]$observability.incident_export_ready) {
+    throw "Health check failed: observability incident export is not ready."
+}
 
 $response = Invoke-JsonUtf8 -Method POST -Uri $eventUrl -BodyBytes $bodyBytes
 
@@ -611,6 +633,42 @@ if (-not $response.runtime -or -not $response.runtime.role) {
 
 if ($IncludeDebug -and -not $response.debug) {
     throw "Smoke request failed: debug=true was requested but debug payload is missing."
+}
+
+$incidentEvidence = $null
+if ($IncludeDebug) {
+    if (-not (Has-Property -Object $response -Name "incident_evidence")) {
+        throw "Smoke request failed: debug request is missing incident_evidence."
+    }
+    $incidentEvidence = $response.incident_evidence
+    if (-not (Has-Property -Object $incidentEvidence -Name "policy_owner")) {
+        throw "Smoke request failed: incident_evidence is missing policy_owner."
+    }
+    if ([string]$incidentEvidence.policy_owner -ne "incident_evidence_export_policy") {
+        throw "Smoke request failed: unexpected incident_evidence.policy_owner '$($incidentEvidence.policy_owner)'."
+    }
+    if (-not (Has-Property -Object $incidentEvidence -Name "schema_version")) {
+        throw "Smoke request failed: incident_evidence is missing schema_version."
+    }
+    if (-not (Has-Property -Object $incidentEvidence -Name "duration_ms")) {
+        throw "Smoke request failed: incident_evidence is missing duration_ms."
+    }
+    if (-not (Has-Property -Object $incidentEvidence -Name "stage_timings_ms")) {
+        throw "Smoke request failed: incident_evidence is missing stage_timings_ms."
+    }
+    if (-not (Has-Property -Object $incidentEvidence -Name "policy_surface_coverage")) {
+        throw "Smoke request failed: incident_evidence is missing policy_surface_coverage."
+    }
+    $incidentCoverage = $incidentEvidence.policy_surface_coverage
+    if (-not (Has-Property -Object $incidentCoverage -Name "complete")) {
+        throw "Smoke request failed: incident_evidence.policy_surface_coverage is missing complete."
+    }
+    if (-not [bool]$incidentCoverage.complete) {
+        throw "Smoke request failed: incident_evidence policy surface coverage is incomplete."
+    }
+    if (-not (Has-Property -Object $incidentEvidence -Name "policy_posture")) {
+        throw "Smoke request failed: incident_evidence is missing policy_posture."
+    }
 }
 
 $summary = @{
@@ -667,7 +725,15 @@ $summary = @{
     retrieval_lifecycle_provider_drift_state = [string]$memoryRetrieval.retrieval_lifecycle_provider_drift_state
     retrieval_lifecycle_alignment_state = [string]$memoryRetrieval.retrieval_lifecycle_alignment_state
     retrieval_lifecycle_pending_gaps = @($memoryRetrieval.retrieval_lifecycle_pending_gaps)
+    observability_policy_owner = [string]$observability.policy_owner
+    observability_export_artifact_available = [bool]$observability.export_artifact_available
+    observability_incident_export_ready = [bool]$observability.incident_export_ready
     debug_included       = [bool]$response.debug
+    incident_evidence_policy_owner = if ($null -ne $incidentEvidence) { [string]$incidentEvidence.policy_owner } else { $null }
+    incident_evidence_schema_version = if ($null -ne $incidentEvidence) { [string]$incidentEvidence.schema_version } else { $null }
+    incident_evidence_duration_ms = if ($null -ne $incidentEvidence) { [int]$incidentEvidence.duration_ms } else { $null }
+    incident_evidence_stage_count = if ($null -ne $incidentEvidence) { @($incidentEvidence.stage_timings_ms.PSObject.Properties).Count } else { $null }
+    incident_evidence_policy_surface_complete = if ($null -ne $incidentEvidence) { [bool]$incidentEvidence.policy_surface_coverage.complete } else { $null }
     deployment_evidence_checked = [bool]$deploymentEvidenceCheck.checked
     deployment_evidence_path = [string]$deploymentEvidenceCheck.path
     deployment_evidence_age_minutes = $deploymentEvidenceCheck.age_minutes

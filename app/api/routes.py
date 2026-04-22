@@ -34,6 +34,7 @@ from app.core.connector_execution import connector_execution_baseline_snapshot
 from app.core.deployment_policy import deployment_policy_snapshot
 from app.core.external_scheduler_policy import external_scheduler_policy_snapshot
 from app.core.observability_policy import observability_export_policy_snapshot
+from app.core.observability_policy import build_runtime_incident_evidence
 from app.core.planning_governance import planning_governance_snapshot
 from app.core.proactive_policy import proactive_runtime_policy_snapshot
 from app.core.role_skill_policy import role_skill_policy_snapshot
@@ -189,6 +190,55 @@ def _memory_retrieval_snapshot_from_settings(settings) -> dict[str, Any]:
     return snapshot
 
 
+async def _incident_evidence_from_request(
+    *,
+    request: Request,
+    result,
+) -> dict[str, Any]:
+    settings = _settings_from_request(request)
+    reflection_worker = _reflection_worker_from_request(request)
+    scheduler_worker = _scheduler_worker_from_request(request)
+    memory_repository = _memory_repository_from_request(request)
+    runtime_policy = runtime_policy_snapshot(settings)
+    memory_retrieval = _memory_retrieval_snapshot_from_settings(settings)
+    scheduler_execution_mode = normalize_scheduler_execution_mode(
+        str(getattr(settings, "scheduler_execution_mode", "in_process") or "in_process")
+    )
+    scheduler_snapshot = scheduler_worker.snapshot() if scheduler_worker is not None else {}
+    scheduler_external_owner_policy = external_scheduler_policy_snapshot(
+        scheduler_execution_mode=str(
+            scheduler_snapshot.get("execution_mode", scheduler_execution_mode)
+        )
+    )
+    reflection_snapshot = reflection_worker.snapshot()
+    reflection_stats = await memory_repository.get_reflection_task_stats(
+        max_attempts=int(reflection_snapshot["max_attempts"]),
+        stuck_after_seconds=int(reflection_snapshot["stuck_processing_seconds"]),
+        retry_backoff_seconds=tuple(int(value) for value in reflection_snapshot["retry_backoff_seconds"]),  # type: ignore[arg-type]
+    )
+    reflection_supervision = reflection_supervision_policy_snapshot(
+        reflection_runtime_mode=str(getattr(settings, "reflection_runtime_mode", "in_process") or "in_process"),
+        scheduler_execution_mode=str(
+            scheduler_snapshot.get("execution_mode", scheduler_execution_mode)
+        ),
+        worker_running=bool(reflection_snapshot["running"]),
+        task_stats=reflection_stats,
+    )
+    connectors_execution_baseline = connector_execution_baseline_snapshot(settings)
+    return build_runtime_incident_evidence(
+        trace_id=result.event.meta.trace_id,
+        event_id=result.event.event_id,
+        source=result.event.source,
+        duration_ms=result.duration_ms,
+        stage_timings_ms=result.stage_timings_ms,
+        runtime_policy=runtime_policy,
+        memory_retrieval=memory_retrieval,
+        scheduler_external_owner_policy=scheduler_external_owner_policy,
+        reflection_supervision=reflection_supervision,
+        connectors_execution_baseline=connectors_execution_baseline,
+    )
+
+
 def _debug_query_compat_telemetry_from_request(request: Request) -> DebugQueryCompatTelemetry:
     telemetry = getattr(request.app.state, "debug_query_compat_telemetry", None)
     if isinstance(telemetry, DebugQueryCompatTelemetry):
@@ -256,6 +306,13 @@ async def _handle_event_request(
     finally:
         await attention_coordinator.finalize_event(runtime_event)
 
+    incident_evidence = None
+    if include_debug:
+        incident_evidence = await _incident_evidence_from_request(
+            request=request,
+            result=result,
+        )
+
     response = EventResponse(
         event_id=result.event.event_id,
         trace_id=result.event.meta.trace_id,
@@ -274,6 +331,7 @@ async def _handle_event_request(
         ),
         debug=result if include_debug else None,
         system_debug=result.system_debug if include_debug else None,
+        incident_evidence=incident_evidence,
     )
     return response.model_dump(mode="json", exclude_none=True)
 
@@ -457,7 +515,7 @@ async def health(request: Request) -> dict[str, Any]:
         structured_logs_available=True,
         health_surface_available=True,
         system_debug_available=True,
-        export_artifact_available=False,
+        export_artifact_available=True,
     )
     return {
         "status": "ok",

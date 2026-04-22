@@ -1,4 +1,4 @@
-from app.core.observability_policy import observability_export_policy_snapshot
+from app.core.observability_policy import build_runtime_incident_evidence, observability_export_policy_snapshot
 
 
 def test_observability_export_policy_marks_local_only_posture_until_artifact_exists() -> None:
@@ -37,3 +37,37 @@ def test_observability_export_policy_marks_ready_when_machine_readable_export_ex
     assert snapshot["incident_export_state"] == "machine_readable_export_available"
     assert snapshot["incident_export_hint"] == "exportable_incident_evidence_ready"
     assert snapshot["missing_export_capabilities"] == []
+
+
+def test_build_runtime_incident_evidence_tracks_stage_timings_and_policy_surface_coverage() -> None:
+    evidence = build_runtime_incident_evidence(
+        trace_id="trace-123",
+        event_id="evt-123",
+        source="api",
+        duration_ms=42,
+        stage_timings_ms={"perception": 4, "action": 8, "total": 42},
+        runtime_policy={"event_debug_admin_policy_owner": "dedicated_admin_debug_ingress_policy"},
+        memory_retrieval={"retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy"},
+        scheduler_external_owner_policy={"policy_owner": "external_scheduler_cadence_policy"},
+        reflection_supervision={"policy_owner": "deferred_reflection_supervision_policy"},
+        connectors_execution_baseline={"policy_owner": "connector_execution_baseline"},
+    )
+
+    assert evidence["kind"] == "runtime_incident_evidence"
+    assert evidence["schema_version"] == "1.0.0"
+    assert evidence["policy_owner"] == "incident_evidence_export_policy"
+    assert evidence["trace_id"] == "trace-123"
+    assert evidence["event_id"] == "evt-123"
+    assert evidence["duration_ms"] == 42
+    assert evidence["stage_timings_ms"] == {"perception": 4, "action": 8, "total": 42}
+    assert evidence["policy_surface_coverage"] == {
+        "present": [
+            "runtime_policy",
+            "memory_retrieval",
+            "scheduler.external_owner_policy",
+            "reflection.supervision",
+            "connectors.execution_baseline",
+        ],
+        "missing": [],
+        "complete": True,
+    }

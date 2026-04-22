@@ -2576,6 +2576,39 @@ def test_event_debug_endpoint_exposes_system_debug_behavior_contract() -> None:
     assert "x-aion-debug-shared-compat" not in debug_response.headers
 
 
+def test_event_debug_endpoint_exposes_runtime_incident_evidence_export() -> None:
+    client, _, _ = _client()
+
+    debug_response = client.post("/internal/event/debug", json={"text": "incident evidence contract"})
+
+    assert debug_response.status_code == 200
+    body = debug_response.json()
+    incident_evidence = body["incident_evidence"]
+    assert incident_evidence["kind"] == "runtime_incident_evidence"
+    assert incident_evidence["schema_version"] == "1.0.0"
+    assert incident_evidence["policy_owner"] == "incident_evidence_export_policy"
+    assert incident_evidence["trace_id"] == body["trace_id"]
+    assert incident_evidence["event_id"] == body["event_id"]
+    assert incident_evidence["duration_ms"] == body["debug"]["duration_ms"]
+    assert incident_evidence["stage_timings_ms"] == body["debug"]["stage_timings_ms"]
+    assert incident_evidence["policy_surface_coverage"]["complete"] is True
+    assert incident_evidence["policy_posture"]["runtime_policy"]["event_debug_admin_policy_owner"] == (
+        "dedicated_admin_debug_ingress_policy"
+    )
+    assert incident_evidence["policy_posture"]["memory_retrieval"]["retrieval_lifecycle_policy_owner"] == (
+        "retrieval_lifecycle_policy"
+    )
+    assert incident_evidence["policy_posture"]["scheduler.external_owner_policy"]["policy_owner"] == (
+        "external_scheduler_cadence_policy"
+    )
+    assert incident_evidence["policy_posture"]["reflection.supervision"]["policy_owner"] == (
+        "deferred_reflection_supervision_policy"
+    )
+    assert incident_evidence["policy_posture"]["connectors.execution_baseline"]["execution_owner"] == (
+        "connector_execution_registry"
+    )
+
+
 def test_event_endpoint_debug_payload_pins_foreground_boundary_stage_order() -> None:
     client, _, _ = _client()
 
@@ -2749,14 +2782,11 @@ def test_health_endpoint_exposes_observability_export_policy_baseline() -> None:
             "health_policy_surfaces",
             "system_debug_runtime_payload",
         ],
-        "export_artifact_available": False,
-        "incident_export_ready": False,
-        "incident_export_state": "local_only_surfaces_pending_export_artifact",
-        "incident_export_hint": "implement_machine_readable_incident_evidence_export",
-        "missing_export_capabilities": [
-            "machine_readable_incident_evidence_artifact",
-            "machine_readable_release_evidence_attachment",
-        ],
+        "export_artifact_available": True,
+        "incident_export_ready": True,
+        "incident_export_state": "machine_readable_export_available",
+        "incident_export_hint": "exportable_incident_evidence_ready",
+        "missing_export_capabilities": [],
     }
 
 

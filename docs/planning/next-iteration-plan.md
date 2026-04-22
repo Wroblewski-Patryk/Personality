@@ -737,6 +737,14 @@ Completed on 2026-04-22:
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
 
+Completed on 2026-04-22:
+
+- `PRJ-513` is complete: debug responses now expose `incident_evidence` from
+  one shared observability owner, carrying stage timings plus machine-readable
+  posture snapshots for runtime policy, retrieval, scheduler, reflection, and
+  connector execution. `/health.observability` now reports export readiness,
+  and release smoke can validate incident evidence directly in debug mode.
+
 - `PRJ-514` Extend behavior or smoke flows to consume the exported incident-evidence baseline.
   - Result:
     - behavior validation or smoke tooling can consume exported evidence

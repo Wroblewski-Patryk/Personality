@@ -2055,9 +2055,16 @@ Last updated: 2026-04-22
   `app/core/observability_policy.py`, and `/health.observability` exposes the
   minimum exportable incident-evidence contract together with the remaining
   machine-readable export gaps.
-- 2026-04-22: `PRJ-513` is now the next `READY` task, focused on implementing
-  exportable runtime evidence for stage timings and policy posture on top of
-  the shared observability contract.
+- 2026-04-22: `PRJ-513` is complete: debug responses now expose
+  `incident_evidence` from the shared observability owner, carrying stage
+  timings plus machine-readable policy-posture snapshots for runtime policy,
+  retrieval, scheduler, reflection supervision, and connector execution.
+- 2026-04-22: `/health.observability` now marks exportable incident evidence
+  as ready, and release smoke can validate that exported evidence directly in
+  debug-mode smoke runs.
+- 2026-04-22: `PRJ-514` is now the next `READY` task, focused on extending
+  behavior or smoke flows so they consume the exported incident-evidence
+  baseline instead of treating it as optional debug output.
 
 ## Working Agreements
 

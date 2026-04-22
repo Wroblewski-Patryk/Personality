@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Any
 
 from app.core.contracts import MotivationMode, RuntimeResult, RuntimeSystemDebugOutput
 
@@ -33,6 +34,7 @@ class EventResponse(BaseModel):
     queue: EventQueueResponse | None = None
     debug: RuntimeResult | None = None
     system_debug: RuntimeSystemDebugOutput | None = None
+    incident_evidence: dict[str, Any] | None = None
 
 
 class SetWebhookRequest(BaseModel):

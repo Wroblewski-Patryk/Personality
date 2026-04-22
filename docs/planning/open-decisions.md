@@ -278,6 +278,12 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `/health.observability` now exposes the required runtime evidence fields,
     required policy-posture surfaces, and the remaining machine-readable
     export gaps before artifact-based evidence is implemented
+- `PRJ-513` is now complete:
+  - debug responses now expose shared-owner `incident_evidence` for stage
+    timings and machine-readable policy-posture snapshots
+  - `/health.observability` now marks incident export as ready, and release
+    smoke can verify exported incident evidence directly during debug-mode
+    smoke runs
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

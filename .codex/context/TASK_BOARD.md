@@ -74,6 +74,27 @@ Last updated: 2026-04-22
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_observability_policy.py tests/test_api_routes.py`
 
+- [x] PRJ-513 Implement exportable runtime evidence for stage timings and policy posture
+  - Owner: Backend Builder
+  - Group: Observability Export And Incident-Evidence Baseline
+  - Depends on: PRJ-512
+  - Priority: P1
+  - Status: DONE
+  - Done when:
+    - the repo can produce machine-readable incident or release evidence for
+      stage timings, policy posture, and key owner-mode surfaces without
+      depending on ad hoc operator capture
+  - Result:
+    - debug responses now expose `incident_evidence` built from one shared
+      observability owner, including stage timings and machine-readable policy
+      posture snapshots for runtime policy, retrieval, scheduler, reflection,
+      and connector execution
+    - `/health.observability` now marks exportable incident evidence as ready,
+      and release smoke can verify exported incident evidence directly in debug
+      mode
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_observability_policy.py`
+
 - [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release
   - Group: External Scheduler Ownership Rollout

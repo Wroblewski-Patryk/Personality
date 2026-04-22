@@ -138,6 +138,11 @@ def stub_aion_server() -> _StubAionServer:
             "retrieval_lifecycle_alignment_state": "lifecycle_gaps_present",
             "retrieval_lifecycle_pending_gaps": ["provider_baseline_not_aligned"],
         },
+        "observability": {
+            "policy_owner": "incident_evidence_export_policy",
+            "export_artifact_available": True,
+            "incident_export_ready": True,
+        },
         "scheduler": {
             "healthy": True,
             "external_owner_policy": {
@@ -183,6 +188,49 @@ def stub_aion_server() -> _StubAionServer:
             "motivation_mode": "respond",
             "action_status": "success",
             "reflection_triggered": False,
+        },
+        "incident_evidence": {
+            "kind": "runtime_incident_evidence",
+            "schema_version": "1.0.0",
+            "policy_owner": "incident_evidence_export_policy",
+            "trace_id": "trace-test",
+            "event_id": "evt-test",
+            "source": "api",
+            "duration_ms": 12,
+            "stage_timings_ms": {
+                "memory_load": 1,
+                "perception": 2,
+                "action": 3,
+                "total": 12,
+            },
+            "policy_surface_coverage": {
+                "present": [
+                    "runtime_policy",
+                    "memory_retrieval",
+                    "scheduler.external_owner_policy",
+                    "reflection.supervision",
+                    "connectors.execution_baseline",
+                ],
+                "missing": [],
+                "complete": True,
+            },
+            "policy_posture": {
+                "runtime_policy": {
+                    "event_debug_admin_policy_owner": "dedicated_admin_debug_ingress_policy",
+                },
+                "memory_retrieval": {
+                    "retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy",
+                },
+                "scheduler.external_owner_policy": {
+                    "policy_owner": "external_scheduler_cadence_policy",
+                },
+                "reflection.supervision": {
+                    "policy_owner": "deferred_reflection_supervision_policy",
+                },
+                "connectors.execution_baseline": {
+                    "execution_owner": "connector_execution_registry",
+                },
+            },
         },
     }
     server = _StubAionServer().start()
@@ -375,6 +423,26 @@ def test_release_smoke_verifies_fresh_successful_deployment_evidence(
     assert summary["deployment_evidence_status_code"] == 200
     assert isinstance(summary["deployment_evidence_age_minutes"], float)
     assert summary["deployment_evidence_age_minutes"] >= 0.0
+
+
+def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_requested(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    result = _run_release_smoke(
+        "-BaseUrl",
+        stub_aion_server.base_url,
+        "-IncludeDebug",
+        cwd=ROOT,
+    )
+
+    assert result.returncode == 0, result.stderr
+    summary = json.loads(result.stdout)
+    assert summary["debug_included"] is True
+    assert summary["incident_evidence_policy_owner"] == "incident_evidence_export_policy"
+    assert summary["incident_evidence_schema_version"] == "1.0.0"
+    assert summary["incident_evidence_stage_count"] == 4
+    assert summary["incident_evidence_duration_ms"] == 12
+    assert summary["incident_evidence_policy_surface_complete"] is True
 
 
 def test_release_smoke_fails_when_deployment_evidence_is_stale(
