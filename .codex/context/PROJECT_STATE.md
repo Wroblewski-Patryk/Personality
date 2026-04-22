@@ -1990,8 +1990,13 @@ Last updated: 2026-04-22
 - 2026-04-22: `PRJ-498` validation is green:
   `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_main_runtime_policy.py`
   passed with `120 passed`.
-- 2026-04-22: `PRJ-499` is now the next `READY` task, focused on docs/context
-  sync for the external scheduler ownership lane.
+- 2026-04-22: `PRJ-499` is complete: implementation reality, ops guidance,
+  testing guidance, planning, and context truth now describe the same
+  external cadence-owner baseline with canonical maintenance/proactive
+  entrypoints and explicit in-process fallback posture.
+- 2026-04-22: Group 71 (`PRJ-496..PRJ-499`) is now complete.
+- 2026-04-22: `PRJ-500` is now the next `READY` task, focused on choosing the
+  first live read-capable connector baseline beyond ClickUp task creation.
 
 ## Working Agreements
 

@@ -219,6 +219,13 @@ The current repo already works as an MVP slice, but several architecture-level d
     the target `externalized` scheduler posture
   - app-local scheduler ownership remains a fallback-only compatibility posture,
     not the long-term production target
+- `PRJ-496..PRJ-499` are now complete:
+  - the repo now has one shared external cadence-owner baseline with canonical
+    entrypoints (`scripts/run_maintenance_tick_once.py`,
+    `scripts/run_proactive_tick_once.py`)
+  - `/health.scheduler.external_owner_policy`, startup logs, and release smoke
+    now expose the same target-vs-fallback posture for maintenance and
+    proactive cadence ownership
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

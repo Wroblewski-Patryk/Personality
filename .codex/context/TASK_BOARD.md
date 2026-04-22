@@ -54,19 +54,20 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-499 Sync docs/context for external scheduler ownership rollout
-  - Owner: Product Docs
-  - Group: External Scheduler Ownership Rollout
-  - Depends on: PRJ-498
+- [ ] PRJ-500 Decide the first live read-capable connector baseline beyond ClickUp task creation
+  - Owner: Planner
+  - Group: Connector Read Posture And Provider Expansion Baseline
+  - Depends on: PRJ-499
   - Priority: P1
   - Why now:
-    - runtime, startup, and release evidence are aligned, so the scheduler lane
-      now needs canonical docs/context closure before connector expansion
+    - cadence ownership docs and runtime evidence are aligned, so the next
+      narrow execution expansion can move to connector reads without reopening
+      scheduler topology
   - Done when:
-    - planning, implementation notes, ops guidance, and context truth all
-      describe the same external scheduler target baseline and fallback posture
+    - the repo records which read-oriented connector capability becomes the next
+      live provider-backed baseline and which families remain policy-only
   - Validation:
-    - doc-and-context sync across planning, ops, implementation, and context
+    - connector policy and architecture cross-review
 
 - [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release
@@ -82,6 +83,22 @@ Last updated: 2026-04-22
       in-process fallback without reading scheduler code
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_main_runtime_policy.py`
+
+- [x] PRJ-499 Sync docs/context for external scheduler ownership rollout
+  - Owner: Product Docs
+  - Group: External Scheduler Ownership Rollout
+  - Depends on: PRJ-498
+  - Priority: P1
+  - Status: DONE
+  - Result:
+    - implementation reality, ops guidance, testing guidance, planning, and
+      context truth now describe the same external cadence-owner baseline with
+      canonical maintenance/proactive entrypoints and explicit in-process
+      fallback posture
+    - Group 71 is now complete and the next active lane is connector read
+      posture and provider expansion baseline
+  - Validation:
+    - doc-and-context sync across planning, ops, implementation, and context
 
 - [x] PRJ-497 Implement canonical external cadence entrypoints and ownership checks
   - Owner: Backend Builder

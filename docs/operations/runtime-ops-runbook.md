@@ -70,7 +70,8 @@ compat dependency.
 
 `GET /health` also includes a `scheduler` object with cadence posture
 (`execution_mode`, cadence owners, dispatch/readiness posture, interval
-settings) and latest reflection/maintenance tick summaries.
+settings), latest reflection/maintenance tick summaries, and
+`external_owner_policy` for the target external cadence baseline.
 
 `GET /health` now also includes a `proactive` object with live proactive
 cadence posture:
@@ -625,6 +626,11 @@ Operator checks:
   - `cadence_execution.proactive_tick_dispatch` /
     `cadence_execution.proactive_tick_reason`
   - `cadence_execution.ready` / `cadence_execution.blocking_signals`
+  - `external_owner_policy.policy_owner=external_scheduler_cadence_policy`
+  - `external_owner_policy.target_execution_mode=externalized`
+  - `external_owner_policy.maintenance_entrypoint_path=scripts/run_maintenance_tick_once.py`
+  - `external_owner_policy.proactive_entrypoint_path=scripts/run_proactive_tick_once.py`
+  - `external_owner_policy.production_baseline_ready`
 - treat growing pending queue in deferred mode as external-dispatch signal
   rather than foreground failure
 - use the external driver entrypoint for one-shot drain checks:
@@ -656,6 +662,10 @@ Target posture:
   to a dedicated external scheduler owner
 - app-local scheduler cadence remains transitional and fallback-oriented during
   rollout or incident recovery
+- the canonical production entrypoints for that owner are
+  `scripts/run_maintenance_tick_once.py` and
+  `scripts/run_proactive_tick_once.py`; wrapper scripts are convenience layers
+  only
 
 Ownership boundaries:
 
@@ -684,6 +694,9 @@ Post-reflection hardening decisions are synchronized through `PRJ-309`:
   posture is treated as transitional
 - scheduler cadence ownership target is explicit (external long-term owner,
   app-local transitional fallback)
+- release smoke now checks `/health.scheduler.external_owner_policy` for the
+  same target owner, entrypoint paths, and baseline readiness that startup
+  logs expose
 - attention owner posture is explicit (`in_process|durable_inbox`) with
   readiness blockers surfaced in `/health.attention.deployment_readiness`
 
@@ -878,8 +891,9 @@ Preconditions checklist (required for reliable Telegram delivery triage):
   still remain operational follow-up work
 - startup now defaults to migration-first schema ownership; `create_tables()` remains only as a compatibility path behind `STARTUP_SCHEMA_MODE=create_tables`
 - runtime logging is present, but there is no external observability stack yet
-- proactive cadence is live only for the in-process scheduler owner today;
-  external scheduler ownership remains an operational follow-up
+- proactive cadence is live in-process today, while external scheduler
+  ownership is now the explicit target posture with machine-visible fallback
+  evidence
 
 ## Incident Triage Shortlist
 

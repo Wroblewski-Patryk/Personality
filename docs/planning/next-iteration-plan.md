@@ -563,6 +563,14 @@ Detailed queue:
   - Validation:
     - doc-and-context sync across planning, ops, implementation, and context
 
+Completed on 2026-04-22:
+
+- `PRJ-496..PRJ-499` are complete: the repo now has one explicit external
+  cadence-owner baseline with canonical maintenance/proactive entrypoints,
+  machine-visible `/health.scheduler.external_owner_policy`, startup and
+  release-smoke evidence, and synchronized docs/context truth around
+  `externalized` target ownership plus in-process fallback posture.
+
 ## Group 72 - Connector Read Posture And Provider Expansion Baseline
 
 - `PRJ-500` Decide the first live read-capable connector baseline beyond ClickUp task creation.

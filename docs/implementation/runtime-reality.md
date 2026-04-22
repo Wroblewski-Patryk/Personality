@@ -582,6 +582,13 @@ Scheduler-facing runtime contracts are now explicit:
 - maintenance/proactive cadence dispatch now uses shared owner-aware boundary
   decisions (`in_process_owner_mode|externalized_owner_mode`) and scheduler
   maintenance path explicitly no-ops in externalized posture
+- `/health.scheduler.external_owner_policy` now exposes the shared external
+  cadence-owner baseline through one machine-visible contract:
+  `policy_owner=external_scheduler_cadence_policy`,
+  `target_execution_mode=externalized`, canonical
+  `maintenance_entrypoint_path=scripts/run_maintenance_tick_once.py`, canonical
+  `proactive_entrypoint_path=scripts/run_proactive_tick_once.py`, and explicit
+  in-process fallback posture
 - `/health.proactive` now exposes the shared proactive runtime policy owner,
   selected cadence owner, delivery-target baseline, candidate-selection
   baseline, anti-spam thresholds, and latest proactive tick summary
@@ -592,6 +599,9 @@ Scheduler-facing runtime contracts are now explicit:
   should move to a dedicated external scheduler owner
 - app-local scheduler cadence remains transitional during rollout and as an
   explicit fallback path
+- the canonical external cadence entrypoints are now frozen for operator and
+  release usage: `scripts/run_maintenance_tick_once.py` and
+  `scripts/run_proactive_tick_once.py`
 - runtime remains the owner of scheduled-event contract normalization and
   guardrail/conscious execution boundaries regardless of cadence owner
 
