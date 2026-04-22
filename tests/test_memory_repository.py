@@ -641,6 +641,52 @@ async def test_memory_repository_builds_hybrid_memory_bundle_with_vector_and_lex
     await engine.dispose()
 
 
+async def test_memory_repository_keeps_relation_embeddings_out_of_default_foreground_retrieval_baseline(
+    tmp_path,
+) -> None:
+    database_path = tmp_path / "memory-hybrid-relation-optional.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.upsert_conclusion(
+        user_id="u-1",
+        kind="custom_semantic_fact",
+        content="structured replies should stay explicit",
+        confidence=0.82,
+        source="background_reflection",
+        supporting_event_id="evt-sem-1",
+    )
+    await repository.upsert_semantic_embedding(
+        user_id="u-1",
+        source_kind="relation",
+        source_id="relation:manual-1",
+        source_event_id="evt-rel-1",
+        scope_type="global",
+        scope_key="global",
+        content="collaboration_dynamic guided",
+        embedding=[0.95, 0.05, 0.0],
+        embedding_model="test-v1",
+        embedding_dimensions=3,
+        metadata={"relation_type": "collaboration_dynamic"},
+    )
+
+    bundle = await repository.get_hybrid_memory_bundle(
+        user_id="u-1",
+        query_text="explicit structured reply please",
+        query_embedding=[0.95, 0.05, 0.0],
+        episodic_limit=4,
+        conclusion_limit=4,
+    )
+
+    assert len(bundle["semantic"]) >= 1
+    assert bundle["diagnostics"]["vector_hits"] == 1
+    assert bundle["diagnostics"]["semantic_candidates"] >= 1
+
+    await engine.dispose()
+
+
 async def test_memory_repository_upserts_and_reads_scoped_relations(tmp_path) -> None:
     database_path = tmp_path / "memory-relations.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")

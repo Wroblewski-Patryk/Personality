@@ -452,7 +452,11 @@ state.
   steady-state retrieval completion baseline, while relation embeddings remain
   an optional follow-on source family and relation records continue to inform
   adaptive foreground behavior outside that completion condition.
-- the next active slice in this lane is `PRJ-537`.
+- `PRJ-537` is complete: retrieval code and `/health.memory_retrieval` now
+  reflect semantic+affective as the foreground rollout-completion baseline,
+  while relation source posture is exposed through one explicit
+  optional-family policy surface instead of staying an implicit pending stage.
+- the next active slice in this lane is `PRJ-538`.
 
 - `PRJ-536` Decide the relation-source retrieval completion posture.
   - Result:

@@ -1062,14 +1062,14 @@ def test_health_endpoint_exposes_configured_embedding_source_kinds() -> None:
         body["memory_retrieval"]["semantic_embedding_source_rollout_recommendation"]
         == "enable_semantic_then_affective_sources"
     )
-    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enabled_sources"] == ["relation"]
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enabled_sources"] == []
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_missing_sources"] == ["semantic", "affective"]
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "semantic"
     assert (
         body["memory_retrieval"]["semantic_embedding_source_rollout_completion_state"]
         == "baseline_blocked_semantic_missing"
     )
-    assert body["memory_retrieval"]["semantic_embedding_source_rollout_progress_percent"] == 33
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_progress_percent"] == 0
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement"] == "warn"
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_state"] == "warning_only"
     assert (
@@ -1086,31 +1086,39 @@ def test_health_endpoint_exposes_configured_embedding_source_kinds() -> None:
         body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_hint"]
         == "source_rollout_enforcement_matches_recommendation"
     )
+    assert body["memory_retrieval"]["semantic_embedding_relation_source_posture"] == "optional_follow_on_family"
+    assert body["memory_retrieval"]["semantic_embedding_relation_source_enabled"] is True
+    assert body["memory_retrieval"]["semantic_embedding_relation_source_baseline_ready"] is False
+    assert body["memory_retrieval"]["semantic_embedding_relation_source_state"] == "enabled_ahead_of_baseline"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_relation_source_recommendation"]
+        == "complete_semantic_and_affective_baseline_first"
+    )
 
 
-def test_health_endpoint_marks_source_rollout_fully_enabled_when_relation_is_included() -> None:
+def test_health_endpoint_treats_relation_as_optional_when_baseline_sources_are_included() -> None:
     client, _, _ = _client(embedding_source_kinds="episodic,semantic,affective,relation")
 
     response = client.get("/health")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["memory_retrieval"]["semantic_embedding_source_rollout_state"] == "all_vector_sources_enabled"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_state"] == "steady_state_baseline_enabled"
     assert (
         body["memory_retrieval"]["semantic_embedding_source_rollout_hint"]
-        == "semantic_affective_relation_sources_enabled"
+        == "semantic_and_affective_foreground_baseline_enabled"
     )
     assert (
         body["memory_retrieval"]["semantic_embedding_source_rollout_recommendation"]
-        == "maintain_current_source_rollout"
+        == "maintain_semantic_and_affective_baseline"
     )
     assert (
         body["memory_retrieval"]["semantic_embedding_source_rollout_enabled_sources"]
-        == ["semantic", "affective", "relation"]
+        == ["semantic", "affective"]
     )
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_missing_sources"] == []
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "none"
-    assert body["memory_retrieval"]["semantic_embedding_source_rollout_completion_state"] == "fully_enabled"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_completion_state"] == "steady_state_baseline_complete"
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_progress_percent"] == 100
     assert (
         body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_state"]
@@ -1127,14 +1135,22 @@ def test_health_endpoint_marks_source_rollout_fully_enabled_when_relation_is_inc
         body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_hint"]
         == "consider_enabling_source_rollout_strict_when_rollout_is_complete"
     )
-    assert body["memory_retrieval"]["semantic_embedding_recommended_refresh_mode"] == "manual"
+    assert body["memory_retrieval"]["semantic_embedding_recommended_refresh_mode"] == "on_write"
     assert (
         body["memory_retrieval"]["semantic_embedding_refresh_alignment_state"]
-        == "on_write_before_recommended_manual"
+        == "aligned"
     )
     assert (
         body["memory_retrieval"]["semantic_embedding_refresh_alignment_hint"]
-        == "consider_switching_to_manual_for_mature_rollout"
+        == "refresh_mode_matches_defined_lifecycle_baseline"
+    )
+    assert body["memory_retrieval"]["semantic_embedding_relation_source_posture"] == "optional_follow_on_family"
+    assert body["memory_retrieval"]["semantic_embedding_relation_source_enabled"] is True
+    assert body["memory_retrieval"]["semantic_embedding_relation_source_baseline_ready"] is True
+    assert body["memory_retrieval"]["semantic_embedding_relation_source_state"] == "optional_family_enabled"
+    assert (
+        body["memory_retrieval"]["semantic_embedding_relation_source_hint"]
+        == "relation_enabled_without_redefining_steady_state_baseline"
     )
 
 
@@ -1218,22 +1234,22 @@ def test_health_endpoint_exposes_source_rollout_enforcement_blocked_posture_in_s
     assert response.status_code == 200
     body = response.json()
     assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement"] == "strict"
-    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_state"] == "blocked"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_state"] == "not_applicable_rollout_complete"
     assert (
         body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_hint"]
-        == "enable_pending_source_kinds_before_startup"
+        == "source_rollout_is_complete"
     )
-    assert body["memory_retrieval"]["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
-    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment"] == "above_recommendation"
+    assert body["memory_retrieval"]["semantic_embedding_recommended_source_rollout_enforcement"] == "strict"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
     assert (
         body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_state"]
-        == "above_recommendation"
+        == "aligned_with_recommendation"
     )
     assert (
         body["memory_retrieval"]["semantic_embedding_source_rollout_enforcement_alignment_hint"]
-        == "source_rollout_strict_enabled_ahead_of_recommendation"
+        == "source_rollout_enforcement_matches_recommendation"
     )
-    assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "relation"
+    assert body["memory_retrieval"]["semantic_embedding_source_rollout_next_source_kind"] == "none"
 
 
 def test_health_endpoint_exposes_source_rollout_enforcement_aligned_posture_when_rollout_is_complete_and_strict_is_enabled() -> None:
@@ -1899,6 +1915,13 @@ def test_health_endpoint_exposes_local_hybrid_embedding_provider_as_ready_owner(
     assert response.status_code == 200
     body = response.json()
     assert body["memory_retrieval"]["retrieval_lifecycle_policy_owner"] == "retrieval_lifecycle_policy"
+    assert body["memory_retrieval"]["retrieval_lifecycle_relation_source_policy_owner"] == (
+        "relation_source_retrieval_policy"
+    )
+    assert body["memory_retrieval"]["retrieval_lifecycle_relation_source_posture"] == (
+        "optional_after_foreground_baseline"
+    )
+    assert body["memory_retrieval"]["retrieval_lifecycle_relation_source_state"] == "optional_family_not_enabled"
     assert body["memory_retrieval"]["retrieval_lifecycle_provider_drift_state"] == "transition_provider_active"
     assert body["memory_retrieval"]["retrieval_lifecycle_pending_gaps"] == ["provider_baseline_not_aligned"]
     assert body["memory_retrieval"]["retrieval_lifecycle_alignment_state"] == "lifecycle_gaps_present"
@@ -1912,6 +1935,11 @@ def test_health_endpoint_exposes_retrieval_lifecycle_gaps_for_deterministic_fall
     assert response.status_code == 200
     body = response.json()
     assert body["memory_retrieval"]["retrieval_lifecycle_policy_owner"] == "retrieval_lifecycle_policy"
+    assert body["memory_retrieval"]["retrieval_lifecycle_relation_source_policy_owner"] == (
+        "relation_source_retrieval_policy"
+    )
+    assert body["memory_retrieval"]["retrieval_lifecycle_relation_source_enabled"] is False
+    assert body["memory_retrieval"]["retrieval_lifecycle_relation_source_state"] == "optional_family_not_enabled"
     assert body["memory_retrieval"]["retrieval_lifecycle_provider_drift_state"] == "compatibility_fallback_active"
     assert body["memory_retrieval"]["retrieval_lifecycle_pending_gaps"] == ["provider_baseline_not_aligned"]
     assert body["memory_retrieval"]["retrieval_lifecycle_alignment_state"] == "lifecycle_gaps_present"

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Iterable
+
+BASELINE_VECTOR_SOURCE_ORDER = ("semantic", "affective")
+OPTIONAL_RELATION_SOURCE_KIND = "relation"
 
 
 def retrieval_depth_policy_snapshot(
@@ -28,6 +31,68 @@ def retrieval_depth_policy_snapshot(
             if int(episodic_limit) == 12 and int(conclusion_limit) == 8
             else "custom_depth_override"
         ),
+    }
+
+
+def foreground_retrieval_source_kinds(
+    *,
+    enabled_source_kinds: Iterable[str] | None,
+) -> list[str]:
+    normalized = {
+        str(kind).strip().lower()
+        for kind in (enabled_source_kinds or [])
+        if str(kind).strip()
+    }
+    selected = [
+        kind for kind in BASELINE_VECTOR_SOURCE_ORDER if kind in normalized
+    ]
+    if OPTIONAL_RELATION_SOURCE_KIND in normalized:
+        selected.append(OPTIONAL_RELATION_SOURCE_KIND)
+    return selected
+
+
+def relation_source_policy_snapshot(
+    *,
+    semantic_vector_enabled: bool,
+    enabled_source_kinds: Iterable[str] | None,
+) -> dict[str, Any]:
+    normalized = {
+        str(kind).strip().lower()
+        for kind in (enabled_source_kinds or [])
+        if str(kind).strip()
+    }
+    baseline_ready = all(kind in normalized for kind in BASELINE_VECTOR_SOURCE_ORDER)
+    relation_enabled = OPTIONAL_RELATION_SOURCE_KIND in normalized
+
+    if not semantic_vector_enabled:
+        state = "not_applicable_vectors_disabled"
+        hint = "relation_source_policy_inactive_while_vectors_are_disabled"
+        recommendation = "enable_vectors_before_relation_source_governance"
+    elif not baseline_ready and relation_enabled:
+        state = "enabled_ahead_of_baseline"
+        hint = "stabilize_semantic_and_affective_before_treating_relation_as_optional"
+        recommendation = "complete_semantic_and_affective_baseline_first"
+    elif not baseline_ready:
+        state = "baseline_not_ready"
+        hint = "complete_semantic_and_affective_before_relation_follow_on_decisions"
+        recommendation = "complete_semantic_and_affective_baseline_first"
+    elif relation_enabled:
+        state = "optional_family_enabled"
+        hint = "relation_enabled_without_redefining_steady_state_baseline"
+        recommendation = "keep_relation_as_optional_follow_on_family"
+    else:
+        state = "optional_family_not_enabled"
+        hint = "steady_state_baseline_does_not_require_relation"
+        recommendation = "relation_can_remain_disabled_without_rollout_gap"
+
+    return {
+        "policy_owner": "relation_source_retrieval_policy",
+        "steady_state_posture": "optional_follow_on_family",
+        "relation_source_enabled": relation_enabled,
+        "baseline_ready": baseline_ready,
+        "state": state,
+        "hint": hint,
+        "recommendation": recommendation,
     }
 
 

@@ -427,7 +427,14 @@ The current repo already works as an MVP slice, but several architecture-level d
     completion baseline
   - relation embeddings remain an explicit optional follow-on source family,
     while relation records stay live adaptive inputs for foreground behavior
-  - the next active slice is `PRJ-537` for code and health-surface alignment
+- `PRJ-537` is now complete:
+  - retrieval code and `/health.memory_retrieval` now treat
+    semantic+affective as the foreground rollout-completion baseline instead
+    of implying relation is still a pending required source
+  - relation source posture now has one explicit shared owner-level surface
+    with machine-visible optional-family state, hint, recommendation, and
+    enabled/alignment visibility
+  - the next active slice is `PRJ-538` for regression and release evidence
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

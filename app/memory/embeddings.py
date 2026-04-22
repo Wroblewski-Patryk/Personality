@@ -3,6 +3,10 @@ from __future__ import annotations
 import hashlib
 import math
 
+from app.core.retrieval_policy import (
+    BASELINE_VECTOR_SOURCE_ORDER,
+    relation_source_policy_snapshot,
+)
 from app.core.retrieval_lifecycle_policy import retrieval_lifecycle_policy_snapshot
 
 DEFAULT_EMBEDDING_PROVIDER = "deterministic"
@@ -102,17 +106,21 @@ def embedding_strategy_snapshot(
     else:
         normalized_source_kinds = normalize_embedding_source_kinds(",".join(source_kinds))
     source_kind_set = set(normalized_source_kinds)
-    vector_source_order = ("semantic", "affective", "relation")
+    source_rollout_order = BASELINE_VECTOR_SOURCE_ORDER
     source_rollout_enabled_sources = [
-        kind for kind in vector_source_order if kind in source_kind_set
+        kind for kind in source_rollout_order if kind in source_kind_set
     ]
     source_rollout_missing_sources = [
-        kind for kind in vector_source_order if kind not in source_kind_set
+        kind for kind in source_rollout_order if kind not in source_kind_set
     ]
     provider_ready = posture["provider_requested"] == posture["provider_effective"]
     semantic_ready = "semantic" in source_kind_set
     affective_ready = "affective" in source_kind_set
     relation_ready = "relation" in source_kind_set
+    relation_policy = relation_source_policy_snapshot(
+        semantic_vector_enabled=semantic_vector_enabled,
+        enabled_source_kinds=normalized_source_kinds,
+    )
     if not semantic_vector_enabled:
         source_coverage_state = "vectors_disabled"
         source_coverage_hint = "not_applicable_vectors_disabled"
@@ -130,14 +138,10 @@ def embedding_strategy_snapshot(
         source_rollout_state = "vectors_disabled"
         source_rollout_hint = "enable_vectors_before_source_rollout"
         source_rollout_recommendation = "defer_source_rollout_until_vectors_enabled"
-    elif semantic_ready and affective_ready and relation_ready:
-        source_rollout_state = "all_vector_sources_enabled"
-        source_rollout_hint = "semantic_affective_relation_sources_enabled"
-        source_rollout_recommendation = "maintain_current_source_rollout"
     elif semantic_ready and affective_ready:
-        source_rollout_state = "semantic_affective_baseline"
-        source_rollout_hint = "high_signal_sources_active"
-        source_rollout_recommendation = "add_relation_source_after_baseline_stabilizes"
+        source_rollout_state = "steady_state_baseline_enabled"
+        source_rollout_hint = "semantic_and_affective_foreground_baseline_enabled"
+        source_rollout_recommendation = "maintain_semantic_and_affective_baseline"
     elif semantic_ready:
         source_rollout_state = "semantic_only_phase"
         source_rollout_hint = "affective_source_missing"
@@ -151,16 +155,13 @@ def embedding_strategy_snapshot(
         source_rollout_hint = "semantic_and_affective_sources_missing"
         source_rollout_recommendation = "enable_semantic_then_affective_sources"
 
-    source_rollout_phase_total = len(vector_source_order)
+    source_rollout_phase_total = len(source_rollout_order)
     if not semantic_vector_enabled:
         source_rollout_completion_state = "vectors_disabled"
         source_rollout_next_source_kind = "none"
-    elif semantic_ready and affective_ready and relation_ready:
-        source_rollout_completion_state = "fully_enabled"
-        source_rollout_next_source_kind = "none"
     elif semantic_ready and affective_ready:
-        source_rollout_completion_state = "baseline_complete_relation_pending"
-        source_rollout_next_source_kind = "relation"
+        source_rollout_completion_state = "steady_state_baseline_complete"
+        source_rollout_next_source_kind = "none"
     elif semantic_ready:
         source_rollout_completion_state = "baseline_in_progress_affective_pending"
         source_rollout_next_source_kind = "affective"
@@ -243,10 +244,14 @@ def embedding_strategy_snapshot(
     normalized_source_rollout_enforcement = normalize_embedding_source_rollout_enforcement(
         source_rollout_enforcement
     )
+    baseline_rollout_complete = (
+        semantic_vector_enabled and source_rollout_completion_state == "steady_state_baseline_complete"
+    )
+
     if not semantic_vector_enabled:
         source_rollout_enforcement_state = "not_applicable_vectors_disabled"
         source_rollout_enforcement_hint = "not_applicable_vectors_disabled"
-    elif source_rollout_next_source_kind != "none":
+    elif not baseline_rollout_complete:
         if normalized_source_rollout_enforcement == "strict":
             source_rollout_enforcement_state = "blocked"
             source_rollout_enforcement_hint = "enable_pending_source_kinds_before_startup"
@@ -445,9 +450,7 @@ def embedding_strategy_snapshot(
             "enable_vectors_before_source_rollout_enforcement_alignment"
         )
     else:
-        recommended_source_rollout_enforcement = (
-            "strict" if source_rollout_next_source_kind == "none" else "warn"
-        )
+        recommended_source_rollout_enforcement = "strict" if baseline_rollout_complete else "warn"
         source_rollout_enforcement_alignment = _enforcement_alignment_state(
             normalized_source_rollout_enforcement,
             recommended_source_rollout_enforcement,
@@ -468,35 +471,24 @@ def embedding_strategy_snapshot(
                 "source_rollout_strict_enabled_ahead_of_recommendation"
             )
 
+    recommended_refresh_mode = str(lifecycle_policy["steady_state_refresh_owner"])
     if not semantic_vector_enabled:
-        recommended_refresh_mode = "on_write"
         refresh_alignment_state = "not_applicable_vectors_disabled"
         refresh_alignment_hint = "enable_vectors_before_refresh_alignment"
-    elif source_rollout_completion_state == "fully_enabled":
-        recommended_refresh_mode = "manual"
-        if normalized_refresh_mode == "manual":
-            refresh_alignment_state = "aligned"
-            refresh_alignment_hint = "refresh_mode_matches_mature_rollout_recommendation"
-        else:
-            refresh_alignment_state = "on_write_before_recommended_manual"
-            refresh_alignment_hint = "consider_switching_to_manual_for_mature_rollout"
+    elif normalized_refresh_mode == recommended_refresh_mode:
+        refresh_alignment_state = "aligned"
+        refresh_alignment_hint = "refresh_mode_matches_defined_lifecycle_baseline"
     else:
-        recommended_refresh_mode = "on_write"
-        if normalized_refresh_mode == "on_write":
-            refresh_alignment_state = "aligned"
-            refresh_alignment_hint = "refresh_mode_matches_active_rollout_recommendation"
-        else:
-            refresh_alignment_state = "manual_override"
-            refresh_alignment_hint = "ensure_manual_mode_has_operational_coverage"
+        refresh_alignment_state = "manual_override"
+        refresh_alignment_hint = "ensure_manual_mode_has_operational_coverage"
 
     pending_lifecycle_gaps: list[str] = []
     if semantic_vector_enabled and posture["provider_effective"] != str(
         lifecycle_policy["target_provider_baseline"].replace("_embeddings", "")
     ).replace("openai_api", "openai"):
         pending_lifecycle_gaps.append("provider_baseline_not_aligned")
-    if semantic_vector_enabled and source_rollout_completion_state != "baseline_complete_relation_pending":
-        if source_rollout_completion_state != "fully_enabled":
-            pending_lifecycle_gaps.append("foreground_source_rollout_incomplete")
+    if semantic_vector_enabled and not baseline_rollout_complete:
+        pending_lifecycle_gaps.append("foreground_source_rollout_incomplete")
     if semantic_vector_enabled and normalized_refresh_mode != str(lifecycle_policy["steady_state_refresh_owner"]):
         pending_lifecycle_gaps.append("refresh_owner_not_aligned")
 
@@ -532,6 +524,11 @@ def embedding_strategy_snapshot(
             lifecycle_policy["steady_state_source_rollout_completion"]
         ),
         "retrieval_lifecycle_relation_source_posture": str(lifecycle_policy["relation_source_posture"]),
+        "retrieval_lifecycle_relation_source_policy_owner": str(relation_policy["policy_owner"]),
+        "retrieval_lifecycle_relation_source_state": str(relation_policy["state"]),
+        "retrieval_lifecycle_relation_source_hint": str(relation_policy["hint"]),
+        "retrieval_lifecycle_relation_source_recommendation": str(relation_policy["recommendation"]),
+        "retrieval_lifecycle_relation_source_enabled": bool(relation_policy["relation_source_enabled"]),
         "retrieval_lifecycle_fallback_retirement_posture": str(
             lifecycle_policy["fallback_retirement_posture"]
         ),
@@ -582,7 +579,7 @@ def embedding_strategy_snapshot(
         "semantic_embedding_source_rollout_state": source_rollout_state,
         "semantic_embedding_source_rollout_hint": source_rollout_hint,
         "semantic_embedding_source_rollout_recommendation": source_rollout_recommendation,
-        "semantic_embedding_source_rollout_order": list(vector_source_order),
+        "semantic_embedding_source_rollout_order": list(source_rollout_order),
         "semantic_embedding_source_rollout_enabled_sources": list(source_rollout_enabled_sources),
         "semantic_embedding_source_rollout_missing_sources": list(source_rollout_missing_sources),
         "semantic_embedding_source_rollout_next_source_kind": source_rollout_next_source_kind,
@@ -597,6 +594,13 @@ def embedding_strategy_snapshot(
         "semantic_embedding_source_rollout_enforcement_alignment": source_rollout_enforcement_alignment,
         "semantic_embedding_source_rollout_enforcement_alignment_state": source_rollout_enforcement_alignment_state,
         "semantic_embedding_source_rollout_enforcement_alignment_hint": source_rollout_enforcement_alignment_hint,
+        "semantic_embedding_relation_source_policy_owner": str(relation_policy["policy_owner"]),
+        "semantic_embedding_relation_source_posture": str(relation_policy["steady_state_posture"]),
+        "semantic_embedding_relation_source_enabled": bool(relation_policy["relation_source_enabled"]),
+        "semantic_embedding_relation_source_baseline_ready": bool(relation_policy["baseline_ready"]),
+        "semantic_embedding_relation_source_state": str(relation_policy["state"]),
+        "semantic_embedding_relation_source_hint": str(relation_policy["hint"]),
+        "semantic_embedding_relation_source_recommendation": str(relation_policy["recommendation"]),
         "semantic_embedding_warning_state": warning_state,
         "semantic_embedding_warning_hint": warning_hint,
         "semantic_embedding_production_baseline": "openai_api_embeddings",

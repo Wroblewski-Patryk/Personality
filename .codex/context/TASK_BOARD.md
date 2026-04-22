@@ -544,15 +544,24 @@ Last updated: 2026-04-22
   - Validation:
     - retrieval architecture, runtime reality, and ops cross-review
 
-- [ ] PRJ-537 Implement the selected relation-source rollout or governance boundary
+- [x] PRJ-537 Implement the selected relation-source rollout or governance boundary
   - Owner: Backend Builder
   - Group: Relation Retrieval Source Completion
   - Depends on: PRJ-536
   - Priority: P2
-  - Status: READY
+  - Status: DONE
   - Done when:
     - retrieval code and health surfaces reflect the selected relation-source
       posture instead of keeping it as a silent optional family
+  - Result:
+    - retrieval code and `/health.memory_retrieval` now treat
+      semantic+affective as the foreground rollout-completion baseline instead
+      of keeping relation as an implicit pending source
+    - relation source posture now has one shared owner-level surface
+      (`relation_source_retrieval_policy`) with explicit optional-family
+      state, hint, recommendation, and enabled/alignment visibility
+    - `MemoryRepository.get_hybrid_memory_bundle()` now consumes the same
+      shared foreground retrieval-source helper as the health policy surface
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_context_agent.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
 
@@ -561,7 +570,7 @@ Last updated: 2026-04-22
   - Group: Relation Retrieval Source Completion
   - Depends on: PRJ-537
   - Priority: P2
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - runtime and release evidence pin the selected relation-source posture,
       including alignment or bounded exclusion from the steady-state retrieval

@@ -12,6 +12,7 @@ from app.core.reflection_scope_policy import (
     conclusion_matches_scope_request,
     relation_matches_scope_request,
 )
+from app.core.retrieval_policy import foreground_retrieval_source_kinds
 from app.memory.embeddings import (
     cosine_similarity,
     materialize_embedding,
@@ -600,7 +601,9 @@ class MemoryRepository:
             vector_hits = await self.query_semantic_similarity(
                 user_id=user_id,
                 query_embedding=query_embedding,
-                source_kinds=["semantic", "affective", "relation"],
+                source_kinds=foreground_retrieval_source_kinds(
+                    enabled_source_kinds=self.embedding_source_kinds
+                ),
                 scope_type=scope_type,
                 scope_key=scope_key,
                 include_global=include_global,
