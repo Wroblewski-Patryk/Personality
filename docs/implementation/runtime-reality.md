@@ -188,6 +188,12 @@ Current implementation posture:
   deterministic baseline signals and marks source as `fallback`
 - policy-disabled fallback and classifier-unavailable fallback are now separate
   machine-visible postures in runtime policy and system-debug surfaces
+- `/health.affective` now exposes the perception-owned affective input policy
+  alongside assessment rollout posture
+- runtime `system_debug.adaptive_state` now exposes both
+  `affective_input_policy` and per-turn `affective_resolution`, so operators
+  can distinguish heuristic input from final affective outcome and fallback
+  reuse
 - motivation, role, and expression now consume `perception.affective` as the
   primary support/emotion signal owner for turn behavior
 
@@ -262,6 +268,9 @@ Production retrieval baseline (`PRJ-284`, planning contract):
   operator override
 - family rollout order: `episodic+semantic` first, then `affective`, then
   `relation`
+- `/health.memory_retrieval.semantic_embedding_execution_class` now exposes
+  `deterministic_baseline`, `local_provider_owned`, or
+  `fallback_to_deterministic` as the current execution posture
 
 Current limitation:
 

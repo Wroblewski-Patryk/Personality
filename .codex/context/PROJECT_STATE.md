@@ -1771,6 +1771,18 @@ Last updated: 2026-04-22
   convergence waves were pruned from the top-level planning/context surfaces so
   the repo now has one shared post-convergence operating stance instead of a
   stack of historical queue headers.
+- 2026-04-22: `PRJ-444..PRJ-447` are complete: shared debug-ingress posture
+  vocabulary now uses final route-owned labels
+  (`shared_route_compatibility|shared_route_break_glass_only`) across runtime
+  policy, response headers, release smoke, and canonical docs.
+- 2026-04-22: `PRJ-448..PRJ-451` are complete: `/health.affective` and runtime
+  `system_debug.adaptive_state` now distinguish perception-owned affective
+  input from final affective assessment resolution, including fallback-reuse
+  diagnostics.
+- 2026-04-22: `PRJ-452..PRJ-453` are complete: `/health.memory_retrieval` now
+  exposes `semantic_embedding_execution_class` so deterministic baseline,
+  local provider-owned execution, and fallback-to-deterministic posture are
+  machine-visible in one field.
 
 ## Working Agreements
 

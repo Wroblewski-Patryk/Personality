@@ -71,6 +71,15 @@ Completed on 2026-04-22:
 - `PRJ-443` is complete: top-level planning/context surfaces now use one shared
   post-convergence stance instead of repeating stale queue-seeding notes from
   earlier convergence waves.
+- `PRJ-444..PRJ-447` are complete: shared debug-ingress posture vocabulary now
+  uses final route-owned labels across runtime policy, headers, release smoke,
+  and docs.
+- `PRJ-448..PRJ-451` are complete: affective visibility now distinguishes
+  heuristic input ownership from final assessment resolution through `/health`
+  and `system_debug`.
+- `PRJ-452..PRJ-453` are complete: embedding posture now exposes one explicit
+  execution class for deterministic baseline, local provider ownership, and
+  fallback-to-deterministic paths.
 
 ## Post-Convergence Operating Mode
 

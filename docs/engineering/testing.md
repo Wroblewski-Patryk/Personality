@@ -117,6 +117,8 @@ For meaningful repo changes, leave behind:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
 - for retrieval-provider rollout changes, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+- for embedding execution-class diagnostics slices, regression evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py`
 - for connector execution-policy slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_connector_policy.py tests/test_planning_agent.py tests/test_action_executor.py`
 - for typed future-write ownership slices, regression evidence from:
@@ -125,6 +127,10 @@ For meaningful repo changes, leave behind:
   - `.\.venv\Scripts\python -m pytest -q tests/test_expression_agent.py tests/test_action_executor.py tests/test_delivery_router.py tests/test_runtime_pipeline.py tests/test_graph_stage_adapters.py tests/test_graph_state_contract.py`
 - for compatibility-sunset readiness slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_deployment_trigger_scripts.py`
+- for shared debug-ingress vocabulary convergence slices, regression evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
+- for affective input and resolution diagnostics slices, regression evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
 - for background adaptive-output convergence slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_graph_state_contract.py`
 - for identity/profile ownership slices, regression evidence from:

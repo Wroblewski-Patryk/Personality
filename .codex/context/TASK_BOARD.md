@@ -23,6 +23,11 @@ Last updated: 2026-04-22
   - new slices should prefer runtime truth, health/debug visibility,
     deployment evidence, and canonical-doc consistency over synthetic backlog
     generation
+- Post-convergence Groups 57 through 59 are now complete through `PRJ-453`.
+- Shared debug-ingress posture vocabulary, affective input-versus-final
+  diagnostics, and embedding execution-class visibility are now explicit
+  runtime surfaces instead of requiring operator inference across multiple
+  fields.
 - Memory, continuity, failure handling, adaptive governance, scheduler and
   connector boundaries, retrieval posture, and release evidence are now
   validated as living-system behavior rather than planning-only follow-ups.
@@ -52,6 +57,152 @@ Last updated: 2026-04-22
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-453 Sync docs/context for embedding execution-class diagnostics
+  - Status: DONE
+  - Group: Embedding Execution-Class Diagnostics
+  - Owner: Product Docs
+  - Depends on: PRJ-452
+  - Priority: P1
+  - Result:
+    - planning, implementation reality, testing guidance, and context truth
+      now align on explicit embedding execution classes for deterministic
+      baseline, local provider ownership, and fallback-to-deterministic
+      posture
+  - Validation:
+    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
+      `docs/implementation/`, `docs/engineering/`, and `docs/architecture/`
+
+- [x] PRJ-452 Add embedding execution-class diagnostics for provider-owned vs fallback retrieval posture
+  - Status: DONE
+  - Group: Embedding Execution-Class Diagnostics
+  - Owner: Backend Builder
+  - Depends on: PRJ-451
+  - Priority: P1
+  - Result:
+    - `/health.memory_retrieval.semantic_embedding_execution_class` now
+      distinguishes `deterministic_baseline`, `local_provider_owned`, and
+      `fallback_to_deterministic`
+    - operator triage no longer needs to infer actual execution class from
+      requested/effective provider fields alone
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py`
+      (`71 passed`)
+
+- [x] PRJ-451 Sync docs/context for affective diagnostics convergence
+  - Status: DONE
+  - Group: Affective Diagnostics Convergence
+  - Owner: Product Docs
+  - Depends on: PRJ-450
+  - Priority: P1
+  - Result:
+    - architecture, runtime-reality, planning docs, testing guidance, and
+      context truth now align on affective input ownership, final assessment
+      resolution, and health/debug visibility
+  - Validation:
+    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
+      `docs/implementation/`, `docs/engineering/`, and `docs/architecture/`
+
+- [x] PRJ-450 Add regressions for affective input, fallback reuse, and resolution diagnostics
+  - Status: DONE
+  - Group: Affective Diagnostics Convergence
+  - Owner: QA/Test
+  - Depends on: PRJ-449
+  - Priority: P1
+  - Result:
+    - regressions now pin `/health.affective` plus `system_debug` resolution
+      semantics for heuristic input, fallback reuse, and final assessment
+      source visibility
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+      (`152 passed`)
+
+- [x] PRJ-449 Expose affective input and final-resolution diagnostics through health and system debug
+  - Status: DONE
+  - Group: Affective Diagnostics Convergence
+  - Owner: Backend Builder
+  - Depends on: PRJ-448
+  - Priority: P1
+  - Result:
+    - `/health.affective` now exposes the perception-owned affective input
+      baseline alongside assessment rollout posture
+    - runtime `system_debug.adaptive_state` now exposes `affective_input_policy`
+      and per-turn `affective_resolution`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+      (`152 passed`)
+
+- [x] PRJ-448 Define affective input-owner diagnostics baseline
+  - Status: DONE
+  - Group: Affective Diagnostics Convergence
+  - Owner: Planner
+  - Depends on: PRJ-447
+  - Priority: P1
+  - Result:
+    - the repo now has one explicit diagnostics owner for heuristic affective
+      input before the assessment stage rewrites or reuses that signal
+    - fallback reuse semantics are now machine-describable instead of implicit
+      in affective evidence strings only
+  - Validation:
+    - targeted runtime-debug and health contract review plus regression impact
+      note
+
+- [x] PRJ-447 Sync docs/context for shared debug-ingress vocabulary convergence
+  - Status: DONE
+  - Group: Shared Debug Ingress Vocabulary Convergence
+  - Owner: Product Docs
+  - Depends on: PRJ-446
+  - Priority: P1
+  - Result:
+    - docs, planning truth, and context now align on final
+      `shared_route_compatibility|shared_route_break_glass_only` posture
+      vocabulary
+  - Validation:
+    - doc-and-context sync across `.codex/context/`, `docs/planning/`,
+      `docs/implementation/`, `docs/engineering/`, and `docs/architecture/`
+
+- [x] PRJ-446 Add regressions and release-smoke parity for final shared debug-ingress vocabulary
+  - Status: DONE
+  - Group: Shared Debug Ingress Vocabulary Convergence
+  - Owner: QA/Test
+  - Depends on: PRJ-445
+  - Priority: P1
+  - Result:
+    - release smoke and API/runtime-policy tests now pin the final shared
+      ingress posture vocabulary instead of the earlier `transitional_*`
+      labels
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
+      (`96 passed`)
+
+- [x] PRJ-445 Apply final shared debug-ingress posture vocabulary to runtime policy and headers
+  - Status: DONE
+  - Group: Shared Debug Ingress Vocabulary Convergence
+  - Owner: Backend Builder
+  - Depends on: PRJ-444
+  - Priority: P1
+  - Result:
+    - runtime policy and shared debug ingress headers now emit
+      `shared_route_compatibility|shared_route_break_glass_only`
+    - release evidence and operator tooling no longer describe the primary
+      shared ingress posture as `transitional_*`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
+      (`96 passed`)
+
+- [x] PRJ-444 Define final shared debug-ingress posture vocabulary owner
+  - Status: DONE
+  - Group: Shared Debug Ingress Vocabulary Convergence
+  - Owner: Planner
+  - Depends on: PRJ-443
+  - Priority: P1
+  - Result:
+    - shared debug ingress posture now uses final route-owned terminology
+      instead of rollout-era `transitional_*` wording
+    - health, headers, and smoke evidence now have one stable vocabulary for
+      compatibility vs break-glass posture
+  - Validation:
+    - targeted runtime-policy, API-header, and smoke-surface review
 
 - [x] PRJ-443 Clean post-convergence backlog surfaces and planning truth
   - Status: DONE

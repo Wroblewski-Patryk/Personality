@@ -89,6 +89,9 @@ The current repo already works as an MVP slice, but several architecture-level d
     (`12`, `12a`, `12c`) - complete
   - `PRJ-439..PRJ-442`: deployment standard and release-reliability closure
     (`6`, `7`) - complete
+  - `PRJ-444..PRJ-447`: shared debug-ingress vocabulary convergence (`3`) - complete
+  - `PRJ-448..PRJ-451`: affective diagnostics convergence (`4a`) - complete
+  - `PRJ-452..PRJ-453`: embedding execution-class diagnostics (`5d`, `5e`) - complete
 - post-Group-56 state has no remaining seeded `READY`; the next architecture
   slice should again be derived from any newly discovered post-convergence
   follow-up instead of inventing a new queue without a concrete runtime or
@@ -227,6 +230,8 @@ The current repo already works as an MVP slice, but several architecture-level d
     `X-AION-Debug-Shared-Posture`) and can run in
     `compatibility|break_glass_only` mode through
     `EVENT_DEBUG_SHARED_INGRESS_MODE`.
+  - shared ingress posture vocabulary is now final and route-owned:
+    `shared_route_compatibility|shared_route_break_glass_only`.
   - compat-route responses now also emit
     `X-AION-Debug-Compat-Deprecated=true` and runtime health now exposes
     `event_debug_query_compat_telemetry` counters plus derived compat sunset
@@ -433,6 +438,10 @@ The current repo already works as an MVP slice, but several architecture-level d
 - Resolved in `PRJ-427..PRJ-430` (2026-04-22):
   - affective rollout remains enabled-by-default in non-production and
     disabled-by-default in production unless explicitly overridden.
+- Resolved in `PRJ-448..PRJ-451` (2026-04-22):
+  - `/health.affective` and runtime `system_debug.adaptive_state` now
+    distinguish heuristic perception input from final affective assessment
+    resolution, including fallback-reuse posture.
 
 ### 5. Memory Retrieval Depth
 
@@ -505,7 +514,10 @@ The current repo already works as an MVP slice, but several architecture-level d
     implemented and validated
 - Resolved in `PRJ-423..PRJ-426` (2026-04-22):
   - provider-owned execution is now available through the local `local_hybrid`
-    provider path; deterministic remains the fallback baseline.
+  provider path; deterministic remains the fallback baseline.
+  - `/health.memory_retrieval.semantic_embedding_execution_class` now exposes
+    whether current execution is deterministic baseline, local provider-owned,
+    or fallback-to-deterministic posture.
 
 ### 5e. Embedding Strategy
 

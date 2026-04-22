@@ -275,6 +275,14 @@ Behavior-driven scenario outcomes should be recorded in the canonical format:
 }
 ```
 
+Current post-convergence diagnostics also require:
+
+- `/health.affective` to expose heuristic affective-input ownership separately
+  from assessment rollout posture
+- `system_debug.adaptive_state.affective_input_policy` and
+  `system_debug.adaptive_state.affective_resolution` to show how the live turn
+  moved from heuristic input to final affective result
+
 ---
 
 ## Final Principle
