@@ -14,8 +14,10 @@ def connector_execution_baseline_snapshot(settings) -> dict[str, object]:
     )
     return {
         "execution_owner": "connector_execution_registry",
-        "mvp_boundary": "clickup_task_create_first_live_path",
+        "mvp_boundary": "clickup_task_create_and_list_first_live_paths",
         "task_system": {
+            "read_capable_live_paths": ["clickup_list_tasks"],
+            "mutation_live_paths": ["clickup_create_task"],
             "clickup_create_task": {
                 "operation": "create_task",
                 "provider": "clickup",
@@ -23,6 +25,18 @@ def connector_execution_baseline_snapshot(settings) -> dict[str, object]:
                 "ready": clickup_ready,
                 "state": clickup_state,
                 "hint": clickup_hint,
+            },
+            "clickup_list_tasks": {
+                "operation": "list_tasks",
+                "provider": "clickup",
+                "execution_mode": "provider_backed_when_configured",
+                "ready": clickup_ready,
+                "state": clickup_state,
+                "hint": (
+                    "clickup_list_tasks_live"
+                    if clickup_ready
+                    else "configure_clickup_api_token_and_clickup_list_id_for_live_read_execution"
+                ),
             },
             "other_operations": "policy_only_until_pre_action_read_and_additional_provider_paths_exist",
         },

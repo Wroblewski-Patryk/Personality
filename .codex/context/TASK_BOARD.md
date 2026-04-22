@@ -54,19 +54,19 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-502 Expose provider-read readiness and failure posture for the expanded connector baseline
-  - Owner: Ops/Release
+- [ ] PRJ-503 Sync docs/context for connector read posture and provider expansion baseline
+  - Owner: Product Docs
   - Group: Connector Read Posture And Provider Expansion Baseline
-  - Depends on: PRJ-501
+  - Depends on: PRJ-502
   - Priority: P1
   - Why now:
-    - the new read path exists, so operators now need machine-visible posture
-      that distinguishes read-capable baseline from remaining policy-only lanes
+    - runtime and health posture are aligned, so the lane now needs canonical
+      docs/context closure before retrieval lifecycle work starts
   - Done when:
-    - `/health.connectors.execution_baseline` can distinguish mutation-only,
-      read-capable, and still-policy-only connector families in one view
+    - contracts, runtime reality, ops notes, and planning/context truth all
+      describe the same expanded connector execution boundary
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+    - doc-and-context sync across architecture, implementation, ops, testing, and context
 
 - [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release
@@ -128,6 +128,20 @@ Last updated: 2026-04-22
       mutating expression ownership
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_connector_policy.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+
+- [x] PRJ-502 Expose provider-read readiness and failure posture for the expanded connector baseline
+  - Owner: Ops/Release
+  - Group: Connector Read Posture And Provider Expansion Baseline
+  - Depends on: PRJ-501
+  - Priority: P1
+  - Status: DONE
+  - Result:
+    - `/health.connectors.execution_baseline` now exposes separate ClickUp
+      mutation and read-capable live paths under the same task-system family
+    - operators can distinguish read-capable posture from policy-only
+      connector families without reading action code
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
 
 - [x] PRJ-497 Implement canonical external cadence entrypoints and ownership checks
   - Owner: Backend Builder

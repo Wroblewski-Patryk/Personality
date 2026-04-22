@@ -2003,9 +2003,12 @@ Last updated: 2026-04-22
   read-capable execution path for `task_system:list_tasks`, executed from
   explicit read-only typed intents before delivery while preserving the
   planning/action boundary.
-- 2026-04-22: `PRJ-502` is now the next `READY` task, focused on exposing
-  provider-read readiness and failure posture for the expanded connector
-  baseline.
+- 2026-04-22: `PRJ-502` is complete: `/health.connectors.execution_baseline`
+  now distinguishes ClickUp mutation and read-capable live paths from the
+  remaining policy-only connector families through one shared execution
+  baseline surface.
+- 2026-04-22: `PRJ-503` is now the next `READY` task, focused on docs/context
+  sync for the connector read posture and provider expansion lane.
 
 ## Working Agreements
 
