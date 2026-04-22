@@ -78,6 +78,7 @@ class MemoryRepository:
     )
     GLOBAL_SCOPE_TYPE = GLOBAL_SCOPE_TYPE
     GLOBAL_SCOPE_KEY = GLOBAL_SCOPE_KEY
+    PROACTIVE_OPT_IN_TRUTHY = frozenset({"1", "true", "yes", "on"})
 
     def __init__(
         self,
@@ -714,6 +715,43 @@ class MemoryRepository:
             }
             for row in rows
         ]
+
+    async def get_proactive_scheduler_candidates(
+        self,
+        *,
+        proactive_interval_seconds: int,
+        limit: int = 8,
+    ) -> list[dict]:
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(AionConclusion)
+                .where(AionConclusion.kind == "proactive_opt_in")
+                .order_by(AionConclusion.updated_at.desc(), AionConclusion.id.desc())
+            )
+            rows = result.scalars().all()
+
+        opted_in_user_ids: list[str] = []
+        seen_user_ids: set[str] = set()
+        for row in rows:
+            value = str(row.content or "").strip().lower()
+            if value not in self.PROACTIVE_OPT_IN_TRUTHY:
+                continue
+            if row.user_id in seen_user_ids:
+                continue
+            seen_user_ids.add(row.user_id)
+            opted_in_user_ids.append(str(row.user_id))
+
+        candidates: list[dict] = []
+        for user_id in opted_in_user_ids:
+            if len(candidates) >= limit:
+                break
+            candidate = await self._build_proactive_scheduler_candidate(
+                user_id=user_id,
+                proactive_interval_seconds=proactive_interval_seconds,
+            )
+            if candidate is not None:
+                candidates.append(candidate)
+        return candidates
 
     async def get_user_profile(self, user_id: str) -> dict | None:
         async with self.session_factory() as session:
@@ -2232,6 +2270,128 @@ class MemoryRepository:
             "updated_at": row.updated_at,
             "created_at": row.created_at,
         }
+
+    async def _build_proactive_scheduler_candidate(
+        self,
+        *,
+        user_id: str,
+        proactive_interval_seconds: int,
+    ) -> dict | None:
+        active_goals, active_tasks, recent_memory = await self._load_proactive_candidate_state(user_id=user_id)
+        if not active_goals and not active_tasks and not recent_memory:
+            return None
+
+        chat_id = self._proactive_delivery_target(user_id=user_id, recent_memory=recent_memory)
+        if chat_id is None:
+            return None
+
+        blocked_tasks = [
+            task for task in active_tasks if str(task.get("status", "")).strip().lower() == "blocked"
+        ]
+        if blocked_tasks:
+            trigger = "task_blocked"
+            text = f"follow up on blocked task {blocked_tasks[0].get('name', '')}".strip()
+        elif active_goals:
+            trigger = "goal_stagnation"
+            text = f"check progress for goal {active_goals[0].get('name', '')}".strip()
+        else:
+            trigger = "time_checkin"
+            text = "time check-in follow up"
+
+        return {
+            "user_id": user_id,
+            "chat_id": chat_id,
+            "trigger": trigger,
+            "text": text[:160],
+            "recent_outbound_count": self._recent_proactive_outbound_count(
+                recent_memory=recent_memory,
+                proactive_interval_seconds=proactive_interval_seconds,
+            ),
+            "unanswered_proactive_count": self._unanswered_proactive_count(recent_memory=recent_memory),
+            "recent_user_activity": self._recent_user_activity(
+                recent_memory=recent_memory,
+                proactive_interval_seconds=proactive_interval_seconds,
+            ),
+            "active_goal_count": len(active_goals),
+            "active_task_count": len(active_tasks),
+            "blocked_task_count": len(blocked_tasks),
+        }
+
+    async def _load_proactive_candidate_state(self, *, user_id: str) -> tuple[list[dict], list[dict], list[dict]]:
+        active_goals = await self.get_active_goals(user_id=user_id, limit=5)
+        goal_ids = [int(goal["id"]) for goal in active_goals if goal.get("id") is not None]
+        active_tasks = await self.get_active_tasks(user_id=user_id, goal_ids=goal_ids, limit=6)
+        recent_memory = await self.get_recent_for_user(user_id=user_id, limit=12)
+        return active_goals, active_tasks, recent_memory
+
+    def _proactive_delivery_target(self, *, user_id: str, recent_memory: list[dict]) -> int | str | None:
+        for item in recent_memory:
+            payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+            chat_id = payload.get("chat_id")
+            if isinstance(chat_id, int):
+                return chat_id
+            if isinstance(chat_id, str) and chat_id.strip():
+                return chat_id.strip()
+        if str(user_id).strip().isdigit():
+            return str(user_id).strip()
+        return None
+
+    def _recent_proactive_outbound_count(
+        self,
+        *,
+        recent_memory: list[dict],
+        proactive_interval_seconds: int,
+    ) -> int:
+        now = datetime.now(timezone.utc)
+        count = 0
+        for item in recent_memory:
+            if str(item.get("source", "")).strip().lower() != "scheduler":
+                continue
+            payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+            update = str(payload.get("proactive_state_update", "")).strip().lower()
+            if not update.startswith("delivery_ready:"):
+                continue
+            timestamp = self._coerce_datetime(item.get("timestamp") or item.get("event_timestamp"))
+            if timestamp is None:
+                continue
+            age_seconds = max(0.0, (now - timestamp).total_seconds())
+            if age_seconds <= max(1800, int(proactive_interval_seconds)):
+                count += 1
+        return count
+
+    def _unanswered_proactive_count(self, *, recent_memory: list[dict]) -> int:
+        count = 0
+        for item in recent_memory:
+            source = str(item.get("source", "")).strip().lower()
+            payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+            update = str(payload.get("proactive_state_update", "")).strip().lower()
+            if source == "scheduler" and update.startswith("delivery_ready:"):
+                count += 1
+                continue
+            break
+        return count
+
+    def _recent_user_activity(
+        self,
+        *,
+        recent_memory: list[dict],
+        proactive_interval_seconds: int,
+    ) -> str:
+        now = datetime.now(timezone.utc)
+        for item in recent_memory:
+            source = str(item.get("source", "")).strip().lower()
+            if source == "scheduler":
+                continue
+            timestamp = self._coerce_datetime(item.get("timestamp") or item.get("event_timestamp"))
+            if timestamp is None:
+                return "unknown"
+            age_seconds = max(0.0, (now - timestamp).total_seconds())
+            if age_seconds <= max(1800, int(proactive_interval_seconds)):
+                return "active"
+            if age_seconds <= max(3600, int(proactive_interval_seconds) * 2):
+                return "idle"
+            return "away"
+        return "unknown"
 
     def _goal_priority_rank(self, priority: str) -> int:
         return {

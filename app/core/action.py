@@ -158,6 +158,7 @@ class ActionExecutor:
         payload = {
             "payload_version": 1,
             "event": str(event.payload.get("text", "")),
+            "chat_id": event.payload.get("chat_id"),
             "memory_kind": memory_kind,
             "memory_topics": memory_topics,
             "domain_intents": executed_intents,

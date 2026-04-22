@@ -49,6 +49,7 @@ class FakeMemoryRepository:
         self.reflection_tasks: list[dict] = []
         self.pending_subconscious_proposals: list[dict] = []
         self.resolved_subconscious_proposals: list[dict] = []
+        self.proactive_candidates: list[dict] = []
 
     async def get_recent_for_user(self, user_id: str, limit: int = 5) -> list[dict]:
         self.recent_limits.append(limit)
@@ -283,6 +284,14 @@ class FakeMemoryRepository:
         }
         self.reflection_tasks.append(task)
         return dict(task)
+
+    async def get_proactive_scheduler_candidates(
+        self,
+        *,
+        proactive_interval_seconds: int,
+        limit: int = 8,
+    ) -> list[dict]:
+        return self.proactive_candidates[:limit]
 
 
 class PersistingFakeMemoryRepository(FakeMemoryRepository):
@@ -5042,4 +5051,115 @@ async def test_runtime_behavior_failure_scenarios_cover_contradiction_missing_da
         ]
     )
     assert len(results) == 3
+    assert {result.status for result in results} == {"pass"}
+
+
+async def test_runtime_behavior_proactive_scenarios_cover_delivery_and_anti_spam_posture() -> None:
+    async def proactive_delivery_scenario() -> BehaviorScenarioCheck:
+        memory = PersistingFakeMemoryRepository(recent_memory=[])
+        memory.user_preferences = {
+            "proactive_opt_in": True,
+            "proactive_recent_outbound_limit": 2,
+            "proactive_unanswered_limit": 1,
+        }
+        runtime = _build_behavior_runtime(memory)
+        event = build_scheduler_event(
+            subsource="proactive_tick",
+            user_id="123456",
+            payload={
+                "text": "follow up on blocked task deploy",
+                "chat_id": 123456,
+                "proactive_trigger": "task_blocked",
+                "user_context": {
+                    "quiet_hours": False,
+                    "focus_mode": False,
+                    "recent_user_activity": "active",
+                    "recent_outbound_count": 0,
+                    "unanswered_proactive_count": 0,
+                },
+            },
+        )
+
+        result = await runtime.run(event)
+        passed = (
+            result.action_result.status == "success"
+            and "send_telegram_message" in result.action_result.actions
+            and result.memory_record is not None
+            and result.memory_record.payload["proactive_state_update"].startswith("delivery_ready:")
+        )
+        return BehaviorScenarioCheck(
+            passed=passed,
+            reason="proactive_delivery_ready_path" if passed else "proactive_delivery_regression",
+            trace_id=result.event.meta.trace_id,
+            notes=(
+                f"action_status={result.action_result.status};"
+                f"actions={','.join(result.action_result.actions)};"
+                f"state={result.memory_record.payload.get('proactive_state_update', '') if result.memory_record else ''}"
+            ),
+        )
+
+    async def proactive_anti_spam_scenario() -> BehaviorScenarioCheck:
+        memory = PersistingFakeMemoryRepository(recent_memory=[])
+        memory.user_preferences = {"proactive_opt_in": True}
+        runtime = _build_behavior_runtime(memory)
+        first = await runtime.run(
+            build_scheduler_event(
+                subsource="proactive_tick",
+                user_id="123456",
+                payload={
+                    "text": "follow up on blocked task deploy",
+                    "chat_id": 123456,
+                    "proactive_trigger": "task_blocked",
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": "active",
+                        "recent_outbound_count": 0,
+                        "unanswered_proactive_count": 0,
+                    },
+                },
+            )
+        )
+        second = await runtime.run(
+            build_scheduler_event(
+                subsource="proactive_tick",
+                user_id="123456",
+                payload={
+                    "text": "follow up on blocked task deploy again",
+                    "chat_id": 123456,
+                    "proactive_trigger": "task_blocked",
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": "active",
+                        "recent_outbound_count": 4,
+                        "unanswered_proactive_count": 1,
+                    },
+                },
+            )
+        )
+        passed = (
+            first.action_result.status == "success"
+            and second.action_result.status == "noop"
+            and second.memory_record is not None
+            and second.memory_record.payload["proactive_state_update"].startswith("attention_gate_blocked:")
+        )
+        return BehaviorScenarioCheck(
+            passed=passed,
+            reason="proactive_anti_spam_guardrails" if passed else "proactive_anti_spam_regression",
+            trace_id=second.event.meta.trace_id,
+            notes=(
+                f"first={first.action_result.status};"
+                f"second={second.action_result.status};"
+                f"second_state={second.memory_record.payload.get('proactive_state_update', '') if second.memory_record else ''}"
+            ),
+        )
+
+    results = await execute_behavior_scenarios(
+        [
+            BehaviorScenarioDefinition(test_id="T12.1", run=proactive_delivery_scenario),
+            BehaviorScenarioDefinition(test_id="T12.2", run=proactive_anti_spam_scenario),
+        ]
+    )
+    assert len(results) == 2
     assert {result.status for result in results} == {"pass"}

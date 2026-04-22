@@ -467,6 +467,7 @@ async def lifespan(app: FastAPI):
         maintenance_interval_seconds=settings.maintenance_interval,
         execution_mode=settings.scheduler_execution_mode,
         proactive_enabled=settings.proactive_enabled,
+        proactive_interval_seconds=settings.proactive_interval,
     )
     runtime_reflection_worker = reflection_worker
     if settings.reflection_runtime_mode == "in_process":
@@ -527,6 +528,7 @@ async def lifespan(app: FastAPI):
         embedding_dimensions=int(getattr(settings, "embedding_dimensions", 32)),
         reflection_runtime_mode=settings.reflection_runtime_mode,
     )
+    scheduler_worker.set_runtime(runtime)
     attention_turn_coordinator = AttentionTurnCoordinator(
         burst_window_ms=settings.attention_burst_window_ms,
         answered_ttl_seconds=settings.attention_answered_ttl_seconds,

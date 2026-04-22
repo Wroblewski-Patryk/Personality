@@ -548,14 +548,19 @@ Scheduler-facing runtime contracts are now explicit:
   `SCHEDULER_ENABLED`, `SCHEDULER_EXECUTION_MODE`, `REFLECTION_INTERVAL`,
   `MAINTENANCE_INTERVAL`, `PROACTIVE_ENABLED`, `PROACTIVE_INTERVAL`
 - in-process scheduler cadence is now implemented through
-  `app/workers/scheduler.py` for reflection and maintenance routines
-- proactive ticks now have a live decision and delivery-guard path when a
-  scheduler proactive event is received
+  `app/workers/scheduler.py` for reflection, maintenance, and proactive
+  routines
+- proactive cadence is now live in the in-process scheduler through
+  repository-backed candidate selection, bounded scheduler event emission, and
+  normal runtime execution
 - scheduler runtime posture and latest tick summaries are visible through
   `GET /health`
 - maintenance/proactive cadence dispatch now uses shared owner-aware boundary
   decisions (`in_process_owner_mode|externalized_owner_mode`) and scheduler
   maintenance path explicitly no-ops in externalized posture
+- `/health.proactive` now exposes the shared proactive runtime policy owner,
+  selected cadence owner, delivery-target baseline, candidate-selection
+  baseline, anti-spam thresholds, and latest proactive tick summary
 
 `PRJ-308` now defines the target cadence-ownership direction:
 
@@ -565,10 +570,6 @@ Scheduler-facing runtime contracts are now explicit:
   explicit fallback path
 - runtime remains the owner of scheduled-event contract normalization and
   guardrail/conscious execution boundaries regardless of cadence owner
-
-Current limitation:
-
-- autonomous proactive cadence loops are not yet live in scheduler worker.
 
 ---
 

@@ -52,22 +52,22 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-484 Define the true MVP proactive runtime baseline and anti-spam contract
+- [ ] PRJ-488 Decide the long-term role-versus-skill execution boundary
   - Owner: Planner
-  - Group: Proactive Runtime Activation
-  - Depends on: PRJ-483
+  - Group: Role/Skill Maturity And Behavior-Validation Expansion
+  - Depends on: PRJ-487
   - Priority: P1
   - Why now:
-    - connector, retrieval, and deferred reflection now each have explicit
-      live or target operating baselines, so the next remaining production gap
-      is proactive cadence ownership and anti-spam posture
+    - proactive cadence now has an explicit live baseline, so the last seeded
+      lane is to freeze the long-term role-versus-skill boundary and widen
+      behavior-validation evidence for the post-convergence runtime
   - Done when:
-    - the repo records what live proactive cadence means for cadence owner,
-      delivery target, unanswered throttles, cooldowns, and feedback loops
-    - runtime, ops, and behavior validation can proceed without ambiguity
-      about proactive outreach boundaries
+    - the repo records whether skills remain metadata-only capability hints or
+      grow into a fuller execution-assist layer
+    - runtime surfaces and behavior-validation expectations can converge on
+      one explicit role/skill maturity baseline
   - Validation:
-    - cross-review across proactive architecture, guardrails, and runtime reality
+    - architecture/planning cross-review across role/skill docs and runtime contracts
 
 ## BACKLOG
 
@@ -90,6 +90,68 @@ Last updated: 2026-04-22
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-487 Sync docs/context for proactive runtime activation
+  - Status: DONE
+  - Group: Proactive Runtime Activation
+  - Owner: Product Docs
+  - Depends on: PRJ-486
+  - Priority: P1
+  - Result:
+    - planning, implementation reality, ops guidance, testing guidance, and
+      context truth now describe one shared proactive runtime baseline with
+      live scheduler cadence ownership, explicit anti-spam posture, and
+      machine-visible health/debug policy snapshots
+    - the next active lane is role/skill maturity and behavior-validation
+      expansion
+  - Validation:
+    - doc-and-context sync across planning, implementation, ops, testing, and
+      context surfaces
+
+- [x] PRJ-486 Add scenario-level behavior validation for proactive outreach quality and anti-spam posture
+  - Status: DONE
+  - Group: Proactive Runtime Activation
+  - Owner: QA/Test
+  - Depends on: PRJ-485
+  - Priority: P1
+  - Result:
+    - behavior validation now covers proactive delivery-ready and
+      anti-spam-blocked posture so proactive runtime is proven through
+      scenario evidence, not only helper or unit coverage
+  - Validation:
+    - `.\scripts\run_behavior_validation.ps1 -GateMode operator`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+- [x] PRJ-485 Implement live proactive cadence ownership beyond passive scheduler plumbing
+  - Status: DONE
+  - Group: Proactive Runtime Activation
+  - Owner: Backend Builder
+  - Depends on: PRJ-484
+  - Priority: P1
+  - Result:
+    - in-process scheduler ownership can now emit bounded proactive wakeups
+      through repository-backed candidate selection, runtime execution, and
+      machine-visible tick summaries instead of only holding proactive guard
+      primitives
+    - `/health.proactive` now exposes cadence-owner, delivery baseline, and
+      anti-spam contract posture for operator triage
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+- [x] PRJ-484 Define the true MVP proactive runtime baseline and anti-spam contract
+  - Status: DONE
+  - Group: Proactive Runtime Activation
+  - Owner: Planner
+  - Depends on: PRJ-483
+  - Priority: P1
+  - Result:
+    - the repo now records one explicit proactive runtime policy owner with
+      cadence owner, delivery-target baseline, opted-in candidate selection,
+      cooldown, and unanswered/outbound anti-spam thresholds
+    - runtime, ops, and behavior validation can proceed without ambiguity
+      about what counts as live proactive cadence posture
+  - Validation:
+    - cross-review across proactive architecture, guardrails, and runtime reality
 
 - [x] PRJ-483 Sync docs/context for background worker externalization
   - Status: DONE

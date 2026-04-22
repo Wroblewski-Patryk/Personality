@@ -126,6 +126,9 @@ For meaningful repo changes, leave behind:
 - for background-worker externalization slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_deployment_trigger_scripts.py`
   - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_reflection_worker.py`
+- for proactive-runtime activation slices, regression evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+  - `.\scripts\run_behavior_validation.ps1 -GateMode operator`
 - for embedding execution-class diagnostics slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py`
 - for connector execution-policy slices, regression evidence from:

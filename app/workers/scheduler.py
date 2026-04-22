@@ -5,8 +5,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.core.logging import get_logger
+from app.core.events import build_scheduler_event
+from app.core.proactive_policy import proactive_runtime_policy_snapshot
 from app.core.scheduler_contracts import (
     SCHEDULER_MAINTENANCE_TICK,
+    SCHEDULER_PROACTIVE_TICK,
     SCHEDULER_REFLECTION_TICK,
     clamp_scheduler_interval_seconds,
     normalize_reflection_runtime_mode,
@@ -37,6 +40,7 @@ class SchedulerWorker:
         maintenance_interval_seconds: int,
         execution_mode: str = "in_process",
         proactive_enabled: bool = False,
+        proactive_interval_seconds: int = 1800,
         reflection_batch_limit: int = 10,
     ) -> None:
         self.memory_repository = memory_repository
@@ -54,20 +58,31 @@ class SchedulerWorker:
             interval_seconds=int(maintenance_interval_seconds),
         )
         self.proactive_enabled = bool(proactive_enabled)
+        self.proactive_interval_seconds = clamp_scheduler_interval_seconds(
+            subsource=SCHEDULER_PROACTIVE_TICK,
+            interval_seconds=int(proactive_interval_seconds),
+        )
         self.reflection_batch_limit = max(1, int(reflection_batch_limit))
+        self.runtime = None
 
         self._task: asyncio.Task | None = None
         self._stop_event = asyncio.Event()
         self._next_reflection_due_at: datetime | None = None
         self._next_maintenance_due_at: datetime | None = None
+        self._next_proactive_due_at: datetime | None = None
         self._last_reflection_tick_at: datetime | None = None
         self._last_maintenance_tick_at: datetime | None = None
+        self._last_proactive_tick_at: datetime | None = None
         self._last_reflection_summary: dict[str, Any] | None = None
         self._last_maintenance_summary: dict[str, Any] | None = None
+        self._last_proactive_summary: dict[str, Any] | None = None
         self.logger = get_logger("aion.scheduler")
 
     def is_running(self) -> bool:
         return self._task is not None and not self._task.done()
+
+    def set_runtime(self, runtime: Any) -> None:
+        self.runtime = runtime
 
     async def start(self) -> None:
         if not self.enabled or self.is_running():
@@ -76,6 +91,7 @@ class SchedulerWorker:
         now = self._utcnow()
         self._next_reflection_due_at = now
         self._next_maintenance_due_at = now
+        self._next_proactive_due_at = now
         self._stop_event = asyncio.Event()
         self._task = asyncio.create_task(self._run_loop(), name="aion-scheduler-worker")
 
@@ -195,6 +211,138 @@ class SchedulerWorker:
         )
         return summary
 
+    async def run_proactive_tick_once(self, *, reason: str = "cadence") -> dict[str, Any]:
+        now = self._utcnow()
+        should_dispatch, dispatch_reason = scheduler_cadence_dispatch_decision(
+            execution_mode=self.execution_mode,
+            cadence_kind=SCHEDULER_PROACTIVE_TICK,
+            proactive_enabled=self.proactive_enabled,
+        )
+        if not should_dispatch:
+            summary = {
+                "executed": False,
+                "reason": dispatch_reason,
+                "trigger": reason,
+                "candidates_considered": 0,
+                "events_emitted": 0,
+                "messages_delivered": 0,
+                "delivery_blocked": 0,
+                "failures": 0,
+            }
+            self._last_proactive_tick_at = now
+            self._last_proactive_summary = summary
+            self.logger.info(
+                "scheduler_proactive_tick executed=%s reason=%s trigger=%s execution_mode=%s proactive_owner=%s candidates_considered=%s events_emitted=%s delivered=%s blocked=%s failures=%s",
+                summary["executed"],
+                summary["reason"],
+                summary["trigger"],
+                self.execution_mode,
+                "external_scheduler" if self.execution_mode == "externalized" else "in_process_scheduler",
+                summary["candidates_considered"],
+                summary["events_emitted"],
+                summary["messages_delivered"],
+                summary["delivery_blocked"],
+                summary["failures"],
+            )
+            return summary
+
+        if self.runtime is None or not hasattr(self.runtime, "run"):
+            summary = {
+                "executed": False,
+                "reason": "runtime_unavailable",
+                "trigger": reason,
+                "candidates_considered": 0,
+                "events_emitted": 0,
+                "messages_delivered": 0,
+                "delivery_blocked": 0,
+                "failures": 0,
+            }
+            self._last_proactive_tick_at = now
+            self._last_proactive_summary = summary
+            self.logger.warning(
+                "scheduler_proactive_tick executed=%s reason=%s trigger=%s execution_mode=%s proactive_owner=%s candidates_considered=%s events_emitted=%s delivered=%s blocked=%s failures=%s",
+                summary["executed"],
+                summary["reason"],
+                summary["trigger"],
+                self.execution_mode,
+                "external_scheduler" if self.execution_mode == "externalized" else "in_process_scheduler",
+                summary["candidates_considered"],
+                summary["events_emitted"],
+                summary["messages_delivered"],
+                summary["delivery_blocked"],
+                summary["failures"],
+            )
+            return summary
+
+        candidates = []
+        if hasattr(self.memory_repository, "get_proactive_scheduler_candidates"):
+            candidates = await self.memory_repository.get_proactive_scheduler_candidates(
+                proactive_interval_seconds=self.proactive_interval_seconds,
+                limit=5,
+            )
+
+        messages_delivered = 0
+        delivery_blocked = 0
+        failures = 0
+        events_emitted = 0
+        for candidate in candidates:
+            proactive_event = build_scheduler_event(
+                subsource=SCHEDULER_PROACTIVE_TICK,
+                user_id=str(candidate["user_id"]),
+                payload={
+                    "text": str(candidate["text"]),
+                    "chat_id": candidate["chat_id"],
+                    "proactive_trigger": str(candidate["trigger"]),
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": str(candidate["recent_user_activity"]),
+                        "recent_outbound_count": int(candidate["recent_outbound_count"]),
+                        "unanswered_proactive_count": int(candidate["unanswered_proactive_count"]),
+                    },
+                },
+            )
+            try:
+                result = await self.runtime.run(proactive_event)
+            except Exception:
+                failures += 1
+                continue
+            events_emitted += 1
+            if result.action_result.status == "success" and "send_telegram_message" in result.action_result.actions:
+                messages_delivered += 1
+            elif result.action_result.status in {"noop", "partial"}:
+                delivery_blocked += 1
+            elif result.action_result.status == "fail":
+                failures += 1
+
+        summary = {
+            "executed": True,
+            "reason": dispatch_reason,
+            "trigger": reason,
+            "candidates_considered": len(candidates),
+            "events_emitted": events_emitted,
+            "messages_delivered": messages_delivered,
+            "delivery_blocked": delivery_blocked,
+            "failures": failures,
+        }
+        self._last_proactive_tick_at = now
+        self._last_proactive_summary = summary
+        log_method = self.logger.warning if failures > 0 else self.logger.info
+        log_method(
+            "scheduler_proactive_tick executed=%s reason=%s trigger=%s execution_mode=%s proactive_owner=%s candidates_considered=%s events_emitted=%s delivered=%s blocked=%s failures=%s",
+            summary["executed"],
+            summary["reason"],
+            summary["trigger"],
+            self.execution_mode,
+            "external_scheduler" if self.execution_mode == "externalized" else "in_process_scheduler",
+            summary["candidates_considered"],
+            summary["events_emitted"],
+            summary["messages_delivered"],
+            summary["delivery_blocked"],
+            summary["failures"],
+        )
+        return summary
+
     def snapshot(self) -> dict[str, Any]:
         running = self.is_running()
         cadence_execution = scheduler_cadence_execution_snapshot(
@@ -202,6 +350,13 @@ class SchedulerWorker:
             scheduler_enabled=self.enabled,
             scheduler_running=running,
             proactive_enabled=self.proactive_enabled,
+        )
+        proactive_policy = proactive_runtime_policy_snapshot(
+            proactive_enabled=self.proactive_enabled,
+            proactive_interval_seconds=self.proactive_interval_seconds,
+            scheduler_execution_mode=self.execution_mode,
+            scheduler_ready=bool(cadence_execution["ready"]),
+            scheduler_running=running,
         )
         return {
             "execution_mode": self.execution_mode,
@@ -215,13 +370,18 @@ class SchedulerWorker:
             "reflection_runtime_mode": self.reflection_runtime_mode,
             "reflection_interval_seconds": self.reflection_interval_seconds,
             "maintenance_interval_seconds": self.maintenance_interval_seconds,
+            "proactive_interval_seconds": self.proactive_interval_seconds,
             "reflection_batch_limit": self.reflection_batch_limit,
             "next_reflection_due_at": self._format_timestamp(self._next_reflection_due_at),
             "next_maintenance_due_at": self._format_timestamp(self._next_maintenance_due_at),
+            "next_proactive_due_at": self._format_timestamp(self._next_proactive_due_at),
             "last_reflection_tick_at": self._format_timestamp(self._last_reflection_tick_at),
             "last_maintenance_tick_at": self._format_timestamp(self._last_maintenance_tick_at),
+            "last_proactive_tick_at": self._format_timestamp(self._last_proactive_tick_at),
             "last_reflection_summary": dict(self._last_reflection_summary or {}),
             "last_maintenance_summary": dict(self._last_maintenance_summary or {}),
+            "last_proactive_summary": dict(self._last_proactive_summary or {}),
+            "proactive_policy": proactive_policy,
         }
 
     async def _run_loop(self) -> None:
@@ -231,6 +391,8 @@ class SchedulerWorker:
                 self._next_reflection_due_at = now
             if self._next_maintenance_due_at is None:
                 self._next_maintenance_due_at = now
+            if self._next_proactive_due_at is None:
+                self._next_proactive_due_at = now
 
             if now >= self._next_reflection_due_at:
                 await self.run_reflection_tick_once(reason="scheduled_reflection_tick")
@@ -239,6 +401,10 @@ class SchedulerWorker:
             if now >= self._next_maintenance_due_at:
                 await self.run_maintenance_tick_once(reason="scheduled_maintenance_tick")
                 self._next_maintenance_due_at = now + timedelta(seconds=self.maintenance_interval_seconds)
+
+            if now >= self._next_proactive_due_at:
+                await self.run_proactive_tick_once(reason="scheduled_proactive_tick")
+                self._next_proactive_due_at = now + timedelta(seconds=self.proactive_interval_seconds)
 
             sleep_seconds = self._sleep_duration_seconds(now)
             try:
@@ -253,7 +419,11 @@ class SchedulerWorker:
         )
 
     def _sleep_duration_seconds(self, now: datetime) -> float:
-        due_times = [value for value in [self._next_reflection_due_at, self._next_maintenance_due_at] if value is not None]
+        due_times = [
+            value
+            for value in [self._next_reflection_due_at, self._next_maintenance_due_at, self._next_proactive_due_at]
+            if value is not None
+        ]
         if not due_times:
             return self.MAX_SLEEP_SECONDS
         next_due = min(due_times)

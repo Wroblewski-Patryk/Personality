@@ -122,9 +122,9 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `PRJ-464..PRJ-467`: migration parity and schema governance - complete
   - `PRJ-468..PRJ-471`: canonical docs consistency sweep - complete
   - `PRJ-472..PRJ-475`: connector execution productionization
-  - `PRJ-476..PRJ-479`: retrieval provider completion
-  - `PRJ-480..PRJ-483`: background worker externalization
-  - `PRJ-484..PRJ-487`: proactive runtime activation
+  - `PRJ-476..PRJ-479`: retrieval provider completion - complete
+  - `PRJ-480..PRJ-483`: background worker externalization - complete
+  - `PRJ-484..PRJ-487`: proactive runtime activation - complete
   - `PRJ-488..PRJ-491`: role/skill maturity and behavior-validation expansion
 - this queue is intentionally ordered by architectural risk:
   deployment/schema truth first, then canonical docs consistency, then
@@ -170,6 +170,18 @@ The current repo already works as an MVP slice, but several architecture-level d
   - `in_process` reflection remains explicit compatibility posture, not the
     target deferred external-worker baseline
   - the next active lane is proactive runtime activation
+- `PRJ-484..PRJ-487` are now complete:
+  - proactive runtime now has one explicit policy owner for cadence owner,
+    delivery-target baseline, opted-in candidate selection, and anti-spam
+    thresholds
+  - in-process scheduler ownership can now emit bounded proactive wakeups
+    through repository-backed candidate selection and runtime execution
+  - `/health.proactive` plus scheduler proactive tick summaries now expose
+    live proactive posture for operator triage
+  - behavior validation now covers delivery-ready versus anti-spam-blocked
+    proactive outcomes
+  - the next active lane is role/skill maturity and behavior-validation
+    expansion
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -989,13 +1001,16 @@ The current repo already works as an MVP slice, but several architecture-level d
     and source/subsource runtime boundaries.
   - runtime config now includes scheduler/reflection/maintenance/proactive
     interval controls.
-  - an in-process scheduler worker can now run reflection and maintenance
-    cadence (`SCHEDULER_ENABLED`) and exposes scheduler posture/tick summaries
-    through `GET /health`.
+  - an in-process scheduler worker can now run reflection, maintenance, and
+    proactive cadence (`SCHEDULER_ENABLED`) and exposes scheduler
+    posture/tick summaries through `GET /health`.
   - proactive scheduler ticks now run through a dedicated decision engine with
     interruption-cost guardrails and typed plan/motivation outputs.
   - proactive delivery now enforces baseline guardrails (user opt-in, outbound
     and unanswered throttle checks, delivery-target requirement) before outreach.
+  - `/health.proactive` now exposes one shared proactive runtime policy owner,
+    cadence owner posture, delivery-target baseline, candidate-selection
+    baseline, and anti-spam threshold snapshot.
 - Decision (PRJ-322 scheduler execution owner posture, 2026-04-20):
   - scheduler cadence execution mode is now explicit through
     `SCHEDULER_EXECUTION_MODE` (`in_process|externalized`)
@@ -1033,6 +1048,14 @@ The current repo already works as an MVP slice, but several architecture-level d
   - durable attention remains the rollout target owner, while current
     production-default switching is gated by explicit topology and scheduler
     ownership evidence.
+- Resolved follow-up in `PRJ-484..PRJ-487` (2026-04-22):
+  - proactive cadence now has one explicit live baseline under shared
+    `proactive_runtime_policy` ownership
+  - in-process scheduler ownership can emit bounded proactive wakeups through
+    repository-backed candidate selection and normal runtime execution
+  - anti-spam posture is explicit through cooldown plus outbound/unanswered
+    thresholds, and behavior validation now proves both delivery-ready and
+    attention-gate-blocked proactive scenarios
 
 ### 12a. Attention Inbox And Turn Assembly
 

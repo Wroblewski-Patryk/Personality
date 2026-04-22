@@ -118,7 +118,7 @@ New groups:
 - `PRJ-472..PRJ-475` Connector execution productionization
 - `PRJ-476..PRJ-479` Retrieval provider completion
 - `PRJ-480..PRJ-483` Background worker externalization
-- `PRJ-484..PRJ-487` Proactive runtime activation
+- `PRJ-484..PRJ-487` Proactive runtime activation - complete
 - `PRJ-488..PRJ-491` Role/skill maturity and behavior-validation expansion
 
 Why this order:
@@ -367,6 +367,22 @@ Completed on 2026-04-22:
     - doc-and-context sync across canonical docs, runtime reality, ops, and planning
 
 ## Group 68 - Proactive Runtime Activation
+
+Completed on 2026-04-22:
+
+- `PRJ-484` fixed the true MVP proactive runtime baseline explicitly:
+  scheduler-owned cadence, opted-in candidate selection, Telegram delivery
+  target fallback, and anti-spam thresholds now live behind one shared policy
+  owner.
+- `PRJ-485` made proactive cadence actually live in the in-process scheduler by
+  selecting repository-backed candidates, emitting bounded scheduler events,
+  and exposing tick summaries plus proactive policy posture through `/health`.
+- `PRJ-486` expanded behavior validation so proactive runtime is proven through
+  delivery-ready and anti-spam-blocked scenarios rather than helper contracts
+  alone.
+- `PRJ-487` synchronized planning/context, runtime reality, ops guidance, and
+  testing guidance around the same proactive baseline so the next lane can
+  move on to role/skill maturity and behavior-validation expansion.
 
 - `PRJ-484` Define the true MVP proactive runtime baseline and anti-spam contract.
   - Result:

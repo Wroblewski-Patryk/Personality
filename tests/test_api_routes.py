@@ -289,6 +289,7 @@ class FakeSettings:
         reflection_interval: int = 900,
         maintenance_interval: int = 3600,
         proactive_enabled: bool = False,
+        proactive_interval: int = 1800,
         attention_coordination_mode: str = "in_process",
     ):
         self.telegram_webhook_secret = telegram_webhook_secret
@@ -320,6 +321,7 @@ class FakeSettings:
         self.reflection_interval = reflection_interval
         self.maintenance_interval = maintenance_interval
         self.proactive_enabled = proactive_enabled
+        self.proactive_interval = proactive_interval
         self.attention_coordination_mode = attention_coordination_mode
 
     def is_event_debug_enabled(self) -> bool:
@@ -497,6 +499,7 @@ class FakeSchedulerWorker:
         reflection_runtime_mode: str = "in_process",
         reflection_interval_seconds: int = 900,
         maintenance_interval_seconds: int = 3600,
+        proactive_interval_seconds: int = 1800,
     ):
         self.enabled = enabled
         self.running = running
@@ -506,6 +509,7 @@ class FakeSchedulerWorker:
         self.reflection_runtime_mode = reflection_runtime_mode
         self.reflection_interval_seconds = reflection_interval_seconds
         self.maintenance_interval_seconds = maintenance_interval_seconds
+        self.proactive_interval_seconds = proactive_interval_seconds
 
     def snapshot(self) -> dict:
         cadence_execution = {
@@ -560,13 +564,48 @@ class FakeSchedulerWorker:
             "reflection_runtime_mode": self.reflection_runtime_mode,
             "reflection_interval_seconds": self.reflection_interval_seconds,
             "maintenance_interval_seconds": self.maintenance_interval_seconds,
+            "proactive_interval_seconds": self.proactive_interval_seconds,
             "reflection_batch_limit": 10,
             "next_reflection_due_at": None,
             "next_maintenance_due_at": None,
+            "next_proactive_due_at": None,
             "last_reflection_tick_at": None,
             "last_maintenance_tick_at": None,
+            "last_proactive_tick_at": None,
             "last_reflection_summary": {},
             "last_maintenance_summary": {},
+            "last_proactive_summary": {},
+            "proactive_policy": {
+                "policy_owner": "proactive_runtime_policy",
+                "selected_execution_mode": self.execution_mode,
+                "selected_cadence_owner": (
+                    "external_scheduler" if self.execution_mode == "externalized" else "in_process_scheduler"
+                ),
+                "delivery_channel_baseline": "telegram_direct_message",
+                "delivery_target_baseline": "recent_telegram_chat_or_numeric_user_id_fallback",
+                "candidate_selection_baseline": "opted_in_users_with_active_work_or_time_checkin",
+                "anti_spam_contract": {
+                    "delivery_guard_recent_outbound_limit_default": 2,
+                    "delivery_guard_unanswered_limit_default": 1,
+                    "attention_gate_recent_outbound_limit_default": 3,
+                    "attention_gate_unanswered_limit_default": 2,
+                    "cadence_cooldown_seconds": self.proactive_interval_seconds,
+                },
+                "production_baseline_ready": self.proactive_enabled and not (
+                    (self.execution_mode == "in_process" and self.enabled and not self.running)
+                    or (self.execution_mode == "externalized" and self.running)
+                ),
+                "production_baseline_state": (
+                    "disabled_by_policy"
+                    if not self.proactive_enabled
+                    else (
+                        "external_scheduler_target_owner"
+                        if self.execution_mode == "externalized"
+                        else ("in_process_scheduler_live" if self.running else "in_process_scheduler_not_running")
+                    )
+                ),
+                "production_baseline_hint": "scheduler_worker_can_emit_bounded_proactive_ticks",
+            },
         }
 
 
@@ -609,6 +648,7 @@ def _client(
     reflection_interval: int = 900,
     maintenance_interval: int = 3600,
     proactive_enabled: bool = False,
+    proactive_interval: int = 1800,
     attention_burst_window_ms: int = 120,
     attention_answered_ttl_seconds: float = 0.5,
     attention_stale_turn_seconds: float = 3.0,
@@ -635,6 +675,7 @@ def _client(
         reflection_runtime_mode=reflection_runtime_mode,
         reflection_interval_seconds=reflection_interval,
         maintenance_interval_seconds=maintenance_interval,
+        proactive_interval_seconds=proactive_interval,
     )
     app.state.runtime = runtime
     app.state.telegram_client = telegram_client
@@ -668,6 +709,7 @@ def _client(
         reflection_interval=reflection_interval,
         maintenance_interval=maintenance_interval,
         proactive_enabled=proactive_enabled,
+        proactive_interval=proactive_interval,
         attention_coordination_mode=attention_coordination_mode,
     )
     app.state.memory_repository = memory_repository
@@ -711,6 +753,11 @@ def test_health_endpoint_returns_ok() -> None:
     assert body["runtime_policy"]["event_debug_shared_ingress_mode"] == "compatibility"
     assert body["runtime_policy"]["compatibility_sunset_ready"] is False
     assert body["runtime_policy"]["event_debug_query_compat_telemetry"]["recent_window_size"] == 20
+    assert body["proactive"]["policy_owner"] == "proactive_runtime_policy"
+    assert body["proactive"]["enabled"] is False
+    assert body["proactive"]["production_baseline_state"] == "disabled_by_policy"
+    assert body["proactive"]["anti_spam_contract"]["delivery_guard_recent_outbound_limit_default"] == 2
+    assert body["proactive"]["anti_spam_contract"]["attention_gate_recent_outbound_limit_default"] == 3
     assert body["identity"]["policy_owner"] == "identity_policy"
     assert body["identity"]["language_strategy"] == "heuristic_plus_profile_continuity"
     assert body["identity"]["profile_owner_fields"] == ["preferred_language"]
@@ -1231,6 +1278,9 @@ def test_health_endpoint_exposes_externalized_scheduler_execution_mode_posture()
     assert body["scheduler"]["cadence_execution"]["maintenance_tick_reason"] == "externalized_owner_mode"
     assert body["scheduler"]["cadence_execution"]["proactive_tick_dispatch"] is False
     assert body["scheduler"]["cadence_execution"]["proactive_tick_reason"] == "externalized_owner_mode"
+    assert body["proactive"]["enabled"] is True
+    assert body["proactive"]["selected_cadence_owner"] == "external_scheduler"
+    assert body["proactive"]["production_baseline_state"] == "external_scheduler_target_owner"
     assert body["scheduler"]["healthy"] is True
 
 

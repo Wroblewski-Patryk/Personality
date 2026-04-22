@@ -163,6 +163,19 @@ Last updated: 2026-04-22
 - 2026-04-22: `/health.reflection.external_driver_policy` and release smoke now
   expose machine-visible external-driver posture so operators can distinguish
   target deferred-worker alignment from local in-process compatibility mode.
+- 2026-04-22: proactive runtime activation now has one shared policy owner in
+  `app/core/proactive_policy.py`; `/health.proactive`,
+  `/health.scheduler.last_proactive_summary`, and runtime
+  `system_debug.adaptive_state.proactive_policy` expose cadence ownership,
+  delivery-target baseline, and anti-spam thresholds through one contract.
+- 2026-04-22: in-process scheduler ownership can now execute bounded proactive
+  cadence ticks by selecting opted-in candidates from repository state,
+  building scheduler-owned proactive events, and routing them back through the
+  normal foreground runtime boundary instead of treating proactive cadence as
+  architecture-only scaffolding.
+- 2026-04-22: proactive behavior validation now covers both delivery-ready and
+  anti-spam-blocked posture, so proactive runtime is proven through
+  scenario-level evidence in addition to unit and integration coverage.
 - 2026-04-19: embedding strategy posture is now explicit through
   `EMBEDDING_PROVIDER`, `EMBEDDING_MODEL`, and `EMBEDDING_DIMENSIONS` with
   deterministic-fallback visibility in `GET /health.memory_retrieval`
@@ -1866,6 +1879,42 @@ Last updated: 2026-04-22
   passed with `184 passed`.
 - 2026-04-22: the next `READY` lane is Group 66 (`PRJ-476..PRJ-479`),
   focused on retrieval provider completion.
+- 2026-04-22: `PRJ-476..PRJ-479` are complete: the target provider-owned
+  retrieval baseline is now explicit as OpenAI API embeddings when configured,
+  retrieval materialization has a live provider-owned path, and `/health`
+  exposes machine-visible production-baseline posture for retrieval rollout.
+- 2026-04-22: Group 66 validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_memory_repository.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+  passed with `163 passed`, and
+  `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_runtime_policy.py`
+  passed with `104 passed`.
+- 2026-04-22: the next `READY` lane is Group 67 (`PRJ-480..PRJ-483`),
+  focused on background worker externalization.
+- 2026-04-22: `PRJ-480..PRJ-483` are complete: deferred reflection
+  externalization now has one explicit policy owner, one canonical
+  queue-drain entrypoint, and release-smoke-visible external-driver posture
+  instead of depending on app-local worker assumptions.
+- 2026-04-22: Group 67 validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_reflection_worker.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
+  passed with `153 passed`, and
+  `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_api_routes.py tests/test_main_runtime_policy.py`
+  passed with `98 passed`.
+- 2026-04-22: the next `READY` lane is Group 68 (`PRJ-484..PRJ-487`),
+  focused on proactive runtime activation.
+- 2026-04-22: `PRJ-484..PRJ-487` are complete: proactive runtime now has one
+  explicit policy owner for cadence baseline and anti-spam thresholds,
+  in-process scheduler ownership can emit bounded proactive wakeups through
+  the normal runtime path, `/health.proactive` exposes live proactive posture,
+  and behavior validation now covers delivery-ready versus anti-spam-blocked
+  proactive outcomes.
+- 2026-04-22: Group 68 validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+  passed with `167 passed`, and
+  `.\scripts\run_behavior_validation.ps1 -GateMode operator`
+  passed with `7 passed`.
+- 2026-04-22: the next `READY` lane is Group 69 (`PRJ-488..PRJ-491`),
+  focused on freezing the long-term role-versus-skill boundary and widening
+  behavior-validation proof for the post-convergence runtime.
 
 ## Working Agreements
 

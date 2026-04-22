@@ -47,6 +47,7 @@ class FakeMemoryRepository:
             "stuck_processing": 0,
         }
         self.stats_calls: list[dict] = []
+        self.proactive_candidates: list[dict] = []
 
     async def get_reflection_task_stats(
         self,
@@ -64,6 +65,37 @@ class FakeMemoryRepository:
             }
         )
         return self.stats
+
+    async def get_proactive_scheduler_candidates(
+        self,
+        *,
+        proactive_interval_seconds: int,
+        limit: int = 8,
+    ) -> list[dict]:
+        return self.proactive_candidates[:limit]
+
+
+class FakeRuntime:
+    def __init__(self, *, status: str = "success", actions: list[str] | None = None):
+        self.calls: list[dict] = []
+        self.status = status
+        self.actions = list(actions or ["send_telegram_message"])
+
+    async def run(self, event):
+        self.calls.append(
+            {
+                "user_id": event.meta.user_id,
+                "subsource": event.subsource,
+                "chat_id": event.payload.get("chat_id"),
+                "trigger": event.payload.get("proactive", {}).get("trigger"),
+            }
+        )
+
+        class Result:
+            def __init__(self, status: str, actions: list[str]):
+                self.action_result = type("ActionResult", (), {"status": status, "actions": actions})()
+
+        return Result(self.status, self.actions)
 
 
 async def test_scheduler_worker_reflection_tick_runs_in_deferred_mode() -> None:
@@ -272,6 +304,80 @@ async def test_scheduler_worker_snapshot_exposes_owner_aware_execution_posture()
     assert snapshot["cadence_execution"]["maintenance_tick_reason"] == "in_process_owner_mode"
     assert snapshot["cadence_execution"]["proactive_tick_dispatch"] is False
     assert snapshot["cadence_execution"]["proactive_tick_reason"] == "proactive_disabled"
+
+
+async def test_scheduler_worker_proactive_tick_emits_bounded_scheduler_events() -> None:
+    reflection_worker = FakeReflectionWorker(running=False)
+    repository = FakeMemoryRepository()
+    repository.proactive_candidates = [
+        {
+            "user_id": "123456",
+            "chat_id": 123456,
+            "trigger": "task_blocked",
+            "text": "follow up on blocked task deploy",
+            "recent_outbound_count": 0,
+            "unanswered_proactive_count": 0,
+            "recent_user_activity": "active",
+        }
+    ]
+    runtime = FakeRuntime()
+    scheduler = SchedulerWorker(
+        memory_repository=repository,  # type: ignore[arg-type]
+        reflection_worker=reflection_worker,  # type: ignore[arg-type]
+        enabled=True,
+        reflection_runtime_mode="deferred",
+        reflection_interval_seconds=900,
+        maintenance_interval_seconds=3600,
+        proactive_enabled=True,
+        proactive_interval_seconds=1800,
+    )
+    scheduler.set_runtime(runtime)
+
+    summary = await scheduler.run_proactive_tick_once(reason="test_proactive")
+
+    assert summary == {
+        "executed": True,
+        "reason": "in_process_owner_mode",
+        "trigger": "test_proactive",
+        "candidates_considered": 1,
+        "events_emitted": 1,
+        "messages_delivered": 1,
+        "delivery_blocked": 0,
+        "failures": 0,
+    }
+    assert runtime.calls == [
+        {
+            "user_id": "123456",
+            "subsource": "proactive_tick",
+            "chat_id": 123456,
+            "trigger": "task_blocked",
+        }
+    ]
+
+
+async def test_scheduler_worker_snapshot_exposes_live_proactive_policy() -> None:
+    reflection_worker = FakeReflectionWorker(running=False)
+    repository = FakeMemoryRepository()
+    scheduler = SchedulerWorker(
+        memory_repository=repository,  # type: ignore[arg-type]
+        reflection_worker=reflection_worker,  # type: ignore[arg-type]
+        enabled=True,
+        reflection_runtime_mode="deferred",
+        reflection_interval_seconds=900,
+        maintenance_interval_seconds=3600,
+        proactive_enabled=True,
+        proactive_interval_seconds=1800,
+    )
+
+    await scheduler.start()
+    snapshot = scheduler.snapshot()
+    await scheduler.stop()
+
+    assert snapshot["proactive_interval_seconds"] == 1800
+    assert snapshot["proactive_policy"]["policy_owner"] == "proactive_runtime_policy"
+    assert snapshot["proactive_policy"]["selected_cadence_owner"] == "in_process_scheduler"
+    assert snapshot["proactive_policy"]["production_baseline_ready"] is True
+    assert snapshot["proactive_policy"]["production_baseline_state"] == "in_process_scheduler_live"
 
 
 async def test_scheduler_worker_reflection_tick_logs_worker_mode_handoff_posture(caplog) -> None:

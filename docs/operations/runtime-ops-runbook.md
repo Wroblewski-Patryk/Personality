@@ -68,6 +68,18 @@ compat dependency.
 (`execution_mode`, cadence owners, dispatch/readiness posture, interval
 settings) and latest reflection/maintenance tick summaries.
 
+`GET /health` now also includes a `proactive` object with live proactive
+cadence posture:
+
+- shared policy owner and selected cadence owner
+- delivery-target and candidate-selection baselines
+- anti-spam contract defaults (cooldown, recent outbound threshold,
+  unanswered threshold)
+- latest proactive tick summary and last tick timestamp
+
+Use `/health.proactive` together with `/health.scheduler.last_proactive_summary`
+when triaging why proactive outreach is quiet, blocked, or actively delivering.
+
 `GET /health` now also includes an `attention` object with burst-turn assembly
 posture (`coordination_mode`, owner/readiness semantics, timing windows) and
 live turn counters (`pending`, `claimed`, `answered`) to support burst-message
@@ -746,6 +758,10 @@ Important health surfaces for current release checks:
   - heuristic-input ownership baseline
   - assessment rollout/fallback posture for live empathy triage
 - `runtime_topology`
+- `proactive`
+  - shared proactive policy owner and selected cadence owner
+  - delivery-target baseline and candidate-selection baseline
+  - anti-spam threshold snapshot plus latest proactive tick summary
 - `planning_governance`
   - inferred goal/task growth posture
   - fixed proposal-decision baseline
@@ -839,7 +855,8 @@ Preconditions checklist (required for reliable Telegram delivery triage):
   still remain operational follow-up work
 - startup now defaults to migration-first schema ownership; `create_tables()` remains only as a compatibility path behind `STARTUP_SCHEMA_MODE=create_tables`
 - runtime logging is present, but there is no external observability stack yet
-- proactive systems are still architectural intent, not live ops surfaces
+- proactive cadence is live only for the in-process scheduler owner today;
+  external scheduler ownership remains an operational follow-up
 
 ## Incident Triage Shortlist
 
