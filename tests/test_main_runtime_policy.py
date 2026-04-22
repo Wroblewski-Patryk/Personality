@@ -1,7 +1,11 @@
 import logging
 from types import SimpleNamespace
 
-from app.main import _log_embedding_strategy_warnings, _log_runtime_policy_warnings
+from app.main import (
+    _log_embedding_strategy_warnings,
+    _log_reflection_external_driver_policy,
+    _log_runtime_policy_warnings,
+)
 
 
 def test_startup_logs_warning_when_production_runs_with_debug_payload_enabled(caplog) -> None:
@@ -24,6 +28,28 @@ def test_startup_logs_warning_when_production_runs_with_debug_payload_enabled(ca
     assert any("disable_debug_payload_in_production" in message for message in messages)
     assert any("configure_event_debug_token_when_debug_enabled" in message for message in messages)
     assert any("source=explicit" in message for message in messages)
+
+
+def test_startup_logs_reflection_external_driver_policy_for_deferred_mode(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("INFO", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        reflection_runtime_mode="deferred",
+        scheduler_execution_mode="externalized",
+    )
+
+    _log_reflection_external_driver_policy(
+        settings=settings,
+        logger=logger,
+        worker_running=False,
+    )
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("reflection_external_driver_policy" in message for message in messages)
+    assert any("selected_runtime_mode=deferred" in message for message in messages)
+    assert any("production_baseline_ready=True" in message for message in messages)
+    assert any("entrypoint_path=scripts/run_reflection_queue_once.py" in message for message in messages)
 
 
 def test_startup_logs_warning_when_production_enables_query_compat_debug_route(caplog) -> None:

@@ -52,22 +52,22 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-480 Define the production external-worker baseline for deferred reflection
+- [ ] PRJ-484 Define the true MVP proactive runtime baseline and anti-spam contract
   - Owner: Planner
-  - Group: Background Worker Externalization
-  - Depends on: PRJ-479
+  - Group: Proactive Runtime Activation
+  - Depends on: PRJ-483
   - Priority: P1
   - Why now:
-    - connector and retrieval now each have one explicit provider-backed
-      production baseline, so the next remaining productionization gap is
-      background execution ownership for deferred reflection
+    - connector, retrieval, and deferred reflection now each have explicit
+      live or target operating baselines, so the next remaining production gap
+      is proactive cadence ownership and anti-spam posture
   - Done when:
-    - the repo records when `REFLECTION_RUNTIME_MODE=deferred` becomes a true
-      production external-worker baseline instead of a monitored rollout mode
-    - runtime policy, health posture, and release evidence can proceed without
-      ambiguity about reflection dispatch ownership
+    - the repo records what live proactive cadence means for cadence owner,
+      delivery target, unanswered throttles, cooldowns, and feedback loops
+    - runtime, ops, and behavior validation can proceed without ambiguity
+      about proactive outreach boundaries
   - Validation:
-    - reflection topology and ops cross-review
+    - cross-review across proactive architecture, guardrails, and runtime reality
 
 ## BACKLOG
 
@@ -90,6 +90,67 @@ Last updated: 2026-04-22
 - [ ] (none)
 
 ## DONE
+
+- [x] PRJ-483 Sync docs/context for background worker externalization
+  - Status: DONE
+  - Group: Background Worker Externalization
+  - Owner: Product Docs
+  - Depends on: PRJ-482
+  - Priority: P1
+  - Result:
+    - canonical contracts, runtime reality, ops guidance, testing guidance,
+      and planning/context truth now describe one shared deferred reflection
+      external-driver baseline with explicit queue-drain entrypoint and
+      health-visible policy owner
+    - the next active lane is proactive runtime activation
+  - Validation:
+    - doc-and-context sync across canonical docs, implementation docs,
+      ops guidance, testing guidance, and planning surfaces
+
+- [x] PRJ-482 Add release-smoke and health evidence for external worker posture
+  - Status: DONE
+  - Group: Background Worker Externalization
+  - Owner: Ops/Release
+  - Depends on: PRJ-481
+  - Priority: P1
+  - Result:
+    - `/health.reflection.external_driver_policy` now exposes machine-visible
+      policy ownership, canonical queue-drain entrypoint, and baseline
+      readiness posture
+    - release smoke verifies that external-driver policy evidence is present
+      and internally consistent before summarizing reflection posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_deployment_trigger_scripts.py`
+
+- [x] PRJ-481 Implement the external-driver-ready reflection execution path and ownership checks
+  - Status: DONE
+  - Group: Background Worker Externalization
+  - Owner: Backend Builder
+  - Depends on: PRJ-480
+  - Priority: P1
+  - Result:
+    - the repo now provides a canonical external queue-drain entrypoint
+      (`scripts/run_reflection_queue_once.py`) with PowerShell/bash wrappers
+    - startup logs and `/health.reflection` expose one shared owner contract
+      for deferred reflection external-driver posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_reflection_worker.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_deployment_trigger_scripts.py`
+
+- [x] PRJ-480 Define the production external-worker baseline for deferred reflection
+  - Status: DONE
+  - Group: Background Worker Externalization
+  - Owner: Planner
+  - Depends on: PRJ-479
+  - Priority: P1
+  - Result:
+    - the repo now records one explicit deferred reflection external-driver
+      baseline through a shared policy owner and canonical queue-drain
+      entrypoint
+    - `in_process` reflection remains a compatibility posture, not the target
+      external-worker production baseline
+  - Validation:
+    - reflection topology and ops cross-review
 
 - [x] PRJ-479 Sync docs/context for retrieval provider completion
   - Status: DONE

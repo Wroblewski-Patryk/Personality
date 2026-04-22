@@ -324,6 +324,20 @@ Completed on 2026-04-22:
 
 ## Group 67 - Background Worker Externalization
 
+Completed on 2026-04-22:
+
+- `PRJ-480` fixed the deferred reflection external-worker baseline explicitly:
+  the repo now treats a shared external-driver policy plus one canonical
+  queue-drain entrypoint as the target production posture.
+- `PRJ-481` implemented that path through
+  `scripts/run_reflection_queue_once.py` with PowerShell/bash wrappers and
+  startup policy logging.
+- `PRJ-482` exposed machine-visible external-driver posture through
+  `/health.reflection.external_driver_policy` and release-smoke validation.
+- `PRJ-483` synchronized contracts, runtime reality, ops guidance, testing,
+  and planning/context truth so the next lane can move on to proactive
+  runtime activation.
+
 - `PRJ-480` Define the production external-worker baseline for deferred reflection.
   - Result:
     - one explicit operating model records when `deferred` reflection becomes

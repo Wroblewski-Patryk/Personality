@@ -156,6 +156,13 @@ Last updated: 2026-04-22
   `semantic_embedding_production_baseline`,
   `semantic_embedding_production_baseline_state`, and
   `semantic_embedding_production_baseline_hint` for rollout triage.
+- 2026-04-22: deferred reflection externalization now has one shared policy
+  owner in `app/core/background_worker_policy.py`, plus a canonical external
+  queue-drain entrypoint at `scripts/run_reflection_queue_once.py` with
+  PowerShell/bash wrappers.
+- 2026-04-22: `/health.reflection.external_driver_policy` and release smoke now
+  expose machine-visible external-driver posture so operators can distinguish
+  target deferred-worker alignment from local in-process compatibility mode.
 - 2026-04-19: embedding strategy posture is now explicit through
   `EMBEDDING_PROVIDER`, `EMBEDDING_MODEL`, and `EMBEDDING_DIMENSIONS` with
   deterministic-fallback visibility in `GET /health.memory_retrieval`

@@ -713,15 +713,21 @@ Current topology ownership split:
   - `in_process`: app-local worker can dispatch immediately
   - `deferred`: pending queue is expected to be drained by external
     scheduler/worker driver
+- `scripts/run_reflection_queue_once.py` now provides one explicit
+  external-driver entrypoint for draining the durable reflection queue once,
+  with `run_reflection_queue_once.ps1` and `.sh` wrappers for operator use
 
-Deployment baseline update (`PRJ-301`):
+Deployment baseline update (`PRJ-480..PRJ-483`):
 
-- production default remains `REFLECTION_RUNTIME_MODE=in_process`
-- deferred mode is treated as rollout posture with explicit
-  external-dispatch readiness criteria documented in
-  `docs/operations/runtime-ops-runbook.md`
+- `REFLECTION_RUNTIME_MODE=deferred` is now the explicit target production
+  posture for external-driver queue drain
+- `in_process` reflection remains compatibility posture for local or
+  transitional environments
 - release smoke now fails fast when reflection deployment-readiness blockers
   are present in `/health.reflection.deployment_readiness`
+- `/health.reflection.external_driver_policy` now exposes the canonical
+  external-driver owner, entrypoint path, wrapper paths, and whether the
+  current runtime posture is aligned with the deferred external-worker target
 - reflection scope governance now treats cross-goal leakage as a shared
   reader/writer contract problem, not only as a worker-local heuristic
 

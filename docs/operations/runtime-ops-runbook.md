@@ -541,11 +541,17 @@ Current reflection runtime topology is explicit and mode-aware:
   foreground still enqueues tasks durably, while dispatch is expected from an
   external scheduler/worker driver
 
-Production deployment baseline (PRJ-301):
+Current external-driver operating baseline (PRJ-480..PRJ-483):
 
-- keep `REFLECTION_RUNTIME_MODE=in_process` as default production posture
-- treat `REFLECTION_RUNTIME_MODE=deferred` as opt-in rollout posture gated by
-  explicit readiness criteria
+- `REFLECTION_RUNTIME_MODE=deferred` is now the explicit target production
+  posture for externalized reflection dispatch ownership
+- the canonical queue-drain entrypoint is
+  `scripts/run_reflection_queue_once.py`
+- operator wrappers are:
+  - Windows: `.\scripts\run_reflection_queue_once.ps1`
+  - Debian/bash: `./scripts/run_reflection_queue_once.sh`
+- app-local `in_process` worker remains compatibility posture for local or
+  transitional environments, not the target external-worker baseline
 
 Deferred readiness criteria (all required before production-default switch):
 
@@ -573,6 +579,12 @@ Operator checks:
   - `runtime_enqueue_dispatch` / `runtime_enqueue_reason`
   - `scheduler_tick_dispatch` / `scheduler_tick_reason`
   - retry guardrails (`max_attempts`, `retry_backoff_seconds`)
+- verify `/health.reflection.external_driver_policy`:
+  - `policy_owner=deferred_reflection_external_worker`
+  - `entrypoint_path=scripts/run_reflection_queue_once.py`
+  - `production_baseline_ready`
+  - `production_baseline_state`
+  - `production_baseline_hint`
 - verify `/health.scheduler` owner posture:
   - `execution_mode`
   - `maintenance_cadence_owner` / `proactive_cadence_owner`
@@ -584,6 +596,9 @@ Operator checks:
   - `cadence_execution.ready` / `cadence_execution.blocking_signals`
 - treat growing pending queue in deferred mode as external-dispatch signal
   rather than foreground failure
+- use the external driver entrypoint for one-shot drain checks:
+  - Windows: `.\scripts\run_reflection_queue_once.ps1 -Limit 10`
+  - Debian/bash: `./scripts/run_reflection_queue_once.sh 10`
 - verify `aion.scheduler` `scheduler_reflection_tick` logs include
   `runtime_mode`, `queue_drain_owner`, and `retry_owner` for worker-mode
   triage
@@ -819,8 +834,9 @@ Preconditions checklist (required for reliable Telegram delivery triage):
 ## Known Operational Limits
 
 - there is no background queue or worker isolation yet
-- reflection is durable and scheduler cadence is now available in-process, but
-  neither reflection nor scheduler is isolated into a separate worker process yet
+- reflection now has an explicit external-driver queue-drain entrypoint, but
+  long-running worker/process supervision and full scheduler externalization
+  still remain operational follow-up work
 - startup now defaults to migration-first schema ownership; `create_tables()` remains only as a compatibility path behind `STARTUP_SCHEMA_MODE=create_tables`
 - runtime logging is present, but there is no external observability stack yet
 - proactive systems are still architectural intent, not live ops surfaces

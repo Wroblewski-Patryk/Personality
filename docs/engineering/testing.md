@@ -123,6 +123,9 @@ For meaningful repo changes, leave behind:
 - for retrieval-provider rollout changes, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
   - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_memory_repository.py tests/test_main_runtime_policy.py tests/test_runtime_policy.py`
+- for background-worker externalization slices, regression evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_deployment_trigger_scripts.py`
+  - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_reflection_worker.py`
 - for embedding execution-class diagnostics slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py`
 - for connector execution-policy slices, regression evidence from:

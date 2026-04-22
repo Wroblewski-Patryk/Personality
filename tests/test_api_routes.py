@@ -839,6 +839,14 @@ def test_health_endpoint_allows_deferred_reflection_mode_without_running_worker(
     }
     assert body["reflection"]["topology"]["queue_drain_owner"] == "external_driver"
     assert body["reflection"]["topology"]["external_driver_expected"] is True
+    assert body["reflection"]["external_driver_policy"]["policy_owner"] == "deferred_reflection_external_worker"
+    assert body["reflection"]["external_driver_policy"]["baseline_runtime_mode"] == "deferred"
+    assert body["reflection"]["external_driver_policy"]["entrypoint_path"] == "scripts/run_reflection_queue_once.py"
+    assert body["reflection"]["external_driver_policy"]["production_baseline_ready"] is True
+    assert body["reflection"]["external_driver_policy"]["production_baseline_state"] in {
+        "external_driver_ready_scheduler_transitional",
+        "external_driver_baseline_aligned",
+    }
     assert body["reflection"]["topology"]["runtime_enqueue_dispatch"] is False
     assert body["reflection"]["topology"]["scheduler_tick_dispatch"] is True
     assert body["reflection"]["worker"]["running"] is False
@@ -857,6 +865,8 @@ def test_health_endpoint_exposes_in_process_handoff_posture_when_worker_is_stopp
     body = response.json()
     assert body["status"] == "ok"
     assert body["reflection"]["runtime_mode"] == "in_process"
+    assert body["reflection"]["external_driver_policy"]["production_baseline_ready"] is False
+    assert body["reflection"]["external_driver_policy"]["production_baseline_state"] == "in_process_compatibility_mode"
     assert body["reflection"]["deployment_readiness"]["ready"] is False
     assert "in_process_worker_not_running" in body["reflection"]["deployment_readiness"]["blocking_signals"]
     assert body["reflection"]["topology"]["queue_drain_owner"] == "in_process_worker"

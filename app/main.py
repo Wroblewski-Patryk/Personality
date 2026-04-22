@@ -11,6 +11,9 @@ from app.api.routes import router
 from app.core.action import ActionExecutor
 from app.core.affective_policy import affective_assessment_policy_snapshot
 from app.core.attention import AttentionTurnCoordinator
+from app.core.background_worker_policy import (
+    reflection_external_driver_policy_snapshot,
+)
 from app.core.config import get_settings
 from app.core.database import Database
 from app.core.debug_compat import DebugQueryCompatTelemetry
@@ -373,6 +376,31 @@ def _log_affective_assessment_policy(*, settings, logger) -> None:
         )
 
 
+def _log_reflection_external_driver_policy(
+    *,
+    settings,
+    logger,
+    worker_running: bool,
+) -> None:
+    snapshot = reflection_external_driver_policy_snapshot(
+        reflection_runtime_mode=str(getattr(settings, "reflection_runtime_mode", "in_process")),
+        worker_running=worker_running,
+        scheduler_execution_mode=str(
+            getattr(settings, "scheduler_execution_mode", "in_process")
+        ),
+    )
+    logger.info(
+        "reflection_external_driver_policy policy_owner=%s selected_runtime_mode=%s selected_scheduler_execution_mode=%s production_baseline_ready=%s production_baseline_state=%s entrypoint_path=%s hint=%s",
+        str(snapshot["policy_owner"]),
+        str(snapshot["selected_runtime_mode"]),
+        str(snapshot["selected_scheduler_execution_mode"]),
+        bool(snapshot["production_baseline_ready"]),
+        str(snapshot["production_baseline_state"]),
+        str(snapshot["entrypoint_path"]),
+        str(snapshot["production_baseline_hint"]),
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
@@ -449,6 +477,11 @@ async def lifespan(app: FastAPI):
             "reflection_runtime mode=%s action=defer_background_worker note=enqueue_only_for_out_of_process_execution",
             settings.reflection_runtime_mode,
         )
+    _log_reflection_external_driver_policy(
+        settings=settings,
+        logger=logger,
+        worker_running=reflection_worker.is_running(),
+    )
     if scheduler_worker.enabled:
         await scheduler_worker.start()
         logger.info(

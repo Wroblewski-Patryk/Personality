@@ -348,6 +348,12 @@ $reflectionDeploymentReadiness = if (Has-Property -Object $reflection -Name "dep
 else {
     $null
 }
+$reflectionExternalDriverPolicy = if (Has-Property -Object $reflection -Name "external_driver_policy") {
+    $reflection.external_driver_policy
+}
+else {
+    $null
+}
 $reflectionDeploymentReady = $true
 $reflectionDeploymentBlockingSignals = @()
 
@@ -447,6 +453,24 @@ if (-not $reflectionDeploymentReady) {
     throw "Reflection deployment readiness check failed: $details."
 }
 
+if ($null -ne $reflectionExternalDriverPolicy) {
+    if (-not (Has-Property -Object $reflectionExternalDriverPolicy -Name "policy_owner")) {
+        throw "Reflection external-driver policy check failed: policy_owner is missing."
+    }
+    if ([string]$reflectionExternalDriverPolicy.policy_owner -ne "deferred_reflection_external_worker") {
+        throw "Reflection external-driver policy check failed: unexpected policy_owner '$($reflectionExternalDriverPolicy.policy_owner)'."
+    }
+    if (-not (Has-Property -Object $reflectionExternalDriverPolicy -Name "entrypoint_path")) {
+        throw "Reflection external-driver policy check failed: entrypoint_path is missing."
+    }
+    if (-not [string]$reflectionExternalDriverPolicy.entrypoint_path) {
+        throw "Reflection external-driver policy check failed: entrypoint_path is empty."
+    }
+    if (-not (Has-Property -Object $reflectionExternalDriverPolicy -Name "production_baseline_ready")) {
+        throw "Reflection external-driver policy check failed: production_baseline_ready is missing."
+    }
+}
+
 $runtimeTopology = $health.runtime_topology
 if ($null -eq $runtimeTopology) {
     throw "Health check failed: response is missing runtime_topology."
@@ -501,6 +525,9 @@ $summary = @{
     release_violations   = @($releaseReadinessViolations)
     reflection_deployment_ready      = $reflectionDeploymentReady
     reflection_deployment_violations = @($reflectionDeploymentBlockingSignals)
+    reflection_external_driver_policy_owner = if ($null -ne $reflectionExternalDriverPolicy) { [string]$reflectionExternalDriverPolicy.policy_owner } else { $null }
+    reflection_external_driver_entrypoint_path = if ($null -ne $reflectionExternalDriverPolicy) { [string]$reflectionExternalDriverPolicy.entrypoint_path } else { $null }
+    reflection_external_driver_baseline_ready = if ($null -ne $reflectionExternalDriverPolicy) { [bool]$reflectionExternalDriverPolicy.production_baseline_ready } else { $null }
     debug_internal_ingress_path      = [string]$runtimePolicy.event_debug_internal_ingress_path
     debug_shared_ingress_path        = [string]$runtimePolicy.event_debug_shared_ingress_path
     debug_shared_ingress_mode        = $sharedIngressMode

@@ -325,6 +325,17 @@ Rules:
 5. connector-expansion proposals must stay suggestion-only until conscious
    planning emits explicit permission-gated connector intents
 
+Deferred reflection external-driver baseline:
+
+1. `deferred` reflection may not rely on an app-local worker for queue drain.
+2. one shared external-driver policy owner must expose the selected runtime
+   mode, the queue-drain target owner, and the canonical queue-drain
+   entrypoint.
+3. the canonical queue-drain entrypoint is
+   `scripts/run_reflection_queue_once.py` with PowerShell/bash wrappers.
+4. `/health.reflection` should expose machine-visible external-driver posture
+   before deferred reflection is treated as production baseline.
+
 Durable attention rollout baseline:
 
 1. owner mode may be `in_process` or `durable_inbox`

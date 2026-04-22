@@ -162,6 +162,14 @@ The current repo already works as an MVP slice, but several architecture-level d
     `semantic_embedding_production_baseline_state`, and
     `semantic_embedding_production_baseline_hint` fields for rollout triage
   - the next active lane is background worker externalization
+- `PRJ-480..PRJ-483` are now complete:
+  - deferred reflection externalization now has one explicit policy owner and
+    one canonical queue-drain entrypoint (`scripts/run_reflection_queue_once.py`)
+  - `/health.reflection.external_driver_policy` and release smoke now expose
+    machine-visible external-driver baseline posture
+  - `in_process` reflection remains explicit compatibility posture, not the
+    target deferred external-worker baseline
+  - the next active lane is proactive runtime activation
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
@@ -191,11 +199,10 @@ The current repo already works as an MVP slice, but several architecture-level d
     release-failing signals (with explicit fallback checks for older runtimes
     that do not yet expose the readiness snapshot).
 - Decision (PRJ-301 reflection deployment baseline, 2026-04-20):
-  - production deployment baseline remains
-    `REFLECTION_RUNTIME_MODE=in_process` for now, so reflection dispatch keeps
-    a local owner while post-convergence hardening continues.
-  - `REFLECTION_RUNTIME_MODE=deferred` is a controlled rollout posture, not a
-    default baseline.
+  - earlier production posture stayed on
+    `REFLECTION_RUNTIME_MODE=in_process` while deferred dispatch matured.
+  - `REFLECTION_RUNTIME_MODE=deferred` was initially a controlled rollout
+    posture rather than the explicit baseline.
   - deferred rollout readiness requires all of:
     - explicit external dispatch owner runbook and on-call ownership
     - `/health.reflection.topology.external_driver_expected=true` and
@@ -210,6 +217,12 @@ The current repo already works as an MVP slice, but several architecture-level d
   - production default switch from `in_process` to `deferred` is now gated by
     one explicit runtime-topology switch policy plus machine-visible readiness
     evidence instead of an open-ended operator judgment.
+- Resolved follow-up in `PRJ-480..PRJ-483` (2026-04-22):
+  - deferred reflection externalization now has one explicit policy owner,
+    canonical queue-drain entrypoint, and release-smoke-visible health
+    contract.
+  - `in_process` reflection remains explicit compatibility posture, not the
+    target external-worker production baseline.
 
 ### 2. Migration Strategy
 
