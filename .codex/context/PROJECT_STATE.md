@@ -217,6 +217,13 @@ Last updated: 2026-04-22
 - 2026-04-22: `PRJ-562` is now the first `READY` task; the next slice should
   prove work-partner behavior through work-organization and decision-support
   scenarios in the shared behavior-validation gate.
+- 2026-04-22: `PRJ-562` is complete: behavior validation now proves
+  work-partner organization and decision-support scenarios through `T15.1`
+  and `T15.2`, keeping search, browser, and ClickUp usage inside the existing
+  role, planning, permission-gate, and action boundary.
+- 2026-04-22: `PRJ-563` is now the first `READY` task; the next slice should
+  synchronize contracts, runtime reality, ops notes, testing guidance, and
+  planning/context truth around the new backend work-partner baseline.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

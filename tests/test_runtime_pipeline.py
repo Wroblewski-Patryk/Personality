@@ -6013,3 +6013,88 @@ async def test_runtime_behavior_role_governed_tool_usage_scenarios() -> None:
     )
     assert len(results) == 3
     assert {result.status for result in results} == {"pass"}
+
+
+async def test_runtime_behavior_work_partner_scenarios() -> None:
+    async def work_partner_organization_scenario() -> BehaviorScenarioCheck:
+        memory = PersistingFakeMemoryRepository(recent_memory=[])
+        runtime = _build_behavior_runtime(
+            memory,
+            clickup_task_client=FakeClickUpTaskClient(),
+            knowledge_search_client=FakeDuckDuckGoSearchClient(),
+        )
+        result = await runtime.run(
+            _behavior_event(
+                event_id="evt-work-partner-behavior-1",
+                trace_id="t-work-partner-behavior-1",
+                text="Be my work partner and search the web for release notes, then mark the Release checklist task as done in ClickUp.",
+            )
+        )
+        selected_skill_ids = [skill.skill_id for skill in result.role.selected_skills]
+        policy = result.system_debug.adaptive_state["role_skill_policy"] if result.system_debug else {}
+        passed = (
+            result.role.selected == "work_partner"
+            and "duckduckgo_search_web" in result.action_result.actions
+            and "clickup_update_task" in result.action_result.actions
+            and selected_skill_ids == [
+                "structured_reasoning",
+                "execution_planning",
+                "connector_boundary_review",
+            ]
+            and policy.get("current_role_name") == "work_partner"
+            and policy.get("work_partner_role_state") == "selected"
+        )
+        return BehaviorScenarioCheck(
+            passed=passed,
+            reason="work_partner_organization_boundary" if passed else "work_partner_organization_regression",
+            trace_id=result.event.meta.trace_id,
+            notes=(
+                f"role={result.role.selected};"
+                f"actions={','.join(result.action_result.actions)};"
+                f"skills={','.join(selected_skill_ids)};"
+                f"policy_state={policy.get('work_partner_role_state', '')}"
+            ),
+        )
+
+    async def work_partner_decision_support_scenario() -> BehaviorScenarioCheck:
+        memory = PersistingFakeMemoryRepository(recent_memory=[])
+        runtime = _build_behavior_runtime(
+            memory,
+            web_browser_client=FakeGenericHttpPageClient(),
+        )
+        result = await runtime.run(
+            _behavior_event(
+                event_id="evt-work-partner-behavior-2",
+                trace_id="t-work-partner-behavior-2",
+                text="Be my work partner and read page https://example.com/release-notes so we can decide whether today's release is safe.",
+            )
+        )
+        selected_skill_ids = [skill.skill_id for skill in result.role.selected_skills]
+        intent_types = [intent.intent_type for intent in result.plan.domain_intents]
+        passed = (
+            result.role.selected == "work_partner"
+            and "web_browser_access_intent" in intent_types
+            and "generic_http_read_page" in result.action_result.actions
+            and "structured_reasoning" in selected_skill_ids
+            and "connector_boundary_review" in selected_skill_ids
+        )
+        return BehaviorScenarioCheck(
+            passed=passed,
+            reason="work_partner_decision_support_boundary" if passed else "work_partner_decision_support_regression",
+            trace_id=result.event.meta.trace_id,
+            notes=(
+                f"role={result.role.selected};"
+                f"intents={','.join(intent_types)};"
+                f"actions={','.join(result.action_result.actions)};"
+                f"skills={','.join(selected_skill_ids)}"
+            ),
+        )
+
+    results = await execute_behavior_scenarios(
+        [
+            BehaviorScenarioDefinition(test_id="T15.1", run=work_partner_organization_scenario),
+            BehaviorScenarioDefinition(test_id="T15.2", run=work_partner_decision_support_scenario),
+        ]
+    )
+    assert len(results) == 2
+    assert {result.status for result in results} == {"pass"}

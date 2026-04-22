@@ -443,14 +443,23 @@ Last updated: 2026-04-22
   - Group: Work-Partner Role And Capability Orchestration
   - Depends on: PRJ-561
   - Priority: P1
-  - Status: READY
+  - Status: DONE
+  - Result:
+    - behavior validation now proves that `work_partner` can organize work and
+      support decisions through the approved backend boundary
+    - scenario-level proof now covers:
+      - `T15.1` work-partner organization with bounded web search plus ClickUp
+        update
+      - `T15.2` work-partner decision support with bounded page-read browsing
+  - Validation:
+    - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
 
 - [ ] PRJ-563 Sync docs/context for work-partner role orchestration
   - Owner: Product Docs
   - Group: Work-Partner Role And Capability Orchestration
   - Depends on: PRJ-562
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
 
 - [ ] PRJ-564 Freeze the `v1` release gate and production acceptance bundle
   - Owner: Planner
