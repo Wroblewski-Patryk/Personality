@@ -160,6 +160,15 @@ Last updated: 2026-04-22
 - 2026-04-22: `PRJ-555` is now the first `READY` task; the next slice should
   synchronize contracts, runtime reality, testing guidance, ops notes, and
   planning/context truth around the new web-knowledge tooling baseline.
+- 2026-04-22: `PRJ-555` is complete: contracts, runtime reality, testing
+  guidance, ops notes, planning, and context truth now describe the same
+  action-owned but still-policy-only web-knowledge tooling baseline built
+  around `/health.connectors.web_knowledge_tools`,
+  `/health.connectors.execution_baseline`, and runtime
+  `system_debug.adaptive_state["web_knowledge_tools"]`.
+- 2026-04-22: `PRJ-556` is now the first `READY` task; the next slice should
+  freeze the first bounded provider-backed search, browser, and organization
+  operations before live execution paths are introduced.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

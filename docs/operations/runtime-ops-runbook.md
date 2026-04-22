@@ -1121,6 +1121,10 @@ Important health surfaces for current release checks:
   - capability-proposal posture for not-yet-authorized expansion
   - `execution_baseline` shows whether the current live provider-backed
     task-system paths are configured
+  - `web_knowledge_tools` shows whether `knowledge_search` and `web_browser`
+    are still policy-only by design, which fallback posture applies, and which
+    operations are already authorized at the contract level before provider
+    execution exists
   - `task_system.clickup_create_task.state=credentials_missing` means the repo
     is still in policy-only posture for task creation at runtime
   - `task_system.clickup_create_task.state=provider_backed_ready` means action

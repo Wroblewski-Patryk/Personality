@@ -160,6 +160,17 @@ For meaningful repo changes, leave behind:
     - exported `incident_evidence.policy_posture["learned_state"]`
     - release-smoke and behavior-validation rejection when learned-state
       posture is missing or carries the wrong owner/path contract
+- for web-knowledge tooling baseline slices, regression evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_connector_policy.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+  - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+  - coverage should pin:
+    - shared typed-intent and permission-gate policy for `knowledge_search`
+      and `web_browser`
+    - `/health.connectors.web_knowledge_tools` readiness plus fallback posture
+    - policy-only execution-baseline entries for search/browser families until
+      a bounded provider-backed slice is explicitly approved
+    - runtime `system_debug.adaptive_state["web_knowledge_tools"]` parity with
+      the health-level posture
 - for no-UI `v1` life-assistant workflow slices, regression and behavior
   evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_goal_task_signals.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`

@@ -983,6 +983,19 @@ What is already live:
   `cloud_drive.google_drive_list_files` with machine-visible
   `credentials_missing|provider_backed_ready` posture for that bounded read
   adapter
+- `/health.connectors.web_knowledge_tools` now exposes the shared
+  web-knowledge tooling owner, metadata-only skill boundary, fallback posture,
+  and the current `policy_only` execution state for:
+  - `knowledge_search`
+  - `web_browser`
+- `/health.connectors.execution_baseline` now also exposes explicit policy-only
+  placeholders for:
+  - `knowledge_search.search_web`
+  - `knowledge_search.suggest_search`
+  - `web_browser.read_page`
+  - `web_browser.suggest_page_review`
+  so operator health and future UI can distinguish "authorized by contract"
+  from "provider-backed execution not selected yet"
 - all non-selected calendar, task-system, and cloud-drive operations remain
   policy-only by design until broader read-scope boundaries and more provider
   adapters are introduced
@@ -1091,6 +1104,9 @@ Current limitation:
 - debug-mode `incident_evidence.policy_posture["learned_state"]` mirrors that
   health-level owner or path contract so release smoke and behavior-validation
   gates can verify future-UI inspection readiness from exported evidence too
+- runtime `system_debug.adaptive_state["web_knowledge_tools"]` now mirrors the
+  same policy-only readiness posture as `/health.connectors.web_knowledge_tools`
+  for operator triage and future UI bootstrap
 
 ---
 

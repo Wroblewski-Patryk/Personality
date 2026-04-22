@@ -314,14 +314,25 @@ Last updated: 2026-04-22
   - Group: Web Knowledge And Tooling Architecture
   - Depends on: PRJ-554
   - Priority: P1
-  - Status: READY
+  - Status: DONE
+  - Result:
+    - contracts, runtime reality, testing guidance, ops notes, and
+      planning/context truth now describe the same action-owned but
+      still-policy-only web-knowledge tooling baseline
+    - `/health.connectors.web_knowledge_tools`,
+      `/health.connectors.execution_baseline`, and runtime
+      `system_debug.adaptive_state["web_knowledge_tools"]` are now documented
+      as one shared visibility surface for future UI and operator triage
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
 
 - [ ] PRJ-556 Freeze the first bounded provider-backed search, browser, and organization slices
   - Owner: Planner
   - Group: Search, Browser, And Organization Tool Expansion
   - Depends on: PRJ-555
   - Priority: P2
-  - Status: BACKLOG
+  - Status: READY
 
 - [ ] PRJ-560 Freeze the backend work-partner role baseline
   - Owner: Planner

@@ -47,6 +47,12 @@ The current repo already works as an MVP slice, but several architecture-level d
     subsystem outside planning/action validation
   - the next implementation slices should therefore reuse shared
     permission-gate and health/debug visibility patterns
+- `PRJ-553..PRJ-554` now make that baseline runtime-visible:
+  - shared typed intents and permission gates exist for `knowledge_search` and
+    `web_browser`
+  - `/health.connectors.web_knowledge_tools` and
+    `system_debug.adaptive_state["web_knowledge_tools"]` now expose the same
+    policy-only posture before any provider-backed slice is selected
 - the next execution queue therefore prioritizes:
   - production conversation reliability
   - life-assistant workflow activation
