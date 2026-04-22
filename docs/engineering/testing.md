@@ -123,6 +123,16 @@ For meaningful repo changes, leave behind:
 - for retrieval-provider rollout changes, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
   - `.\.venv\Scripts\python -m pytest -q tests/test_embedding_strategy.py tests/test_memory_repository.py tests/test_main_runtime_policy.py tests/test_runtime_policy.py`
+- for retrieval-lifecycle closure slices, regression and release evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_runtime_policy.py tests/test_api_routes.py`
+  - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_runtime_pipeline.py`
+  - coverage should pin all three surfaces:
+    - lifecycle owner, provider-drift posture, and pending-gap visibility in
+      `/health.memory_retrieval`
+    - runtime behavior that still exercises the declared transition owner when
+      `local_hybrid` is active
+    - release-smoke summary fields for retrieval lifecycle owner, drift, and
+      alignment posture
 - for background-worker externalization slices, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_main_runtime_policy.py tests/test_deployment_trigger_scripts.py`
   - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_reflection_worker.py`

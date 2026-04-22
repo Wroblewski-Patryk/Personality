@@ -54,19 +54,19 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-507 Sync docs/context for retrieval lifecycle and source-rollout closure
-  - Owner: Product Docs
-  - Group: Retrieval Lifecycle And Source-Rollout Closure
-  - Depends on: PRJ-506
+- [ ] PRJ-508 Define the production supervision baseline for deferred reflection workers
+  - Owner: Planner
+  - Group: Reflection Worker Supervision And Durability Closure
+  - Depends on: PRJ-507
   - Priority: P1
   - Why now:
-    - runtime posture and release evidence are aligned, so the retrieval lane
-      now needs canonical docs/context closure before reflection supervision
+    - retrieval lifecycle closure is now synchronized, so the next remaining
+      hardening lane is deferred reflection supervision and recovery posture
   - Done when:
-    - planning, implementation, ops, and testing surfaces all describe the same
-      retrieval steady-state lifecycle baseline
+    - the repo records one explicit production supervision owner for deferred
+      reflection execution, recovery visibility, and failure-escalation posture
   - Validation:
-    - doc-and-context sync across implementation, ops, testing, planning, and context
+    - reflection topology and ops cross-review across runtime reality, release posture, and worker ownership
 
 - [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release
@@ -203,6 +203,21 @@ Last updated: 2026-04-22
       lifecycle baseline
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_runtime_pipeline.py`
+
+- [x] PRJ-507 Sync docs/context for retrieval lifecycle and source-rollout closure
+  - Owner: Product Docs
+  - Group: Retrieval Lifecycle And Source-Rollout Closure
+  - Depends on: PRJ-506
+  - Priority: P1
+  - Status: DONE
+  - Result:
+    - implementation reality, ops guidance, testing guidance, planning, and
+      context truth now describe one shared retrieval steady-state lifecycle
+      owner together with provider-drift, alignment, and pending-gap posture
+    - Group 73 is now complete and the next active lane is reflection worker
+      supervision and durability closure
+  - Validation:
+    - doc-and-context sync across implementation, ops, testing, planning, and context
 
 - [x] PRJ-497 Implement canonical external cadence entrypoints and ownership checks
   - Owner: Backend Builder

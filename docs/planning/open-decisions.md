@@ -244,6 +244,16 @@ The current repo already works as an MVP slice, but several architecture-level d
     rollout completion posture
   - semantic+affective coverage is frozen as the foreground steady-state
     baseline, while relation remains an optional follow-on source family
+- `PRJ-505..PRJ-507` are now complete:
+  - `/health.memory_retrieval` now exposes one shared retrieval lifecycle
+    owner together with provider drift posture, alignment state, and pending
+    lifecycle gaps
+  - release smoke now consumes the same lifecycle fields directly instead of
+    inferring retrieval steady-state posture only from embedding-provider
+    rollout diagnostics
+  - implementation reality, ops guidance, testing guidance, planning, and
+    context truth now describe the same steady-state retrieval lifecycle
+    baseline
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

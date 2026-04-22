@@ -280,6 +280,39 @@ Production retrieval baseline (`PRJ-476`, planning contract):
   `semantic_embedding_production_baseline=openai_api_embeddings` plus
   `semantic_embedding_production_baseline_state` and
   `semantic_embedding_production_baseline_hint`
+- `/health.memory_retrieval` now also exposes one explicit retrieval lifecycle
+  contract owned by `retrieval_lifecycle_policy`:
+  - `retrieval_lifecycle_policy_owner`
+  - `retrieval_lifecycle_target_provider_baseline`
+  - `retrieval_lifecycle_transition_provider_baseline`
+  - `retrieval_lifecycle_steady_state_refresh_owner`
+  - `retrieval_lifecycle_source_rollout_baseline`
+  - `retrieval_lifecycle_relation_source_posture`
+  - `retrieval_lifecycle_fallback_retirement_posture`
+  - `retrieval_lifecycle_provider_drift_state`
+  - `retrieval_lifecycle_provider_drift_hint`
+  - `retrieval_lifecycle_alignment_state`
+  - `retrieval_lifecycle_alignment_hint`
+  - `retrieval_lifecycle_pending_gaps`
+
+Retrieval lifecycle interpretation (`PRJ-504..PRJ-507`):
+
+- target steady-state provider baseline is still
+  `openai_api_embeddings` when OpenAI credentials are present
+- `local_hybrid` remains an explicit transition owner rather than a production
+  steady-state target
+- deterministic execution remains the explicit compatibility fallback posture,
+  not an unowned failure mode
+- semantic plus affective sources are treated as the foreground rollout
+  completion baseline; relation stays an explicit optional follow-on source
+  family after that baseline is stable
+- `retrieval_lifecycle_provider_drift_state` distinguishes whether runtime is
+  aligned with the target owner, still on the local transition owner, or still
+  on compatibility fallback
+- `retrieval_lifecycle_alignment_state` plus
+  `retrieval_lifecycle_pending_gaps` summarize whether provider owner, refresh
+  owner, and source-rollout posture match the selected steady-state lifecycle
+  baseline in one surface
 
 Current limitation:
 
@@ -290,6 +323,10 @@ Current limitation:
   `openai_api_key_missing_fallback_deterministic` posture.
 - provider-owned lifecycle tuning beyond this baseline remains future follow-up
   work.
+- release smoke now consumes the retrieval lifecycle contract directly and
+  records policy owner, provider drift posture, alignment state, and pending
+  lifecycle gaps in the smoke summary instead of inferring lifecycle truth only
+  from embedding provider fields
 - `/health.memory_retrieval` now exposes explicit warning posture fields
   (`semantic_embedding_warning_state`, `semantic_embedding_warning_hint`) and
   startup warning logs reuse the same warning-state semantics.

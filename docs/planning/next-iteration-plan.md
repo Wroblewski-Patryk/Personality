@@ -634,6 +634,10 @@ Completed on 2026-04-22:
   owner plus alignment/drift posture from `/health.memory_retrieval`, and
   runtime regression coverage pins that the local-hybrid transition owner
   still exercises the active hybrid retrieval path.
+- `PRJ-507` is complete: implementation reality, ops guidance, testing
+  guidance, planning, and context truth now describe the same retrieval
+  steady-state lifecycle owner, pending-gap posture, and release evidence
+  contract.
 
 - `PRJ-504` Define the production retrieval lifecycle baseline beyond current provider-owned materialization.
   - Result:

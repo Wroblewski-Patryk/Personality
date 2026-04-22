@@ -2021,8 +2021,14 @@ Last updated: 2026-04-22
   lifecycle owner and drift/alignment posture from `/health.memory_retrieval`,
   and runtime regression coverage now pins that the local-hybrid transition
   owner still exercises the active hybrid retrieval path.
-- 2026-04-22: `PRJ-507` is now the next `READY` task, focused on docs/context
-  sync for retrieval lifecycle and source-rollout closure.
+- 2026-04-22: `PRJ-507` is complete: implementation reality, ops guidance,
+  testing guidance, planning, and context truth now describe one shared
+  retrieval steady-state lifecycle baseline with machine-visible
+  provider-drift, alignment, and pending-gap posture.
+- 2026-04-22: Group 73 (`PRJ-504..PRJ-507`) is now complete.
+- 2026-04-22: `PRJ-508` is now the next `READY` task, focused on defining the
+  production supervision baseline for deferred reflection workers before
+  machine-visible supervision posture and release evidence are added.
 
 ## Working Agreements
 

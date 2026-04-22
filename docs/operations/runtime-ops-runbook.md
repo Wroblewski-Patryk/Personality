@@ -193,6 +193,18 @@ retrieval posture:
 - `semantic_embedding_recommended_refresh_mode`
 - `semantic_embedding_refresh_alignment_state`
 - `semantic_embedding_refresh_alignment_hint`
+- `retrieval_lifecycle_policy_owner`
+- `retrieval_lifecycle_target_provider_baseline`
+- `retrieval_lifecycle_transition_provider_baseline`
+- `retrieval_lifecycle_steady_state_refresh_owner`
+- `retrieval_lifecycle_source_rollout_baseline`
+- `retrieval_lifecycle_relation_source_posture`
+- `retrieval_lifecycle_fallback_retirement_posture`
+- `retrieval_lifecycle_provider_drift_state`
+- `retrieval_lifecycle_provider_drift_hint`
+- `retrieval_lifecycle_alignment_state`
+- `retrieval_lifecycle_alignment_hint`
+- `retrieval_lifecycle_pending_gaps`
 
 When semantic vectors are enabled and `EMBEDDING_PROVIDER=openai` is requested
 without `OPENAI_API_KEY`, startup emits `embedding_strategy_warning` with
@@ -214,6 +226,35 @@ Operator interpretation for retrieval production baseline:
   production owner
 - `semantic_embedding_production_baseline_state=deterministic_compatibility_baseline`
   means runtime is still on the explicit compatibility fallback posture
+
+Operator interpretation for retrieval lifecycle closure:
+
+- `retrieval_lifecycle_policy_owner=retrieval_lifecycle_policy` is the shared
+  source of truth for target provider owner, transition owner, steady-state
+  refresh owner, source-rollout completion baseline, and fallback retirement
+  posture
+- `retrieval_lifecycle_target_provider_baseline=openai_api_embeddings` remains
+  the target steady-state provider owner, while
+  `retrieval_lifecycle_transition_provider_baseline=local_hybrid` records the
+  bounded local transition path
+- `retrieval_lifecycle_source_rollout_baseline=semantic_and_affective_sources_enabled`
+  means semantic plus affective families are the foreground rollout completion
+  baseline; relation remains an explicit optional follow-on family reflected by
+  `retrieval_lifecycle_relation_source_posture`
+- `retrieval_lifecycle_provider_drift_state=aligned_target_provider` means the
+  effective provider owner matches the selected steady-state lifecycle target
+- `retrieval_lifecycle_provider_drift_state=transition_provider_active` means
+  runtime is still intentionally on `local_hybrid`
+- `retrieval_lifecycle_provider_drift_state=compatibility_fallback_active`
+  means runtime is still on deterministic compatibility fallback
+- `retrieval_lifecycle_alignment_state=lifecycle_gaps_present` means rollout is
+  not yet at the intended steady-state baseline and exact blockers are listed
+  in `retrieval_lifecycle_pending_gaps`
+- treat `provider_baseline_not_aligned`,
+  `foreground_source_rollout_incomplete`, and
+  `refresh_owner_not_aligned` in `retrieval_lifecycle_pending_gaps` as rollout
+  blockers when deciding whether retrieval is actually at its intended
+  lifecycle baseline
 
 When provider-ownership fallback is active and
 `EMBEDDING_PROVIDER_OWNERSHIP_ENFORCEMENT=strict`, startup emits
@@ -809,6 +850,14 @@ Important health surfaces for current release checks:
     `memory_retrieval.semantic_embedding_production_baseline_state` to tell
     whether runtime is aligned with the target OpenAI production owner,
     still on a local transition path, or still on compatibility fallback
+- `memory_retrieval.retrieval_lifecycle_alignment_state`
+  - whether retrieval is actually aligned with the selected steady-state
+    lifecycle baseline
+  - treat `lifecycle_gaps_present` as the high-signal summary field for
+    rollout blockers before reading deeper embedding diagnostics
+- `memory_retrieval.retrieval_lifecycle_pending_gaps`
+  - exact lifecycle blockers across provider owner, refresh owner, and
+    foreground source-rollout completion
 - `connectors`
   - connector authorization matrix
   - capability-proposal posture for not-yet-authorized expansion
