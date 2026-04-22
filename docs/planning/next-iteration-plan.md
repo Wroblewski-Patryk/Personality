@@ -761,6 +761,13 @@ Completed on 2026-04-22:
   artifacts can optionally ingest a runtime incident-evidence file through the
   shared gate flow instead of relying on ad hoc local inspection.
 
+Completed on 2026-04-22:
+
+- `PRJ-515` is complete: architecture, implementation, ops, testing guidance,
+  planning, and context truth now describe the same observability export
+  baseline for `/health.observability`, debug-response incident evidence, and
+  validation or smoke consumption.
+
 - `PRJ-515` Sync docs/context for observability export and incident-evidence baseline.
   - Result:
     - planning, architecture, ops, testing guidance, and context truth all

@@ -325,6 +325,8 @@ Post-convergence minimum scenario families now also include:
 - connector execution and guardrail posture
 - proactive delivery-ready versus anti-spam-blocked posture
 - deferred reflection enqueue and non-blocking background expectations
+- exported `incident_evidence` consumption through smoke or validation tooling
+  whenever observability-sensitive runtime or release slices change
 
 ---
 

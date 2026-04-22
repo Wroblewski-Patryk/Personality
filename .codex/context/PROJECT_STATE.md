@@ -2066,9 +2066,15 @@ Last updated: 2026-04-22
   `incident_evidence` directly in debug mode, and behavior-validation
   artifacts can optionally ingest incident-evidence JSON through the shared
   gate flow.
-- 2026-04-22: `PRJ-515` is now the next `READY` task, focused on the final
-  docs/context sync for the observability export and incident-evidence
-  baseline.
+- 2026-04-22: `PRJ-515` is complete: canonical architecture docs,
+  runtime-reality notes, ops guidance, testing guidance, planning, and context
+  truth now describe the same observability export baseline for
+  `/health.observability`, debug-response `incident_evidence`, and validation
+  or smoke consumption.
+- 2026-04-22: Group 75 (`PRJ-512..PRJ-515`) is now complete.
+- 2026-04-22: no seeded `READY` task remains after the observability export
+  lane; the next task should again be derived from fresh runtime or
+  operational analysis.
 
 ## Working Agreements
 

@@ -793,6 +793,10 @@ Optional debug payload:
 .\scripts\run_release_smoke.ps1 -BaseUrl "http://localhost:8000" -IncludeDebug
 ```
 
+With `-IncludeDebug`, release smoke now also validates exported
+`incident_evidence` directly and records its schema version, stage count, and
+policy-surface coverage in the smoke summary.
+
 Optional debug payload with token:
 
 ```powershell
@@ -839,6 +843,10 @@ Important health surfaces for current release checks:
 
 - `runtime_policy.startup_schema_removal_window`
 - `runtime_policy.event_debug_shared_ingress_enforcement_window`
+- `observability`
+  - shared export policy owner
+  - `export_artifact_available`
+  - `incident_export_ready`
 - `affective`
   - heuristic-input ownership baseline
   - assessment rollout/fallback posture for live empathy triage
@@ -957,10 +965,10 @@ Preconditions checklist (required for reliable Telegram delivery triage):
 - there is no background queue or worker isolation yet
 - reflection now has an explicit external-driver queue-drain entrypoint, but
   worker supervision and recovery posture are now bounded by explicit
-  supervision policy and release evidence, while broader externalized
-  observability/export remains follow-up work
+  supervision policy and release evidence
 - startup now defaults to migration-first schema ownership; `create_tables()` remains only as a compatibility path behind `STARTUP_SCHEMA_MODE=create_tables`
-- runtime logging is present, but there is no external observability stack yet
+- runtime now has exportable JSON incident evidence, but there is still no
+  external observability stack with dashboards or centralized trace storage
 - proactive cadence is live in-process today, while external scheduler
   ownership is now the explicit target posture with machine-visible fallback
   evidence

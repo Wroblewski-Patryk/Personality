@@ -290,6 +290,11 @@ The current repo already works as an MVP slice, but several architecture-level d
   - release smoke now consumes exported `incident_evidence` directly during
     debug-mode smoke runs, making observability evidence part of repeatable
     done-state
+- `PRJ-515` is now complete:
+  - architecture, runtime reality, ops guidance, testing guidance, planning,
+    and context truth now describe the same observability export baseline
+  - no seeded `READY` task remains after Group 75; the next slice should be
+    derived from new runtime or operational analysis
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

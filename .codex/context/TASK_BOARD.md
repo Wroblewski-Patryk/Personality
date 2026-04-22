@@ -111,6 +111,21 @@ Last updated: 2026-04-22
     - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
     - `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_deployment_trigger_scripts.py`
 
+- [x] PRJ-515 Sync docs/context for observability export and incident-evidence baseline
+  - Owner: Product Docs
+  - Group: Observability Export And Incident-Evidence Baseline
+  - Depends on: PRJ-514
+  - Priority: P1
+  - Status: DONE
+  - Result:
+    - architecture, runtime reality, testing guidance, ops guidance, planning,
+      and context truth now describe the same exportable observability baseline
+      for `/health.observability`, debug-response `incident_evidence`, and
+      behavior or smoke consumption
+    - Group 75 is now complete and no seeded `READY` task remains on the board
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing, planning, and context
+
 - [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release
   - Group: External Scheduler Ownership Rollout

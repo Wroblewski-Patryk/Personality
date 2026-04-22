@@ -117,6 +117,16 @@ For meaningful repo changes, leave behind:
 - for deployment-trigger or release-smoke changes, script regression evidence
   from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py`
+- for observability-export and incident-evidence slices, regression and gate
+  evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_observability_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
+  - `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_deployment_trigger_scripts.py`
+  - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+  - coverage should pin:
+    - `/health.observability` export-readiness posture
+    - debug-response `incident_evidence` export contract
+    - smoke-mode validation of exported incident evidence
+    - optional behavior-artifact ingestion of exported incident evidence
 - for runtime-topology, adaptive-governance, planning-governance, or
   deployment-policy surface changes, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
@@ -212,6 +222,9 @@ For meaningful repo changes, leave behind:
   - `artifact_schema_version` identifies schema evolution
   - `gate_reason_taxonomy_version` identifies reason-code taxonomy
   - `gate.violation_context` carries machine-readable context for gate reasons
+  - optional `incident_evidence` block records whether exported runtime
+    incident evidence was checked, which schema/policy owner it used, and
+    whether policy-surface coverage was complete
   - CI artifact-input evaluation now blocks on incompatible
     `artifact_schema_version` major values, while operator mode remains
     backward-compatible for local inspection

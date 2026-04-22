@@ -935,6 +935,39 @@ This coordination model baseline is now implemented through `PRJ-295`.
 
 ---
 
+## Current Observability Export Reality
+
+The live runtime now has an explicit machine-readable observability export
+baseline:
+
+- `app/core/observability_policy.py` owns the minimum incident-evidence
+  contract through `incident_evidence_export_policy`
+- `GET /health.observability` exposes:
+  - the shared policy owner
+  - required incident-evidence fields
+  - required policy-posture surfaces
+  - whether exportable incident evidence is ready
+- debug-mode event responses now expose `incident_evidence` with:
+  - `trace_id`, `event_id`, `source`
+  - `duration_ms`
+  - full `stage_timings_ms`
+  - policy posture snapshots for:
+    - `runtime_policy`
+    - `memory_retrieval`
+    - `scheduler.external_owner_policy`
+    - `reflection.supervision`
+    - `connectors.execution_baseline`
+- release smoke now validates this export directly in debug mode
+- behavior-validation artifacts can optionally ingest an exported
+  `incident_evidence` JSON file and record its summary in the same gate output
+
+Current limitation:
+
+- this is an exportable JSON evidence baseline, not yet a full external
+  observability stack with dashboards, aggregation, or tracing backend
+
+---
+
 ## Internal Planning State vs External Systems (Planned)
 
 Goals and tasks are treated as integral internal planning state of the

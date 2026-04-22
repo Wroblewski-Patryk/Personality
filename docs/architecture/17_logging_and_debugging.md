@@ -282,6 +282,13 @@ Current post-convergence diagnostics also require:
 - `system_debug.adaptive_state.affective_input_policy` and
   `system_debug.adaptive_state.affective_resolution` to show how the live turn
   moved from heuristic input to final affective result
+- `/health.observability` to expose the shared export-policy owner and whether
+  machine-readable incident evidence is actually available beyond local logs
+- debug-mode runtime responses to expose `incident_evidence` with:
+  - `trace_id`, `event_id`, `duration_ms`, and `stage_timings_ms`
+  - machine-readable posture snapshots for runtime policy, retrieval,
+    scheduler external ownership, reflection supervision, and connector
+    execution baseline
 
 ---
 
