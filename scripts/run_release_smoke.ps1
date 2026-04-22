@@ -4,7 +4,8 @@ param(
     [string]$UserId = "manual-smoke",
     [switch]$IncludeDebug,
     [string]$DeploymentEvidencePath = "",
-    [int]$DeploymentEvidenceMaxAgeMinutes = 60
+    [int]$DeploymentEvidenceMaxAgeMinutes = 60,
+    [string]$IncidentEvidenceBundlePath = ""
 )
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -140,6 +141,105 @@ function Validate-DeploymentEvidence {
     }
 }
 
+function Validate-IncidentEvidenceBundle {
+    param(
+        [string]$Path
+    )
+
+    $result = @{
+        checked                  = $false
+        path                     = $Path
+        manifest_schema_version  = $null
+        capture_mode             = $null
+        trace_id                 = $null
+        event_id                 = $null
+        behavior_report_attached = $false
+        policy_surface_complete  = $null
+        health_status            = $null
+    }
+
+    if (-not $Path) {
+        return $result
+    }
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        throw "Incident evidence bundle verification failed: directory not found '$Path'."
+    }
+
+    $manifestPath = Join-Path -Path $Path -ChildPath "manifest.json"
+    $incidentEvidencePath = Join-Path -Path $Path -ChildPath "incident_evidence.json"
+    $healthSnapshotPath = Join-Path -Path $Path -ChildPath "health_snapshot.json"
+
+    foreach ($requiredPath in @($manifestPath, $incidentEvidencePath, $healthSnapshotPath)) {
+        if (-not (Test-Path -LiteralPath $requiredPath)) {
+            throw "Incident evidence bundle verification failed: required file missing '$requiredPath'."
+        }
+    }
+
+    try {
+        $manifest = ConvertFrom-JsonCompat -Json (Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8)
+        $incidentEvidence = ConvertFrom-JsonCompat -Json (Get-Content -LiteralPath $incidentEvidencePath -Raw -Encoding UTF8)
+        $healthSnapshot = ConvertFrom-JsonCompat -Json (Get-Content -LiteralPath $healthSnapshotPath -Raw -Encoding UTF8)
+    }
+    catch {
+        throw "Incident evidence bundle verification failed: invalid JSON inside '$Path'."
+    }
+
+    if ([string]$manifest.kind -ne "incident_evidence_bundle_manifest") {
+        throw "Incident evidence bundle verification failed: unexpected manifest kind '$($manifest.kind)'."
+    }
+    if ([string]$manifest.policy_owner -ne "incident_evidence_export_policy") {
+        throw "Incident evidence bundle verification failed: unexpected manifest policy owner '$($manifest.policy_owner)'."
+    }
+    if ([string]$incidentEvidence.kind -ne "runtime_incident_evidence") {
+        throw "Incident evidence bundle verification failed: unexpected incident evidence kind '$($incidentEvidence.kind)'."
+    }
+    if ([string]$incidentEvidence.policy_owner -ne "incident_evidence_export_policy") {
+        throw "Incident evidence bundle verification failed: unexpected incident evidence policy owner '$($incidentEvidence.policy_owner)'."
+    }
+    if ([string]$healthSnapshot.status -ne "ok") {
+        throw "Incident evidence bundle verification failed: unexpected health snapshot status '$($healthSnapshot.status)'."
+    }
+
+    $manifestTraceId = [string]$manifest.trace_id
+    $manifestEventId = [string]$manifest.event_id
+    if ($manifestTraceId -and [string]$incidentEvidence.trace_id -ne $manifestTraceId) {
+        throw "Incident evidence bundle verification failed: manifest trace_id does not match incident evidence."
+    }
+    if ($manifestEventId -and [string]$incidentEvidence.event_id -ne $manifestEventId) {
+        throw "Incident evidence bundle verification failed: manifest event_id does not match incident evidence."
+    }
+
+    $behaviorReportAttached = $false
+    if ($null -ne $manifest.files -and $manifest.files.PSObject.Properties.Name -contains "behavior_validation_report") {
+        $behaviorReportPath = Join-Path -Path $Path -ChildPath ([string]$manifest.files.behavior_validation_report)
+        if (-not (Test-Path -LiteralPath $behaviorReportPath)) {
+            throw "Incident evidence bundle verification failed: manifest references missing behavior_validation_report '$behaviorReportPath'."
+        }
+        $behaviorReportAttached = $true
+    }
+
+    $policySurfaceComplete = $false
+    if ($null -ne $incidentEvidence.policy_surface_coverage -and $incidentEvidence.policy_surface_coverage.PSObject.Properties.Name -contains "complete") {
+        $policySurfaceComplete = [bool]$incidentEvidence.policy_surface_coverage.complete
+    }
+    if (-not $policySurfaceComplete) {
+        throw "Incident evidence bundle verification failed: policy surface coverage is incomplete."
+    }
+
+    return @{
+        checked                  = $true
+        path                     = $Path
+        manifest_schema_version  = [string]$manifest.schema_version
+        capture_mode             = [string]$manifest.capture_mode
+        trace_id                 = [string]$incidentEvidence.trace_id
+        event_id                 = [string]$incidentEvidence.event_id
+        behavior_report_attached = $behaviorReportAttached
+        policy_surface_complete  = $policySurfaceComplete
+        health_status            = [string]$healthSnapshot.status
+    }
+}
+
 $trimmedBaseUrl = $BaseUrl.TrimEnd("/")
 $traceId = [guid]::NewGuid().ToString()
 $eventUrl = "$trimmedBaseUrl/event"
@@ -160,6 +260,7 @@ $payload = @{
 $json = $payload | ConvertTo-Json -Depth 6 -Compress
 $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($json)
 $deploymentEvidenceCheck = Validate-DeploymentEvidence -Path $DeploymentEvidencePath -MaxAgeMinutes $DeploymentEvidenceMaxAgeMinutes
+$incidentEvidenceBundleCheck = Validate-IncidentEvidenceBundle -Path $IncidentEvidenceBundlePath
 
 $health = Invoke-JsonUtf8 -Method GET -Uri "$trimmedBaseUrl/health"
 if ($health.status -ne "ok") {
@@ -734,6 +835,15 @@ $summary = @{
     incident_evidence_duration_ms = if ($null -ne $incidentEvidence) { [int]$incidentEvidence.duration_ms } else { $null }
     incident_evidence_stage_count = if ($null -ne $incidentEvidence) { @($incidentEvidence.stage_timings_ms.PSObject.Properties).Count } else { $null }
     incident_evidence_policy_surface_complete = if ($null -ne $incidentEvidence) { [bool]$incidentEvidence.policy_surface_coverage.complete } else { $null }
+    incident_bundle_checked = [bool]$incidentEvidenceBundleCheck.checked
+    incident_bundle_path = [string]$incidentEvidenceBundleCheck.path
+    incident_bundle_manifest_schema_version = $incidentEvidenceBundleCheck.manifest_schema_version
+    incident_bundle_capture_mode = $incidentEvidenceBundleCheck.capture_mode
+    incident_bundle_trace_id = $incidentEvidenceBundleCheck.trace_id
+    incident_bundle_event_id = $incidentEvidenceBundleCheck.event_id
+    incident_bundle_behavior_report_attached = $incidentEvidenceBundleCheck.behavior_report_attached
+    incident_bundle_policy_surface_complete = $incidentEvidenceBundleCheck.policy_surface_complete
+    incident_bundle_health_status = $incidentEvidenceBundleCheck.health_status
     deployment_evidence_checked = [bool]$deploymentEvidenceCheck.checked
     deployment_evidence_path = [string]$deploymentEvidenceCheck.path
     deployment_evidence_age_minutes = $deploymentEvidenceCheck.age_minutes

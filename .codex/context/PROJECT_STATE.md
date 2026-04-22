@@ -30,6 +30,13 @@ Last updated: 2026-04-22
   helper entrypoint through the shared observability owner.
 - 2026-04-22: `PRJ-518` is now the first `READY` task; the next slice should
   pin bundle integrity and failure posture in smoke and regression coverage.
+- 2026-04-22: `PRJ-518` is complete: release smoke now supports
+  `-IncidentEvidenceBundlePath` and validates full bundle integrity, while
+  regression coverage pins both the valid bundle path and partial-bundle
+  failure posture.
+- 2026-04-22: `PRJ-519` is now the first `READY` task; the next slice should
+  synchronize the new helper and smoke behavior across canonical docs,
+  runtime reality, ops guidance, and planning/context truth.
 
 ## Product Decisions (Confirmed)
 

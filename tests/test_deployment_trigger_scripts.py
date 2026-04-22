@@ -274,6 +274,88 @@ def _write_evidence(path: Path, *, minutes_ago: int = 0, ok: bool = True, status
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def _write_incident_bundle(
+    bundle_dir: Path,
+    *,
+    include_behavior_report: bool = False,
+    policy_surface_complete: bool = True,
+) -> None:
+    bundle_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "kind": "incident_evidence_bundle_manifest",
+        "schema_version": "1.0.0",
+        "policy_owner": "incident_evidence_export_policy",
+        "capture_mode": "incident",
+        "trace_id": "trace-test",
+        "event_id": "evt-test",
+        "files": {
+            "manifest": "manifest.json",
+            "incident_evidence": "incident_evidence.json",
+            "health_snapshot": "health_snapshot.json",
+        },
+    }
+    if include_behavior_report:
+        manifest["files"]["behavior_validation_report"] = "behavior_validation_report.json"
+    incident_evidence = {
+        "kind": "runtime_incident_evidence",
+        "schema_version": "1.0.0",
+        "policy_owner": "incident_evidence_export_policy",
+        "trace_id": "trace-test",
+        "event_id": "evt-test",
+        "source": "api",
+        "duration_ms": 12,
+        "stage_timings_ms": {
+            "memory_load": 1,
+            "perception": 2,
+            "action": 3,
+            "total": 12,
+        },
+        "policy_surface_coverage": {
+            "present": [
+                "runtime_policy",
+                "memory_retrieval",
+                "scheduler.external_owner_policy",
+                "reflection.supervision",
+                "connectors.execution_baseline",
+            ],
+            "missing": [],
+            "complete": policy_surface_complete,
+        },
+        "policy_posture": {
+            "runtime_policy": {
+                "event_debug_admin_policy_owner": "dedicated_admin_debug_ingress_policy",
+            },
+            "memory_retrieval": {
+                "retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy",
+            },
+            "scheduler.external_owner_policy": {
+                "policy_owner": "external_scheduler_cadence_policy",
+            },
+            "reflection.supervision": {
+                "policy_owner": "deferred_reflection_supervision_policy",
+            },
+            "connectors.execution_baseline": {
+                "execution_owner": "connector_execution_registry",
+            },
+        },
+    }
+    health_snapshot = {
+        "status": "ok",
+        "observability": {
+            "policy_owner": "incident_evidence_export_policy",
+            "bundle_helper_available": True,
+        },
+    }
+    (bundle_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (bundle_dir / "incident_evidence.json").write_text(json.dumps(incident_evidence), encoding="utf-8")
+    (bundle_dir / "health_snapshot.json").write_text(json.dumps(health_snapshot), encoding="utf-8")
+    if include_behavior_report:
+        (bundle_dir / "behavior_validation_report.json").write_text(
+            json.dumps({"kind": "behavior_validation_artifact"}),
+            encoding="utf-8",
+        )
+
+
 def test_trigger_main_writes_success_evidence_file(monkeypatch, tmp_path: Path) -> None:
     evidence_path = tmp_path / "deploy-evidence.json"
 
@@ -443,6 +525,56 @@ def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_r
     assert summary["incident_evidence_stage_count"] == 4
     assert summary["incident_evidence_duration_ms"] == 12
     assert summary["incident_evidence_policy_surface_complete"] is True
+
+
+def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_provided(
+    stub_aion_server: _StubAionServer,
+    tmp_path: Path,
+) -> None:
+    bundle_dir = tmp_path / "incident-bundle"
+    _write_incident_bundle(bundle_dir, include_behavior_report=True)
+
+    result = _run_release_smoke(
+        "-BaseUrl",
+        stub_aion_server.base_url,
+        "-IncidentEvidenceBundlePath",
+        str(bundle_dir),
+        cwd=ROOT,
+    )
+
+    assert result.returncode == 0, result.stderr
+    summary = json.loads(result.stdout)
+    assert summary["incident_bundle_checked"] is True
+    assert summary["incident_bundle_path"] == str(bundle_dir)
+    assert summary["incident_bundle_manifest_schema_version"] == "1.0.0"
+    assert summary["incident_bundle_capture_mode"] == "incident"
+    assert summary["incident_bundle_trace_id"] == "trace-test"
+    assert summary["incident_bundle_event_id"] == "evt-test"
+    assert summary["incident_bundle_behavior_report_attached"] is True
+    assert summary["incident_bundle_policy_surface_complete"] is True
+    assert summary["incident_bundle_health_status"] == "ok"
+
+
+def test_release_smoke_fails_when_incident_evidence_bundle_is_partial(
+    stub_aion_server: _StubAionServer,
+    tmp_path: Path,
+) -> None:
+    bundle_dir = tmp_path / "incident-bundle"
+    _write_incident_bundle(bundle_dir)
+    (bundle_dir / "health_snapshot.json").unlink()
+
+    result = _run_release_smoke(
+        "-BaseUrl",
+        stub_aion_server.base_url,
+        "-IncidentEvidenceBundlePath",
+        str(bundle_dir),
+        cwd=ROOT,
+    )
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "Incident evidence bundle verification failed" in combined_output
+    assert "required file missing" in combined_output
 
 
 def test_release_smoke_fails_when_deployment_evidence_is_stale(

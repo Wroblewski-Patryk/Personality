@@ -119,25 +119,32 @@ Last updated: 2026-04-22
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_observability_policy.py tests/test_api_routes.py tests/test_runtime_pipeline.py`
 
-- [ ] PRJ-518 Add regression and smoke coverage for incident evidence bundle integrity
+- [x] PRJ-518 Add regression and smoke coverage for incident evidence bundle integrity
   - Owner: QA/Test
   - Group: Incident Evidence Bundle And Retention
   - Depends on: PRJ-517
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Done when:
     - release smoke and focused regression coverage verify the selected bundle
       contract, required fields, and failure posture for unreadable or partial
       artifacts
+  - Result:
+    - `run_release_smoke.ps1` now verifies a full incident-evidence bundle via
+      `-IncidentEvidenceBundlePath`, including manifest, required files,
+      trace/event parity, health snapshot status, and optional behavior report
+    - regression coverage now pins both the valid bundle path and partial
+      bundle failure posture
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_behavior_validation_script.py tests/test_deployment_trigger_scripts.py tests/test_observability_policy.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_api_routes.py`
 
 - [ ] PRJ-519 Sync docs/context for incident evidence bundle and retention baseline
   - Owner: Product Docs
   - Group: Incident Evidence Bundle And Retention
   - Depends on: PRJ-518
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - architecture, runtime reality, ops guidance, testing guidance, and
       context truth all describe the same operator-facing incident evidence
@@ -147,10 +154,10 @@ Last updated: 2026-04-22
       planning, and context
 
 - Group 76 note:
-  - `PRJ-516..PRJ-517` are now complete, and `PRJ-518` is the next `READY`
+  - `PRJ-516..PRJ-518` are now complete, and `PRJ-519` is the next `READY`
     task.
-  - the bundle contract is now frozen and implemented through one canonical
-    helper path before smoke and failure coverage are expanded.
+  - the bundle contract is now frozen, implemented, and smoke-covered before
+    the final docs/context sync for the group.
 
 - [ ] PRJ-520 Freeze the shared debug compatibility retirement gate
   - Owner: Planner

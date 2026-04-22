@@ -183,8 +183,11 @@ Completed on 2026-04-22:
   `scripts/export_incident_evidence_bundle.py` that collects `/health`,
   debug-mode `incident_evidence`, and optional behavior-validation output into
   the frozen bundle shape without introducing a second evidence schema.
-- the next active task in this lane is `PRJ-518`, which should pin bundle
-  integrity and failure posture in smoke and regression coverage.
+- `PRJ-518` is complete: release smoke now validates full bundle integrity via
+  `-IncidentEvidenceBundlePath`, and regression coverage now pins both valid
+  bundle and partial-bundle failure posture.
+- the next active task in this lane is `PRJ-519`, which should synchronize the
+  completed helper plus smoke behavior across docs and context truth.
 
 - `PRJ-516` Define the operator-facing incident evidence bundle and retention baseline.
   - Result:
