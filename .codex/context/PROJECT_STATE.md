@@ -2026,9 +2026,16 @@ Last updated: 2026-04-22
   retrieval steady-state lifecycle baseline with machine-visible
   provider-drift, alignment, and pending-gap posture.
 - 2026-04-22: Group 73 (`PRJ-504..PRJ-507`) is now complete.
-- 2026-04-22: `PRJ-508` is now the next `READY` task, focused on defining the
-  production supervision baseline for deferred reflection workers before
-  machine-visible supervision posture and release evidence are added.
+- 2026-04-22: `PRJ-508` is complete: deferred reflection supervision now has
+  one shared policy owner in `app/core/reflection_supervision_policy.py` for
+  target runtime mode, external queue-drain ownership, durable retry
+  ownership, queue-health states, and recovery actions.
+- 2026-04-22: `PRJ-508` validation is green:
+  `.\.venv\Scripts\python -m pytest -q tests/test_reflection_supervision_policy.py`
+  passed.
+- 2026-04-22: `PRJ-509` is now the next `READY` task, focused on exposing the
+  new supervision baseline through machine-visible runtime health and
+  reflection execution posture.
 
 ## Working Agreements
 

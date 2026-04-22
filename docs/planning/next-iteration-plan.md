@@ -670,6 +670,11 @@ Completed on 2026-04-22:
 
 ## Group 74 - Reflection Worker Supervision And Durability Closure
 
+- `PRJ-508` is complete: the repo now has one explicit supervision policy owner
+  for deferred reflection operations, freezing target runtime mode, external
+  queue-drain owner, durable retry owner, queue-health states, and recovery
+  actions before those signals are surfaced through runtime health.
+
 - `PRJ-508` Define the production supervision baseline for deferred reflection workers.
   - Result:
     - one explicit contract records queue-drain supervision, failure ownership,

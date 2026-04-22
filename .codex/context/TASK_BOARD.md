@@ -54,19 +54,19 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-508 Define the production supervision baseline for deferred reflection workers
-  - Owner: Planner
+- [ ] PRJ-509 Implement machine-visible supervision posture for deferred reflection execution
+  - Owner: Backend Builder
   - Group: Reflection Worker Supervision And Durability Closure
-  - Depends on: PRJ-507
+  - Depends on: PRJ-508
   - Priority: P1
   - Why now:
-    - retrieval lifecycle closure is now synchronized, so the next remaining
-      hardening lane is deferred reflection supervision and recovery posture
+    - the supervision baseline is now frozen, so health/runtime surfaces can
+      adopt one shared owner for queue pressure and recovery posture
   - Done when:
-    - the repo records one explicit production supervision owner for deferred
-      reflection execution, recovery visibility, and failure-escalation posture
+    - runtime health exposes supervision posture, backlog pressure, and
+      recovery guidance for deferred reflection execution from the shared owner
   - Validation:
-    - reflection topology and ops cross-review across runtime reality, release posture, and worker ownership
+    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_scheduler_worker.py tests/test_api_routes.py`
 
 - [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release
@@ -218,6 +218,22 @@ Last updated: 2026-04-22
       supervision and durability closure
   - Validation:
     - doc-and-context sync across implementation, ops, testing, planning, and context
+
+- [x] PRJ-508 Define the production supervision baseline for deferred reflection workers
+  - Owner: Planner
+  - Group: Reflection Worker Supervision And Durability Closure
+  - Depends on: PRJ-507
+  - Priority: P1
+  - Status: DONE
+  - Result:
+    - the repo now has one explicit supervision policy owner for deferred
+      reflection operations, freezing target runtime mode, external
+      queue-drain owner, durable retry owner, queue-health states, and
+      recovery actions before runtime surfaces expose them
+    - `PRJ-509` can now reuse one shared baseline instead of re-encoding
+      supervision semantics in local health logic
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_supervision_policy.py`
 
 - [x] PRJ-497 Implement canonical external cadence entrypoints and ownership checks
   - Owner: Backend Builder

@@ -254,6 +254,11 @@ The current repo already works as an MVP slice, but several architecture-level d
   - implementation reality, ops guidance, testing guidance, planning, and
     context truth now describe the same steady-state retrieval lifecycle
     baseline
+- `PRJ-508` is now complete:
+  - deferred reflection supervision now has one explicit policy owner for
+    target runtime mode, queue-drain owner, durable retry owner, queue-health
+    states, and recovery actions before health/export surfaces consume those
+    semantics
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 
