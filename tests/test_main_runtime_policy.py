@@ -5,6 +5,7 @@ from app.main import (
     _log_embedding_strategy_warnings,
     _log_external_scheduler_policy,
     _log_reflection_external_driver_policy,
+    _log_reflection_supervision_policy,
     _log_runtime_policy_warnings,
 )
 
@@ -51,6 +52,36 @@ def test_startup_logs_reflection_external_driver_policy_for_deferred_mode(caplog
     assert any("selected_runtime_mode=deferred" in message for message in messages)
     assert any("production_baseline_ready=True" in message for message in messages)
     assert any("entrypoint_path=scripts/run_reflection_queue_once.py" in message for message in messages)
+
+
+def test_startup_logs_reflection_supervision_policy_snapshot(caplog) -> None:
+    logger_name = "aion.app"
+    caplog.set_level("INFO", logger=logger_name)
+    logger = logging.getLogger(logger_name)
+    settings = SimpleNamespace(
+        reflection_runtime_mode="deferred",
+        scheduler_execution_mode="externalized",
+    )
+
+    _log_reflection_supervision_policy(
+        settings=settings,
+        logger=logger,
+        worker_running=False,
+        task_stats={
+            "pending": 2,
+            "processing": 1,
+            "retryable_failed": 1,
+            "stuck_processing": 0,
+            "exhausted_failed": 0,
+        },
+    )
+
+    messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
+    assert any("reflection_supervision_policy" in message for message in messages)
+    assert any("selected_runtime_mode=deferred" in message for message in messages)
+    assert any("queue_health_state=active_backlog_under_supervision" in message for message in messages)
+    assert any("production_supervision_ready=True" in message for message in messages)
+    assert any("production_supervision_state=deferred_supervision_active_backlog" in message for message in messages)
 
 
 def test_startup_logs_external_scheduler_policy_snapshot(caplog) -> None:

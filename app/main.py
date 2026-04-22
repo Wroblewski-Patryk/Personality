@@ -19,6 +19,9 @@ from app.core.database import Database
 from app.core.debug_compat import DebugQueryCompatTelemetry
 from app.core.external_scheduler_policy import external_scheduler_policy_snapshot
 from app.core.logging import get_logger, setup_logging
+from app.core.reflection_supervision_policy import (
+    reflection_supervision_policy_snapshot,
+)
 from app.core.runtime_policy import (
     app_environment,
     production_debug_token_required,
@@ -413,6 +416,34 @@ def _log_reflection_external_driver_policy(
     )
 
 
+def _log_reflection_supervision_policy(
+    *,
+    settings,
+    logger,
+    worker_running: bool,
+    task_stats: dict[str, int],
+) -> None:
+    snapshot = reflection_supervision_policy_snapshot(
+        reflection_runtime_mode=str(getattr(settings, "reflection_runtime_mode", "in_process")),
+        scheduler_execution_mode=str(
+            getattr(settings, "scheduler_execution_mode", "in_process")
+        ),
+        worker_running=worker_running,
+        task_stats=task_stats,
+    )
+    logger.info(
+        "reflection_supervision_policy policy_owner=%s selected_runtime_mode=%s selected_scheduler_execution_mode=%s queue_health_state=%s production_supervision_ready=%s production_supervision_state=%s blocking_signals=%s recovery_actions=%s",
+        str(snapshot["policy_owner"]),
+        str(snapshot["selected_runtime_mode"]),
+        str(snapshot["selected_scheduler_execution_mode"]),
+        str(snapshot["queue_health_state"]),
+        bool(snapshot["production_supervision_ready"]),
+        str(snapshot["production_supervision_state"]),
+        ",".join(str(item) for item in snapshot["blocking_signals"]),
+        ",".join(str(item) for item in snapshot["recovery_actions"]),
+    )
+
+
 def _log_external_scheduler_policy(*, settings, logger) -> None:
     snapshot = external_scheduler_policy_snapshot(
         scheduler_execution_mode=str(getattr(settings, "scheduler_execution_mode", "in_process"))
@@ -510,6 +541,20 @@ async def lifespan(app: FastAPI):
         settings=settings,
         logger=logger,
         worker_running=reflection_worker.is_running(),
+    )
+    reflection_snapshot = reflection_worker.snapshot()
+    reflection_task_stats = await memory_repository.get_reflection_task_stats(
+        max_attempts=int(reflection_snapshot["max_attempts"]),
+        stuck_after_seconds=int(reflection_snapshot["stuck_processing_seconds"]),
+        retry_backoff_seconds=tuple(
+            int(value) for value in reflection_snapshot["retry_backoff_seconds"]
+        ),
+    )
+    _log_reflection_supervision_policy(
+        settings=settings,
+        logger=logger,
+        worker_running=reflection_worker.is_running(),
+        task_stats=reflection_task_stats,
     )
     _log_external_scheduler_policy(settings=settings, logger=logger)
     if scheduler_worker.enabled:

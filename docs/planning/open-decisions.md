@@ -264,6 +264,10 @@ The current repo already works as an MVP slice, but several architecture-level d
     including backlog-pressure state, blocking signals, and recovery actions
   - deferred reflection supervision is now machine-visible in one surface
     instead of being reconstructed from task counts plus topology posture
+- `PRJ-510` is now complete:
+  - startup logs and release smoke now consume the same deferred-reflection
+    supervision contract, so queue-pressure and recovery posture are visible in
+    both runtime-startup and operator-smoke evidence
 - Introduce new feature surface only when it advances one of those convergence
   lanes or removes a documented transitional shortcut.
 

@@ -54,19 +54,19 @@ Last updated: 2026-04-22
 
 ## READY
 
-- [ ] PRJ-510 Add release evidence for deferred reflection supervision and recovery posture
-  - Owner: Ops/Release
+- [ ] PRJ-511 Sync docs/context for reflection worker supervision and durability closure
+  - Owner: Product Docs
   - Group: Reflection Worker Supervision And Durability Closure
-  - Depends on: PRJ-509
+  - Depends on: PRJ-510
   - Priority: P1
   - Why now:
-    - the supervision posture is now visible in runtime health, so smoke and
-      operator evidence can start consuming the same queue-pressure contract
+    - runtime, startup, and smoke evidence are now aligned, so the reflection
+      supervision lane needs canonical docs/context closure before observability
   - Done when:
-    - release and operator evidence verify the shared deferred-reflection
-      supervision posture, including backlog pressure and recovery guidance
+    - architecture notes, runtime reality, ops guidance, and planning/context
+      truth all describe the same supervised deferred reflection baseline
   - Validation:
-    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_main_runtime_policy.py tests/test_api_routes.py`
+    - doc-and-context sync across architecture, implementation, ops, planning, and context
 
 - [x] PRJ-498 Add release and health evidence for external scheduler ownership posture
   - Owner: Ops/Release
@@ -250,6 +250,22 @@ Last updated: 2026-04-22
       combining task counters with topology fields
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py tests/test_scheduler_worker.py tests/test_api_routes.py`
+
+- [x] PRJ-510 Add release evidence for deferred reflection supervision and recovery posture
+  - Owner: Ops/Release
+  - Group: Reflection Worker Supervision And Durability Closure
+  - Depends on: PRJ-509
+  - Priority: P1
+  - Status: DONE
+  - Result:
+    - startup logs and release smoke now consume the same deferred reflection
+      supervision contract, including queue-health state, readiness posture,
+      blocking signals, and recovery actions
+    - operator evidence can now prove reflection supervision posture without
+      reading `/health` manually or inferring recovery guidance from raw task
+      counters
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_main_runtime_policy.py tests/test_api_routes.py`
 
 - [x] PRJ-497 Implement canonical external cadence entrypoints and ownership checks
   - Owner: Backend Builder

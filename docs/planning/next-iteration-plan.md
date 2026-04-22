@@ -678,6 +678,9 @@ Completed on 2026-04-22:
   supervision snapshot with queue-health state, blocking signals, and recovery
   actions, so deferred reflection backlog pressure no longer requires manual
   interpretation across task counters and topology fields.
+- `PRJ-510` is complete: startup logs and release smoke now consume the same
+  reflection supervision contract, so queue pressure and recovery posture are
+  visible in both release evidence and runtime startup traces.
 
 - `PRJ-508` Define the production supervision baseline for deferred reflection workers.
   - Result:

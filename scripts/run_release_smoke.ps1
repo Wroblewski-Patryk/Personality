@@ -388,6 +388,12 @@ $reflectionExternalDriverPolicy = if (Has-Property -Object $reflection -Name "ex
 else {
     $null
 }
+$reflectionSupervision = if (Has-Property -Object $reflection -Name "supervision") {
+    $reflection.supervision
+}
+else {
+    $null
+}
 $reflectionDeploymentReady = $true
 $reflectionDeploymentBlockingSignals = @()
 
@@ -504,6 +510,30 @@ if ($null -ne $reflectionExternalDriverPolicy) {
         throw "Reflection external-driver policy check failed: production_baseline_ready is missing."
     }
 }
+if ($null -eq $reflectionSupervision) {
+    throw "Reflection supervision check failed: supervision is missing."
+}
+if (-not (Has-Property -Object $reflectionSupervision -Name "policy_owner")) {
+    throw "Reflection supervision check failed: policy_owner is missing."
+}
+if ([string]$reflectionSupervision.policy_owner -ne "deferred_reflection_supervision_policy") {
+    throw "Reflection supervision check failed: unexpected policy_owner '$($reflectionSupervision.policy_owner)'."
+}
+if (-not (Has-Property -Object $reflectionSupervision -Name "queue_health_state")) {
+    throw "Reflection supervision check failed: queue_health_state is missing."
+}
+if (-not (Has-Property -Object $reflectionSupervision -Name "production_supervision_ready")) {
+    throw "Reflection supervision check failed: production_supervision_ready is missing."
+}
+if (-not (Has-Property -Object $reflectionSupervision -Name "production_supervision_state")) {
+    throw "Reflection supervision check failed: production_supervision_state is missing."
+}
+if (-not (Has-Property -Object $reflectionSupervision -Name "blocking_signals")) {
+    throw "Reflection supervision check failed: blocking_signals are missing."
+}
+if (-not (Has-Property -Object $reflectionSupervision -Name "recovery_actions")) {
+    throw "Reflection supervision check failed: recovery_actions are missing."
+}
 
 $runtimeTopology = $health.runtime_topology
 if ($null -eq $runtimeTopology) {
@@ -601,6 +631,12 @@ $summary = @{
     reflection_external_driver_policy_owner = if ($null -ne $reflectionExternalDriverPolicy) { [string]$reflectionExternalDriverPolicy.policy_owner } else { $null }
     reflection_external_driver_entrypoint_path = if ($null -ne $reflectionExternalDriverPolicy) { [string]$reflectionExternalDriverPolicy.entrypoint_path } else { $null }
     reflection_external_driver_baseline_ready = if ($null -ne $reflectionExternalDriverPolicy) { [bool]$reflectionExternalDriverPolicy.production_baseline_ready } else { $null }
+    reflection_supervision_policy_owner = [string]$reflectionSupervision.policy_owner
+    reflection_supervision_queue_health_state = [string]$reflectionSupervision.queue_health_state
+    reflection_supervision_ready = [bool]$reflectionSupervision.production_supervision_ready
+    reflection_supervision_state = [string]$reflectionSupervision.production_supervision_state
+    reflection_supervision_blocking_signals = @($reflectionSupervision.blocking_signals)
+    reflection_supervision_recovery_actions = @($reflectionSupervision.recovery_actions)
     debug_internal_ingress_path      = [string]$runtimePolicy.event_debug_internal_ingress_path
     debug_admin_policy_owner         = [string]$runtimePolicy.event_debug_admin_policy_owner
     debug_admin_ingress_target_path  = [string]$runtimePolicy.event_debug_admin_ingress_target_path

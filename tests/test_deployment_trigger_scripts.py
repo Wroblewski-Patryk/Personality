@@ -159,6 +159,14 @@ def stub_aion_server() -> _StubAionServer:
                 "entrypoint_path": "scripts/run_reflection_queue_once.py",
                 "production_baseline_ready": False,
             },
+            "supervision": {
+                "policy_owner": "deferred_reflection_supervision_policy",
+                "queue_health_state": "active_backlog_under_supervision",
+                "production_supervision_ready": True,
+                "production_supervision_state": "deferred_supervision_active_backlog",
+                "blocking_signals": [],
+                "recovery_actions": [],
+            },
         },
     }
     _StubAionHandler.event_payload = {
@@ -332,6 +340,12 @@ def test_release_smoke_allows_optional_deployment_evidence_to_be_omitted(
     assert summary["reflection_external_driver_policy_owner"] == "deferred_reflection_external_worker"
     assert summary["reflection_external_driver_entrypoint_path"] == "scripts/run_reflection_queue_once.py"
     assert summary["reflection_external_driver_baseline_ready"] is False
+    assert summary["reflection_supervision_policy_owner"] == "deferred_reflection_supervision_policy"
+    assert summary["reflection_supervision_queue_health_state"] == "active_backlog_under_supervision"
+    assert summary["reflection_supervision_ready"] is True
+    assert summary["reflection_supervision_state"] == "deferred_supervision_active_backlog"
+    assert summary["reflection_supervision_blocking_signals"] == []
+    assert summary["reflection_supervision_recovery_actions"] == []
     assert summary["deployment_evidence_checked"] is False
     assert summary["deployment_evidence_path"] == ""
     assert summary["deployment_evidence_status_code"] is None
