@@ -289,6 +289,30 @@ Current post-convergence diagnostics also require:
   - machine-readable posture snapshots for runtime policy, retrieval,
     scheduler external ownership, reflection supervision, and connector
     execution baseline
+  - machine-readable conversation-channel posture for
+    `conversation_channels.telegram`
+
+For the no-UI `v1` release baseline, conversation reliability is now also an
+operator-visible evidence contract:
+
+- `/health.conversation_channels.telegram` must expose:
+  - policy owner
+  - round-trip readiness posture
+  - token/secret configuration posture
+  - last ingress state
+  - last delivery state
+- ingress telemetry must distinguish:
+  - received
+  - rejected
+  - queued
+  - processed
+  - runtime-failed
+- delivery telemetry must distinguish:
+  - attempted
+  - sent
+  - missing_chat_id
+  - telegram_api_error
+  - delivery_exception
 
 ## Operator Incident Evidence Bundle
 
@@ -310,6 +334,13 @@ Canonical bundle contents:
 - optional `behavior_validation_report.json`
   - attached only when behavior validation was run for the same incident or
     release investigation
+
+Conversation-reliability evidence is part of that bundle contract too:
+
+- `incident_evidence.json` must carry
+  `policy_posture["conversation_channels.telegram"]`
+- bundle validation must fail when Telegram conversation posture is missing or
+  carries an invalid round-trip baseline
 
 Canonical naming posture:
 

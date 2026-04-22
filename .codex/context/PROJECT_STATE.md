@@ -59,6 +59,14 @@ Last updated: 2026-04-22
 - 2026-04-22: `PRJ-543` is now the first `READY` task; the next slice should
   synchronize the new `v1` conversation-reliability evidence across canonical
   docs, runtime reality, testing guidance, ops notes, and context truth.
+- 2026-04-22: `PRJ-543` is complete: canonical logging/debugging docs, runtime
+  reality, testing guidance, ops notes, planning truth, and context now all
+  describe the same `v1` conversation-reliability baseline built around
+  `/health.conversation_channels.telegram` and exported
+  `incident_evidence.policy_posture["conversation_channels.telegram"]`.
+- 2026-04-22: `PRJ-544` is now the first `READY` task; the next slice should
+  freeze the exact no-UI `v1` life-assistant workflow set before expanding
+  workflow execution or behavior scenarios.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

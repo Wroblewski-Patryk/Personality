@@ -28,6 +28,12 @@ The current repo already works as an MVP slice, but several architecture-level d
 - user-reported Telegram no-response posture is treated as a real `v1`
   blocker and should be addressed before broader capability expansion is
   considered done.
+- `PRJ-541..PRJ-542` now turn that blocker into explicit runtime truth:
+  - `/health.conversation_channels.telegram` is the canonical operator surface
+    for Telegram round-trip posture
+  - exported `incident_evidence` and release smoke now require
+    `conversation_channels.telegram` posture instead of treating Telegram
+    reliability as log-only evidence
 - the next execution queue therefore prioritizes:
   - production conversation reliability
   - life-assistant workflow activation

@@ -138,6 +138,17 @@ For meaningful repo changes, leave behind:
     - smoke-mode validation of exported incident evidence and full bundle
       directories
     - optional behavior-artifact ingestion of exported incident evidence
+- for `v1` conversation-reliability slices, regression and smoke evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_delivery_router.py`
+  - `.\.venv\Scripts\python -m pytest -q tests/test_action_executor.py tests/test_runtime_pipeline.py`
+  - `.\.venv\Scripts\python -m pytest -q tests/test_observability_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py`
+  - coverage should pin:
+    - `/health.conversation_channels.telegram` readiness and last-event posture
+    - ingress rejection versus processed-turn telemetry for Telegram webhook
+      traffic
+    - delivery success/failure telemetry in the shared delivery boundary
+    - incident-evidence and smoke validation of
+      `conversation_channels.telegram`
 - for runtime-topology, adaptive-governance, planning-governance, or
   deployment-policy surface changes, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`

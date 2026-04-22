@@ -1034,6 +1034,17 @@ Current limitation:
   existing runtime-owned surfaces into the frozen bundle shape
 - `incident_evidence.json` remains owned by the debug/runtime export contract,
   while `health_snapshot.json` remains owned by `GET /health`
+- `/health.conversation_channels.telegram` now exposes one shared Telegram
+  conversation-reliability telemetry owner with:
+  - `round_trip_ready`
+  - `round_trip_state`
+  - token/secret configuration posture
+  - ingress counters and last-ingress evidence
+  - delivery counters and last-delivery evidence
+- debug-mode `incident_evidence.policy_posture` now also includes
+  `conversation_channels.telegram`, so release smoke and behavior-validation
+  gates can verify Telegram conversation posture from exported evidence rather
+  than only from live `/health`
 
 ---
 

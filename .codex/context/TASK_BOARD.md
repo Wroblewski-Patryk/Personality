@@ -157,14 +157,25 @@ Last updated: 2026-04-22
   - Group: Production Conversation Reliability
   - Depends on: PRJ-542
   - Priority: P1
-  - Status: READY
+  - Status: DONE
+  - Result:
+    - canonical logging/debugging docs, runtime reality, testing guidance, ops
+      notes, and planning truth now describe the same `v1`
+      conversation-reliability evidence baseline
+    - `/health.conversation_channels.telegram`, exported
+      `incident_evidence.policy_posture["conversation_channels.telegram"]`,
+      release smoke, and behavior-validation gates are now documented as one
+      shared release-blocking proof surface for no-UI `v1`
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
 
 - [ ] PRJ-544 Freeze the canonical `v1` life-assistant workflow set
   - Owner: Planner
   - Group: Life Assistant Workflow Activation
   - Depends on: PRJ-543
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
 
 - [ ] PRJ-548 Freeze the learned-state model for `v1`
   - Owner: Planner

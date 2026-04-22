@@ -122,6 +122,31 @@ with runtime `system_debug.adaptive_state.affective_input_policy` and
 heuristic input, policy-disabled fallback, classifier-unavailable fallback,
 and final affective outcome.
 
+`GET /health` now also includes `conversation_channels.telegram` for
+conversation-reliability triage:
+
+- `policy_owner=telegram_conversation_reliability_telemetry`
+- `round_trip_ready`
+- `round_trip_state` (`provider_backed_ready|missing_bot_token`)
+- `bot_token_configured`
+- `webhook_secret_configured`
+- ingress counters:
+  - `ingress_attempts`
+  - `ingress_rejections`
+  - `ingress_queued`
+  - `ingress_processed`
+  - `ingress_runtime_failures`
+- delivery counters:
+  - `delivery_attempts`
+  - `delivery_successes`
+  - `delivery_failures`
+- `last_ingress` and `last_delivery`
+
+Use this surface first when Telegram appears silent in production. It tells
+you whether the webhook reached the service, whether the secret was rejected,
+whether the turn was coalesced into a queue, and whether outbound delivery
+ever ran.
+
 `GET /health` now also includes a `memory_retrieval` object with semantic
 retrieval posture:
 
@@ -902,6 +927,8 @@ For dedicated debug-ingress retirement, `-IncludeDebug` now also proves:
 - query compatibility remains disabled in incident evidence
 - rollback exception is explicit as either
   `shared_debug_break_glass_only` or `shared_debug_disabled`
+- Telegram conversation posture is present in exported incident evidence under
+  `policy_posture["conversation_channels.telegram"]`
 
 ## Incident Evidence Bundle Baseline
 
@@ -957,6 +984,9 @@ Bundle verification through release smoke:
 Bundle verification now also checks the same dedicated-admin debug posture
 from `incident_evidence.json`, so retirement proof does not depend only on the
 live `/health.runtime_policy` snapshot.
+Bundle verification now also checks Telegram conversation posture from
+`incident_evidence.json`, so `v1` conversation reliability does not depend
+only on live `/health` during release or incident review.
 
 Optional debug payload with token:
 
@@ -1182,4 +1212,10 @@ If a request path fails:
 2. verify Postgres health and connection string
 3. confirm whether OpenAI fallback behavior is acceptable for the failing scenario
 4. for Telegram issues, verify webhook secret, bot token, and `chat_id` presence
-5. inspect structured logs for `event_id`, `trace_id`, and action status
+5. inspect `/health.conversation_channels.telegram`:
+   - rejected ingress means secret mismatch or malformed webhook path
+   - queued ingress means burst coalescing/turn ownership is active
+   - missing bot token means delivery cannot be provider-backed
+   - delivery failures expose whether the problem is missing `chat_id`,
+     Telegram API failure, or transport exception
+6. inspect structured logs for `event_id`, `trace_id`, and action status
