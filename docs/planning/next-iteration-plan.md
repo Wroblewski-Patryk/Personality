@@ -27,6 +27,394 @@ Confirmed on 2026-04-19:
   - durable reflection enqueue
 - the current problems are mostly contract and maintainability problems, not missing endpoints
 
+## Planned On 2026-04-22 After V1 Productization Review
+
+This plan now also carries the productization interpretation requested by the
+user so the next execution queue moves the repo toward a real `v1`, not only
+continued architecture hardening.
+
+### Product Stage Interpretation
+
+`MVP`:
+
+- one coherent personality
+- one production-capable conversation channel
+- memory, reflection, retrieval, identity continuity, role selection, and
+  bounded action execution
+- enough continuity and behavior validation to prove that AION lives across
+  time
+
+`V1`:
+
+- still backend-first and no-UI by design
+- production-stable personality reachable through Telegram and API
+- life-assistant workflows that really work end to end:
+  - reminders
+  - daily planning
+  - check-ins
+  - lightweight organization
+  - reflection-backed continuity
+- inspectable internal surfaces for:
+  - learned preferences
+  - learned knowledge and conclusions
+  - active roles
+  - selected skill metadata
+  - active plans, goals, tasks, and proposals
+- role-governed tool usage through the approved action boundary
+
+`V2`:
+
+- adds the user/admin UI on top of the stable backend runtime
+- exposes the same backend-owned introspection surfaces through product UX
+- extends work-partner and organization workflows once the no-UI `v1`
+  baseline is already stable in production
+
+### Architecture Interpretation For Skills And Tools
+
+The current architecture already supports the user's intended direction, with
+one important boundary:
+
+- identity stays stable
+- roles are contextual behavior stances
+- skills remain metadata-only capability hints unless architecture docs
+  intentionally expand that authority later
+- tool and connector execution remains action-owned
+- learned knowledge belongs to memory and reflection outputs
+- learned skills, if surfaced, must be represented as governed capability
+  metadata rather than arbitrary self-modifying executable code
+
+This means the future UI may show:
+
+- what the personality learned
+- what role it selected
+- what skill metadata it used
+- what it plans
+- what tools are available and authorized
+
+But tool execution must still stay inside the action or integration layer.
+
+### V1 Gap Snapshot
+
+The biggest remaining gaps between the current repo and a real no-UI `v1` are:
+
+- production conversation reliability, especially Telegram round-trip success
+- operator-visible proof that Telegram ingress, attention assembly, delivery,
+  and reflection still behave correctly in production
+- end-to-end life-assistant workflows rather than only infrastructure surfaces
+- inspectable learned-state surfaces that future UI can consume
+- explicit architecture for web search and browser tool families
+- provider-backed organization and knowledge tools selected by role through the
+  existing planning-to-action boundary
+- a backend work-partner role baseline that uses skills and tools without
+  becoming a second personality
+
+### New Queue
+
+The next queue is now seeded through `PRJ-567`.
+
+New groups:
+
+- `PRJ-540..PRJ-543` Production Conversation Reliability
+- `PRJ-544..PRJ-547` Life Assistant Workflow Activation
+- `PRJ-548..PRJ-551` Learned-State And Skill Introspection
+- `PRJ-552..PRJ-555` Web Knowledge And Tooling Architecture
+- `PRJ-556..PRJ-559` Search, Browser, And Organization Tool Expansion
+- `PRJ-560..PRJ-563` Work-Partner Role And Capability Orchestration
+- `PRJ-564..PRJ-567` V1 Release Closure And V2 API Readiness
+
+Why this order:
+
+- Telegram or other production conversation failures block `v1` more directly
+  than any new capability lane, so conversation reliability comes first
+- life-assistant workflows come next because `v1` is not achieved by health
+  surfaces alone
+- introspection surfaces must land before future UI can truthfully show what
+  the system learned, planned, or selected
+- web search and browser support need architecture-first contracts because
+  current connector families do not yet freeze those tool kinds
+- bounded tool expansion should happen before work-partner role growth so role
+  orchestration has real authorized tools to use
+- final `v1` closure should prove release readiness and leave behind stable
+  backend APIs for future UI rather than bundling UI into `v1`
+
+## Group 82 - Production Conversation Reliability
+
+This group turns channel reliability into a first-class `v1` gate instead of
+assuming that passing runtime tests automatically means Telegram production
+still works.
+
+- `PRJ-540` Freeze the no-UI `v1` product contract and conversation-reliability gate.
+  - Result:
+    - one explicit `v1` contract records that Telegram or API conversation
+      round-trip success is a release-blocking requirement
+    - user-reported Telegram no-response posture becomes an explicit
+      architecture and ops blocker rather than an anecdotal follow-up
+  - Validation:
+    - architecture, runtime-reality, and ops cross-review
+
+- `PRJ-541` Repair and instrument the Telegram ingress-to-delivery path.
+  - Result:
+    - Telegram webhook handling, attention assembly, delivery routing, and
+      reply execution expose one machine-visible success or failure path
+    - production message loss can be triaged without manual log archaeology
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_telegram_integration.py tests/test_delivery_router.py tests/test_runtime_pipeline.py tests/test_api_routes.py`
+
+- `PRJ-542` Add Telegram round-trip smoke and incident-evidence coverage.
+  - Result:
+    - release and behavior-validation flows prove that a Telegram message can
+      enter the system, produce a reply, and attach incident evidence when it
+      fails
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_telegram_integration.py`
+
+- `PRJ-543` Sync docs/context for the `v1` conversation-reliability baseline.
+  - Result:
+    - planning, ops, testing, runtime reality, and context truth all treat
+      Telegram or API round-trip health as a first-class `v1` readiness gate
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
+
+## Group 83 - Life Assistant Workflow Activation
+
+This group turns the existing runtime into a real no-UI life assistant instead
+of a mostly-correct cognitive engine with partial proactive and planning
+surfaces.
+
+- `PRJ-544` Freeze the canonical `v1` life-assistant workflow set.
+  - Result:
+    - one explicit baseline records the required no-UI user workflows for
+      `v1`:
+      - reminder capture and follow-up
+      - daily planning
+      - task or goal check-in
+      - reflection-backed continuity over time
+  - Validation:
+    - cross-review across `09_mvp_scope`, `10_future_vision`,
+      `16_agent_contracts`, and runtime reality
+
+- `PRJ-545` Implement missing bounded workflow execution for reminders and daily support.
+  - Result:
+    - the selected `v1` workflows execute through existing goal, task,
+      proactive, scheduler, and connector boundaries without introducing a
+      second orchestration path
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_scheduler_worker.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+
+- `PRJ-546` Add end-to-end behavior validation for life-assistant scenarios.
+  - Result:
+    - scenario-level tests prove that the system can remember, plan, remind,
+      and follow up across time instead of only emitting correct internal
+      payload shapes
+  - Validation:
+    - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+
+- `PRJ-547` Sync docs/context for the `v1` life-assistant workflow baseline.
+  - Result:
+    - planning, testing, ops, runtime reality, and context truth all describe
+      the same `v1` workflow set and its validation evidence
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
+
+## Group 84 - Learned-State And Skill Introspection
+
+This group prepares the backend surfaces that future UI should consume to show
+what the personality learned, what it is planning, and how it is currently
+expressing itself.
+
+- `PRJ-548` Freeze the learned-state model for `v1`.
+  - Result:
+    - one explicit contract distinguishes:
+      - learned knowledge and conclusions
+      - learned preferences
+      - selected role
+      - selected skill metadata
+      - active plans, goals, tasks, and proposals
+      - adaptive state versus profile identity
+    - the repo records what can truthfully be called a "learned skill" inside
+      the existing architecture
+  - Validation:
+    - architecture and planning cross-review
+
+- `PRJ-549` Expose backend inspection surfaces for learned state and planning state.
+  - Result:
+    - the runtime exposes canonical internal or admin-readable surfaces for
+      future UI consumption without putting that inspection logic into the UI
+      first
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py tests/test_role_agent.py tests/test_planning_agent.py`
+
+- `PRJ-550` Add regression and incident-evidence coverage for introspection surfaces.
+  - Result:
+    - inspection endpoints or debug surfaces are stable enough for release,
+      triage, and future UI integration
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_behavior_validation_script.py tests/test_deployment_trigger_scripts.py`
+
+- `PRJ-551` Sync docs/context for learned-state and skill introspection.
+  - Result:
+    - planning, contracts, ops notes, testing guidance, and runtime reality
+      all describe the same backend inspection baseline for future UI
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
+
+## Group 85 - Web Knowledge And Tooling Architecture
+
+This group resolves the architecture gap between current connector families and
+the user's desired future tools such as web search and browser access.
+
+- `PRJ-552` Define the architecture baseline for web search and browser tool families.
+  - Result:
+    - one explicit contract records whether web search and browser become new
+      connector kinds, a bounded knowledge-tool family, or another approved
+      action-owned capability surface
+    - the repo avoids silently treating browsing as "just another skill"
+  - Validation:
+    - architecture and planning cross-review with explicit boundary note
+
+- `PRJ-553` Implement shared capability and permission-gate policy for web knowledge tools.
+  - Result:
+    - role, planning, and action can reason about search or browser access
+      through one shared policy owner without yet widening provider execution
+      beyond the selected baseline
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_connector_policy.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+
+- `PRJ-554` Expose readiness and debug visibility for the selected tool-family posture.
+  - Result:
+    - `/health` and runtime debug make tool availability, authorization, and
+      fallback posture visible for operator triage and future UI use
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+
+- `PRJ-555` Sync docs/context for the web knowledge and tooling baseline.
+  - Result:
+    - contracts, runtime reality, ops notes, testing guidance, and planning
+      truth all describe the same new tool-family baseline
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
+
+## Group 86 - Search, Browser, And Organization Tool Expansion
+
+This group adds the first bounded real-world tools that a no-UI `v1` and later
+`v2` can rely on.
+
+- `PRJ-556` Freeze the first bounded provider-backed search, browser, and organization slices.
+  - Result:
+    - one explicit contract selects:
+      - the first search operation
+      - the first browser or page-read operation
+      - the next ClickUp organization operation beyond current baseline
+    - each slice has a safe output boundary and confirmation posture
+  - Validation:
+    - connector or tool policy cross-review across architecture and ops docs
+
+- `PRJ-557` Implement the selected bounded search, browser, and ClickUp slices.
+  - Result:
+    - the first approved tool slices execute through the existing
+      planning-to-action boundary and return bounded evidence instead of
+      ungoverned raw tool payloads
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_connector_policy.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+
+- `PRJ-558` Add role-governed behavior validation for tool usage.
+  - Result:
+    - scenario-level tests prove that role and planning can use authorized
+      tools for life-organization and work turns without bypassing permission
+      gates or the action boundary
+  - Validation:
+    - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+
+- `PRJ-559` Sync docs/context for bounded search, browser, and organization tooling.
+  - Result:
+    - runtime reality, contracts, testing, ops, and planning truth all
+      describe the same approved tool slices
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
+
+## Group 87 - Work-Partner Role And Capability Orchestration
+
+This group treats work-partner as a role of the same personality, not as a
+separate persona or a UI-specific feature.
+
+- `PRJ-560` Freeze the backend work-partner role baseline.
+  - Result:
+    - one explicit contract records that work-partner is a role using bounded
+      skills, memory, planning, and authorized tools within the existing
+      identity and action boundaries
+  - Validation:
+    - architecture cross-review across identity, role, skill, planning, and
+      connector contracts
+
+- `PRJ-561` Implement work-partner capability orchestration and selection evidence.
+  - Result:
+    - role selection, selected skills, connector or tool gates, and planning
+      outputs provide one machine-visible backend baseline for work-partner
+      scenarios
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`
+
+- `PRJ-562` Add behavior validation for work-organization and decision-support scenarios.
+  - Result:
+    - the repo proves that work-partner behavior can organize tasks, use
+      bounded tools, and support decisions without drifting outside the
+      approved architecture
+  - Validation:
+    - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+
+- `PRJ-563` Sync docs/context for work-partner role orchestration.
+  - Result:
+    - contracts, runtime reality, ops guidance, testing guidance, and context
+      truth all describe the same backend work-partner baseline
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
+
+## Group 88 - V1 Release Closure And V2 API Readiness
+
+This group closes no-UI `v1` and intentionally leaves behind the backend
+surface that a later `v2` UI can consume.
+
+- `PRJ-564` Freeze the `v1` release gate and production acceptance bundle.
+  - Result:
+    - one explicit release contract defines the minimum no-UI `v1` acceptance
+      baseline across conversation reliability, life-assistant workflows,
+      learned-state inspection, and approved tool posture
+  - Validation:
+    - ops, testing, and architecture cross-review
+
+- `PRJ-565` Implement missing release and operator evidence for the `v1` gate.
+  - Result:
+    - `/health`, incident evidence, release smoke, and behavior validation can
+      prove whether the selected `v1` baseline is actually live in production
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_api_routes.py`
+
+- `PRJ-566` Expose stable backend API-readiness surfaces for future `v2` UI.
+  - Result:
+    - the repo leaves behind one explicit backend readiness contract for a UI
+      that wants to show:
+      - learned state
+      - active role and selected skills
+      - goals, tasks, plans, proposals
+      - authorized tools and connector posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py`
+
+- `PRJ-567` Sync docs/context for `v1` closure and `v2` API readiness.
+  - Result:
+    - planning, context, architecture notes, runtime reality, testing, and
+      ops guidance all describe the same completed no-UI `v1` baseline and the
+      starting point for later UI work in `v2`
+  - Validation:
+    - doc-and-context sync across architecture, implementation, ops, testing,
+      planning, and context
+
 ## Progress Update
 
 Historical planning note (2026-04-22):

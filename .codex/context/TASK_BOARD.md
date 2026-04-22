@@ -66,8 +66,111 @@ Last updated: 2026-04-22
   - retrieval should close the remaining relation-source rollout question with
     explicit policy and evidence instead of leaving it as an open optional
     family forever
+- A new `v1` productization queue is now seeded through `PRJ-567`.
+- Product-stage interpretation is now explicit:
+  - `MVP` is already exceeded by the current runtime baseline
+  - `v1` means a no-UI but production-usable life assistant reachable through
+    Telegram or API
+  - `v2` starts when a dedicated UI consumes stable backend inspection and
+    orchestration surfaces
+- work-partner is now treated as a role of the same personality that may use
+  selected skills and authorized tools through the existing planning and
+  action boundary, not as a separate persona.
+- the next queue is intentionally ordered around real `v1` blockers:
+  - production conversation reliability first, because user-reported Telegram
+    no-response posture blocks product reality more directly than any new tool
+    lane
+  - then life-assistant workflow activation
+  - then learned-state inspection surfaces for future UI
+  - then architecture-first web search and browser tooling
+  - then bounded tool expansion and work-partner role orchestration
+  - finally `v1` release closure and `v2` backend API readiness
 
 ## READY
+
+- [ ] PRJ-540 Freeze the no-UI `v1` product contract and conversation-reliability gate
+  - Owner: Planner
+  - Group: Production Conversation Reliability
+  - Depends on: PRJ-539
+  - Priority: P0
+  - Status: READY
+  - Why now:
+    - the current runtime already exceeds classic MVP scope, but a
+      user-reported Telegram no-response posture means `v1` cannot yet be
+      called production-real
+    - the repo needs one explicit product gate that says Telegram or API
+      round-trip reliability is part of the `v1` release contract
+  - Done when:
+    - one explicit `v1` baseline records:
+      - no UI is required for `v1`
+      - Telegram or API conversation reliability is release-blocking
+      - work-partner remains a role inside the same personality
+      - future UI belongs to `v2`
+  - Validation:
+    - architecture, runtime-reality, ops, and planning cross-review
+
+- [ ] PRJ-541 Repair and instrument the Telegram ingress-to-delivery path
+  - Owner: Backend Builder
+  - Group: Production Conversation Reliability
+  - Depends on: PRJ-540
+  - Priority: P0
+  - Status: BACKLOG
+
+- [ ] PRJ-542 Add Telegram round-trip smoke and incident-evidence coverage
+  - Owner: QA/Test
+  - Group: Production Conversation Reliability
+  - Depends on: PRJ-541
+  - Priority: P0
+  - Status: BACKLOG
+
+- [ ] PRJ-543 Sync docs/context for the `v1` conversation-reliability baseline
+  - Owner: Product Docs
+  - Group: Production Conversation Reliability
+  - Depends on: PRJ-542
+  - Priority: P1
+  - Status: BACKLOG
+
+- [ ] PRJ-544 Freeze the canonical `v1` life-assistant workflow set
+  - Owner: Planner
+  - Group: Life Assistant Workflow Activation
+  - Depends on: PRJ-543
+  - Priority: P1
+  - Status: BACKLOG
+
+- [ ] PRJ-548 Freeze the learned-state model for `v1`
+  - Owner: Planner
+  - Group: Learned-State And Skill Introspection
+  - Depends on: PRJ-547
+  - Priority: P1
+  - Status: BACKLOG
+
+- [ ] PRJ-552 Define the architecture baseline for web search and browser tool families
+  - Owner: Planner
+  - Group: Web Knowledge And Tooling Architecture
+  - Depends on: PRJ-551
+  - Priority: P1
+  - Status: BACKLOG
+
+- [ ] PRJ-556 Freeze the first bounded provider-backed search, browser, and organization slices
+  - Owner: Planner
+  - Group: Search, Browser, And Organization Tool Expansion
+  - Depends on: PRJ-555
+  - Priority: P2
+  - Status: BACKLOG
+
+- [ ] PRJ-560 Freeze the backend work-partner role baseline
+  - Owner: Planner
+  - Group: Work-Partner Role And Capability Orchestration
+  - Depends on: PRJ-559
+  - Priority: P1
+  - Status: BACKLOG
+
+- [ ] PRJ-564 Freeze the `v1` release gate and production acceptance bundle
+  - Owner: Planner
+  - Group: V1 Release Closure And V2 API Readiness
+  - Depends on: PRJ-563
+  - Priority: P1
+  - Status: BACKLOG
 
 - [x] PRJ-516 Define the operator-facing incident evidence bundle and retention baseline
   - Owner: Planner

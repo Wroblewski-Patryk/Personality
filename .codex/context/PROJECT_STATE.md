@@ -9,7 +9,31 @@ Last updated: 2026-04-22
   structured pipeline, replies through API or Telegram, and learns lightweight
   user preferences over time
 - Commercial model: TBD
-- Current phase: post-convergence follow-up discovery and hardening
+- Current phase: V1 productization planning and production hardening
+- 2026-04-22: product staging is now explicit:
+  - `MVP` is already exceeded by the current runtime
+  - `v1` means a no-UI but production-usable life assistant over Telegram or
+    API
+  - `v2` begins when a dedicated UI consumes stable backend inspection and
+    orchestration surfaces
+- 2026-04-22: work-partner is now explicitly treated as a role of the same
+  personality that may use selected skills and authorized tools through the
+  existing planning-to-action boundary; it is not a separate persona.
+- 2026-04-22: user-reported Telegram no-response posture is now treated as the
+  highest-priority blocker for making `v1` real and seeds the first group in
+  the new queue.
+- 2026-04-22: a new `v1` productization queue is now seeded through
+  `PRJ-567`, focused on:
+  - production conversation reliability
+  - life-assistant workflow activation
+  - learned-state and skill introspection
+  - web knowledge and tooling architecture
+  - bounded search, browser, and organization tool expansion
+  - work-partner role orchestration
+  - final `v1` release closure and `v2` backend API readiness
+- 2026-04-22: `PRJ-540` is now the first `READY` task; it freezes the no-UI
+  `v1` product contract and makes Telegram or API round-trip reliability a
+  release-blocking baseline before broader capability work continues.
 - 2026-04-22: fresh post-`PRJ-515` analysis has now seeded a new queue through
   `PRJ-539`, focused on operator-grade incident-evidence handling, actual
   debug-compat retirement, bounded connector read expansion, external cadence

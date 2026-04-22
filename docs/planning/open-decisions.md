@@ -4,6 +4,38 @@
 
 The current repo already works as an MVP slice, but several architecture-level docs describe systems that are not implemented yet. This file keeps the next real decisions visible and tied to the current codebase.
 
+## V1 Productization Stance (2026-04-22)
+
+- `v1` is now interpreted as a no-UI but production-usable life-assistant
+  backend:
+  - Telegram or API conversation must work reliably in production
+  - reminders, planning, follow-up, and reflection-backed continuity must be
+    behavior-level reality, not only contract-level truth
+  - backend inspection surfaces must expose what the personality learned,
+    selected, and planned so a later UI can be built on top of real runtime
+    truth
+- `v2` begins when a dedicated UI or admin product layer is added on top of
+  those stable backend surfaces.
+- work-partner is treated as a role of the same personality, not as a second
+  persona or a UI-only feature.
+- skills remain metadata-only capability hints unless a later approved
+  architecture change explicitly expands their authority.
+- tool execution remains action-owned:
+  - learned knowledge belongs to memory and reflection outputs
+  - selected skill metadata may explain capability posture
+  - external tools such as search, browser, calendar, ClickUp, or drive must
+    stay behind explicit planning and action boundaries
+- user-reported Telegram no-response posture is treated as a real `v1`
+  blocker and should be addressed before broader capability expansion is
+  considered done.
+- the next execution queue therefore prioritizes:
+  - production conversation reliability
+  - life-assistant workflow activation
+  - learned-state inspection surfaces
+  - architecture-first web search and browser tooling
+  - work-partner role orchestration
+  - final `v1` release closure plus `v2` backend API readiness
+
 ## Target-State Convergence Stance (2026-04-20)
 
 - For the next execution queue, prefer slices that reduce transitional wiring
