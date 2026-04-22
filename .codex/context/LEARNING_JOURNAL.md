@@ -25,6 +25,37 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-23 - PostgreSQL vector deploys must validate Python pgvector parity before startup
+- Context:
+  - production Telegram webhook traffic reached the service, but every
+    foreground `/event` turn failed with
+    `/health.conversation_channels.telegram.last_ingress.reason=runtime_exception:ProgrammingError`.
+- Symptom:
+  - `/health` looked healthy, while Telegram and direct API turns both returned
+    `500 Internal Server Error` before any delivery attempt.
+- Root cause:
+  - PostgreSQL semantic-vector retrieval was live in the foreground pipeline,
+    but the Python `pgvector` binding was not guaranteed by the default runtime
+    dependency set, so deploys could boot into a broken vector-runtime state.
+- Guardrail:
+  - when PostgreSQL plus semantic vectors are enabled, startup must block
+    before database initialization unless the Python `pgvector` package is
+    available in the runtime image.
+- Preferred pattern:
+  - ship `pgvector` as a normal deploy dependency
+  - fail fast at startup on missing vector-runtime bindings
+  - use `/health.conversation_channels.telegram.last_ingress.reason` to confirm
+    whether production silence is a foreground runtime crash instead of a
+    webhook or delivery outage
+- Avoid:
+  - treating healthy `/health` as proof that foreground turn processing is
+    safe when semantic retrieval dependencies may still be missing
+- Evidence:
+  - `PRJ-569`
+  - `pyproject.toml`
+  - `app/main.py`
+  - `tests/test_main_lifespan_policy.py`
+
 ### 2026-04-22 - Connector-action tests must carry the same delivery envelope as the plan
 - Context:
   - adding provider-backed connector execution to `ActionExecutor` while the

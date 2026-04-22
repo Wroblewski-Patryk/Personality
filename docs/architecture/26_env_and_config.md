@@ -181,6 +181,12 @@ Default: `true`.
 When `false`, runtime retrieval remains lexical-only while keeping the same
 hybrid retrieval API surface.
 
+When `DATABASE_URL` targets PostgreSQL and semantic vectors remain enabled, the
+runtime also requires the Python `pgvector` package at startup. AION now
+blocks startup before database initialization if PostgreSQL vector retrieval is
+configured without that runtime binding, because foreground `/event`
+processing would otherwise fail even while `/health` still appears healthy.
+
 `EMBEDDING_PROVIDER`
 
 Controls which embedding provider is requested by runtime configuration.

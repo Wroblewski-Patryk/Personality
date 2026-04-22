@@ -147,6 +147,13 @@ you whether the webhook reached the service, whether the secret was rejected,
 whether the turn was coalesced into a queue, and whether outbound delivery
 ever ran.
 
+If `last_ingress.state=runtime_failed` and the reason shows a runtime
+exception before any delivery attempt, treat the incident as a foreground
+pipeline failure rather than a Telegram transport outage. For PostgreSQL
+deploys with semantic vectors enabled, verify that the runtime image includes
+the Python `pgvector` package; startup now blocks on missing `pgvector`
+binding to prevent `/health` from looking healthy while `/event` still fails.
+
 For no-UI `v1` life-assistant triage, pair Telegram reliability with workflow
 posture:
 

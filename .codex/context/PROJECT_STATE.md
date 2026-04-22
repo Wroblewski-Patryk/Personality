@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 
 ## Product Snapshot
 
@@ -258,6 +258,15 @@ Last updated: 2026-04-22
   reality, testing guidance, ops notes, planning, and context now all
   describe the same completed no-UI `v1` baseline plus the backend API
   readiness seed for future `v2` UI work.
+- 2026-04-23: `PRJ-568` is complete: app startup now wires
+  `AttentionTurnCoordinator` to the shared `MemoryRepository`, so
+  `ATTENTION_COORDINATION_MODE=durable_inbox` no longer boots without the
+  repository-backed contract store dependency.
+- 2026-04-23: `PRJ-569` is complete: PostgreSQL semantic-vector runtime now
+  treats the Python `pgvector` binding as a required deploy dependency and
+  blocks startup before database initialization when semantic vectors are
+  enabled on PostgreSQL without that dependency, preventing the broken
+  `/health`-looks-healthy but `/event`-returns-500 posture seen in production.
 - 2026-04-22: the seeded `v1` queue is complete through `PRJ-567`; no seeded
   `READY` task remains and the next lane should be derived from fresh
   production/runtime analysis.

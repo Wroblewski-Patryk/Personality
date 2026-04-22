@@ -1,6 +1,6 @@
 # TASK_BOARD
 
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 
 ## Agent Workflow Refresh (2026-04-18)
 
@@ -89,9 +89,15 @@ Last updated: 2026-04-22
 - no seeded `READY`, `BACKLOG`, or `FUTURE` queue remains after the no-UI `v1`
   closure lane; the next task should be derived from fresh production/runtime
   analysis
-- a new production hotfix slice is now in progress through `PRJ-568`, focused
-  on restoring Telegram replies when production selects
-  `ATTENTION_COORDINATION_MODE=durable_inbox`
+- `PRJ-568` is complete: startup now wires durable attention to the shared
+  memory repository instead of leaving `durable_inbox` unable to use the
+  repository-backed contract store.
+- `PRJ-569` is complete: PostgreSQL semantic-vector deploys now require the
+  Python `pgvector` package as a normal runtime dependency, and app startup
+  blocks before database initialization when semantic vectors are enabled on
+  PostgreSQL without that binding.
+- no seeded execution queue is currently active; the next task should be
+  derived from the next fresh production or architecture gap.
 
 ## READY
 

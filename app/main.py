@@ -42,6 +42,7 @@ from app.integrations.web_browser.generic_http_client import GenericHttpPageClie
 from app.memory.embeddings import embedding_strategy_snapshot, normalize_embedding_source_kinds
 from app.memory.openai_embedding_client import OpenAIEmbeddingClient
 from app.memory.repository import MemoryRepository
+from app.memory.vector_types import pgvector_python_binding_available
 from app.motivation.engine import MotivationEngine
 from app.reflection.worker import ReflectionWorker
 from app.workers.scheduler import SchedulerWorker
@@ -372,6 +373,23 @@ def _log_embedding_strategy_warnings(*, settings, logger) -> None:
         )
 
 
+def _enforce_postgres_vector_runtime_requirements(*, settings, logger) -> None:
+    database_url = str(getattr(settings, "database_url", "") or "").strip().lower()
+    semantic_vector_enabled = bool(getattr(settings, "semantic_vector_enabled", True))
+    if not semantic_vector_enabled or not database_url.startswith("postgresql"):
+        return
+    if pgvector_python_binding_available():
+        return
+    logger.error(
+        "vector_runtime_block database_url_scheme=postgresql semantic_vector_enabled=%s missing_dependency=pgvector recommendation=install_pgvector_python_package_in_runtime_image",
+        semantic_vector_enabled,
+    )
+    raise RuntimeError(
+        "PostgreSQL semantic vector runtime requires the Python 'pgvector' package. "
+        "Install production dependencies with pgvector before startup."
+    )
+
+
 def _log_affective_assessment_policy(*, settings, logger) -> None:
     snapshot = affective_assessment_policy_snapshot(settings)
     if str(snapshot["affective_assessment_posture"]) == "fallback_only_classifier_unavailable":
@@ -474,6 +492,7 @@ async def lifespan(app: FastAPI):
     logger = get_logger("aion.app")
     _log_runtime_policy_warnings(settings=settings, logger=logger)
     _log_embedding_strategy_warnings(settings=settings, logger=logger)
+    _enforce_postgres_vector_runtime_requirements(settings=settings, logger=logger)
     _log_affective_assessment_policy(settings=settings, logger=logger)
 
     database = Database(settings.database_url)  # type: ignore[arg-type]

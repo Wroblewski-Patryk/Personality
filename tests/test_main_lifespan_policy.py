@@ -238,3 +238,55 @@ async def test_lifespan_wires_memory_repository_into_attention_coordinator_for_d
     async with app_main.lifespan(app):
         assert app.state.memory_repository is captured_kwargs["memory_repository"]
         assert captured_kwargs["coordination_mode"] == "durable_inbox"
+
+
+class _PostgresVectorDependencyMissingSettings:
+    app_env = "production"
+    log_level = "INFO"
+    event_debug_enabled = False
+    startup_schema_mode = "migrate"
+    production_policy_enforcement = "warn"
+    database_url = "postgresql+asyncpg://db.example.local:5432/aion"
+    reflection_runtime_mode = "in_process"
+    attention_burst_window_ms = 120
+    attention_answered_ttl_seconds = 5.0
+    attention_stale_turn_seconds = 30.0
+    semantic_vector_enabled = True
+    embedding_provider = "deterministic"
+    embedding_model = "deterministic-v1"
+    embedding_dimensions = 32
+    embedding_refresh_mode = "on_write"
+    embedding_refresh_interval_seconds = 21600
+    embedding_provider_ownership_enforcement = "warn"
+    embedding_model_governance_enforcement = "warn"
+    embedding_source_rollout_enforcement = "warn"
+
+    @staticmethod
+    def validate_required() -> None:
+        return None
+
+    @staticmethod
+    def get_embedding_source_kinds() -> tuple[str, ...]:
+        return ("episodic", "semantic", "affective")
+
+
+async def test_lifespan_blocks_startup_before_database_init_when_pgvector_binding_is_missing_for_postgres_vectors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database_initialized = False
+
+    class _DatabaseGuard:
+        def __init__(self, *_args, **_kwargs):
+            nonlocal database_initialized
+            database_initialized = True
+            raise AssertionError("Database initialization should not run when pgvector binding is missing.")
+
+    monkeypatch.setattr(app_main, "get_settings", lambda: _PostgresVectorDependencyMissingSettings())
+    monkeypatch.setattr(app_main, "pgvector_python_binding_available", lambda: False)
+    monkeypatch.setattr(app_main, "Database", _DatabaseGuard)
+
+    with pytest.raises(RuntimeError, match="Python 'pgvector' package"):
+        async with app_main.lifespan(FastAPI()):
+            pass
+
+    assert database_initialized is False

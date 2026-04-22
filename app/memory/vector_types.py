@@ -11,6 +11,10 @@ except Exception:  # pragma: no cover - optional dependency path
     Vector = None  # type: ignore[assignment]
 
 
+def pgvector_python_binding_available() -> bool:
+    return Vector is not None
+
+
 class EmbeddingVectorType(TypeDecorator):
     """Stores vector data as pgvector on PostgreSQL and JSON elsewhere."""
 

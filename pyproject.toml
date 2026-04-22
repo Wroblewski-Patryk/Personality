@@ -20,6 +20,7 @@ dependencies = [
   "python-dotenv>=1.0.1,<2.0.0",
   "openai>=1.75.0,<2.0.0",
   "langgraph>=1.1.8,<2.0.0",
+  "pgvector>=0.3.0,<1.0.0",
 ]
 
 [project.optional-dependencies]
@@ -31,9 +32,7 @@ dev = [
 langchain = [
   "langchain-core>=0.3.0,<1.0.0",
 ]
-vector = [
-  "pgvector>=0.3.0,<1.0.0",
-]
+vector = []
 
 [tool.setuptools.packages.find]
 where = ["."]
