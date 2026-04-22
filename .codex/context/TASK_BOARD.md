@@ -189,6 +189,14 @@ Last updated: 2026-04-22
   - `PRJ-528` is the next active slice for the first bounded cloud-drive
     metadata read contract.
 
+- Group 79 note:
+  - `PRJ-528` is now complete.
+  - the next bounded cloud-drive live-read path is frozen as
+    `cloud_drive:list_files` with `provider_hint=google_drive`.
+  - safe output is intentionally metadata-only, leaving document contents,
+    downloads, and writes outside the selected baseline.
+  - `PRJ-529` is the next active slice for the provider-backed adapter.
+
 - [x] PRJ-520 Freeze the shared debug compatibility retirement gate
   - Owner: Planner
   - Group: Dedicated Debug Ingress Compatibility Retirement
@@ -348,11 +356,17 @@ Last updated: 2026-04-22
   - Group: Cloud-Drive Metadata Read Baseline
   - Depends on: PRJ-527
   - Priority: P2
-  - Status: READY
+  - Status: DONE
   - Done when:
     - one explicit contract defines the first provider-backed cloud-drive
       metadata read slice, safe output fields, and its read-only permission
       boundary
+  - Result:
+    - the first bounded cloud-drive metadata-read slice is now explicitly
+      frozen as `cloud_drive:list_files` with `provider_hint=google_drive`
+    - safe output posture is limited to action-owned file metadata evidence:
+      bounded file-name preview, provider file id, mime type or file kind,
+      modified-time or recency note, and optional truncation posture
   - Validation:
     - connector policy, architecture, and ops cross-review
 
@@ -361,7 +375,7 @@ Last updated: 2026-04-22
   - Group: Cloud-Drive Metadata Read Baseline
   - Depends on: PRJ-528
   - Priority: P2
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - the selected cloud-drive read path executes from explicit read-only
       typed intents and preserves the planning-to-action execution boundary

@@ -339,6 +339,12 @@ Completed on 2026-04-22:
 This group adds the next bounded live connector family through metadata-only
 cloud-drive reads rather than durable file or write semantics.
 
+- `PRJ-528` is complete: the first bounded cloud-drive metadata live-read
+  contract is now frozen as `cloud_drive:list_files` with
+  `provider_hint=google_drive`, and the safe output boundary is limited to
+  file metadata evidence rather than document bodies, downloads, or writes.
+- the next active slice in this lane is `PRJ-529`.
+
 - `PRJ-528` Define the first bounded cloud-drive metadata read baseline.
   - Result:
     - one explicit contract defines the first provider-backed cloud-drive

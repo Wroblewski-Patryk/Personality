@@ -77,9 +77,13 @@ Last updated: 2026-04-22
   testing guidance, ops notes, and context truth now describe the same bounded
   Google Calendar live-read baseline plus `/health.connectors.execution_baseline`
   readiness posture.
-- 2026-04-22: `PRJ-528` is now the first `READY` task; the next slice should
-  freeze the first bounded cloud-drive metadata read baseline before another
-  provider-backed connector adapter is added.
+- 2026-04-22: `PRJ-528` is complete: the first bounded cloud-drive metadata
+  live-read slice is now frozen as `cloud_drive:list_files` with
+  `provider_hint=google_drive`, and its safe output boundary is limited to
+  file metadata evidence rather than document content or write semantics.
+- 2026-04-22: `PRJ-529` is now the first `READY` task; the next slice should
+  implement that bounded cloud-drive metadata read adapter behind the existing
+  connector policy and action guardrails.
 - 2026-04-22: Group 76 (`PRJ-516..PRJ-519`) is now complete, and the next
   `READY` task is `PRJ-520` for dedicated debug-ingress compatibility
   retirement.

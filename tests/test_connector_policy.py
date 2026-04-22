@@ -86,13 +86,13 @@ def test_connector_read_baseline_selects_clickup_task_list_as_next_live_read_pat
 
     assert snapshot["policy_owner"] == "connector_read_execution_baseline"
     selected = snapshot["selected_live_read_path"]
-    assert selected["connector_kind"] == "calendar"
-    assert selected["provider"] == "google_calendar"
-    assert selected["operation"] == "read_availability"
+    assert selected["connector_kind"] == "cloud_drive"
+    assert selected["provider"] == "google_drive"
+    assert selected["operation"] == "list_files"
     assert selected["execution_mode"] == "provider_backed_next"
     assert (
-        snapshot["deferred_families"]["task_system"]
-        == "current_live_read_path_already_implemented_through_clickup_list_tasks"
+        snapshot["deferred_families"]["calendar"]
+        == "current_live_read_path_already_implemented_through_google_calendar_read_availability"
     )
 
 

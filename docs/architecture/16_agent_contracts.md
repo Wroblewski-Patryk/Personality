@@ -511,6 +511,20 @@ Rules:
     - `state=credentials_missing|provider_backed_ready`
     - all other calendar operations remain policy-only until separately
       approved through their own contract slices
+11. the first bounded cloud-drive metadata-read baseline is now frozen before
+    implementation:
+    - selected operation: `cloud_drive:list_files`
+    - selected provider hint: `google_drive`
+    - permission posture remains `read_only` with explicit user opt-in and
+      without mutation confirmation
+    - safe output shape must stay metadata-only and action-owned:
+      - bounded file-name preview
+      - provider file id
+      - mime type or provider file kind
+      - modified-time or recency note
+      - optional next-page or truncation note
+    - provider-backed execution must not expose document body content, file
+      download payloads, or become a new pre-planning retrieval surface
 
 ---
 

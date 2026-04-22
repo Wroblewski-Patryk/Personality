@@ -557,6 +557,23 @@ Next bounded connector-read baseline selected for implementation:
   explicit `read_only` availability intents; create/update/cancel operations
   remain policy-only unless separately approved
 
+Next bounded cloud-drive metadata-read baseline selected for implementation:
+
+- `cloud_drive:list_files`
+- provider hint target: `google_drive`
+- expected operator posture after implementation:
+  - `policy_only` when no adapter is present yet
+  - `credentials_missing` when adapter lands without provider credentials
+  - `provider_backed_ready` when the selected provider path is configured
+- safe output contract must stay metadata-only:
+  - bounded file-name preview
+  - provider file id
+  - mime type or provider file kind
+  - modified-time or recency note
+  - optional truncation or next-page note
+- document body content, downloads, and write semantics remain out of scope
+  for this lane
+
 Recommended when Telegram webhooks are enabled:
 
 - `TELEGRAM_WEBHOOK_SECRET`
