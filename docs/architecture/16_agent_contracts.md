@@ -747,6 +747,16 @@ Canonical introspection surfaces for that baseline:
    - exposes the shared policy owner for learned-state inspection
    - exposes the stable internal inspection path used by admin or future UI
      callers
+   - freezes the bounded section contract for:
+     - `identity_state`
+     - `learned_knowledge`
+     - `role_skill_state`
+     - `planning_state`
+   - freezes the bounded summary families for:
+     - `preference_summary`
+     - `knowledge_summary`
+     - `reflection_growth_summary`
+     - `planning_continuity_summary`
 2. `/health.api_readiness`
    - exposes the shared backend API-readiness owner for later `v2` UI
      consumers
@@ -761,9 +771,19 @@ Canonical introspection surfaces for that baseline:
      - `learned_knowledge`
      - `role_skill_state`
      - `planning_state`
+   - bounded summary views now include:
+     - `identity_state.preference_summary`
+     - `learned_knowledge.knowledge_summary`
+     - `learned_knowledge.reflection_growth_summary`
+     - `role_skill_state.selection_visibility_summary`
+     - `planning_state.continuity_summary`
+   - role/skill visibility remains metadata-only:
+     - skill registry and role-skill policy may be inspected
+     - current-turn selected role and selected skills are still read from
+       `system_debug`, not inferred as durable executable skill growth
 4. exported `incident_evidence.policy_posture["learned_state"]`
-   - must carry the same policy owner and internal inspection path as
-     `/health.learned_state`
+   - must carry the same policy owner, internal inspection path, and bounded
+     section-contract metadata as `/health.learned_state`
    - exists so release smoke, behavior validation, and future UI readiness do
      not depend only on live health calls during incident review
 5. learned personality-growth introspection remains explicitly bounded:

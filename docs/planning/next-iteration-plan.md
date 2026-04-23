@@ -265,6 +265,22 @@ Queue update (2026-04-23):
   - Validation:
     - doc-and-context sync
 
+Queue update (2026-04-23):
+
+- `PRJ-591` is now complete.
+- learned-state and personality-growth introspection truth is now synchronized
+  across canonical contracts, runtime reality, testing guidance, ops notes,
+  and planning/context surfaces.
+- the richer bounded baseline now explicitly covers:
+  - `/health.learned_state` section and summary contract metadata
+  - internal `GET /internal/state/inspect?user_id=...` summary views for
+    preferences, learned knowledge, reflection growth, role/skill visibility,
+    and planning continuity
+  - release smoke and incident-evidence bundle validation for the same bounded
+    contract
+- the next active lane is Group 94 (`PRJ-592..PRJ-595`) for production
+  organizer-tool readiness.
+
 ### Group 94 - Production Organizer-Tool Readiness
 
 - `PRJ-592` Freeze the first production organizer-tool stack baseline.

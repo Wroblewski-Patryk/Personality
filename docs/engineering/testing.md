@@ -168,14 +168,18 @@ For meaningful repo changes, leave behind:
   - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py`
   - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
   - coverage should pin:
-    - `/health.learned_state` owner and internal inspection path
+    - `/health.learned_state` owner, internal inspection path, and bounded
+      section-contract metadata
     - `/health.api_readiness` owner and stable backend-surface contract for
       later `v2` UI callers
     - internal `GET /internal/state/inspect?user_id=...` access and bounded
-      payload shape, including `api_readiness`
-    - exported `incident_evidence.policy_posture["learned_state"]`
+      payload shape, including `api_readiness`, preference summary,
+      knowledge summary, reflection growth summary, role/skill visibility
+      summary, and planning continuity summary
+    - exported `incident_evidence.policy_posture["learned_state"]` with the
+      same bounded section-contract metadata
     - release-smoke and behavior-validation rejection when learned-state
-      posture is missing or carries the wrong owner/path contract
+      posture is missing or carries the wrong bounded contract
 - for bounded search, browser, and organization tooling slices, regression and
   behavior evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_connector_policy.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`

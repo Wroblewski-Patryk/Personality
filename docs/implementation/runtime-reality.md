@@ -1149,7 +1149,9 @@ Current limitation:
   smoke and behavior-validation gates fail when proactive is missing, disabled,
   or drifted from the shared owner contract
 - `/health.learned_state` now exposes the shared learned-state inspection
-  policy owner plus the canonical internal inspection path
+  policy owner, the canonical internal inspection path, and the bounded
+  learned-state section contract for `identity_state`, `learned_knowledge`,
+  `role_skill_state`, and `planning_state`
 - `/health.api_readiness` now exposes the shared backend API-readiness owner
   plus the health, inspection, connector, and current-turn debug surfaces that
   later `v2` UI callers should consume
@@ -1160,9 +1162,16 @@ Current limitation:
   - `learned_knowledge`
   - `role_skill_state`
   - `planning_state`
+  and the richer bounded summary views:
+  - `identity_state.preference_summary`
+  - `learned_knowledge.knowledge_summary`
+  - `learned_knowledge.reflection_growth_summary`
+  - `role_skill_state.selection_visibility_summary`
+  - `planning_state.continuity_summary`
 - debug-mode `incident_evidence.policy_posture["learned_state"]` mirrors that
-  health-level owner or path contract so release smoke and behavior-validation
-  gates can verify future-UI inspection readiness from exported evidence too
+  health-level owner, path, and section-contract metadata so release smoke and
+  behavior-validation gates can verify future-UI inspection readiness from
+  exported evidence too
 - the current bounded interpretation of `personality growth introspection` is:
   - learned preferences and learned knowledge summaries from repository-owned
     profile, runtime preferences, and conclusions

@@ -1169,9 +1169,19 @@ Important health surfaces for current release checks:
 - `learned_state`
   - shared learned-state inspection policy owner
   - canonical internal inspection path for future UI or admin callers
+  - bounded section contract for `identity_state`, `learned_knowledge`,
+    `role_skill_state`, and `planning_state`
   - pair it with internal `GET /internal/state/inspect?user_id=...` when you
     need bounded snapshots of identity state, learned knowledge, role/skill
     metadata, and planning state
+  - the richer bounded growth summaries now live in:
+    - `identity_state.preference_summary`
+    - `learned_knowledge.knowledge_summary`
+    - `learned_knowledge.reflection_growth_summary`
+    - `role_skill_state.selection_visibility_summary`
+    - `planning_state.continuity_summary`
+  - release smoke and incident-evidence bundle validation now fail if the
+    learned-state posture loses any of those bounded contract sections
 - `api_readiness`
   - shared backend API-readiness owner for later `v2` UI callers
   - canonical health surfaces for learned-state, role-skill, connectors, and

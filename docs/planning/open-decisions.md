@@ -29,14 +29,13 @@ partially resolved areas:
      remains compatibility fallback only
    - runtime alignment and strict release proof completed in `PRJ-585..PRJ-586`
 4. learned-state and personality-growth introspection
-   - backend surfaces exist, but they still read more like readiness posture
-     than a rich personality-growth inspection bundle
-   - future UI or admin work should build on richer backend-owned truth, not on
-     frontend reconstruction
-   - `PRJ-588` now freezes the bounded contract:
-     learned growth may expose knowledge/preference summaries, role-skill
-     metadata, reflection-backed summaries, and planning continuity, but not
-     self-modifying executable skill learning
+   - resolved through `PRJ-588..PRJ-591`
+   - `/health.learned_state`, internal inspection, release smoke, and
+     incident-evidence bundles now agree on one richer bounded contract for
+     preference summaries, knowledge summaries, reflection growth summaries,
+     role/skill visibility summaries, and planning continuity
+   - learned growth remains bounded to backend-owned metadata and summaries,
+     not self-modifying executable skill learning
 5. organizer-tool production posture
    - ClickUp, Google Calendar, and Google Drive slices exist, but production
      readiness is still fragmented across per-provider credential states and
