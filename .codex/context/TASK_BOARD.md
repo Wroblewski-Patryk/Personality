@@ -179,9 +179,14 @@ Last updated: 2026-04-23
   learned preferences, role/skill metadata, reflection-backed summaries, and
   planning continuity while explicitly rejecting self-modifying executable
   skill learning.
-- `PRJ-589` is now the first `READY` slice because the contract is frozen and
-  the next step is widening the actual internal inspection surfaces to match
-  it.
+- `PRJ-589` is complete: `/health.learned_state` now exposes the richer
+  section contract, and `GET /internal/state/inspect?user_id=...` now returns
+  bounded preference, knowledge, role/skill, and planning-continuity summaries
+  for future UI or operator inspection instead of leaving growth visibility at
+  policy-owner level only.
+- `PRJ-590` is now the first `READY` slice because the richer learned-state
+  contract is live in runtime surfaces and the next step is making smoke,
+  incident evidence, and regressions pin that exact bounded contract.
 
 ## READY
 
@@ -468,27 +473,32 @@ Last updated: 2026-04-23
     - future widening stays backend-owned and must not imply self-modifying
       executable skill learning
 
-- [ ] PRJ-589 Expose richer backend-owned learned-state inspection surfaces
+- [x] PRJ-589 Expose richer backend-owned learned-state inspection surfaces
   - Owner: Backend Builder
   - Group: Learned-State And Personality-Growth Introspection
   - Depends on: PRJ-588
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Done when:
     - internal inspection surfaces expose richer role, skill, preference,
       reflection, and planning-growth summaries for future UI consumption
     - health or internal inspection no longer reduce learned-state visibility
       to policy posture only
   - Validation:
-    - relevant pytest coverage
-    - internal inspection checks
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py` -> `86 passed`
+  - Result:
+    - `/health.learned_state` now publishes the richer inspection section and
+      summary contract instead of only owner/path posture
+    - `GET /internal/state/inspect?user_id=...` now exposes backend-owned
+      preference, knowledge, reflection-growth, role/skill visibility, and
+      planning-continuity summaries for future UI or admin callers
 
 - [ ] PRJ-590 Add regression and release evidence for learned-state introspection
   - Owner: QA/Test
   - Group: Learned-State And Personality-Growth Introspection
   - Depends on: PRJ-589
   - Priority: P2
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - regression and incident-evidence flows pin the richer learned-state
       inspection contract

@@ -987,6 +987,36 @@ def test_health_endpoint_exposes_learned_state_introspection_posture() -> None:
         "planning_state_scope": "active_goals_tasks_milestones_and_pending_proposals",
         "current_turn_selection_surface": "system_debug",
         "future_ui_posture": "backend_owned_surfaces_before_ui",
+        "inspection_sections": [
+            "identity_state",
+            "learned_knowledge",
+            "role_skill_state",
+            "planning_state",
+        ],
+        "growth_summary_sections": [
+            "preference_summary",
+            "knowledge_summary",
+            "reflection_growth_summary",
+            "planning_continuity_summary",
+        ],
+        "role_skill_metadata_sections": [
+            "role_skill_policy",
+            "skill_registry",
+            "selection_visibility_summary",
+        ],
+        "planning_continuity_sections": [
+            "active_goals",
+            "active_tasks",
+            "active_goal_milestones",
+            "pending_proposals",
+            "continuity_summary",
+        ],
+        "reflection_growth_signal_kinds": [
+            "semantic_conclusions",
+            "affective_conclusions",
+            "adaptive_outputs",
+            "relations",
+        ],
     }
     assert body["api_readiness"] == {
         "policy_owner": "v2_backend_api_readiness_policy",
@@ -1036,6 +1066,19 @@ def test_internal_state_inspection_endpoint_exposes_learned_and_planning_state()
     assert body["identity_state"]["profile"]["preferred_language"] == "pl"
     assert body["identity_state"]["learned_preferences"]["response_style"] == "concise"
     assert body["identity_state"]["learned_preferences"]["proactive_opt_in"] is True
+    assert body["identity_state"]["preference_summary"] == {
+        "learned_preference_count": 5,
+        "learned_preference_keys": [
+            "collaboration_preference",
+            "preferred_language",
+            "preferred_role",
+            "proactive_opt_in",
+            "response_style",
+        ],
+        "preferred_language_present": True,
+        "preferred_role_present": True,
+        "proactive_opt_in_present": True,
+    }
     assert body["learned_knowledge"]["semantic_conclusions"][0]["kind"] == "custom_semantic_fact"
     assert body["learned_knowledge"]["affective_conclusions"][0]["kind"] == "affective_support_pattern"
     assert body["learned_knowledge"]["adaptive_outputs"]["loaded_conclusion_kinds"] == [
@@ -1043,11 +1086,64 @@ def test_internal_state_inspection_endpoint_exposes_learned_and_planning_state()
         "custom_semantic_fact",
         "response_style",
     ]
+    assert body["learned_knowledge"]["knowledge_summary"] == {
+        "semantic_conclusion_count": 1,
+        "semantic_conclusion_kinds": ["custom_semantic_fact"],
+        "affective_conclusion_count": 1,
+        "affective_conclusion_kinds": ["affective_support_pattern"],
+        "relation_count": 1,
+        "relation_types": ["collaboration_dynamic"],
+        "adaptive_output_keys": [
+            "foreground_mutation_posture",
+            "loaded_conclusion_kinds",
+            "loaded_progress_signal_kinds",
+            "loaded_relation_types",
+            "theta_dominant_channel",
+            "theta_loaded",
+        ],
+        "theta_present": True,
+    }
+    assert body["learned_knowledge"]["reflection_growth_summary"] == {
+        "adaptive_output_keys": [
+            "foreground_mutation_posture",
+            "loaded_conclusion_kinds",
+            "loaded_progress_signal_kinds",
+            "loaded_relation_types",
+            "theta_dominant_channel",
+            "theta_loaded",
+        ],
+        "reflection_backed_semantic_growth": True,
+        "reflection_backed_affective_growth": True,
+        "relation_signal_types": ["collaboration_dynamic"],
+    }
     assert body["role_skill_state"]["role_skill_policy"]["policy_owner"] == "role_skill_boundary_policy"
     assert body["role_skill_state"]["skill_registry"]["policy_owner"] == "skill_registry"
+    assert body["role_skill_state"]["selection_visibility_summary"] == {
+        "current_turn_selected_role_available_via": "system_debug.role",
+        "current_turn_selected_skills_available_via": "system_debug.adaptive_state.selected_skills",
+        "catalog_skill_count": 5,
+        "catalog_skill_ids": [
+            "emotional_support",
+            "structured_reasoning",
+            "execution_planning",
+            "memory_recall",
+            "connector_boundary_review",
+        ],
+        "metadata_only_skill_boundary": True,
+        "work_partner_role_available": True,
+    }
     assert body["planning_state"]["active_goals"][0]["name"] == "ship the MVP"
     assert body["planning_state"]["active_tasks"][0]["name"] == "fix deployment blocker"
     assert body["planning_state"]["pending_proposals"][0]["proposal_id"] == 5
+    assert body["planning_state"]["continuity_summary"] == {
+        "active_goal_count": 1,
+        "active_task_count": 1,
+        "blocked_task_count": 1,
+        "active_milestone_count": 1,
+        "pending_proposal_count": 1,
+        "primary_goal_names": ["ship the MVP"],
+        "primary_task_names": ["fix deployment blocker"],
+    }
 
 
 def test_internal_state_inspection_endpoint_requires_debug_access() -> None:

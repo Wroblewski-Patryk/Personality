@@ -408,6 +408,75 @@ async def _build_learned_state_snapshot(*, request: Request, user_id: str) -> di
     affective_conclusions = [
         row for row in conclusions if str(row.get("kind", "")).strip().lower() in affective_kinds
     ]
+    relation_types = sorted(
+        {
+            str(row.get("relation_type", "")).strip().lower()
+            for row in relations
+            if str(row.get("relation_type", "")).strip()
+        }
+    )
+    semantic_conclusion_kinds = sorted(
+        {
+            str(row.get("kind", "")).strip().lower()
+            for row in semantic_conclusions
+            if str(row.get("kind", "")).strip()
+        }
+    )
+    affective_conclusion_kinds = sorted(
+        {
+            str(row.get("kind", "")).strip().lower()
+            for row in affective_conclusions
+            if str(row.get("kind", "")).strip()
+        }
+    )
+    skill_registry = skill_registry_snapshot()
+    role_skill_policy = role_skill_policy_snapshot()
+    planning_continuity_summary = {
+        "active_goal_count": len(active_goals),
+        "active_task_count": len(active_tasks),
+        "blocked_task_count": sum(1 for row in active_tasks if str(row.get("status", "")).strip().lower() == "blocked"),
+        "active_milestone_count": len(active_goal_milestones),
+        "pending_proposal_count": len(pending_proposals),
+        "primary_goal_names": [
+            str(row.get("name", "")).strip()
+            for row in active_goals[:3]
+            if str(row.get("name", "")).strip()
+        ],
+        "primary_task_names": [
+            str(row.get("name", "")).strip()
+            for row in active_tasks[:5]
+            if str(row.get("name", "")).strip()
+        ],
+    }
+    learned_knowledge_summary = {
+        "semantic_conclusion_count": len(semantic_conclusions),
+        "semantic_conclusion_kinds": semantic_conclusion_kinds,
+        "affective_conclusion_count": len(affective_conclusions),
+        "affective_conclusion_kinds": affective_conclusion_kinds,
+        "relation_count": len(relations),
+        "relation_types": relation_types,
+        "adaptive_output_keys": sorted(str(key) for key in adaptive_outputs.keys()),
+        "theta_present": bool(theta),
+    }
+    preference_summary = {
+        "learned_preference_count": len(learned_preferences),
+        "learned_preference_keys": sorted(str(key) for key in learned_preferences.keys()),
+        "preferred_language_present": "preferred_language" in learned_preferences,
+        "preferred_role_present": "preferred_role" in learned_preferences,
+        "proactive_opt_in_present": "proactive_opt_in" in learned_preferences,
+    }
+    selection_visibility_summary = {
+        "current_turn_selected_role_available_via": "system_debug.role",
+        "current_turn_selected_skills_available_via": "system_debug.adaptive_state.selected_skills",
+        "catalog_skill_count": int(skill_registry.get("catalog_count", 0)),
+        "catalog_skill_ids": [
+            str(item.get("skill_id", "")).strip()
+            for item in skill_registry.get("catalog", [])
+            if isinstance(item, dict) and str(item.get("skill_id", "")).strip()
+        ],
+        "metadata_only_skill_boundary": True,
+        "work_partner_role_available": bool(role_skill_policy.get("work_partner_role_available", False)),
+    }
 
     return {
         **learned_state_policy_snapshot(),
@@ -417,6 +486,7 @@ async def _build_learned_state_snapshot(*, request: Request, user_id: str) -> di
             "identity_policy": identity_policy_snapshot(),
             "profile": dict(profile or {}) if isinstance(profile, dict) else {},
             "learned_preferences": learned_preferences,
+            "preference_summary": preference_summary,
         },
         "learned_knowledge": {
             "semantic_conclusions": semantic_conclusions,
@@ -424,18 +494,25 @@ async def _build_learned_state_snapshot(*, request: Request, user_id: str) -> di
             "relations": relations,
             "adaptive_outputs": adaptive_outputs,
             "theta": dict(theta) if isinstance(theta, dict) else {},
+            "knowledge_summary": learned_knowledge_summary,
+            "reflection_growth_summary": {
+                "adaptive_output_keys": learned_knowledge_summary["adaptive_output_keys"],
+                "reflection_backed_semantic_growth": bool(semantic_conclusions),
+                "reflection_backed_affective_growth": bool(affective_conclusions),
+                "relation_signal_types": relation_types,
+            },
         },
         "role_skill_state": {
-            "role_skill_policy": role_skill_policy_snapshot(),
-            "skill_registry": skill_registry_snapshot(),
-            "current_turn_selected_role_available_via": "system_debug.role",
-            "current_turn_selected_skills_available_via": "system_debug.adaptive_state.selected_skills",
+            "role_skill_policy": role_skill_policy,
+            "skill_registry": skill_registry,
+            "selection_visibility_summary": selection_visibility_summary,
         },
         "planning_state": {
             "active_goals": active_goals,
             "active_tasks": active_tasks,
             "active_goal_milestones": active_goal_milestones,
             "pending_proposals": pending_proposals,
+            "continuity_summary": planning_continuity_summary,
         },
     }
 

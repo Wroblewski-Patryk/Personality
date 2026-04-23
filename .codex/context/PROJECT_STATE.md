@@ -325,8 +325,15 @@ Last updated: 2026-04-23
   learned preferences, role/skill metadata, reflection-backed summaries, and
   planning continuity, while explicitly rejecting self-modifying executable
   skill learning.
-- 2026-04-23: `PRJ-589` is now the first `READY` task; the next slice should
-  widen the actual internal inspection surfaces to match that frozen contract.
+- 2026-04-23: `PRJ-589` is complete: `/health.learned_state` now exposes the
+  richer bounded inspection contract, and
+  `GET /internal/state/inspect?user_id=...` now returns backend-owned
+  preference, learned-knowledge, role/skill visibility, and planning
+  continuity summaries for future UI or admin inspection.
+- 2026-04-23: `PRJ-590` is now the first `READY` task; the next slice should
+  turn that richer learned-state contract into release-smoke,
+  incident-evidence, and regression proof instead of keeping it only in API
+  contract tests.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.

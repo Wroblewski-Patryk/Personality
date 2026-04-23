@@ -18,4 +18,34 @@ def learned_state_policy_snapshot() -> dict[str, Any]:
         "planning_state_scope": "active_goals_tasks_milestones_and_pending_proposals",
         "current_turn_selection_surface": "system_debug",
         "future_ui_posture": "backend_owned_surfaces_before_ui",
+        "inspection_sections": [
+            "identity_state",
+            "learned_knowledge",
+            "role_skill_state",
+            "planning_state",
+        ],
+        "growth_summary_sections": [
+            "preference_summary",
+            "knowledge_summary",
+            "reflection_growth_summary",
+            "planning_continuity_summary",
+        ],
+        "role_skill_metadata_sections": [
+            "role_skill_policy",
+            "skill_registry",
+            "selection_visibility_summary",
+        ],
+        "planning_continuity_sections": [
+            "active_goals",
+            "active_tasks",
+            "active_goal_milestones",
+            "pending_proposals",
+            "continuity_summary",
+        ],
+        "reflection_growth_signal_kinds": [
+            "semantic_conclusions",
+            "affective_conclusions",
+            "adaptive_outputs",
+            "relations",
+        ],
     }
