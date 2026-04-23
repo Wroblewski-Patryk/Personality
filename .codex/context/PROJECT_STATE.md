@@ -336,9 +336,13 @@ Last updated: 2026-04-23
 - 2026-04-23: `PRJ-591` is complete: canonical contracts, runtime reality,
   testing guidance, ops notes, planning docs, and context truth now describe
   the same richer learned-state and personality-growth inspection baseline.
-- 2026-04-23: `PRJ-592` is now the first `READY` task; the next slice should
-  freeze the first production organizer-tool stack baseline for ClickUp,
-  Calendar, and Drive.
+- 2026-04-23: `PRJ-592` is complete: the first production organizer-tool stack
+  is now frozen as ClickUp `create_task/list_tasks/update_task`, Google
+  Calendar `read_availability`, and Google Drive `list_files`, with the
+  existing opt-in and confirmation boundaries preserved.
+- 2026-04-23: `PRJ-593` is now the first `READY` task; the next slice should
+  expose one shared acceptance surface for that frozen organizer-tool stack
+  instead of leaving readiness fragmented across provider-specific entries.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.

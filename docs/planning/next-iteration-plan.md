@@ -291,6 +291,27 @@ Queue update (2026-04-23):
   - Validation:
     - architecture/product/connector cross-review
 
+Queue update (2026-04-23):
+
+- `PRJ-592` is now complete.
+- the first production organizer-tool stack is now frozen as:
+  - ClickUp:
+    - `create_task`
+    - `list_tasks`
+    - `update_task`
+  - Google Calendar:
+    - `read_availability`
+  - Google Drive:
+    - `list_files`
+- baseline boundaries remain explicit:
+  - ClickUp reads and Google Calendar/Drive reads require opt-in but no extra
+    confirmation
+  - ClickUp mutations remain confirmation-gated
+  - Calendar mutations, Drive mutations, and broader document reads stay
+    outside this first organizer-tool stack
+- the next active slice is `PRJ-593`, which should expose one shared
+  acceptance surface for this frozen stack.
+
 - `PRJ-593` Expose one acceptance surface for organizer-tool readiness and opt-in gaps.
   - Result:
     - backend surfaces expose one operator-visible readiness bundle for

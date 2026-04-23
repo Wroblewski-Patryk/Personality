@@ -37,9 +37,13 @@ partially resolved areas:
    - learned growth remains bounded to backend-owned metadata and summaries,
      not self-modifying executable skill learning
 5. organizer-tool production posture
-   - ClickUp, Google Calendar, and Google Drive slices exist, but production
-     readiness is still fragmented across per-provider credential states and
-     lacks one bounded operator-facing acceptance bundle
+   - partially resolved through `PRJ-592`
+   - the first bounded production organizer-tool stack is now frozen as:
+     - ClickUp `create_task`, `list_tasks`, `update_task`
+     - Google Calendar `read_availability`
+     - Google Drive `list_files`
+   - remaining work is no longer deciding the stack; it is exposing one shared
+     readiness surface plus smoke/behavior proof for that frozen baseline
 
 Queue seeded from this analysis:
 

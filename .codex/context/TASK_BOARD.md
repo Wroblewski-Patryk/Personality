@@ -190,9 +190,13 @@ Last updated: 2026-04-23
 - `PRJ-591` is complete: canonical contracts, runtime reality, testing
   guidance, ops notes, planning docs, and repository context now describe the
   same richer learned-state and personality-growth inspection baseline.
-- `PRJ-592` is now the first `READY` slice because learned-state closure is
-  synchronized and the next gap is turning ClickUp, Calendar, and Drive slices
-  into one explicit production organizer-tool baseline.
+- `PRJ-592` is complete: the first production organizer-tool stack is now
+  frozen as ClickUp `create_task/list_tasks/update_task`, Google Calendar
+  `read_availability`, and Google Drive `list_files`, with opt-in and
+  confirmation boundaries left explicit.
+- `PRJ-593` is now the first `READY` slice because the stack is frozen and the
+  next gap is exposing one shared acceptance surface instead of fragmented
+  provider readiness.
 
 ## READY
 
@@ -532,25 +536,31 @@ Last updated: 2026-04-23
       planning/context truth now describe the richer bounded learned-state
       section and summary contract
 
-- [ ] PRJ-592 Freeze the first production organizer-tool stack baseline
+- [x] PRJ-592 Freeze the first production organizer-tool stack baseline
   - Owner: Planner
   - Group: Production Organizer-Tool Readiness
   - Depends on: PRJ-591
   - Priority: P2
-  - Status: READY
+  - Status: DONE
   - Done when:
     - one explicit backend baseline records which ClickUp, Calendar, and Drive
       slices count as the first real organization stack for life/work support
     - confirmation, opt-in, and bounded-read constraints remain explicit
   - Validation:
     - architecture/product/connector cross-review
+  - Result:
+    - one explicit organizer-tool baseline now records the first production
+      ClickUp, Calendar, and Drive slices for no-UI assistant and work-partner
+    - ClickUp reads/writes, Google Calendar availability reads, and Google
+      Drive file-list reads are the only approved organizer-tool stack members
+      in this first production baseline
 
 - [ ] PRJ-593 Expose one acceptance surface for organizer-tool readiness and opt-in gaps
   - Owner: Backend Builder
   - Group: Production Organizer-Tool Readiness
   - Depends on: PRJ-592
   - Priority: P2
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - backend surfaces expose one operator-visible readiness bundle for
       ClickUp, Calendar, and Drive instead of fragmented credential states
