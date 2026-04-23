@@ -2167,6 +2167,36 @@ def test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready() ->
         == "configure_google_drive_access_token_for_live_metadata_read_execution"
     )
     assert body["connectors"]["execution_baseline"]["task_system"]["clickup_update_task"]["ready"] is False
+    organizer_stack = body["connectors"]["organizer_tool_stack"]
+    assert organizer_stack["policy_owner"] == "production_organizer_tool_stack"
+    assert organizer_stack["stack_name"] == "clickup_calendar_drive_first_stack"
+    assert organizer_stack["approved_connector_kinds"] == ["task_system", "calendar", "cloud_drive"]
+    assert organizer_stack["approved_operations"] == [
+        "task_system.clickup_create_task",
+        "task_system.clickup_list_tasks",
+        "task_system.clickup_update_task",
+        "calendar.google_calendar_read_availability",
+        "cloud_drive.google_drive_list_files",
+    ]
+    assert organizer_stack["read_only_operations"] == [
+        "task_system.clickup_list_tasks",
+        "calendar.google_calendar_read_availability",
+        "cloud_drive.google_drive_list_files",
+    ]
+    assert organizer_stack["confirmation_required_operations"] == [
+        "task_system.clickup_create_task",
+        "task_system.clickup_update_task",
+    ]
+    assert organizer_stack["user_opt_in_required_operations"] == organizer_stack["approved_operations"]
+    assert organizer_stack["provider_ready_operation_count"] == 0
+    assert organizer_stack["provider_total_operation_count"] == 5
+    assert organizer_stack["ready_operations"] == []
+    assert organizer_stack["credential_gap_operations"] == organizer_stack["approved_operations"]
+    assert organizer_stack["readiness_state"] == "provider_credentials_missing"
+    assert (
+        organizer_stack["readiness_hint"]
+        == "configure_clickup_google_calendar_and_google_drive_credentials_for_full_stack_readiness"
+    )
     search_baseline = body["connectors"]["execution_baseline"]["knowledge_search"]["search_web"]
     assert search_baseline["execution_mode"] == "provider_backed_without_credentials"
     assert search_baseline["ready"] is True
@@ -2199,6 +2229,18 @@ def test_health_endpoint_exposes_provider_backed_clickup_connector_readiness_whe
     assert read_baseline["ready"] is True
     assert read_baseline["state"] == "provider_backed_ready"
     assert read_baseline["hint"] == "clickup_list_tasks_live"
+    organizer_stack = body["connectors"]["organizer_tool_stack"]
+    assert organizer_stack["provider_ready_operation_count"] == 3
+    assert organizer_stack["ready_operations"] == [
+        "task_system.clickup_create_task",
+        "task_system.clickup_list_tasks",
+        "task_system.clickup_update_task",
+    ]
+    assert organizer_stack["credential_gap_operations"] == [
+        "calendar.google_calendar_read_availability",
+        "cloud_drive.google_drive_list_files",
+    ]
+    assert organizer_stack["readiness_state"] == "provider_credentials_missing"
 
 
 def test_health_endpoint_exposes_provider_backed_google_calendar_readiness_when_configured() -> None:
@@ -2216,6 +2258,15 @@ def test_health_endpoint_exposes_provider_backed_google_calendar_readiness_when_
     assert read_baseline["ready"] is True
     assert read_baseline["state"] == "provider_backed_ready"
     assert read_baseline["hint"] == "google_calendar_read_availability_live"
+    organizer_stack = body["connectors"]["organizer_tool_stack"]
+    assert organizer_stack["provider_ready_operation_count"] == 1
+    assert organizer_stack["ready_operations"] == ["calendar.google_calendar_read_availability"]
+    assert organizer_stack["credential_gap_operations"] == [
+        "task_system.clickup_create_task",
+        "task_system.clickup_list_tasks",
+        "task_system.clickup_update_task",
+        "cloud_drive.google_drive_list_files",
+    ]
 
 
 def test_health_endpoint_exposes_provider_backed_google_drive_readiness_when_configured() -> None:
@@ -2233,6 +2284,35 @@ def test_health_endpoint_exposes_provider_backed_google_drive_readiness_when_con
     assert read_baseline["ready"] is True
     assert read_baseline["state"] == "provider_backed_ready"
     assert read_baseline["hint"] == "google_drive_list_files_live"
+    organizer_stack = body["connectors"]["organizer_tool_stack"]
+    assert organizer_stack["provider_ready_operation_count"] == 1
+    assert organizer_stack["ready_operations"] == ["cloud_drive.google_drive_list_files"]
+    assert organizer_stack["credential_gap_operations"] == [
+        "task_system.clickup_create_task",
+        "task_system.clickup_list_tasks",
+        "task_system.clickup_update_task",
+        "calendar.google_calendar_read_availability",
+    ]
+
+
+def test_health_endpoint_exposes_ready_organizer_tool_stack_when_all_providers_are_configured() -> None:
+    client, _, _ = _client()
+    client.app.state.settings.clickup_api_token = "clickup-token"
+    client.app.state.settings.clickup_list_id = "list-123"
+    client.app.state.settings.google_calendar_access_token = "google-calendar-token"
+    client.app.state.settings.google_calendar_calendar_id = "primary"
+    client.app.state.settings.google_drive_access_token = "google-drive-token"
+    client.app.state.settings.google_drive_folder_id = "folder-123"
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    organizer_stack = response.json()["connectors"]["organizer_tool_stack"]
+    assert organizer_stack["provider_ready_operation_count"] == 5
+    assert organizer_stack["provider_total_operation_count"] == 5
+    assert organizer_stack["credential_gap_operations"] == []
+    assert organizer_stack["readiness_state"] == "provider_stack_ready"
+    assert organizer_stack["readiness_hint"] == "organizer_tool_stack_ready_for_operator_acceptance"
 
 
 def test_health_endpoint_exposes_local_hybrid_embedding_provider_as_ready_owner() -> None:

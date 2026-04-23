@@ -194,9 +194,13 @@ Last updated: 2026-04-23
   frozen as ClickUp `create_task/list_tasks/update_task`, Google Calendar
   `read_availability`, and Google Drive `list_files`, with opt-in and
   confirmation boundaries left explicit.
-- `PRJ-593` is now the first `READY` slice because the stack is frozen and the
-  next gap is exposing one shared acceptance surface instead of fragmented
-  provider readiness.
+- `PRJ-593` is complete: `/health.connectors.organizer_tool_stack` now exposes
+  one shared acceptance snapshot for the frozen ClickUp/Calendar/Drive stack,
+  including approved operations, credential gaps, opt-in requirements, and
+  confirmation boundaries.
+- `PRJ-594` is now the first `READY` slice because the organizer-tool
+  acceptance surface is live and the next step is proving the same posture
+  through smoke and behavior evidence.
 
 ## READY
 
@@ -555,25 +559,28 @@ Last updated: 2026-04-23
       Drive file-list reads are the only approved organizer-tool stack members
       in this first production baseline
 
-- [ ] PRJ-593 Expose one acceptance surface for organizer-tool readiness and opt-in gaps
+- [x] PRJ-593 Expose one acceptance surface for organizer-tool readiness and opt-in gaps
   - Owner: Backend Builder
   - Group: Production Organizer-Tool Readiness
   - Depends on: PRJ-592
   - Priority: P2
-  - Status: READY
+  - Status: DONE
   - Done when:
     - backend surfaces expose one operator-visible readiness bundle for
       ClickUp, Calendar, and Drive instead of fragmented credential states
   - Validation:
-    - relevant pytest coverage
-    - `/health.connectors` checks
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py` -> `87 passed`
+  - Result:
+    - `/health.connectors.organizer_tool_stack` now summarizes approved
+      organizer operations, credential gaps, opt-in requirements, and
+      confirmation boundaries in one shared acceptance surface
 
 - [ ] PRJ-594 Add behavior and smoke evidence for work-partner organizer-tool posture
   - Owner: QA/Test
   - Group: Production Organizer-Tool Readiness
   - Depends on: PRJ-593
   - Priority: P2
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - behavior or smoke evidence proves the same organizer-tool posture that
       backend readiness surfaces describe

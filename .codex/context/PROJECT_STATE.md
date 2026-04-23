@@ -340,9 +340,12 @@ Last updated: 2026-04-23
   is now frozen as ClickUp `create_task/list_tasks/update_task`, Google
   Calendar `read_availability`, and Google Drive `list_files`, with the
   existing opt-in and confirmation boundaries preserved.
-- 2026-04-23: `PRJ-593` is now the first `READY` task; the next slice should
-  expose one shared acceptance surface for that frozen organizer-tool stack
-  instead of leaving readiness fragmented across provider-specific entries.
+- 2026-04-23: `PRJ-593` is complete: `/health.connectors.organizer_tool_stack`
+  now exposes one shared acceptance snapshot for the frozen organizer-tool
+  stack, covering approved operations, credential gaps, opt-in requirements,
+  and confirmation boundaries.
+- 2026-04-23: `PRJ-594` is now the first `READY` task; the next slice should
+  add smoke and behavior evidence for the same organizer-tool posture.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.

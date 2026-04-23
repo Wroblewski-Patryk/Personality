@@ -33,7 +33,10 @@ from app.core.connector_policy import (
     connector_authorization_matrix_snapshot,
     connector_capability_proposal_snapshot,
 )
-from app.core.connector_execution import connector_execution_baseline_snapshot
+from app.core.connector_execution import (
+    connector_execution_baseline_snapshot,
+    organizer_tool_stack_snapshot,
+)
 from app.core.deployment_policy import deployment_policy_snapshot
 from app.core.external_scheduler_policy import external_scheduler_policy_snapshot
 from app.core.observability_policy import observability_export_policy_snapshot
@@ -866,6 +869,7 @@ async def health(request: Request) -> dict[str, Any]:
             **connector_authorization_matrix_snapshot(),
             "capability_proposal": connector_capability_proposal_snapshot(),
             "execution_baseline": connector_execution_baseline_snapshot(settings),
+            "organizer_tool_stack": organizer_tool_stack_snapshot(settings),
             "web_knowledge_tools": web_knowledge_tooling_snapshot(),
         },
         "deployment": deployment_policy_snapshot(),

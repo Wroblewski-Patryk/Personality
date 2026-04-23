@@ -148,3 +148,69 @@ def connector_execution_baseline_snapshot(settings) -> dict[str, object]:
             "other_operations": "policy_only_until_additional_browser_provider_paths_are_approved",
         },
     }
+
+
+def organizer_tool_stack_snapshot(settings) -> dict[str, object]:
+    execution_baseline = connector_execution_baseline_snapshot(settings)
+    task_system = dict(execution_baseline["task_system"])
+    calendar = dict(execution_baseline["calendar"])
+    cloud_drive = dict(execution_baseline["cloud_drive"])
+
+    clickup_create = dict(task_system["clickup_create_task"])
+    clickup_list = dict(task_system["clickup_list_tasks"])
+    clickup_update = dict(task_system["clickup_update_task"])
+    calendar_read = dict(calendar["google_calendar_read_availability"])
+    drive_list = dict(cloud_drive["google_drive_list_files"])
+
+    approved_operations = [
+        "task_system.clickup_create_task",
+        "task_system.clickup_list_tasks",
+        "task_system.clickup_update_task",
+        "calendar.google_calendar_read_availability",
+        "cloud_drive.google_drive_list_files",
+    ]
+    readiness_entries = {
+        "task_system.clickup_create_task": clickup_create,
+        "task_system.clickup_list_tasks": clickup_list,
+        "task_system.clickup_update_task": clickup_update,
+        "calendar.google_calendar_read_availability": calendar_read,
+        "cloud_drive.google_drive_list_files": drive_list,
+    }
+    ready_operations = [
+        operation_id for operation_id in approved_operations if bool(readiness_entries[operation_id].get("ready", False))
+    ]
+    credential_gap_operations = [
+        operation_id for operation_id in approved_operations if not bool(readiness_entries[operation_id].get("ready", False))
+    ]
+    return {
+        "policy_owner": "production_organizer_tool_stack",
+        "stack_name": "clickup_calendar_drive_first_stack",
+        "product_scope": "no_ui_life_assistant_and_work_partner_organization_support",
+        "approved_connector_kinds": ["task_system", "calendar", "cloud_drive"],
+        "approved_operations": approved_operations,
+        "read_only_operations": [
+            "task_system.clickup_list_tasks",
+            "calendar.google_calendar_read_availability",
+            "cloud_drive.google_drive_list_files",
+        ],
+        "confirmation_required_operations": [
+            "task_system.clickup_create_task",
+            "task_system.clickup_update_task",
+        ],
+        "user_opt_in_required_operations": list(readiness_entries.keys()),
+        "mutation_boundary": "clickup_mutations_confirmation_required_calendar_and_drive_mutations_out_of_scope",
+        "read_boundary": "bounded_reads_only_for_calendar_availability_and_drive_metadata",
+        "provider_ready_operation_count": len(ready_operations),
+        "provider_total_operation_count": len(readiness_entries),
+        "ready_operations": ready_operations,
+        "credential_gap_operations": credential_gap_operations,
+        "readiness_state": (
+            "provider_stack_ready" if not credential_gap_operations else "provider_credentials_missing"
+        ),
+        "readiness_hint": (
+            "organizer_tool_stack_ready_for_operator_acceptance"
+            if not credential_gap_operations
+            else "configure_clickup_google_calendar_and_google_drive_credentials_for_full_stack_readiness"
+        ),
+        "provider_readiness": readiness_entries,
+    }
