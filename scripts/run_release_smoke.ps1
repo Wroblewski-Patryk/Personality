@@ -314,15 +314,9 @@ function Validate-IncidentEvidenceBundle {
         -MemoryRetrieval $retrieval `
         -FailurePrefix "Incident evidence bundle verification failed"
     $learnedState = $incidentEvidence.policy_posture.learned_state
-    if ($null -eq $learnedState) {
-        throw "Incident evidence bundle verification failed: learned_state posture is missing."
-    }
-    if ([string]$learnedState.policy_owner -ne "learned_state_inspection_policy") {
-        throw "Incident evidence bundle verification failed: unexpected learned_state policy_owner '$($learnedState.policy_owner)'."
-    }
-    if ([string]$learnedState.internal_inspection_path -ne "/internal/state/inspect") {
-        throw "Incident evidence bundle verification failed: unexpected learned_state internal_inspection_path '$($learnedState.internal_inspection_path)'."
-    }
+    $learnedStateContract = Assert-LearnedStateContract `
+        -LearnedState $learnedState `
+        -FailurePrefix "Incident evidence bundle verification failed"
     $v1Readiness = $incidentEvidence.policy_posture.v1_readiness
     if ($null -eq $v1Readiness) {
         throw "Incident evidence bundle verification failed: v1_readiness posture is missing."
@@ -366,6 +360,10 @@ function Validate-IncidentEvidenceBundle {
         retrieval_baseline_state = [string]$retrievalAlignment.production_baseline_state
         retrieval_provider_drift_state = [string]$retrievalAlignment.provider_drift_state
         retrieval_alignment_state = [string]$retrievalAlignment.alignment_state
+        learned_state_policy_owner = [string]$learnedStateContract.policy_owner
+        learned_state_internal_inspection_path = [string]$learnedStateContract.internal_inspection_path
+        learned_state_inspection_sections = @($learnedStateContract.inspection_sections)
+        learned_state_growth_summary_sections = @($learnedStateContract.growth_summary_sections)
     }
 }
 
@@ -468,6 +466,101 @@ function Assert-RetrievalAlignmentPosture {
         provider_drift_state = [string]$MemoryRetrieval.retrieval_lifecycle_provider_drift_state
         alignment_state = [string]$MemoryRetrieval.retrieval_lifecycle_alignment_state
         pending_gaps = @()
+    }
+}
+
+function Assert-LearnedStateContract {
+    param(
+        [object]$LearnedState,
+        [Parameter(Mandatory = $true)][string]$FailurePrefix
+    )
+
+    $expectedInspectionSections = @(
+        "identity_state",
+        "learned_knowledge",
+        "role_skill_state",
+        "planning_state"
+    )
+    $expectedGrowthSummarySections = @(
+        "preference_summary",
+        "knowledge_summary",
+        "reflection_growth_summary",
+        "planning_continuity_summary"
+    )
+    $expectedRoleSkillMetadataSections = @(
+        "role_skill_policy",
+        "skill_registry",
+        "selection_visibility_summary"
+    )
+    $expectedPlanningContinuitySections = @(
+        "active_goals",
+        "active_tasks",
+        "active_goal_milestones",
+        "pending_proposals",
+        "continuity_summary"
+    )
+    $expectedReflectionGrowthSignalKinds = @(
+        "semantic_conclusions",
+        "affective_conclusions",
+        "adaptive_outputs",
+        "relations"
+    )
+
+    if ($null -eq $LearnedState) {
+        throw "${FailurePrefix}: learned_state posture is missing."
+    }
+    if ([string]$LearnedState.policy_owner -ne "learned_state_inspection_policy") {
+        throw "${FailurePrefix}: unexpected learned_state policy_owner '$($LearnedState.policy_owner)'."
+    }
+    if ([string]$LearnedState.internal_inspection_path -ne "/internal/state/inspect") {
+        throw "${FailurePrefix}: unexpected learned_state internal_inspection_path '$($LearnedState.internal_inspection_path)'."
+    }
+    if (-not (Has-Property -Object $LearnedState -Name "inspection_sections")) {
+        throw "${FailurePrefix}: learned_state is missing inspection_sections."
+    }
+    if (-not (Has-Property -Object $LearnedState -Name "growth_summary_sections")) {
+        throw "${FailurePrefix}: learned_state is missing growth_summary_sections."
+    }
+    if (-not (Has-Property -Object $LearnedState -Name "role_skill_metadata_sections")) {
+        throw "${FailurePrefix}: learned_state is missing role_skill_metadata_sections."
+    }
+    if (-not (Has-Property -Object $LearnedState -Name "planning_continuity_sections")) {
+        throw "${FailurePrefix}: learned_state is missing planning_continuity_sections."
+    }
+    if (-not (Has-Property -Object $LearnedState -Name "reflection_growth_signal_kinds")) {
+        throw "${FailurePrefix}: learned_state is missing reflection_growth_signal_kinds."
+    }
+
+    $inspectionSections = @($LearnedState.inspection_sections)
+    $growthSummarySections = @($LearnedState.growth_summary_sections)
+    $roleSkillMetadataSections = @($LearnedState.role_skill_metadata_sections)
+    $planningContinuitySections = @($LearnedState.planning_continuity_sections)
+    $reflectionGrowthSignalKinds = @($LearnedState.reflection_growth_signal_kinds)
+
+    if (@(Compare-Object -ReferenceObject $expectedInspectionSections -DifferenceObject $inspectionSections).Count -ne 0) {
+        throw "${FailurePrefix}: learned_state inspection_sections do not match the bounded contract."
+    }
+    if (@(Compare-Object -ReferenceObject $expectedGrowthSummarySections -DifferenceObject $growthSummarySections).Count -ne 0) {
+        throw "${FailurePrefix}: learned_state growth_summary_sections do not match the bounded contract."
+    }
+    if (@(Compare-Object -ReferenceObject $expectedRoleSkillMetadataSections -DifferenceObject $roleSkillMetadataSections).Count -ne 0) {
+        throw "${FailurePrefix}: learned_state role_skill_metadata_sections do not match the bounded contract."
+    }
+    if (@(Compare-Object -ReferenceObject $expectedPlanningContinuitySections -DifferenceObject $planningContinuitySections).Count -ne 0) {
+        throw "${FailurePrefix}: learned_state planning_continuity_sections do not match the bounded contract."
+    }
+    if (@(Compare-Object -ReferenceObject $expectedReflectionGrowthSignalKinds -DifferenceObject $reflectionGrowthSignalKinds).Count -ne 0) {
+        throw "${FailurePrefix}: learned_state reflection_growth_signal_kinds do not match the bounded contract."
+    }
+
+    return @{
+        policy_owner = [string]$LearnedState.policy_owner
+        internal_inspection_path = [string]$LearnedState.internal_inspection_path
+        inspection_sections = $inspectionSections
+        growth_summary_sections = $growthSummarySections
+        role_skill_metadata_sections = $roleSkillMetadataSections
+        planning_continuity_sections = $planningContinuitySections
+        reflection_growth_signal_kinds = $reflectionGrowthSignalKinds
     }
 }
 
@@ -1096,21 +1189,9 @@ if (-not (Has-Property -Object $telegramConversation -Name "delivery_failures"))
     throw "Health check failed: conversation_channels.telegram is missing delivery_failures."
 }
 $learnedState = $health.learned_state
-if ($null -eq $learnedState) {
-    throw "Health check failed: response is missing learned_state."
-}
-if (-not (Has-Property -Object $learnedState -Name "policy_owner")) {
-    throw "Health check failed: learned_state is missing policy_owner."
-}
-if ([string]$learnedState.policy_owner -ne "learned_state_inspection_policy") {
-    throw "Health check failed: unexpected learned_state.policy_owner '$($learnedState.policy_owner)'."
-}
-if (-not (Has-Property -Object $learnedState -Name "internal_inspection_path")) {
-    throw "Health check failed: learned_state is missing internal_inspection_path."
-}
-if ([string]$learnedState.internal_inspection_path -ne "/internal/state/inspect") {
-    throw "Health check failed: unexpected learned_state.internal_inspection_path '$($learnedState.internal_inspection_path)'."
-}
+$learnedStateContract = Assert-LearnedStateContract `
+    -LearnedState $learnedState `
+    -FailurePrefix "Health check failed"
 $v1Readiness = $health.v1_readiness
 if ($null -eq $v1Readiness) {
     throw "Health check failed: response is missing v1_readiness."
@@ -1275,15 +1356,9 @@ if ($IncludeDebug) {
         -MemoryRetrieval $incidentRetrieval `
         -FailurePrefix "Smoke request failed"
     $incidentLearnedState = $incidentEvidence.policy_posture.learned_state
-    if ($null -eq $incidentLearnedState) {
-        throw "Smoke request failed: incident_evidence is missing learned_state posture."
-    }
-    if ([string]$incidentLearnedState.policy_owner -ne "learned_state_inspection_policy") {
-        throw "Smoke request failed: unexpected incident_evidence learned_state policy_owner '$($incidentLearnedState.policy_owner)'."
-    }
-    if ([string]$incidentLearnedState.internal_inspection_path -ne "/internal/state/inspect") {
-        throw "Smoke request failed: unexpected incident_evidence learned_state internal_inspection_path '$($incidentLearnedState.internal_inspection_path)'."
-    }
+    $incidentLearnedStateContract = Assert-LearnedStateContract `
+        -LearnedState $incidentLearnedState `
+        -FailurePrefix "Smoke request failed"
     $incidentV1Readiness = $incidentEvidence.policy_posture.v1_readiness
     if ($null -eq $incidentV1Readiness) {
         throw "Smoke request failed: incident_evidence is missing v1_readiness posture."
@@ -1409,6 +1484,10 @@ $summary = @{
     incident_evidence_proactive_enabled = if ($null -ne $incidentProactive) { [bool]$incidentProactive.enabled } else { $null }
     incident_evidence_proactive_production_baseline_ready = if ($null -ne $incidentProactive) { [bool]$incidentProactive.production_baseline_ready } else { $null }
     incident_evidence_proactive_production_baseline_state = if ($null -ne $incidentProactive) { [string]$incidentProactive.production_baseline_state } else { $null }
+    incident_evidence_learned_state_policy_owner = if ($null -ne $incidentLearnedStateContract) { [string]$incidentLearnedStateContract.policy_owner } else { $null }
+    incident_evidence_learned_state_internal_inspection_path = if ($null -ne $incidentLearnedStateContract) { [string]$incidentLearnedStateContract.internal_inspection_path } else { $null }
+    incident_evidence_learned_state_inspection_sections = if ($null -ne $incidentLearnedStateContract) { @($incidentLearnedStateContract.inspection_sections) } else { @() }
+    incident_evidence_learned_state_growth_summary_sections = if ($null -ne $incidentLearnedStateContract) { @($incidentLearnedStateContract.growth_summary_sections) } else { @() }
     incident_evidence_retrieval_policy_owner = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.retrieval_policy_owner } else { $null }
     incident_evidence_retrieval_provider_requested = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.provider_requested } else { $null }
     incident_evidence_retrieval_provider_effective = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.provider_effective } else { $null }
@@ -1434,6 +1513,10 @@ $summary = @{
     incident_bundle_proactive_policy_owner = $incidentEvidenceBundleCheck.proactive_policy_owner
     incident_bundle_proactive_enabled = $incidentEvidenceBundleCheck.proactive_enabled
     incident_bundle_proactive_production_baseline_state = $incidentEvidenceBundleCheck.proactive_production_baseline_state
+    incident_bundle_learned_state_policy_owner = $incidentEvidenceBundleCheck.learned_state_policy_owner
+    incident_bundle_learned_state_internal_inspection_path = $incidentEvidenceBundleCheck.learned_state_internal_inspection_path
+    incident_bundle_learned_state_inspection_sections = $incidentEvidenceBundleCheck.learned_state_inspection_sections
+    incident_bundle_learned_state_growth_summary_sections = $incidentEvidenceBundleCheck.learned_state_growth_summary_sections
     incident_bundle_retrieval_policy_owner = $incidentEvidenceBundleCheck.retrieval_policy_owner
     incident_bundle_retrieval_provider_requested = $incidentEvidenceBundleCheck.retrieval_provider_requested
     incident_bundle_retrieval_provider_effective = $incidentEvidenceBundleCheck.retrieval_provider_effective

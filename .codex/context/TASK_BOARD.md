@@ -184,9 +184,12 @@ Last updated: 2026-04-23
   bounded preference, knowledge, role/skill, and planning-continuity summaries
   for future UI or operator inspection instead of leaving growth visibility at
   policy-owner level only.
-- `PRJ-590` is now the first `READY` slice because the richer learned-state
-  contract is live in runtime surfaces and the next step is making smoke,
-  incident evidence, and regressions pin that exact bounded contract.
+- `PRJ-590` is complete: release smoke, incident-evidence bundle validation,
+  and targeted regression fixtures now require the richer learned-state section
+  contract instead of only checking owner or path posture.
+- `PRJ-591` is now the first `READY` slice because runtime and release
+  evidence now agree on the richer learned-state contract and the next step is
+  syncing canonical docs and context around that live baseline.
 
 ## READY
 
@@ -498,20 +501,24 @@ Last updated: 2026-04-23
   - Group: Learned-State And Personality-Growth Introspection
   - Depends on: PRJ-589
   - Priority: P2
-  - Status: READY
+  - Status: DONE
   - Done when:
     - regression and incident-evidence flows pin the richer learned-state
       inspection contract
   - Validation:
-    - targeted pytest coverage
-    - release or evidence checks where applicable
+    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_api_routes.py` -> `126 passed`
+  - Result:
+    - release smoke now validates the richer learned-state section contract
+      from `/health`, exported `incident_evidence`, and incident bundles
+    - targeted smoke regressions now fail when learned-state contract sections
+      are partially missing instead of silently degrading to owner-only posture
 
 - [ ] PRJ-591 Sync docs/context for learned-state introspection
   - Owner: Product Docs
   - Group: Learned-State And Personality-Growth Introspection
   - Depends on: PRJ-590
   - Priority: P2
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - docs and context truth align on the richer backend personality-growth
       introspection baseline

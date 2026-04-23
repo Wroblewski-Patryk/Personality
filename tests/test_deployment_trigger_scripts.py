@@ -26,6 +26,37 @@ TRIGGER_MODULE = importlib.util.module_from_spec(TRIGGER_SPEC)
 sys.modules[TRIGGER_SPEC.name] = TRIGGER_MODULE
 TRIGGER_SPEC.loader.exec_module(TRIGGER_MODULE)
 
+LEARNED_STATE_INSPECTION_SECTIONS = [
+    "identity_state",
+    "learned_knowledge",
+    "role_skill_state",
+    "planning_state",
+]
+LEARNED_STATE_GROWTH_SUMMARY_SECTIONS = [
+    "preference_summary",
+    "knowledge_summary",
+    "reflection_growth_summary",
+    "planning_continuity_summary",
+]
+LEARNED_STATE_ROLE_SKILL_METADATA_SECTIONS = [
+    "role_skill_policy",
+    "skill_registry",
+    "selection_visibility_summary",
+]
+LEARNED_STATE_PLANNING_CONTINUITY_SECTIONS = [
+    "active_goals",
+    "active_tasks",
+    "active_goal_milestones",
+    "pending_proposals",
+    "continuity_summary",
+]
+LEARNED_STATE_REFLECTION_GROWTH_SIGNAL_KINDS = [
+    "semantic_conclusions",
+    "affective_conclusions",
+    "adaptive_outputs",
+    "relations",
+]
+
 
 def _powershell_exe() -> str | None:
     return shutil.which("powershell") or shutil.which("pwsh")
@@ -196,6 +227,11 @@ def stub_aion_server() -> _StubAionServer:
         "learned_state": {
             "policy_owner": "learned_state_inspection_policy",
             "internal_inspection_path": "/internal/state/inspect",
+            "inspection_sections": LEARNED_STATE_INSPECTION_SECTIONS,
+            "growth_summary_sections": LEARNED_STATE_GROWTH_SUMMARY_SECTIONS,
+            "role_skill_metadata_sections": LEARNED_STATE_ROLE_SKILL_METADATA_SECTIONS,
+            "planning_continuity_sections": LEARNED_STATE_PLANNING_CONTINUITY_SECTIONS,
+            "reflection_growth_signal_kinds": LEARNED_STATE_REFLECTION_GROWTH_SIGNAL_KINDS,
         },
         "conversation_channels": {
             "telegram": {
@@ -324,6 +360,11 @@ def stub_aion_server() -> _StubAionServer:
                 "learned_state": {
                     "policy_owner": "learned_state_inspection_policy",
                     "internal_inspection_path": "/internal/state/inspect",
+                    "inspection_sections": LEARNED_STATE_INSPECTION_SECTIONS,
+                    "growth_summary_sections": LEARNED_STATE_GROWTH_SUMMARY_SECTIONS,
+                    "role_skill_metadata_sections": LEARNED_STATE_ROLE_SKILL_METADATA_SECTIONS,
+                    "planning_continuity_sections": LEARNED_STATE_PLANNING_CONTINUITY_SECTIONS,
+                    "reflection_growth_signal_kinds": LEARNED_STATE_REFLECTION_GROWTH_SIGNAL_KINDS,
                 },
             "v1_readiness": {
                 "policy_owner": "v1_release_readiness_policy",
@@ -517,6 +558,11 @@ def _write_incident_bundle(
             "learned_state": {
                 "policy_owner": "learned_state_inspection_policy",
                 "internal_inspection_path": "/internal/state/inspect",
+                "inspection_sections": LEARNED_STATE_INSPECTION_SECTIONS,
+                "growth_summary_sections": LEARNED_STATE_GROWTH_SUMMARY_SECTIONS,
+                "role_skill_metadata_sections": LEARNED_STATE_ROLE_SKILL_METADATA_SECTIONS,
+                "planning_continuity_sections": LEARNED_STATE_PLANNING_CONTINUITY_SECTIONS,
+                "reflection_growth_signal_kinds": LEARNED_STATE_REFLECTION_GROWTH_SIGNAL_KINDS,
             },
                 "v1_readiness": {
                     "policy_owner": "v1_release_readiness_policy",
@@ -594,6 +640,11 @@ def _write_incident_bundle(
         "learned_state": {
             "policy_owner": "learned_state_inspection_policy",
             "internal_inspection_path": "/internal/state/inspect",
+            "inspection_sections": LEARNED_STATE_INSPECTION_SECTIONS,
+            "growth_summary_sections": LEARNED_STATE_GROWTH_SUMMARY_SECTIONS,
+            "role_skill_metadata_sections": LEARNED_STATE_ROLE_SKILL_METADATA_SECTIONS,
+            "planning_continuity_sections": LEARNED_STATE_PLANNING_CONTINUITY_SECTIONS,
+            "reflection_growth_signal_kinds": LEARNED_STATE_REFLECTION_GROWTH_SIGNAL_KINDS,
         },
         "v1_readiness": {
             "policy_owner": "v1_release_readiness_policy",
@@ -912,6 +963,12 @@ def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_r
     assert summary["incident_evidence_proactive_production_baseline_state"] == (
         "external_scheduler_target_owner"
     )
+    assert summary["incident_evidence_learned_state_policy_owner"] == "learned_state_inspection_policy"
+    assert summary["incident_evidence_learned_state_internal_inspection_path"] == "/internal/state/inspect"
+    assert summary["incident_evidence_learned_state_inspection_sections"] == LEARNED_STATE_INSPECTION_SECTIONS
+    assert summary["incident_evidence_learned_state_growth_summary_sections"] == (
+        LEARNED_STATE_GROWTH_SUMMARY_SECTIONS
+    )
     assert summary["incident_evidence_retrieval_policy_owner"] == "retrieval_lifecycle_policy"
     assert summary["incident_evidence_retrieval_provider_requested"] == "openai"
     assert summary["incident_evidence_retrieval_provider_effective"] == "openai"
@@ -962,6 +1019,12 @@ def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_pro
     assert summary["incident_bundle_proactive_enabled"] is True
     assert summary["incident_bundle_proactive_production_baseline_state"] == (
         "external_scheduler_target_owner"
+    )
+    assert summary["incident_bundle_learned_state_policy_owner"] == "learned_state_inspection_policy"
+    assert summary["incident_bundle_learned_state_internal_inspection_path"] == "/internal/state/inspect"
+    assert summary["incident_bundle_learned_state_inspection_sections"] == LEARNED_STATE_INSPECTION_SECTIONS
+    assert summary["incident_bundle_learned_state_growth_summary_sections"] == (
+        LEARNED_STATE_GROWTH_SUMMARY_SECTIONS
     )
     assert summary["incident_bundle_retrieval_policy_owner"] == "retrieval_lifecycle_policy"
     assert summary["incident_bundle_retrieval_provider_requested"] == "openai"
@@ -1056,6 +1119,50 @@ def test_release_smoke_fails_when_incident_evidence_retrieval_alignment_drifts(
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "Smoke request failed" in combined_output
     assert "semantic_embedding_provider_effective" in combined_output
+
+
+def test_release_smoke_fails_when_learned_state_health_contract_is_partial(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original = dict(_StubAionHandler.health_payload["learned_state"])
+    broken = dict(original)
+    broken.pop("inspection_sections", None)
+    _StubAionHandler.health_payload["learned_state"] = broken
+    try:
+        result = _run_release_smoke("-BaseUrl", stub_aion_server.base_url, cwd=ROOT)
+    finally:
+        _StubAionHandler.health_payload["learned_state"] = original
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "learned_state is missing inspection_sections" in combined_output
+
+
+def test_release_smoke_fails_when_incident_evidence_learned_state_contract_is_partial(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    incident_evidence = _StubAionHandler.event_payload["incident_evidence"]
+    assert isinstance(incident_evidence, dict)
+    policy_posture = dict(incident_evidence["policy_posture"])
+    learned_state_policy = dict(policy_posture["learned_state"])
+    learned_state_policy.pop("growth_summary_sections", None)
+    policy_posture["learned_state"] = learned_state_policy
+    _StubAionHandler.event_payload["incident_evidence"] = {
+        **incident_evidence,
+        "policy_posture": policy_posture,
+    }
+
+    result = _run_release_smoke(
+        "-BaseUrl",
+        stub_aion_server.base_url,
+        "-IncludeDebug",
+        cwd=ROOT,
+    )
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "Smoke request failed" in combined_output
+    assert "learned_state is missing growth_summary_sections" in combined_output
 
 
 def test_release_smoke_fails_when_deployment_evidence_is_stale(
