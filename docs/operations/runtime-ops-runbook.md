@@ -746,6 +746,10 @@ Current external-driver operating baseline (PRJ-480..PRJ-483):
   - Debian/bash: `./scripts/run_reflection_queue_once.sh`
 - app-local `in_process` worker remains compatibility posture for local or
   transitional environments, not the target external-worker baseline
+- current Coolify production baseline now defaults
+  `REFLECTION_RUNTIME_MODE=deferred`, while scheduler cadence ownership remains
+  a separate transitional lane until the external scheduler cutover work is
+  completed
 
 Deferred readiness criteria (all required before production-default switch):
 

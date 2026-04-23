@@ -134,6 +134,7 @@ Last updated: 2026-04-23
     - relevant pytest coverage
     - Coolify deploy
     - production `/health` and release-smoke evidence
+  - Status: IN_PROGRESS
 
 - [ ] PRJ-573 Externalize maintenance and proactive cadence ownership
   - Owner: Ops/Release
