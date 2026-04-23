@@ -165,6 +165,13 @@ function Validate-IncidentEvidenceBundle {
         proactive_policy_owner = $null
         proactive_enabled = $null
         proactive_production_baseline_state = $null
+        retrieval_policy_owner = $null
+        retrieval_provider_requested = $null
+        retrieval_provider_effective = $null
+        retrieval_execution_class = $null
+        retrieval_baseline_state = $null
+        retrieval_provider_drift_state = $null
+        retrieval_alignment_state = $null
     }
 
     if (-not $Path) {
@@ -302,6 +309,10 @@ function Validate-IncidentEvidenceBundle {
     if ([string]$proactive.production_baseline_state -eq "disabled_by_policy") {
         throw "Incident evidence bundle verification failed: proactive production baseline is still disabled_by_policy."
     }
+    $retrieval = $incidentEvidence.policy_posture.memory_retrieval
+    $retrievalAlignment = Assert-RetrievalAlignmentPosture `
+        -MemoryRetrieval $retrieval `
+        -FailurePrefix "Incident evidence bundle verification failed"
     $learnedState = $incidentEvidence.policy_posture.learned_state
     if ($null -eq $learnedState) {
         throw "Incident evidence bundle verification failed: learned_state posture is missing."
@@ -348,6 +359,13 @@ function Validate-IncidentEvidenceBundle {
         proactive_policy_owner = [string]$proactive.policy_owner
         proactive_enabled = [bool]$proactive.enabled
         proactive_production_baseline_state = [string]$proactive.production_baseline_state
+        retrieval_policy_owner = [string]$retrievalAlignment.retrieval_policy_owner
+        retrieval_provider_requested = [string]$retrievalAlignment.provider_requested
+        retrieval_provider_effective = [string]$retrievalAlignment.provider_effective
+        retrieval_execution_class = [string]$retrievalAlignment.execution_class
+        retrieval_baseline_state = [string]$retrievalAlignment.production_baseline_state
+        retrieval_provider_drift_state = [string]$retrievalAlignment.provider_drift_state
+        retrieval_alignment_state = [string]$retrievalAlignment.alignment_state
     }
 }
 
@@ -395,6 +413,61 @@ function Assert-DedicatedAdminDebugPosture {
     return @{
         debug_posture_state   = "dedicated_admin_only"
         debug_exception_state = $debugExceptionState
+    }
+}
+
+function Assert-RetrievalAlignmentPosture {
+    param(
+        [object]$MemoryRetrieval,
+        [Parameter(Mandatory = $true)][string]$FailurePrefix
+    )
+
+    if ($null -eq $MemoryRetrieval) {
+        throw "${FailurePrefix}: memory_retrieval posture is missing."
+    }
+    if ([string]$MemoryRetrieval.retrieval_lifecycle_policy_owner -ne "retrieval_lifecycle_policy") {
+        throw "${FailurePrefix}: unexpected memory_retrieval policy_owner '$($MemoryRetrieval.retrieval_lifecycle_policy_owner)'."
+    }
+    if ([string]$MemoryRetrieval.semantic_embedding_provider_requested -ne "openai") {
+        throw "${FailurePrefix}: unexpected memory_retrieval semantic_embedding_provider_requested '$($MemoryRetrieval.semantic_embedding_provider_requested)'."
+    }
+    if ([string]$MemoryRetrieval.semantic_embedding_provider_effective -ne "openai") {
+        throw "${FailurePrefix}: unexpected memory_retrieval semantic_embedding_provider_effective '$($MemoryRetrieval.semantic_embedding_provider_effective)'."
+    }
+    if ([string]$MemoryRetrieval.semantic_embedding_model_requested -ne "text-embedding-3-small") {
+        throw "${FailurePrefix}: unexpected memory_retrieval semantic_embedding_model_requested '$($MemoryRetrieval.semantic_embedding_model_requested)'."
+    }
+    if ([string]$MemoryRetrieval.semantic_embedding_model_effective -ne "text-embedding-3-small") {
+        throw "${FailurePrefix}: unexpected memory_retrieval semantic_embedding_model_effective '$($MemoryRetrieval.semantic_embedding_model_effective)'."
+    }
+    if ([string]$MemoryRetrieval.semantic_embedding_execution_class -ne "provider_owned_openai_api") {
+        throw "${FailurePrefix}: unexpected memory_retrieval semantic_embedding_execution_class '$($MemoryRetrieval.semantic_embedding_execution_class)'."
+    }
+    if ([string]$MemoryRetrieval.semantic_embedding_production_baseline_state -ne "aligned_openai_provider_owned") {
+        throw "${FailurePrefix}: unexpected memory_retrieval semantic_embedding_production_baseline_state '$($MemoryRetrieval.semantic_embedding_production_baseline_state)'."
+    }
+    if ([string]$MemoryRetrieval.retrieval_lifecycle_provider_drift_state -ne "aligned_target_provider") {
+        throw "${FailurePrefix}: unexpected memory_retrieval retrieval_lifecycle_provider_drift_state '$($MemoryRetrieval.retrieval_lifecycle_provider_drift_state)'."
+    }
+    if ([string]$MemoryRetrieval.retrieval_lifecycle_alignment_state -ne "aligned_with_defined_lifecycle_baseline") {
+        throw "${FailurePrefix}: unexpected memory_retrieval retrieval_lifecycle_alignment_state '$($MemoryRetrieval.retrieval_lifecycle_alignment_state)'."
+    }
+    $pendingGaps = @($MemoryRetrieval.retrieval_lifecycle_pending_gaps)
+    if ($pendingGaps.Count -ne 0) {
+        throw "${FailurePrefix}: memory_retrieval retrieval_lifecycle_pending_gaps is not empty."
+    }
+
+    return @{
+        retrieval_policy_owner = [string]$MemoryRetrieval.retrieval_lifecycle_policy_owner
+        provider_requested = [string]$MemoryRetrieval.semantic_embedding_provider_requested
+        provider_effective = [string]$MemoryRetrieval.semantic_embedding_provider_effective
+        model_requested = [string]$MemoryRetrieval.semantic_embedding_model_requested
+        model_effective = [string]$MemoryRetrieval.semantic_embedding_model_effective
+        execution_class = [string]$MemoryRetrieval.semantic_embedding_execution_class
+        production_baseline_state = [string]$MemoryRetrieval.semantic_embedding_production_baseline_state
+        provider_drift_state = [string]$MemoryRetrieval.retrieval_lifecycle_provider_drift_state
+        alignment_state = [string]$MemoryRetrieval.retrieval_lifecycle_alignment_state
+        pending_gaps = @()
     }
 }
 
@@ -937,6 +1010,24 @@ if (-not (Has-Property -Object $memoryRetrieval -Name "retrieval_lifecycle_align
 if (-not (Has-Property -Object $memoryRetrieval -Name "retrieval_lifecycle_pending_gaps")) {
     throw "Health check failed: memory_retrieval is missing retrieval_lifecycle_pending_gaps."
 }
+if (-not (Has-Property -Object $memoryRetrieval -Name "semantic_embedding_provider_requested")) {
+    throw "Health check failed: memory_retrieval is missing semantic_embedding_provider_requested."
+}
+if (-not (Has-Property -Object $memoryRetrieval -Name "semantic_embedding_provider_effective")) {
+    throw "Health check failed: memory_retrieval is missing semantic_embedding_provider_effective."
+}
+if (-not (Has-Property -Object $memoryRetrieval -Name "semantic_embedding_model_requested")) {
+    throw "Health check failed: memory_retrieval is missing semantic_embedding_model_requested."
+}
+if (-not (Has-Property -Object $memoryRetrieval -Name "semantic_embedding_model_effective")) {
+    throw "Health check failed: memory_retrieval is missing semantic_embedding_model_effective."
+}
+if (-not (Has-Property -Object $memoryRetrieval -Name "semantic_embedding_execution_class")) {
+    throw "Health check failed: memory_retrieval is missing semantic_embedding_execution_class."
+}
+if (-not (Has-Property -Object $memoryRetrieval -Name "semantic_embedding_production_baseline_state")) {
+    throw "Health check failed: memory_retrieval is missing semantic_embedding_production_baseline_state."
+}
 if (-not (Has-Property -Object $memoryRetrieval -Name "retrieval_lifecycle_relation_source_policy_owner")) {
     throw "Health check failed: memory_retrieval is missing retrieval_lifecycle_relation_source_policy_owner."
 }
@@ -946,6 +1037,9 @@ if (-not (Has-Property -Object $memoryRetrieval -Name "retrieval_lifecycle_relat
 if (-not (Has-Property -Object $memoryRetrieval -Name "retrieval_lifecycle_relation_source_enabled")) {
     throw "Health check failed: memory_retrieval is missing retrieval_lifecycle_relation_source_enabled."
 }
+$retrievalAlignment = Assert-RetrievalAlignmentPosture `
+    -MemoryRetrieval $memoryRetrieval `
+    -FailurePrefix "Health check failed"
 $observability = $health.observability
 if ($null -eq $observability) {
     throw "Health check failed: response is missing observability."
@@ -1176,6 +1270,10 @@ if ($IncludeDebug) {
     if ([string]$incidentProactive.production_baseline_state -eq "disabled_by_policy") {
         throw "Smoke request failed: incident_evidence proactive production baseline is still disabled_by_policy."
     }
+    $incidentRetrieval = $incidentEvidence.policy_posture.memory_retrieval
+    $incidentRetrievalAlignment = Assert-RetrievalAlignmentPosture `
+        -MemoryRetrieval $incidentRetrieval `
+        -FailurePrefix "Smoke request failed"
     $incidentLearnedState = $incidentEvidence.policy_posture.learned_state
     if ($null -eq $incidentLearnedState) {
         throw "Smoke request failed: incident_evidence is missing learned_state posture."
@@ -1270,6 +1368,12 @@ $summary = @{
     scheduler_external_proactive_evidence_state = [string]$externalSchedulerPolicy.proactive_run_evidence.evidence_state
     scheduler_external_duplicate_protection_state = [string]$externalSchedulerPolicy.duplicate_protection_posture.state
     retrieval_lifecycle_policy_owner = [string]$memoryRetrieval.retrieval_lifecycle_policy_owner
+    retrieval_semantic_embedding_provider_requested = [string]$retrievalAlignment.provider_requested
+    retrieval_semantic_embedding_provider_effective = [string]$retrievalAlignment.provider_effective
+    retrieval_semantic_embedding_model_requested = [string]$retrievalAlignment.model_requested
+    retrieval_semantic_embedding_model_effective = [string]$retrievalAlignment.model_effective
+    retrieval_semantic_embedding_execution_class = [string]$retrievalAlignment.execution_class
+    retrieval_semantic_embedding_production_baseline_state = [string]$retrievalAlignment.production_baseline_state
     retrieval_lifecycle_provider_drift_state = [string]$memoryRetrieval.retrieval_lifecycle_provider_drift_state
     retrieval_lifecycle_alignment_state = [string]$memoryRetrieval.retrieval_lifecycle_alignment_state
     retrieval_lifecycle_pending_gaps = @($memoryRetrieval.retrieval_lifecycle_pending_gaps)
@@ -1305,6 +1409,13 @@ $summary = @{
     incident_evidence_proactive_enabled = if ($null -ne $incidentProactive) { [bool]$incidentProactive.enabled } else { $null }
     incident_evidence_proactive_production_baseline_ready = if ($null -ne $incidentProactive) { [bool]$incidentProactive.production_baseline_ready } else { $null }
     incident_evidence_proactive_production_baseline_state = if ($null -ne $incidentProactive) { [string]$incidentProactive.production_baseline_state } else { $null }
+    incident_evidence_retrieval_policy_owner = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.retrieval_policy_owner } else { $null }
+    incident_evidence_retrieval_provider_requested = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.provider_requested } else { $null }
+    incident_evidence_retrieval_provider_effective = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.provider_effective } else { $null }
+    incident_evidence_retrieval_execution_class = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.execution_class } else { $null }
+    incident_evidence_retrieval_baseline_state = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.production_baseline_state } else { $null }
+    incident_evidence_retrieval_provider_drift_state = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.provider_drift_state } else { $null }
+    incident_evidence_retrieval_alignment_state = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.alignment_state } else { $null }
     incident_bundle_checked = [bool]$incidentEvidenceBundleCheck.checked
     incident_bundle_path = [string]$incidentEvidenceBundleCheck.path
     incident_bundle_manifest_schema_version = $incidentEvidenceBundleCheck.manifest_schema_version
@@ -1323,6 +1434,13 @@ $summary = @{
     incident_bundle_proactive_policy_owner = $incidentEvidenceBundleCheck.proactive_policy_owner
     incident_bundle_proactive_enabled = $incidentEvidenceBundleCheck.proactive_enabled
     incident_bundle_proactive_production_baseline_state = $incidentEvidenceBundleCheck.proactive_production_baseline_state
+    incident_bundle_retrieval_policy_owner = $incidentEvidenceBundleCheck.retrieval_policy_owner
+    incident_bundle_retrieval_provider_requested = $incidentEvidenceBundleCheck.retrieval_provider_requested
+    incident_bundle_retrieval_provider_effective = $incidentEvidenceBundleCheck.retrieval_provider_effective
+    incident_bundle_retrieval_execution_class = $incidentEvidenceBundleCheck.retrieval_execution_class
+    incident_bundle_retrieval_baseline_state = $incidentEvidenceBundleCheck.retrieval_baseline_state
+    incident_bundle_retrieval_provider_drift_state = $incidentEvidenceBundleCheck.retrieval_provider_drift_state
+    incident_bundle_retrieval_alignment_state = $incidentEvidenceBundleCheck.retrieval_alignment_state
     deployment_evidence_checked = [bool]$deploymentEvidenceCheck.checked
     deployment_evidence_path = [string]$deploymentEvidenceCheck.path
     deployment_evidence_age_minutes = $deploymentEvidenceCheck.age_minutes

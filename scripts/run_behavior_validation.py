@@ -44,6 +44,7 @@ GATE_REASON_INCIDENT_EVIDENCE_TELEGRAM_CONVERSATION_INVALID = "incident_evidence
 GATE_REASON_INCIDENT_EVIDENCE_V1_READINESS_INVALID = "incident_evidence_v1_readiness_invalid"
 GATE_REASON_INCIDENT_EVIDENCE_DURABLE_ATTENTION_INVALID = "incident_evidence_durable_attention_invalid"
 GATE_REASON_INCIDENT_EVIDENCE_PROACTIVE_INVALID = "incident_evidence_proactive_invalid"
+GATE_REASON_INCIDENT_EVIDENCE_RETRIEVAL_ALIGNMENT_INVALID = "incident_evidence_retrieval_alignment_invalid"
 
 
 @dataclass(frozen=True)
@@ -332,6 +333,16 @@ def _evaluate_incident_evidence_input(
         "incident_evidence_proactive_enabled": None,
         "incident_evidence_proactive_production_baseline_ready": None,
         "incident_evidence_proactive_production_baseline_state": None,
+        "incident_evidence_retrieval_policy_owner": None,
+        "incident_evidence_retrieval_provider_requested": None,
+        "incident_evidence_retrieval_provider_effective": None,
+        "incident_evidence_retrieval_model_requested": None,
+        "incident_evidence_retrieval_model_effective": None,
+        "incident_evidence_retrieval_execution_class": None,
+        "incident_evidence_retrieval_baseline_state": None,
+        "incident_evidence_retrieval_provider_drift_state": None,
+        "incident_evidence_retrieval_alignment_state": None,
+        "incident_evidence_retrieval_pending_gaps": None,
     }
     violations: list[str] = []
 
@@ -428,6 +439,11 @@ def _evaluate_incident_evidence_input(
         candidate_proactive_policy = policy_posture.get("proactive")
         if isinstance(candidate_proactive_policy, dict):
             proactive_policy = candidate_proactive_policy
+    retrieval_policy = {}
+    if isinstance(policy_posture, dict):
+        candidate_retrieval_policy = policy_posture.get("memory_retrieval")
+        if isinstance(candidate_retrieval_policy, dict):
+            retrieval_policy = candidate_retrieval_policy
 
     maintenance_evidence = scheduler_policy.get("maintenance_run_evidence")
     proactive_evidence = scheduler_policy.get("proactive_run_evidence")
@@ -560,6 +576,53 @@ def _evaluate_incident_evidence_input(
     if not proactive_valid:
         violations.append(GATE_REASON_INCIDENT_EVIDENCE_PROACTIVE_INVALID)
 
+    retrieval_pending_gaps = retrieval_policy.get("retrieval_lifecycle_pending_gaps")
+    if isinstance(retrieval_pending_gaps, list):
+        context["incident_evidence_retrieval_pending_gaps"] = list(retrieval_pending_gaps)
+    else:
+        context["incident_evidence_retrieval_pending_gaps"] = retrieval_pending_gaps
+    context["incident_evidence_retrieval_policy_owner"] = retrieval_policy.get("retrieval_lifecycle_policy_owner")
+    context["incident_evidence_retrieval_provider_requested"] = retrieval_policy.get(
+        "semantic_embedding_provider_requested"
+    )
+    context["incident_evidence_retrieval_provider_effective"] = retrieval_policy.get(
+        "semantic_embedding_provider_effective"
+    )
+    context["incident_evidence_retrieval_model_requested"] = retrieval_policy.get(
+        "semantic_embedding_model_requested"
+    )
+    context["incident_evidence_retrieval_model_effective"] = retrieval_policy.get(
+        "semantic_embedding_model_effective"
+    )
+    context["incident_evidence_retrieval_execution_class"] = retrieval_policy.get(
+        "semantic_embedding_execution_class"
+    )
+    context["incident_evidence_retrieval_baseline_state"] = retrieval_policy.get(
+        "semantic_embedding_production_baseline_state"
+    )
+    context["incident_evidence_retrieval_provider_drift_state"] = retrieval_policy.get(
+        "retrieval_lifecycle_provider_drift_state"
+    )
+    context["incident_evidence_retrieval_alignment_state"] = retrieval_policy.get(
+        "retrieval_lifecycle_alignment_state"
+    )
+    retrieval_alignment_valid = (
+        retrieval_policy.get("retrieval_lifecycle_policy_owner") == "retrieval_lifecycle_policy"
+        and retrieval_policy.get("semantic_embedding_provider_requested") == "openai"
+        and retrieval_policy.get("semantic_embedding_provider_effective") == "openai"
+        and retrieval_policy.get("semantic_embedding_model_requested") == "text-embedding-3-small"
+        and retrieval_policy.get("semantic_embedding_model_effective") == "text-embedding-3-small"
+        and retrieval_policy.get("semantic_embedding_execution_class") == "provider_owned_openai_api"
+        and retrieval_policy.get("semantic_embedding_production_baseline_state")
+        == "aligned_openai_provider_owned"
+        and retrieval_policy.get("retrieval_lifecycle_provider_drift_state") == "aligned_target_provider"
+        and retrieval_policy.get("retrieval_lifecycle_alignment_state")
+        == "aligned_with_defined_lifecycle_baseline"
+        and retrieval_pending_gaps == []
+    )
+    if not retrieval_alignment_valid:
+        violations.append(GATE_REASON_INCIDENT_EVIDENCE_RETRIEVAL_ALIGNMENT_INVALID)
+
     return violations, context
 
 
@@ -675,6 +738,8 @@ def main() -> int:
         "stage_count": None,
         "debug_exception_state": None,
         "scheduler_cutover_proof_state": None,
+        "retrieval_alignment_state": None,
+        "retrieval_provider_drift_state": None,
     }
     if incident_evidence_input_path is not None:
         incident_payload, incident_read_violations = _load_incident_evidence_payload(
@@ -697,6 +762,12 @@ def main() -> int:
                 "scheduler_cutover_proof_state": incident_context.get(
                     "incident_evidence_scheduler_cutover_proof_state"
                 ),
+                "retrieval_alignment_state": incident_context.get(
+                    "incident_evidence_retrieval_alignment_state"
+                ),
+                "retrieval_provider_drift_state": incident_context.get(
+                    "incident_evidence_retrieval_provider_drift_state"
+                ),
             }
         else:
             incident_evidence_summary = {
@@ -708,6 +779,8 @@ def main() -> int:
                 "stage_count": 0,
                 "debug_exception_state": None,
                 "scheduler_cutover_proof_state": None,
+                "retrieval_alignment_state": None,
+                "retrieval_provider_drift_state": None,
             }
         if incident_read_violations or incident_violations:
             gate_status = "fail"

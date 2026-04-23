@@ -173,14 +173,20 @@ def stub_aion_server() -> _StubAionServer:
             },
         },
         "memory_retrieval": {
+            "semantic_embedding_provider_requested": "openai",
+            "semantic_embedding_provider_effective": "openai",
+            "semantic_embedding_model_requested": "text-embedding-3-small",
+            "semantic_embedding_model_effective": "text-embedding-3-small",
+            "semantic_embedding_execution_class": "provider_owned_openai_api",
+            "semantic_embedding_production_baseline_state": "aligned_openai_provider_owned",
             "retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy",
             "retrieval_lifecycle_relation_source_policy_owner": "relation_source_retrieval_policy",
             "retrieval_lifecycle_relation_source_posture": "optional_after_foreground_baseline",
             "retrieval_lifecycle_relation_source_state": "optional_family_not_enabled",
             "retrieval_lifecycle_relation_source_enabled": False,
-            "retrieval_lifecycle_provider_drift_state": "compatibility_fallback_active",
-            "retrieval_lifecycle_alignment_state": "lifecycle_gaps_present",
-            "retrieval_lifecycle_pending_gaps": ["provider_baseline_not_aligned"],
+            "retrieval_lifecycle_provider_drift_state": "aligned_target_provider",
+            "retrieval_lifecycle_alignment_state": "aligned_with_defined_lifecycle_baseline",
+            "retrieval_lifecycle_pending_gaps": [],
         },
         "observability": {
             "policy_owner": "incident_evidence_export_policy",
@@ -300,11 +306,20 @@ def stub_aion_server() -> _StubAionServer:
                     "event_debug_shared_ingress_sunset_reason": "shared_debug_route_break_glass_only",
                 },
                 "memory_retrieval": {
+                    "semantic_embedding_provider_requested": "openai",
+                    "semantic_embedding_provider_effective": "openai",
+                    "semantic_embedding_model_requested": "text-embedding-3-small",
+                    "semantic_embedding_model_effective": "text-embedding-3-small",
+                    "semantic_embedding_execution_class": "provider_owned_openai_api",
+                    "semantic_embedding_production_baseline_state": "aligned_openai_provider_owned",
                     "retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy",
                     "retrieval_lifecycle_relation_source_policy_owner": "relation_source_retrieval_policy",
                     "retrieval_lifecycle_relation_source_posture": "optional_after_foreground_baseline",
                     "retrieval_lifecycle_relation_source_state": "optional_family_not_enabled",
                     "retrieval_lifecycle_relation_source_enabled": False,
+                    "retrieval_lifecycle_provider_drift_state": "aligned_target_provider",
+                    "retrieval_lifecycle_alignment_state": "aligned_with_defined_lifecycle_baseline",
+                    "retrieval_lifecycle_pending_gaps": [],
                 },
                 "learned_state": {
                     "policy_owner": "learned_state_inspection_policy",
@@ -484,11 +499,20 @@ def _write_incident_bundle(
                     "event_debug_shared_ingress_sunset_reason": "shared_debug_route_break_glass_only",
                 },
             "memory_retrieval": {
+                "semantic_embedding_provider_requested": "openai",
+                "semantic_embedding_provider_effective": "openai",
+                "semantic_embedding_model_requested": "text-embedding-3-small",
+                "semantic_embedding_model_effective": "text-embedding-3-small",
+                "semantic_embedding_execution_class": "provider_owned_openai_api",
+                "semantic_embedding_production_baseline_state": "aligned_openai_provider_owned",
                 "retrieval_lifecycle_policy_owner": "retrieval_lifecycle_policy",
                 "retrieval_lifecycle_relation_source_policy_owner": "relation_source_retrieval_policy",
                 "retrieval_lifecycle_relation_source_posture": "optional_after_foreground_baseline",
                 "retrieval_lifecycle_relation_source_state": "optional_family_not_enabled",
                 "retrieval_lifecycle_relation_source_enabled": False,
+                "retrieval_lifecycle_provider_drift_state": "aligned_target_provider",
+                "retrieval_lifecycle_alignment_state": "aligned_with_defined_lifecycle_baseline",
+                "retrieval_lifecycle_pending_gaps": [],
             },
             "learned_state": {
                 "policy_owner": "learned_state_inspection_policy",
@@ -710,9 +734,15 @@ def test_release_smoke_allows_optional_deployment_evidence_to_be_omitted(
     assert summary["retrieval_lifecycle_relation_source_posture"] == "optional_after_foreground_baseline"
     assert summary["retrieval_lifecycle_relation_source_state"] == "optional_family_not_enabled"
     assert summary["retrieval_lifecycle_relation_source_enabled"] is False
-    assert summary["retrieval_lifecycle_provider_drift_state"] == "compatibility_fallback_active"
-    assert summary["retrieval_lifecycle_alignment_state"] == "lifecycle_gaps_present"
-    assert summary["retrieval_lifecycle_pending_gaps"] == ["provider_baseline_not_aligned"]
+    assert summary["retrieval_semantic_embedding_provider_requested"] == "openai"
+    assert summary["retrieval_semantic_embedding_provider_effective"] == "openai"
+    assert summary["retrieval_semantic_embedding_model_requested"] == "text-embedding-3-small"
+    assert summary["retrieval_semantic_embedding_model_effective"] == "text-embedding-3-small"
+    assert summary["retrieval_semantic_embedding_execution_class"] == "provider_owned_openai_api"
+    assert summary["retrieval_semantic_embedding_production_baseline_state"] == "aligned_openai_provider_owned"
+    assert summary["retrieval_lifecycle_provider_drift_state"] == "aligned_target_provider"
+    assert summary["retrieval_lifecycle_alignment_state"] == "aligned_with_defined_lifecycle_baseline"
+    assert summary["retrieval_lifecycle_pending_gaps"] == []
     assert summary["reflection_external_driver_policy_owner"] == "deferred_reflection_external_worker"
     assert summary["reflection_external_driver_entrypoint_path"] == "scripts/run_reflection_queue_once.py"
     assert summary["reflection_external_driver_baseline_ready"] is False
@@ -744,6 +774,27 @@ def test_release_smoke_fails_when_relation_source_policy_evidence_is_missing(
 
     assert result.returncode != 0
     assert "retrieval_lifecycle_relation_source_policy_owner" in result.stderr
+
+
+def test_release_smoke_fails_when_retrieval_provider_alignment_drifts(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original = dict(_StubAionHandler.health_payload["memory_retrieval"])
+    broken = dict(original)
+    broken["semantic_embedding_provider_effective"] = "deterministic"
+    broken["semantic_embedding_execution_class"] = "deterministic_baseline"
+    broken["semantic_embedding_production_baseline_state"] = "deterministic_compatibility_baseline"
+    broken["retrieval_lifecycle_provider_drift_state"] = "compatibility_fallback_active"
+    broken["retrieval_lifecycle_alignment_state"] = "lifecycle_gaps_present"
+    broken["retrieval_lifecycle_pending_gaps"] = ["provider_baseline_not_aligned"]
+    _StubAionHandler.health_payload["memory_retrieval"] = broken
+    try:
+        result = _run_release_smoke("-BaseUrl", stub_aion_server.base_url, cwd=ROOT)
+    finally:
+        _StubAionHandler.health_payload["memory_retrieval"] = original
+
+    assert result.returncode != 0
+    assert "semantic_embedding_provider_effective" in result.stderr
 
 
 def test_release_smoke_fails_when_telegram_conversation_health_surface_is_missing(
@@ -861,6 +912,13 @@ def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_r
     assert summary["incident_evidence_proactive_production_baseline_state"] == (
         "external_scheduler_target_owner"
     )
+    assert summary["incident_evidence_retrieval_policy_owner"] == "retrieval_lifecycle_policy"
+    assert summary["incident_evidence_retrieval_provider_requested"] == "openai"
+    assert summary["incident_evidence_retrieval_provider_effective"] == "openai"
+    assert summary["incident_evidence_retrieval_execution_class"] == "provider_owned_openai_api"
+    assert summary["incident_evidence_retrieval_baseline_state"] == "aligned_openai_provider_owned"
+    assert summary["incident_evidence_retrieval_provider_drift_state"] == "aligned_target_provider"
+    assert summary["incident_evidence_retrieval_alignment_state"] == "aligned_with_defined_lifecycle_baseline"
     assert summary["scheduler_external_cutover_proof_owner"] == "external_scheduler_cutover_proof_policy"
     assert summary["scheduler_external_cutover_proof_ready"] is False
     assert summary["scheduler_external_maintenance_evidence_state"] == "missing_external_run_evidence"
@@ -905,6 +963,13 @@ def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_pro
     assert summary["incident_bundle_proactive_production_baseline_state"] == (
         "external_scheduler_target_owner"
     )
+    assert summary["incident_bundle_retrieval_policy_owner"] == "retrieval_lifecycle_policy"
+    assert summary["incident_bundle_retrieval_provider_requested"] == "openai"
+    assert summary["incident_bundle_retrieval_provider_effective"] == "openai"
+    assert summary["incident_bundle_retrieval_execution_class"] == "provider_owned_openai_api"
+    assert summary["incident_bundle_retrieval_baseline_state"] == "aligned_openai_provider_owned"
+    assert summary["incident_bundle_retrieval_provider_drift_state"] == "aligned_target_provider"
+    assert summary["incident_bundle_retrieval_alignment_state"] == "aligned_with_defined_lifecycle_baseline"
 
 
 def test_release_smoke_fails_when_incident_evidence_bundle_is_partial(
@@ -959,6 +1024,38 @@ def test_release_smoke_fails_when_incident_evidence_debug_posture_is_not_dedicat
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "Smoke request failed" in combined_output
     assert "shared debug ingress is not retired to break-glass-only mode" in combined_output
+
+
+def test_release_smoke_fails_when_incident_evidence_retrieval_alignment_drifts(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    incident_evidence = _StubAionHandler.event_payload["incident_evidence"]
+    assert isinstance(incident_evidence, dict)
+    policy_posture = dict(incident_evidence["policy_posture"])
+    retrieval_policy = dict(policy_posture["memory_retrieval"])
+    retrieval_policy["semantic_embedding_provider_effective"] = "deterministic"
+    retrieval_policy["semantic_embedding_execution_class"] = "deterministic_baseline"
+    retrieval_policy["semantic_embedding_production_baseline_state"] = "deterministic_compatibility_baseline"
+    retrieval_policy["retrieval_lifecycle_provider_drift_state"] = "compatibility_fallback_active"
+    retrieval_policy["retrieval_lifecycle_alignment_state"] = "lifecycle_gaps_present"
+    retrieval_policy["retrieval_lifecycle_pending_gaps"] = ["provider_baseline_not_aligned"]
+    policy_posture["memory_retrieval"] = retrieval_policy
+    _StubAionHandler.event_payload["incident_evidence"] = {
+        **incident_evidence,
+        "policy_posture": policy_posture,
+    }
+
+    result = _run_release_smoke(
+        "-BaseUrl",
+        stub_aion_server.base_url,
+        "-IncludeDebug",
+        cwd=ROOT,
+    )
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "Smoke request failed" in combined_output
+    assert "semantic_embedding_provider_effective" in combined_output
 
 
 def test_release_smoke_fails_when_deployment_evidence_is_stale(
