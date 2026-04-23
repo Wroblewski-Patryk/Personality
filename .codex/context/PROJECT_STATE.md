@@ -320,9 +320,13 @@ Last updated: 2026-04-23
   notes, planning docs, and repository context now all describe the same
   aligned OpenAI retrieval-provider production baseline and strict evidence
   path.
-- 2026-04-23: `PRJ-588` is now the first `READY` task; the next slice should
-  freeze the richer learned personality-growth introspection contract now that
-  the remaining retrieval-provider production drift is closed.
+- 2026-04-23: `PRJ-588` is complete: the repo now records one bounded backend
+  contract for personality-growth introspection covering learned knowledge,
+  learned preferences, role/skill metadata, reflection-backed summaries, and
+  planning continuity, while explicitly rejecting self-modifying executable
+  skill learning.
+- 2026-04-23: `PRJ-589` is now the first `READY` task; the next slice should
+  widen the actual internal inspection surfaces to match that frozen contract.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.

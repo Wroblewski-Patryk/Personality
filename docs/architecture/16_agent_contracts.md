@@ -766,6 +766,15 @@ Canonical introspection surfaces for that baseline:
      `/health.learned_state`
    - exists so release smoke, behavior validation, and future UI readiness do
      not depend only on live health calls during incident review
+5. learned personality-growth introspection remains explicitly bounded:
+   - it may expose learned preferences, learned knowledge summaries, bounded
+     reflection outputs, selected role metadata, selected skill metadata, and
+     planning continuity
+   - it must not imply self-modifying executable skill learning, code
+     generation ownership, or a second tool-execution path outside planning and
+     action
+   - tool use remains governed by the existing planning, permission-gate, and
+     action boundary even when future UI inspects learned-state surfaces
 
 ---
 

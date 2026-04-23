@@ -33,6 +33,10 @@ partially resolved areas:
      than a rich personality-growth inspection bundle
    - future UI or admin work should build on richer backend-owned truth, not on
      frontend reconstruction
+   - `PRJ-588` now freezes the bounded contract:
+     learned growth may expose knowledge/preference summaries, role-skill
+     metadata, reflection-backed summaries, and planning continuity, but not
+     self-modifying executable skill learning
 5. organizer-tool production posture
    - ClickUp, Google Calendar, and Google Drive slices exist, but production
      readiness is still fragmented across per-provider credential states and

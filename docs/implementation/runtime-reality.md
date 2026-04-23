@@ -1163,6 +1163,15 @@ Current limitation:
 - debug-mode `incident_evidence.policy_posture["learned_state"]` mirrors that
   health-level owner or path contract so release smoke and behavior-validation
   gates can verify future-UI inspection readiness from exported evidence too
+- the current bounded interpretation of `personality growth introspection` is:
+  - learned preferences and learned knowledge summaries from repository-owned
+    profile, runtime preferences, and conclusions
+  - role and skill metadata visibility, not executable self-modifying skill
+    learning
+  - planning continuity through active goals, tasks, milestones, and pending
+    proposals
+  - reflection-backed growth signals remain summaries owned by memory and
+    reflection systems, not a second growth engine
 - runtime `system_debug.adaptive_state["web_knowledge_tools"]` now mirrors the
   same selected provider-backed posture as `/health.connectors.web_knowledge_tools`
   for operator triage and future UI bootstrap

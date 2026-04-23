@@ -50,6 +50,10 @@ New groups:
     - release smoke, exported incident evidence, bundles, and CI behavior
       validation now fail on retrieval drift
 - `PRJ-588..PRJ-591` Learned-State And Personality-Growth Introspection
+  - Status: in progress
+  - First slice:
+    - freeze the bounded backend contract for personality-growth introspection
+      before widening internal inspection payloads
 - `PRJ-592..PRJ-595` Production Organizer-Tool Readiness
 
 Why this order:
@@ -5024,3 +5028,12 @@ This phase is complete when:
 - `PRJ-496` is complete: the repo now records one explicit production cadence
   owner baseline with `externalized` scheduler execution as the target posture
   for maintenance and proactive ticks.
+- `PRJ-588` Freeze the backend introspection contract for learned personality growth.
+  - Result:
+    - one explicit bounded contract now defines personality-growth
+      introspection as learned knowledge, learned preferences, role/skill
+      metadata, reflection-backed summaries, and planning continuity
+    - the contract explicitly rejects self-modifying executable skill learning
+      or any second execution path outside planning/action
+  - Validation:
+    - architecture/product/runtime cross-review

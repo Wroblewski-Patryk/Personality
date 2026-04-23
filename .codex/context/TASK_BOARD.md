@@ -174,9 +174,14 @@ Last updated: 2026-04-23
   aligns with the OpenAI retrieval baseline, release smoke plus incident
   evidence fail on retrieval drift, and docs/context truth now describe the
   same aligned provider-owned baseline and strict evidence path.
-- `PRJ-588` is now the first `READY` slice because retrieval baseline drift is
-  closed and the next remaining architecture gap is richer introspection of
-  learned personality growth for future UI and operator tooling.
+- `PRJ-588` is complete: the repo now records one explicit bounded backend
+  contract for personality-growth introspection, separating learned knowledge,
+  learned preferences, role/skill metadata, reflection-backed summaries, and
+  planning continuity while explicitly rejecting self-modifying executable
+  skill learning.
+- `PRJ-589` is now the first `READY` slice because the contract is frozen and
+  the next step is widening the actual internal inspection surfaces to match
+  it.
 
 ## READY
 
@@ -445,25 +450,30 @@ Last updated: 2026-04-23
     - the queue now advances to learned-state and personality-growth
       introspection in `PRJ-588`
 
-- [ ] PRJ-588 Freeze the backend introspection contract for learned personality growth
+- [x] PRJ-588 Freeze the backend introspection contract for learned personality growth
   - Owner: Planner
   - Group: Learned-State And Personality-Growth Introspection
   - Depends on: PRJ-587
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Done when:
     - the repo records one explicit backend contract for exposing learned
       roles, selected skill metadata, reflection outputs, and planning
       continuity without pretending to expose self-modifying executable skills
   - Validation:
     - architecture/product cross-review
+  - Result:
+    - the learned-state lane now has one explicit bounded contract for
+      personality-growth introspection
+    - future widening stays backend-owned and must not imply self-modifying
+      executable skill learning
 
 - [ ] PRJ-589 Expose richer backend-owned learned-state inspection surfaces
   - Owner: Backend Builder
   - Group: Learned-State And Personality-Growth Introspection
   - Depends on: PRJ-588
   - Priority: P1
-  - Status: BACKLOG
+  - Status: READY
   - Done when:
     - internal inspection surfaces expose richer role, skill, preference,
       reflection, and planning-growth summaries for future UI consumption
