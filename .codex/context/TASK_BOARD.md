@@ -1,6 +1,6 @@
 # TASK_BOARD
 
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 
 ## Agent Workflow Refresh (2026-04-18)
 
@@ -208,8 +208,42 @@ Last updated: 2026-04-23
 - the queue seeded through `PRJ-595` is now complete; no seeded `READY`,
   `BACKLOG`, or `FUTURE` slice remains after the organizer-tool production
   readiness lane.
+- `PRJ-596` is complete: fresh production analysis now seeds the next queue
+  through `PRJ-611`, focused on the remaining productization gaps between a
+  healthy no-UI `v1` runtime and a production-ready external-tool learning
+  baseline.
+- the next queue intentionally targets four live gaps:
+  - Coolify deployment automation is still not a proven repo-driven baseline
+  - the organizer-tool stack is machine-visible but still blocked by provider
+    credentials in production
+  - bounded search/browser/tool reads still lack an explicit durable
+    tool-grounded learning capture contract
+  - future UI/admin work still needs one clearer backend capability catalog for
+    tools, roles, and metadata-only skills
+- `PRJ-597` is now the first `READY` slice because deploy automation drift can
+  silently invalidate all later provider-activation and tool-learning work.
 
 ## READY
+
+- [ ] PRJ-597 Freeze the repo-driven Coolify deployment-automation baseline
+  - Owner: Planning Agent
+  - Group: Coolify Deployment Automation Reliability
+  - Depends on: PRJ-596
+  - Priority: P0
+  - Status: READY
+  - Why now:
+    - live production runtime is healthy, but user-observed behavior shows
+      that pushes do not reliably result in automatic Coolify deploys
+    - repo-driven deployment automation must be frozen before tool activation
+      or production learning slices rely on it
+  - Done when:
+    - one explicit production baseline records how repo-driven deploy
+      automation is expected to start on Coolify
+    - proof surfaces, rollback posture, and operator checks are frozen before
+      deeper deployment-automation enforcement or evidence work
+  - Validation:
+    - architecture/ops/deployment cross-review plus live production and
+      Coolify operational truth
 
 - [x] PRJ-575 Analyze post-v1 architecture gaps and seed the next execution queue
   - Owner: Planning Agent

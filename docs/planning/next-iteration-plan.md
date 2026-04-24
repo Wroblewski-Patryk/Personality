@@ -7,6 +7,194 @@ This plan translates the repo analysis into an execution roadmap that brings the
 The goal is not to add more features first.
 The goal is to make the current AION runtime more correct, more inspectable, and easier to extend without architectural drift.
 
+## Planned On 2026-04-24 After Organizer-Tool Production Readiness
+
+`PRJ-576..PRJ-595` closed the main architecture-to-production gaps for the
+no-UI `v1` baseline. Fresh production truth now shows a different class of
+remaining work: the runtime is healthy, but the product is not yet fully ready
+for real external-tool onboarding and tool-grounded learning.
+
+### Fresh Production Gap Snapshot
+
+Observed from live production release smoke, canonical contracts, runtime
+reality, and the operator report from Coolify:
+
+- core runtime topology is healthy:
+  - Telegram round-trip is healthy
+  - durable attention is active
+  - external cadence ownership is active
+  - proactive production baseline is active
+  - retrieval baseline is aligned to OpenAI
+- organizer-tool posture is now explicit and behavior-proven, but live
+  production still reports `provider_credentials_missing` for:
+  - ClickUp `create_task|list_tasks|update_task`
+  - Google Calendar `read_availability`
+  - Google Drive `list_files`
+- bounded search and browser reads already exist, but there is still no
+  explicit backend contract for how approved external-read results become
+  durable learned knowledge without creating a second execution path outside
+  planning and action
+- user-observed Coolify behavior shows that repo pushes do not always result
+  in automatic deployment, so repository-driven deployment automation is not
+  yet a proven production baseline
+- future UI/admin work already has learned-state and API-readiness surfaces,
+  but it still lacks one clearer backend capability catalog that combines:
+  - approved tools
+  - selected role posture
+  - metadata-only skill visibility
+  - provider readiness
+
+### New Queue
+
+The next queue is now seeded through `PRJ-611`.
+
+New groups:
+
+- `PRJ-597..PRJ-599` Coolify Deployment Automation Reliability
+- `PRJ-600..PRJ-603` Organizer-Tool Credential Activation
+- `PRJ-604..PRJ-607` Tool-Grounded Learning Capture
+- `PRJ-608..PRJ-611` Capability Catalog And Future-UI Bootstrap
+
+Why this order:
+
+- deployment automation comes first, because provider activation and future
+  tool-learning slices should not depend on manual deploy luck
+- organizer credentials come next, because the first production tool stack is
+  already contractually frozen and behavior-proven but still blocked in live
+  runtime
+- tool-grounded learning should be frozen before external reads start to
+  matter more operationally, so learned-state growth stays truthful and
+  action-owned
+- capability-catalog work comes last, because it should summarize real backend
+  truth after deploy automation, tool activation, and learning capture are
+  clearer
+
+### Group 95 - Coolify Deployment Automation Reliability
+
+- `PRJ-597` Freeze the repo-driven Coolify deployment-automation baseline.
+  - Result:
+    - one explicit production baseline records how pushes are expected to turn
+      into deploys on Coolify
+    - proof surfaces, rollback posture, and operator checks are frozen before
+      deeper deployment automation enforcement work
+  - Validation:
+    - architecture/ops/deployment cross-review plus live Coolify truth
+
+- `PRJ-598` Add machine-visible release evidence for deployment automation posture.
+  - Result:
+    - release evidence and operator guidance prove whether production deploy
+      automation is healthy, delayed, or manual-fallback-only
+  - Validation:
+    - targeted pytest coverage
+    - release smoke or deploy evidence checks
+
+- `PRJ-599` Sync docs/context for the deployment-automation baseline.
+  - Result:
+    - runbook, planning truth, and repository context describe the same
+      repo-driven Coolify deploy posture and fallback path
+  - Validation:
+    - doc-and-context sync
+
+### Group 96 - Organizer-Tool Credential Activation
+
+- `PRJ-600` Freeze the production credential-activation baseline for organizer tools.
+  - Result:
+    - one explicit operator baseline records which secrets, opt-ins, and
+      provider-specific readiness checks are required before the first
+      organizer-tool stack is considered live
+  - Validation:
+    - architecture/product/ops cross-review
+
+- `PRJ-601` Expose one actionable onboarding surface for organizer-tool activation.
+  - Result:
+    - backend surfaces provide one operator-facing activation snapshot with
+      credential gaps, opt-in posture, and provider-specific next actions
+  - Validation:
+    - relevant pytest coverage
+    - `/health.connectors` checks
+
+- `PRJ-602` Add release and incident evidence for organizer-tool activation posture.
+  - Result:
+    - smoke and incident evidence distinguish a frozen organizer baseline from
+      a fully provider-ready organizer stack
+  - Validation:
+    - targeted pytest coverage
+    - smoke or incident-evidence checks
+
+- `PRJ-603` Sync docs/context for organizer-tool credential activation.
+  - Result:
+    - contracts, runtime reality, testing guidance, ops notes, and planning
+      truth align on how organizer-tool activation becomes production-real
+  - Validation:
+    - doc-and-context sync
+
+### Group 97 - Tool-Grounded Learning Capture
+
+- `PRJ-604` Freeze the bounded tool-grounded learning contract.
+  - Result:
+    - one explicit contract defines how approved external reads may become
+      durable learned knowledge, preferences, or reflection signals without
+      introducing a second execution path or self-modifying skill learning
+  - Validation:
+    - architecture/product/runtime cross-review
+
+- `PRJ-605` Implement bounded memory capture for approved external-read results.
+  - Result:
+    - approved search/browser/connector read results can contribute bounded
+      learned knowledge through existing memory/reflection ownership instead of
+      staying purely ephemeral turn-local data
+  - Validation:
+    - relevant pytest coverage
+    - internal inspection checks
+
+- `PRJ-606` Add behavior and release evidence for tool-grounded learning.
+  - Result:
+    - behavior validation, inspection surfaces, and release evidence prove that
+      approved external reads can influence later cognition without bypassing
+      planning/action ownership
+  - Validation:
+    - targeted pytest coverage
+    - behavior-validation or smoke evidence
+
+- `PRJ-607` Sync docs/context for tool-grounded learning capture.
+  - Result:
+    - canonical contracts, runtime reality, testing guidance, ops notes, and
+      context truth align on the bounded tool-grounded learning baseline
+  - Validation:
+    - doc-and-context sync
+
+### Group 98 - Capability Catalog And Future-UI Bootstrap
+
+- `PRJ-608` Freeze the backend capability-catalog baseline.
+  - Result:
+    - one explicit backend contract records how future UI/admin surfaces should
+      inspect tool readiness, role posture, and metadata-only skills together
+  - Validation:
+    - architecture/product cross-review
+
+- `PRJ-609` Expose one backend capability catalog for future UI/admin callers.
+  - Result:
+    - backend inspection surfaces expose a bounded capability catalog instead
+      of forcing future UI to reconstruct it from scattered `/health` blocks
+  - Validation:
+    - relevant pytest coverage
+    - internal inspection checks
+
+- `PRJ-610` Add release and regression evidence for the capability catalog.
+  - Result:
+    - regression and smoke evidence pin the capability-catalog contract so UI
+      bootstrap work can trust the backend surface
+  - Validation:
+    - targeted pytest coverage
+    - smoke or inspection evidence
+
+- `PRJ-611` Sync docs/context for the capability-catalog baseline.
+  - Result:
+    - docs and repository truth align on the backend capability-catalog
+      surface and its relationship to future UI/admin work
+  - Validation:
+    - doc-and-context sync
+
 ## Planned On 2026-04-23 After Post-V1 Production Hardening
 
 `PRJ-572..PRJ-574` closed the most urgent post-v1 operational drift: production

@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 
 ## Product Snapshot
 
@@ -9,7 +9,7 @@ Last updated: 2026-04-23
   structured pipeline, replies through API or Telegram, and learns lightweight
   user preferences over time
 - Commercial model: TBD
-- Current phase: no-UI V1 baseline achieved; next architecture-closure queue seeded
+- Current phase: no-UI V1 baseline achieved; next external-tool activation queue seeded
 - 2026-04-22: product staging is now explicit:
   - `MVP` is already exceeded by the current runtime
   - `v1` means a no-UI but production-usable life assistant over Telegram or
@@ -356,6 +356,19 @@ Last updated: 2026-04-23
 - 2026-04-24: the queue seeded through `PRJ-595` is now complete; no seeded
   organizer-tool follow-up remains until the next fresh architecture or
   product gap analysis.
+- 2026-04-24: `PRJ-596` is complete: fresh production/runtime analysis now
+  seeds the next queue through `PRJ-611`, focused on the next blockers between
+  a healthy no-UI `v1` runtime and a production-ready external-tool learning
+  baseline.
+- 2026-04-24: the next queue is intentionally ordered around four live gaps:
+  - Coolify deployment automation reliability
+  - organizer-tool credential activation in production
+  - bounded tool-grounded learning capture for external reads
+  - one clearer backend capability catalog for future UI/admin work
+- 2026-04-24: `PRJ-597` is now the first `READY` task; the next slice should
+  freeze the repo-driven Coolify deployment-automation baseline before deeper
+  provider activation and tool-grounded learning work assumes automatic deploy
+  behavior.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.

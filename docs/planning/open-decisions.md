@@ -4,6 +4,46 @@
 
 The current repo already works as an MVP slice, but several architecture-level docs describe systems that are not implemented yet. This file keeps the next real decisions visible and tied to the current codebase.
 
+## Post-V1 Tool Activation And Deployment Automation Analysis (2026-04-24)
+
+Fresh comparison of canonical docs, runtime reality, live production release
+smoke, and operator observations now shows a new class of remaining gaps.
+Core runtime topology is healthy, but the system is not yet fully ready for
+real-world tool onboarding and tool-grounded learning.
+
+1. Coolify deployment automation reliability
+   - not yet resolved
+   - production can be healthy after a deploy, but user-observed behavior
+     shows that pushes do not always trigger an automatic deploy on Coolify
+   - the repo needs one explicit baseline for what "repo-driven deploy" means,
+     how to prove it, and how to triage manual-fallback posture
+2. organizer-tool credential activation
+   - not yet resolved
+   - `/health.connectors.organizer_tool_stack` is machine-visible and
+     behavior-proven, but live production still reports
+     `provider_credentials_missing`
+   - the repo needs one explicit baseline for when the first ClickUp +
+     Calendar + Drive stack becomes actually provider-ready
+3. tool-grounded learning capture
+   - not yet resolved
+   - bounded search, browser, and connector reads already exist, but there is
+     still no explicit contract for how approved external reads become durable
+     learned knowledge without creating a second tool-execution path
+   - any solution must keep learning inside memory/reflection ownership and
+     must not imply self-modifying executable skill learning
+4. capability catalog for future UI/admin work
+   - not yet resolved
+   - learned-state and API-readiness surfaces exist, but future UI or admin
+     work still lacks one clearer backend catalog that combines approved tools,
+     provider readiness, selected role posture, and metadata-only skills
+
+Queue seeded from this analysis:
+
+- `PRJ-597..PRJ-599` Coolify Deployment Automation Reliability
+- `PRJ-600..PRJ-603` Organizer-Tool Credential Activation
+- `PRJ-604..PRJ-607` Tool-Grounded Learning Capture
+- `PRJ-608..PRJ-611` Capability Catalog And Future-UI Bootstrap
+
 ## Post-V1 Architecture Gap Analysis (2026-04-23)
 
 Fresh comparison of canonical docs, runtime reality, and live production
