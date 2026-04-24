@@ -98,22 +98,26 @@ Queue update (2026-04-24):
     - trigger deploy webhook helper first
     - if webhook fallback is unavailable, use Coolify UI redeploy for the same
       canonical app
-- the next active slice is `PRJ-598`, which should add machine-visible release
-  evidence for whether the primary automation path actually fired or whether
-  fallback was required.
+- `PRJ-598` is complete: repo runtime, deploy evidence artifacts, exported
+  incident evidence, and release smoke now share one deployment-provenance
+  contract for source automation versus webhook/UI fallback.
+- the next active slice is `PRJ-599`, which should synchronize runbook,
+  planning truth, and repository context around that shared provenance
+  contract before organizer-tool credential activation begins.
 
 - `PRJ-598` Add machine-visible release evidence for deployment automation posture.
   - Result:
-    - release evidence and operator guidance prove whether production deploy
-      automation is healthy, delayed, or manual-fallback-only
+    - `/health.deployment`, deploy webhook evidence, incident evidence, and
+      release smoke now expose the same deployment-provenance owner and
+      primary/fallback trigger contract
   - Validation:
-    - targeted pytest coverage
-    - release smoke or deploy evidence checks
+    - `.\.venv\Scripts\python -m pytest -q tests/test_observability_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
 
 - `PRJ-599` Sync docs/context for the deployment-automation baseline.
   - Result:
     - runbook, planning truth, and repository context describe the same
-      repo-driven Coolify deploy posture and fallback path
+      repo-driven Coolify deploy posture, canonical app identity, and
+      primary-versus-fallback provenance path
   - Validation:
     - doc-and-context sync
 

@@ -378,10 +378,14 @@ Last updated: 2026-04-24
   shared deployment-automation provenance contract, including the canonical
   Coolify app identity and explicit `source_automation` versus
   `webhook_manual_fallback|ui_manual_fallback` trigger posture.
-- 2026-04-24: `PRJ-599` is now the first `READY` task; the next slice should
-  synchronize runbook, planning truth, and repository context around the new
-  deployment provenance contract before organizer-tool credential activation
-  begins.
+- 2026-04-24: `PRJ-599` is complete: runbook, planning docs, repository
+  context, and task records now describe the same deployment-provenance
+  baseline and explicitly note that release smoke should fail fast on older
+  production until the new contract is deployed.
+- 2026-04-24: `PRJ-600` is now the first `READY` task; the next slice should
+  freeze the production credential-activation baseline for the first
+  organizer-tool stack before trying to make ClickUp, Calendar, and Drive
+  fully live in production.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.

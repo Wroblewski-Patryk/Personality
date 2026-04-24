@@ -227,18 +227,38 @@ Last updated: 2026-04-24
   exported incident evidence, and release smoke now share one machine-visible
   deployment-automation posture with explicit provenance fields for primary
   source automation versus webhook/UI fallback.
-- `PRJ-599` is now the first `READY` slice because the new deployment
-  provenance contract is implemented in runtime and smoke, but canonical docs
-  and planning/context truth still need to describe the same baseline.
+- `PRJ-599` is complete: runbook, planning truth, and repository context now
+  describe the same repo-driven Coolify deployment-provenance baseline as the
+  runtime and smoke contract.
+- `PRJ-600` is now the first `READY` slice because deployment provenance is
+  frozen end-to-end and the next live product gap is still organizer-tool
+  credential activation in production.
 
 ## READY
 
-- [ ] PRJ-599 Sync docs/context for the deployment-automation baseline
-  - Owner: Ops/Release
+- [ ] PRJ-600 Freeze the production credential-activation baseline for organizer tools
+  - Owner: Planner
+  - Group: Organizer-Tool Credential Activation
+  - Depends on: PRJ-599
+  - Priority: P0
+  - Status: READY
+  - Why now:
+    - the first organizer-tool stack is already behavior-proven and
+      machine-visible, but production still cannot treat it as truly live
+      until credential posture and provider-specific activation requirements
+      are frozen in one place
+  - Done when:
+    - one explicit operator baseline records required secrets, opt-ins, and
+      provider-specific readiness checks for the first organizer-tool stack
+  - Validation:
+    - architecture/product/ops cross-review
+
+- [x] PRJ-599 Sync docs/context for the deployment-automation baseline
+  - Owner: Product Docs Agent
   - Group: Coolify Deployment Automation Reliability
   - Depends on: PRJ-598
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Why now:
     - runtime and release smoke now expose deployment provenance through one
       shared contract, but the runbook and planning truth still need the same
@@ -248,6 +268,8 @@ Last updated: 2026-04-24
       repo-driven Coolify automation posture and bounded fallback evidence path
   - Validation:
     - doc-and-context sync
+    - release-smoke wording cross-check against the current production failure
+      mode before redeploy
 
 - [x] PRJ-598 Add machine-visible release evidence for deployment automation posture
   - Owner: Ops/Release

@@ -53,6 +53,14 @@ Queue seeded from this analysis:
 - `PRJ-604..PRJ-607` Tool-Grounded Learning Capture
 - `PRJ-608..PRJ-611` Capability Catalog And Future-UI Bootstrap
 
+Current execution note:
+
+- `PRJ-598` is complete in repo truth: deployment provenance is now
+  machine-visible in `/health.deployment`, deploy webhook evidence, exported
+  incident evidence, and release smoke.
+- `PRJ-599` is the current docs/context sync slice before organizer-tool
+  credential activation begins.
+
 ## Post-V1 Architecture Gap Analysis (2026-04-23)
 
 Fresh comparison of canonical docs, runtime reality, and live production

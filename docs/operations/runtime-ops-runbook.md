@@ -603,6 +603,22 @@ Repo-driven Coolify deployment-automation baseline (`PRJ-597`):
      same canonical app
    - fallback does not replace the repo-driven baseline; it is the explicit
      recovery path when automation proof is missing
+5. machine-visible provenance baseline (`PRJ-598`):
+   - `/health.deployment.deployment_automation_policy_owner` must be
+     `coolify_repo_deploy_automation`
+   - `/health.deployment.deployment_automation_baseline.primary_trigger_mode`
+     must stay `source_automation`
+   - `/health.deployment.deployment_automation_baseline.fallback_trigger_modes`
+     must stay `webhook_manual_fallback|ui_manual_fallback`
+   - `/health.deployment.canonical_coolify_app.application_id` is the machine-
+     readable identity for the canonical production app
+   - webhook evidence artifacts
+     (`kind=coolify_deploy_webhook_evidence`) must include
+     `policy_owner`, `trigger_mode`, `trigger_class`, and
+     `canonical_coolify_app`
+   - release smoke now fails fast when any of those provenance fields are
+     missing, which is the intended signal that production is still on an
+     older deploy or that evidence is ambiguous
 
 Explicit fallback path (when automation is delayed or missing):
 
@@ -630,6 +646,10 @@ Release smoke ownership:
     `./scripts/run_release_smoke.sh "<deployment_url>" "" "manual-smoke" "false" artifacts/deploy/coolify-webhook.json`
 - deployment evidence verification remains optional so existing smoke posture
   stays backward-compatible when no evidence artifact is available.
+- when deployment evidence is supplied, treat `trigger_class=manual_fallback`
+  as bounded recovery posture, not as proof that source automation is healthy;
+  the primary proof still comes from Coolify deploy history for the canonical
+  app.
 - smoke now fails fast when `/health.release_readiness.ready=false`
   (or when fallback policy-gate checks detect drift on older runtimes).
 - smoke now also fails fast when
