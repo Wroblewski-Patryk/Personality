@@ -202,9 +202,12 @@ Last updated: 2026-04-23
   behavior validation, and runtime behavior scenarios now prove the same
   bounded organizer-tool posture that `/health.connectors.organizer_tool_stack`
   exposes for ClickUp, Calendar, and Drive.
-- `PRJ-595` is now the first `READY` slice because the organizer-tool
-  production baseline is proven in code and the remaining step is syncing docs
-  and context truth.
+- `PRJ-595` is complete: canonical contracts, runtime reality, testing
+  guidance, ops notes, planning docs, and repository context now describe the
+  same first production organizer-tool baseline and its proof path.
+- the queue seeded through `PRJ-595` is now complete; no seeded `READY`,
+  `BACKLOG`, or `FUTURE` slice remains after the organizer-tool production
+  readiness lane.
 
 ## READY
 
@@ -600,12 +603,12 @@ Last updated: 2026-04-23
       `T16.1..T16.3` for ClickUp task reads, Google Calendar availability, and
       Google Drive metadata listing
 
-- [ ] PRJ-595 Sync docs/context for organizer-tool production readiness
+- [x] PRJ-595 Sync docs/context for organizer-tool production readiness
   - Owner: Product Docs
   - Group: Production Organizer-Tool Readiness
   - Depends on: PRJ-594
   - Priority: P2
-  - Status: READY
+  - Status: DONE
   - Done when:
     - docs and context truth align on the first production organizer-tool
       baseline for work-partner and no-UI assistant flows

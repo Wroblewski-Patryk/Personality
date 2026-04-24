@@ -632,6 +632,14 @@ Rules:
    - the metadata-only skill boundary
 5. its `v1` scope is work organization and decision support, not autonomous
    execution outside explicit user-facing turns or approved proactive flows.
+6. the first production organizer-tool stack for this role is explicitly
+   bounded to:
+   - ClickUp `create_task`, `list_tasks`, `update_task`
+   - Google Calendar `read_availability`
+   - Google Drive `list_files`
+   and must stay machine-visible through one shared
+   `/health.connectors.organizer_tool_stack` acceptance surface plus matching
+   smoke, incident-evidence, and behavior-validation proof.
 
 Machine-visible expectation:
 
@@ -639,6 +647,8 @@ Machine-visible expectation:
 2. selected skills and planned skills should remain inspectable metadata
 3. authorized tool use should stay visible through typed intents, permission
    gates, execution envelopes, and action results
+4. organizer-tool production readiness must remain visible through the shared
+   organizer stack snapshot instead of provider-by-provider operator inference
 
 ---
 

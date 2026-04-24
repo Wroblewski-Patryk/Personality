@@ -213,6 +213,16 @@ For meaningful repo changes, leave behind:
       - `T15.1` work-partner organization with bounded search plus ClickUp
         update
       - `T15.2` work-partner decision support with bounded page-read browsing
+      - `T16.1` work-partner ClickUp task listing
+      - `T16.2` work-partner Google Calendar availability reads
+      - `T16.3` work-partner Google Drive metadata listing
+- for organizer-tool production-readiness slices, regression and release-proof
+  evidence from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_api_routes.py`
+  - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+  - `.\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'`
+  - coverage should pin the shared `/health.connectors.organizer_tool_stack`
+    contract plus matching incident-evidence and bundle proof
 - for no-UI `v1` life-assistant workflow slices, regression and behavior
   evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_goal_task_signals.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`

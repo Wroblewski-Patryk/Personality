@@ -214,6 +214,15 @@ posture:
   behavior-validation evidence for:
   - `T15.1` work-partner organization with bounded search plus ClickUp update
   - `T15.2` work-partner decision support with bounded page-read browsing
+- when a release or incident touches organizer-tool readiness, attach evidence
+  for:
+  - `T16.1` work-partner ClickUp task listing
+  - `T16.2` work-partner Google Calendar availability reads
+  - `T16.3` work-partner Google Drive metadata listing
+  - `GET /health.connectors.organizer_tool_stack`
+  - `incident_evidence.policy_posture["connectors.organizer_tool_stack"]`
+  - `health_snapshot.json.connectors.organizer_tool_stack` inside the exported
+    incident-evidence bundle
 
 `GET /health` now also includes a `memory_retrieval` object with semantic
 retrieval posture:
@@ -1236,12 +1245,23 @@ Important health surfaces for current release checks:
   - `task_system.clickup_update_task.state=credentials_missing` means the
     bounded ClickUp update path exists but runtime lacks provider credentials
     for mutation execution
-  - `task_system.clickup_update_task.state=provider_backed_ready` means action
-    may execute bounded `update_task` intents for matched ClickUp tasks while
-    keeping the mutation evidence status-level only
-  - `calendar.google_calendar_read_availability.state=credentials_missing`
-    means the bounded calendar live-read adapter exists but runtime lacks
-    credentials for provider-backed execution
+- `task_system.clickup_update_task.state=provider_backed_ready` means action
+  may execute bounded `update_task` intents for matched ClickUp tasks while
+  keeping the mutation evidence status-level only
+- `/health.connectors.organizer_tool_stack` is the shared operator surface for
+  the frozen first production organizer stack:
+  - `approved_operations`
+  - `read_only_operations`
+  - `confirmation_required_operations`
+  - `user_opt_in_required_operations`
+  - `ready_operations`
+  - `credential_gap_operations`
+  - `readiness_state`
+  Treat this snapshot as the acceptance source of truth instead of inferring
+  readiness from individual provider blocks.
+- `calendar.google_calendar_read_availability.state=credentials_missing`
+  means the bounded calendar live-read adapter exists but runtime lacks
+  credentials for provider-backed execution
   - `calendar.google_calendar_read_availability.state=provider_backed_ready`
     means action may execute only bounded `read_availability` typed intents
     through the Google Calendar adapter

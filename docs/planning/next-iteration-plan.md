@@ -327,6 +327,17 @@ Queue update (2026-04-23):
   - Validation:
     - targeted pytest coverage
     - smoke or behavior-validation evidence
+- Queue update (2026-04-24):
+  - `PRJ-594` is now complete.
+  - release smoke now validates the shared organizer-tool stack contract from
+    `/health.connectors.organizer_tool_stack`
+  - incident evidence and incident-evidence bundles now carry the same
+    organizer-tool posture
+  - runtime behavior scenarios now prove `T16.1..T16.3` for ClickUp task
+    reads, Google Calendar availability reads, and Google Drive metadata
+    listing under work-partner selection
+  - the next active slice is `PRJ-595`, which should synchronize docs and
+    context truth for this production baseline
 
 - `PRJ-595` Sync docs/context for organizer-tool production readiness.
   - Result:
@@ -334,6 +345,14 @@ Queue update (2026-04-23):
       baseline for work-partner and no-UI assistant flows
   - Validation:
     - doc-and-context sync
+
+Queue update (2026-04-24):
+
+- `PRJ-595` is now complete.
+- canonical contracts, runtime reality, testing guidance, ops notes, planning
+  docs, and repository context now describe the same organizer-tool production
+  baseline and its proof path.
+- the queue seeded through `PRJ-595` is now complete.
 
 ## Planned On 2026-04-23 After Production Repair
 

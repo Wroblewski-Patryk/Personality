@@ -37,13 +37,17 @@ partially resolved areas:
    - learned growth remains bounded to backend-owned metadata and summaries,
      not self-modifying executable skill learning
 5. organizer-tool production posture
-   - partially resolved through `PRJ-592`
+   - now resolved through `PRJ-592..PRJ-595`
    - the first bounded production organizer-tool stack is now frozen as:
      - ClickUp `create_task`, `list_tasks`, `update_task`
      - Google Calendar `read_availability`
      - Google Drive `list_files`
-   - remaining work is no longer deciding the stack; it is exposing one shared
-     readiness surface plus smoke/behavior proof for that frozen baseline
+   - `PRJ-593` exposed one shared readiness surface through
+     `/health.connectors.organizer_tool_stack`
+   - `PRJ-594` added smoke, incident-evidence, incident-bundle, and behavior
+     proof for that frozen baseline
+   - `PRJ-595` synchronized canonical docs and repository context for the same
+     agreed posture
 
 Queue seeded from this analysis:
 

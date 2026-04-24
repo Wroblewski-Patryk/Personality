@@ -1040,6 +1040,11 @@ What is already live:
   - `web_browser.suggest_page_review` as a planning-only suggestion surface
   - `task_system.clickup_update_task` as the first bounded organization
     mutation slice beyond task creation and task listing
+- `/health.connectors.organizer_tool_stack` now exposes one shared operator and
+  release-acceptance snapshot for the frozen first production organizer stack:
+  approved operations, read-only operations, confirmation-required operations,
+  opt-in-required operations, ready operations, credential-gap operations, and
+  readiness state
 - these live tool slices still remain bounded:
   - search returns result evidence only
   - browser returns page-read evidence only
@@ -1192,6 +1197,12 @@ Current limitation:
   through:
   - `T15.1` work-partner organization with bounded search plus ClickUp update
   - `T15.2` work-partner decision support with bounded page-read browsing
+- organizer-tool production readiness is now also proven through:
+  - `T16.1` work-partner ClickUp task listing
+  - `T16.2` work-partner Google Calendar availability reads
+  - `T16.3` work-partner Google Drive metadata listing
+- release smoke and incident-evidence bundles now validate the same organizer
+  stack contract instead of relying only on direct `/health` inspection
 
 ---
 
