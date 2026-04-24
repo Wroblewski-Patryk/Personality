@@ -10,6 +10,13 @@ Last updated: 2026-04-24
   user preferences over time
 - Commercial model: TBD
 - Current phase: no-UI V1 baseline achieved in repo; final operational V1-closure queue now active for live tool onboarding and daily-use readiness
+- 2026-04-24: `PRJ-634` is complete: deploy parity is now fully green on live
+  production. The compose contract uses application-owned
+  `${APP_BUILD_REVISION:-unknown}`, the canonical Coolify app maps
+  `APP_BUILD_REVISION=$SOURCE_COMMIT` as a runtime-only variable, shadowing
+  `SOURCE_COMMIT=unknown` variables were removed, and live production now
+  reports a declared `runtime_build_revision` that matches local repo `HEAD`
+  through release smoke.
 - 2026-04-24: `PRJ-617` is complete: planning truth, ops guidance, and
   repository context now all record the same deploy-closure baseline after the
   Coolify source repair. The canonical production app must stay on the GitHub

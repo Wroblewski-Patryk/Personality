@@ -283,10 +283,14 @@ Last updated: 2026-04-24
 - `PRJ-617` is complete: planning truth, runbook guidance, and repository
   context now treat `Public GitHub` on the canonical production app as
   deployment drift instead of an acceptable source variant.
+- `PRJ-634` is complete: deploy parity is now fully green in live production.
+  The repo-owned compose contract uses `${APP_BUILD_REVISION:-unknown}`, the
+  canonical Coolify app maps `APP_BUILD_REVISION=$SOURCE_COMMIT` as a
+  runtime-only variable, shadowing `SOURCE_COMMIT=unknown` variables were
+  removed, and release smoke now proves that production `runtime_build_revision`
+  matches local repo `HEAD`.
 - the next queue intentionally targets the remaining product-to-production
   gaps that still block everyday use:
-  - repo truth versus live production truth still needs ongoing parity proof
-    after the repaired deploy baseline
   - bounded website/search/browser workflows must become real user-facing
     behavior
   - durable role/skill/tool-authorization visibility for future UI/admin
@@ -361,6 +365,29 @@ Last updated: 2026-04-24
       deploy source now describe the same repository
     - the bounded fallback posture remains webhook first, then UI redeploy only
       when source automation proof is missing
+
+- [x] PRJ-634 Wire runtime build revision to Coolify predefined source commit
+  - Owner: Ops/Release
+  - Group: Production Truth And Deploy Automation Closure
+  - Depends on: PRJ-616
+  - Priority: P0
+  - Status: DONE
+  - Why now:
+    - source automation was repaired, but production still reported
+      `runtime_build_revision=unknown`, so release smoke could not yet prove
+      full repo-to-production parity
+  - Result:
+    - the repo-owned compose contract now references
+      `${APP_BUILD_REVISION:-unknown}` instead of `SOURCE_COMMIT` directly
+    - the canonical Coolify app now maps `APP_BUILD_REVISION=$SOURCE_COMMIT`
+      as a runtime-only variable, and the shadowing `SOURCE_COMMIT=unknown`
+      variables were removed
+    - live production now exposes a declared `runtime_build_revision` that
+      matches local repo `HEAD`
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_coolify_compose.py tests/test_deployment_trigger_scripts.py` -> `40 passed`
+    - `docker compose -f docker-compose.coolify.yml config` -> OK
+    - `.\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'` -> passed
 
 - [x] PRJ-611 Sync docs/context for the capability-catalog baseline
   - Owner: Product Docs Agent

@@ -25,6 +25,38 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-24 - Coolify Docker Compose apps must not reference `SOURCE_COMMIT` directly in compose values
+- Context:
+  - deploy parity was repaired up to automatic source automation, but live
+    production still reported `runtime_build_revision=unknown` even after the
+    canonical app auto-deployed the latest commits.
+- Symptom:
+  - the Coolify environment-variable UI showed `SOURCE_COMMIT=unknown`, and
+    runtime build revision stayed missing despite healthy source automation and
+    successful deploy history.
+- Root cause:
+  - referencing `SOURCE_COMMIT` directly inside `docker-compose.coolify.yml`
+    caused Coolify to materialize `SOURCE_COMMIT` as a user-managed environment
+    variable, which shadowed the predefined magic variable and persisted the
+    value `unknown`.
+- Guardrail:
+  - for Docker Compose deployments, let the compose file reference an
+    application-owned variable such as `${APP_BUILD_REVISION:-unknown}`, then
+    set `APP_BUILD_REVISION=$SOURCE_COMMIT` in Coolify as a runtime variable.
+- Preferred pattern:
+  - keep `APP_BUILD_REVISION` as the repo-owned compose contract
+  - keep `$SOURCE_COMMIT` only in Coolify's environment-variable value, not as
+    a compose placeholder
+  - remove any user-created `SOURCE_COMMIT` variable if it appears with the
+    value `unknown`
+- Avoid:
+  - using `$SOURCE_COMMIT` or `${SOURCE_COMMIT:-...}` directly in compose
+    service environment values for the canonical Coolify app
+- Evidence:
+  - `PRJ-634`
+  - production `/health.deployment.runtime_build_revision`
+  - `.\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'`
+
 ### 2026-04-24 - Coolify source drift can silently break repo-driven deploy after a repository rename
 - Context:
   - the final operational `v1` closure lane required proving that `push main`

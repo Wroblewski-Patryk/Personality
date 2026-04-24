@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-634
 - Title: Wire runtime build revision to Coolify predefined source commit
-- Status: IN_PROGRESS
+- Status: DONE
 - Owner: Ops/Release
 - Depends on: PRJ-616
 - Priority: P0
@@ -24,9 +24,9 @@ contract so live production exposes a machine-visible commit SHA.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] Coolify runtime wiring uses the correct predefined source-commit posture.
-- [ ] Targeted regression coverage pins the same compose/runtime assumption.
-- [ ] Live production exposes a non-`unknown` `runtime_build_revision` and release smoke passes.
+- [x] Coolify runtime wiring uses the correct predefined source-commit posture.
+- [x] Targeted regression coverage pins the same compose/runtime assumption.
+- [x] Live production exposes a non-`unknown` `runtime_build_revision` and release smoke passes.
 
 ## Forbidden
 - new systems without approval
@@ -49,14 +49,14 @@ contract so live production exposes a machine-visible commit SHA.
 - Follow-up architecture doc updates: ops/runbook and planning/context truth if the predefined-variable contract changes
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
+- [x] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 Official Coolify docs state that runtime applications should expose predefined
@@ -70,3 +70,18 @@ Implementation note:
 - The canonical Coolify app now stores `APP_BUILD_REVISION=$SOURCE_COMMIT` as
   a runtime-only variable, and the previously shadowing `SOURCE_COMMIT=unknown`
   variable has been removed from the application environment.
+
+## Evidence
+- Repo-side wiring now uses `${APP_BUILD_REVISION:-unknown}` in
+  `docker-compose.coolify.yml` for both runtime env and build args, so the
+  Coolify application owns the actual source-commit mapping.
+- Canonical Coolify app `jr1oehwlzl8tcn3h8gh2vvih` now stores
+  `APP_BUILD_REVISION=$SOURCE_COMMIT` as a runtime-only environment variable,
+  and the user-created `SOURCE_COMMIT` variables were removed to avoid
+  shadowing the predefined Coolify variable.
+- Production `GET /health` now reports
+  `deployment.runtime_build_revision=6585681e57bf2e93cdc7b12bd8286aacb950709d`,
+  `runtime_build_revision_state=runtime_build_revision_declared`, and
+  `runtime_provenance_state=primary_runtime_provenance_declared`.
+- `.\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'`
+  now passes against the live production URL.

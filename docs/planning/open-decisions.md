@@ -160,6 +160,15 @@ Current execution note:
 - `PRJ-617` is now complete:
   - planning/context and ops truth now treat `Public GitHub` on the canonical
     production app as deployment drift instead of an acceptable source posture
+- `PRJ-634` is now complete:
+  - full deploy parity is now green in live production
+  - the repo-owned compose contract uses `${APP_BUILD_REVISION:-unknown}`
+  - the canonical Coolify app maps `APP_BUILD_REVISION=$SOURCE_COMMIT` as a
+    runtime-only variable
+  - shadowing `SOURCE_COMMIT=unknown` variables were removed from the app
+    environment
+  - live `runtime_build_revision` now matches local repo `HEAD` through release
+    smoke
 - `PRJ-618` is now the next active slice:
   - repo-driven deployment truth is repaired, so the next gap is bounded live
     web-knowledge workflow activation rather than deploy automation ambiguity

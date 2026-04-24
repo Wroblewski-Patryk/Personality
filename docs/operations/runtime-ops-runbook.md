@@ -617,6 +617,13 @@ Repo-driven Coolify deployment-automation baseline (`PRJ-597`):
    - after a repository rename, verify both the local git remote and the
      Coolify source repository path; the current canonical repository is
      `Wroblewski-Patryk/Personality`
+   - for Docker Compose deployments, keep the compose file pointing at the
+     application-owned placeholder `${APP_BUILD_REVISION:-unknown}` instead of
+     referencing `SOURCE_COMMIT` directly
+   - in Coolify UI, set `APP_BUILD_REVISION=$SOURCE_COMMIT` as a runtime
+     variable for the canonical app; if `SOURCE_COMMIT=unknown` appears as a
+     user-managed variable, delete it because it shadows Coolify's predefined
+     commit variable
 3. canonical production proof path:
    - Coolify deployment history for the canonical app shows the pushed commit
    - public production `GET /health` is green
