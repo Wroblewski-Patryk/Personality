@@ -228,6 +228,12 @@ For meaningful repo changes, leave behind:
 - `.\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'`
 - coverage should pin the shared `/health.connectors.organizer_tool_stack`
   contract plus matching incident-evidence and bundle proof
+- organizer daily-use coverage should also pin:
+  - `daily_use_workflows`
+  - `daily_use_ready_workflow_count` versus `daily_use_total_workflow_count`
+  - `daily_use_ready_workflows`
+  - `daily_use_blocked_workflows`
+  - parity with `/health.v1_readiness.organizer_daily_use_*`
 - organizer-tool activation coverage should also pin
   `organizer_tool_stack.activation_snapshot`, including:
   - activation-state transitions

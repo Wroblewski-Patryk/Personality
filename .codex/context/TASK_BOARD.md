@@ -586,6 +586,41 @@ Last updated: 2026-04-24
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py` -> `87 passed`
 
+- [x] PRJ-628 Add end-to-end proof for organizer daily-use workflows
+  - Owner: QA/Test
+  - Group: Organizer-Tool Daily-Use Activation
+  - Depends on: PRJ-627
+  - Priority: P1
+  - Status: DONE
+  - Why now:
+    - the frozen organizer daily-use baseline must be proven through the same
+      release, incident-evidence, and behavior gates that claim no-UI `v1`
+      readiness
+  - Result:
+    - release smoke, incident-evidence bundles, and behavior validation now
+      prove the same organizer daily-use acceptance posture instead of only
+      abstract provider readiness
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py` -> `30 passed`
+    - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json` -> `15 passed`
+
+- [x] PRJ-629 Sync docs/context for organizer daily-use activation
+  - Owner: Product Docs Agent
+  - Group: Organizer-Tool Daily-Use Activation
+  - Depends on: PRJ-628
+  - Priority: P1
+  - Status: DONE
+  - Why now:
+    - the organizer daily-use lane is only trustworthy if runtime reality,
+      testing guidance, ops notes, and planning/context describe the same proof
+      path
+  - Result:
+    - canonical docs and repository context now describe organizer daily-use
+      readiness as one shared runtime and evidence contract rather than as
+      only abstract provider readiness
+  - Validation:
+    - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json` -> `15 passed`
+
 - [x] PRJ-611 Sync docs/context for the capability-catalog baseline
   - Owner: Product Docs Agent
   - Group: Capability Catalog And Future-UI Bootstrap

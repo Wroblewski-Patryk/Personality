@@ -233,9 +233,15 @@ Current execution note:
     workflow instead of only provider activation details
   - `v1_readiness` now reflects that same organizer readiness truth in a more
     product-facing form
-- `PRJ-628` is now the next active slice:
-  - the next gap is to prove the daily-use organizer baseline end to end
-    through release and behavior evidence
+- `PRJ-628` is now complete:
+  - release smoke, incident-evidence bundles, and behavior validation now
+    prove the first organizer daily-use baseline end to end
+- `PRJ-629` is now complete:
+  - runtime reality, testing guidance, ops, planning, and repository context
+    now describe the same organizer daily-use proof path and its parity with
+    `/health.v1_readiness`
+- `PRJ-630` is now the next active slice:
+  - the next gap is to freeze the final no-UI `v1` daily-use acceptance bundle
 - `PRJ-598` is complete in repo truth: deployment provenance is now
   machine-visible in `/health.deployment`, deploy webhook evidence, exported
   incident evidence, and release smoke.

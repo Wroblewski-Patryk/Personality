@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-629
 - Title: Sync docs/context for organizer daily-use activation
-- Status: BACKLOG
+- Status: DONE
 - Owner: Product Docs Agent
 - Depends on: PRJ-628
 - Priority: P1
@@ -21,9 +21,9 @@ Synchronize docs/context for organizer daily-use activation.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] Runtime reality/testing/ops docs describe the daily-use organizer baseline.
-- [ ] Planning/context reflects the same lane completion state.
-- [ ] Older wording that treats the stack as only abstract provider readiness is removed or updated.
+- [x] Runtime reality/testing/ops docs describe the daily-use organizer baseline.
+- [x] Planning/context reflects the same lane completion state.
+- [x] Older wording that treats the stack as only abstract provider readiness is removed or updated.
 
 ## Forbidden
 - new systems without approval
@@ -32,8 +32,8 @@ Synchronize docs/context for organizer daily-use activation.
 - architecture changes without explicit approval
 
 ## Validation Evidence
-- Tests: doc-and-context sync
-- Manual checks: cross-review against workflow evidence
+- Tests: `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+- Manual checks: cross-review against organizer daily-use release-smoke and behavior evidence
 - Screenshots/logs:
 - High-risk checks: keep the boundary between internal planning state and external tools explicit
 
@@ -46,13 +46,13 @@ Synchronize docs/context for organizer daily-use activation.
 - Follow-up architecture doc updates: runtime reality/testing/runbook/planning/context
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes

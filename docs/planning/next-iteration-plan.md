@@ -194,8 +194,15 @@ Queue update (2026-04-24):
 - `/health.connectors.organizer_tool_stack` and `/health.v1_readiness` now
   expose the same workflow-level daily-use readiness posture instead of only
   raw provider activation details
-- the next active slice is `PRJ-628`, which should add end-to-end release and
-  behavior proof for that daily-use organizer baseline
+- `PRJ-628` is now complete.
+- release smoke, incident-evidence bundles, and behavior validation now prove
+  the same organizer daily-use posture that `/health.connectors.organizer_tool_stack`
+  and `/health.v1_readiness` describe
+- `PRJ-629` is now complete.
+- runtime reality, testing guidance, ops notes, planning, and repository
+  context now describe the same organizer daily-use proof path and parity
+- the next active slice is `PRJ-630`, which should freeze the final no-UI `v1`
+  daily-use acceptance bundle
 
 - `PRJ-615` Add machine-visible repo-vs-production truth and deploy-parity evidence.
   - Result:

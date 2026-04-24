@@ -1384,6 +1384,13 @@ Important health surfaces for current release checks:
   - `read_only_operations`
   - `confirmation_required_operations`
   - `user_opt_in_required_operations`
+  - `daily_use_workflows`
+  - `daily_use_ready_workflow_count`
+  - `daily_use_total_workflow_count`
+  - `daily_use_ready_workflows`
+  - `daily_use_blocked_workflows`
+  - `daily_use_state`
+  - `daily_use_hint`
   - `activation_snapshot`
     - use this as the primary operator onboarding view for production
       credential activation
@@ -1402,6 +1409,9 @@ Important health surfaces for current release checks:
   - `readiness_state`
   Treat this snapshot as the acceptance source of truth instead of inferring
   readiness from individual provider blocks.
+ - `/health.v1_readiness.organizer_daily_use_*` must stay in parity with the
+   same organizer-tool stack snapshot; treat drift between those two surfaces
+   as a release-blocking regression rather than as a docs-only mismatch.
 - `calendar.google_calendar_read_availability.state=credentials_missing`
   means the bounded calendar live-read adapter exists but runtime lacks
   credentials for provider-backed execution

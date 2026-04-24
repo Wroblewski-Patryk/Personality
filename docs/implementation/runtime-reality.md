@@ -1132,6 +1132,12 @@ What is already live:
    - provider-specific `missing_settings`
    - provider-specific `next_action`
    - top-level `next_actions`
+ - the same surface now includes `daily_use_workflows`,
+   `daily_use_ready_workflow_count`, `daily_use_total_workflow_count`,
+   `daily_use_ready_workflows`, `daily_use_blocked_workflows`,
+   `daily_use_state`, and `daily_use_hint`, so operators and future UI callers
+   can see whether the frozen ClickUp, Google Calendar, and Google Drive flows
+   are truly ready for day-to-day use rather than only contractually approved
 - these live tool slices still remain bounded:
   - search returns result evidence only
   - browser returns page-read evidence only
@@ -1303,7 +1309,9 @@ Current limitation:
   - `T16.2` work-partner Google Calendar availability reads
   - `T16.3` work-partner Google Drive metadata listing
 - release smoke and incident-evidence bundles now validate the same organizer
-  stack contract instead of relying only on direct `/health` inspection
+  daily-use contract instead of relying only on direct `/health` inspection
+- `/health.v1_readiness` now mirrors that organizer proof with
+  `organizer_daily_use_state`, workflow counts, and ready/blocked workflow ids
 
 ---
 
