@@ -127,6 +127,13 @@ ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS = [
     "configure_google_calendar_access_token_calendar_id_and_timezone",
     "configure_google_drive_access_token_and_folder_id",
 ]
+ORGANIZER_DAILY_USE_READY_WORKFLOWS = [
+    "clickup_task_review_and_mutation",
+]
+ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS = [
+    "google_calendar_availability_inspection",
+    "google_drive_file_space_inspection",
+]
 
 
 def _powershell_exe() -> str | None:
@@ -195,6 +202,52 @@ def _organizer_tool_activation_snapshot() -> dict[str, object]:
             },
         },
         "next_actions": ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS,
+    }
+
+
+def _organizer_daily_use_workflows() -> dict[str, object]:
+    return {
+        "clickup_task_review_and_mutation": {
+            "provider": "clickup",
+            "workflow_kind": "task_review_and_mutation",
+            "approved_operations": [
+                "task_system.clickup_list_tasks",
+                "task_system.clickup_create_task",
+                "task_system.clickup_update_task",
+            ],
+            "daily_use_ready": True,
+            "daily_use_state": "ready_for_daily_use_with_opt_in_and_confirmed_mutations",
+            "user_opt_in_required": True,
+            "mutation_confirmation_required": True,
+            "planning_boundary": "internal_tasks_and_goals_remain_primary",
+            "next_action": "ready_for_clickup_daily_use",
+        },
+        "google_calendar_availability_inspection": {
+            "provider": "google_calendar",
+            "workflow_kind": "availability_inspection",
+            "approved_operations": [
+                "calendar.google_calendar_read_availability",
+            ],
+            "daily_use_ready": False,
+            "daily_use_state": "blocked_missing_provider_credentials",
+            "user_opt_in_required": True,
+            "mutation_confirmation_required": False,
+            "planning_boundary": "availability_evidence_only_no_calendar_management",
+            "next_action": "configure_google_calendar_access_token_calendar_id_and_timezone",
+        },
+        "google_drive_file_space_inspection": {
+            "provider": "google_drive",
+            "workflow_kind": "file_space_inspection",
+            "approved_operations": [
+                "cloud_drive.google_drive_list_files",
+            ],
+            "daily_use_ready": False,
+            "daily_use_state": "blocked_missing_provider_credentials",
+            "user_opt_in_required": True,
+            "mutation_confirmation_required": False,
+            "planning_boundary": "metadata_only_file_evidence_no_document_body_ingestion",
+            "next_action": "configure_google_drive_access_token_and_folder_id",
+        },
     }
 
 
@@ -561,6 +614,11 @@ def stub_aion_server() -> _StubAionServer:
             "product_stage": "v1_no_ui_life_assistant",
             "conversation_gate_state": "conversation_surface_ready",
             "learned_state_gate_state": "inspection_surface_ready",
+            "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+            "organizer_daily_use_total_workflow_count": 3,
+            "organizer_daily_use_ready_workflow_count": 1,
+            "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+            "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
             "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
             "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
         },
@@ -670,6 +728,13 @@ def stub_aion_server() -> _StubAionServer:
                     "cloud_drive.google_drive_list_files",
                 ],
                 "readiness_state": "provider_credentials_missing",
+                "daily_use_workflows": _organizer_daily_use_workflows(),
+                "daily_use_ready_workflow_count": 1,
+                "daily_use_total_workflow_count": 3,
+                "daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+                "daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
+                "daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                "daily_use_hint": "finish_provider_activation_before_treating_organizer_stack_as_daily_use_ready",
                 "activation_snapshot": _organizer_tool_activation_snapshot(),
             },
             "web_knowledge_tools": {
@@ -865,11 +930,16 @@ def stub_aion_server() -> _StubAionServer:
                     "reflection_growth_signal_kinds": LEARNED_STATE_REFLECTION_GROWTH_SIGNAL_KINDS,
                     "tool_grounded_learning": TOOL_GROUNDED_LEARNING_CONTRACT,
                 },
-            "v1_readiness": {
+                "v1_readiness": {
                     "policy_owner": "v1_release_readiness_policy",
                     "product_stage": "v1_no_ui_life_assistant",
                     "conversation_gate_state": "conversation_surface_ready",
                     "learned_state_gate_state": "inspection_surface_ready",
+                    "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                    "organizer_daily_use_ready_workflow_count": 1,
+                    "organizer_daily_use_total_workflow_count": 3,
+                    "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+                    "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
                     "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
                     "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
                 },
@@ -954,6 +1024,13 @@ def stub_aion_server() -> _StubAionServer:
                         "cloud_drive.google_drive_list_files",
                     ],
                     "readiness_state": "provider_credentials_missing",
+                    "daily_use_workflows": _organizer_daily_use_workflows(),
+                    "daily_use_ready_workflow_count": 1,
+                    "daily_use_total_workflow_count": 3,
+                    "daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+                    "daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
+                    "daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                    "daily_use_hint": "finish_provider_activation_before_treating_organizer_stack_as_daily_use_ready",
                     "activation_snapshot": _organizer_tool_activation_snapshot(),
                 },
                 "connectors.web_knowledge_tools": {
@@ -1173,6 +1250,11 @@ def _write_incident_bundle(
                 "product_stage": "v1_no_ui_life_assistant",
                 "conversation_gate_state": "conversation_surface_ready",
                 "learned_state_gate_state": "inspection_surface_ready",
+                "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                "organizer_daily_use_ready_workflow_count": 1,
+                "organizer_daily_use_total_workflow_count": 3,
+                "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+                "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
                 "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
                 "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
             },
@@ -1257,6 +1339,13 @@ def _write_incident_bundle(
                     "cloud_drive.google_drive_list_files",
                 ],
                 "readiness_state": "provider_credentials_missing",
+                "daily_use_workflows": _organizer_daily_use_workflows(),
+                "daily_use_ready_workflow_count": 1,
+                "daily_use_total_workflow_count": 3,
+                "daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+                "daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
+                "daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                "daily_use_hint": "finish_provider_activation_before_treating_organizer_stack_as_daily_use_ready",
                 "activation_snapshot": _organizer_tool_activation_snapshot(),
             },
             "connectors.web_knowledge_tools": {
@@ -1343,6 +1432,11 @@ def _write_incident_bundle(
             "product_stage": "v1_no_ui_life_assistant",
             "conversation_gate_state": "conversation_surface_ready",
             "learned_state_gate_state": "inspection_surface_ready",
+            "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+            "organizer_daily_use_ready_workflow_count": 1,
+            "organizer_daily_use_total_workflow_count": 3,
+            "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+            "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
             "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
             "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
         },
@@ -1365,6 +1459,13 @@ def _write_incident_bundle(
                     "cloud_drive.google_drive_list_files",
                 ],
                 "readiness_state": "provider_credentials_missing",
+                "daily_use_workflows": _organizer_daily_use_workflows(),
+                "daily_use_ready_workflow_count": 1,
+                "daily_use_total_workflow_count": 3,
+                "daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+                "daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
+                "daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                "daily_use_hint": "finish_provider_activation_before_treating_organizer_stack_as_daily_use_ready",
                 "activation_snapshot": _organizer_tool_activation_snapshot(),
             },
             "web_knowledge_tools": {
@@ -1819,13 +1920,28 @@ def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_r
         "calendar.google_calendar_read_availability",
         "cloud_drive.google_drive_list_files",
     ]
+    assert summary["organizer_tool_stack_daily_use_state"] == "daily_use_workflows_blocked_by_provider_activation"
+    assert summary["organizer_tool_stack_daily_use_ready_workflow_count"] == 1
+    assert summary["organizer_tool_stack_daily_use_ready_workflows"] == ORGANIZER_DAILY_USE_READY_WORKFLOWS
+    assert summary["organizer_tool_stack_daily_use_blocked_workflows"] == ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS
     assert summary["organizer_tool_activation_state"] == "provider_activation_incomplete"
     assert summary["organizer_tool_activation_next_actions"] == ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS
+    assert summary["v1_organizer_daily_use_state"] == "daily_use_workflows_blocked_by_provider_activation"
+    assert summary["v1_organizer_daily_use_ready_workflow_count"] == 1
+    assert summary["v1_organizer_daily_use_ready_workflows"] == ORGANIZER_DAILY_USE_READY_WORKFLOWS
+    assert summary["v1_organizer_daily_use_blocked_workflows"] == ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS
     assert summary["incident_evidence_organizer_tool_stack_policy_owner"] == "production_organizer_tool_stack"
     assert summary["incident_evidence_organizer_tool_stack_readiness_state"] == "provider_credentials_missing"
+    assert summary["incident_evidence_organizer_tool_stack_daily_use_state"] == (
+        "daily_use_workflows_blocked_by_provider_activation"
+    )
+    assert summary["incident_evidence_organizer_tool_stack_daily_use_ready_workflow_count"] == 1
     assert summary["incident_evidence_organizer_tool_activation_state"] == "provider_activation_incomplete"
     assert summary["incident_evidence_organizer_tool_activation_next_actions"] == (
         ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS
+    )
+    assert summary["incident_evidence_v1_organizer_daily_use_state"] == (
+        "daily_use_workflows_blocked_by_provider_activation"
     )
     assert summary["incident_evidence_retrieval_policy_owner"] == "retrieval_lifecycle_policy"
     assert summary["incident_evidence_retrieval_provider_requested"] == "openai"
@@ -1902,6 +2018,10 @@ def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_pro
         "calendar.google_calendar_read_availability",
         "cloud_drive.google_drive_list_files",
     ]
+    assert summary["incident_bundle_organizer_tool_stack_daily_use_state"] == (
+        "daily_use_workflows_blocked_by_provider_activation"
+    )
+    assert summary["incident_bundle_organizer_tool_stack_daily_use_ready_workflow_count"] == 1
     assert summary["incident_bundle_organizer_tool_activation_state"] == "provider_activation_incomplete"
     assert summary["incident_bundle_organizer_tool_activation_next_actions"] == (
         ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS

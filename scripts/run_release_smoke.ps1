@@ -514,6 +514,8 @@ function Validate-IncidentEvidenceBundle {
         organizer_tool_stack_readiness_state = [string]$organizerToolStackContract.readiness_state
         organizer_tool_stack_ready_operations = @($organizerToolStackContract.ready_operations)
         organizer_tool_stack_credential_gap_operations = @($organizerToolStackContract.credential_gap_operations)
+        organizer_tool_stack_daily_use_state = [string]$organizerToolStackContract.daily_use_state
+        organizer_tool_stack_daily_use_ready_workflow_count = [int]$organizerToolStackContract.daily_use_ready_workflow_count
         organizer_tool_activation_state = [string]$organizerToolStackContract.activation_state
         organizer_tool_activation_next_actions = @($organizerToolStackContract.activation_next_actions)
         web_knowledge_policy_owner = [string]$webKnowledgeWorkflowContract.policy_owner
@@ -550,6 +552,8 @@ function Validate-IncidentEvidenceBundle {
         capability_catalog_tool_grounded_learning_policy_owner = [string]$capabilityCatalogContract.tool_grounded_learning_policy_owner
         incident_organizer_tool_stack_policy_owner = [string]$incidentOrganizerToolStackContract.policy_owner
         incident_organizer_tool_stack_readiness_state = [string]$incidentOrganizerToolStackContract.readiness_state
+        incident_organizer_tool_stack_daily_use_state = [string]$incidentOrganizerToolStackContract.daily_use_state
+        incident_organizer_tool_stack_daily_use_ready_workflow_count = [int]$incidentOrganizerToolStackContract.daily_use_ready_workflow_count
         incident_organizer_tool_activation_state = [string]$incidentOrganizerToolStackContract.activation_state
         incident_organizer_tool_activation_next_actions = @($incidentOrganizerToolStackContract.activation_next_actions)
     }
@@ -1089,6 +1093,11 @@ function Assert-OrganizerToolStackContract {
         "task_system.clickup_create_task",
         "task_system.clickup_update_task"
     )
+    $expectedDailyUseWorkflowIds = @(
+        "clickup_task_review_and_mutation",
+        "google_calendar_availability_inspection",
+        "google_drive_file_space_inspection"
+    )
 
     if ($null -eq $OrganizerToolStack) {
         throw "${FailurePrefix}: organizer_tool_stack posture is missing."
@@ -1108,6 +1117,13 @@ function Assert-OrganizerToolStackContract {
         "ready_operations",
         "credential_gap_operations",
         "readiness_state",
+        "daily_use_workflows",
+        "daily_use_ready_workflow_count",
+        "daily_use_total_workflow_count",
+        "daily_use_ready_workflows",
+        "daily_use_blocked_workflows",
+        "daily_use_state",
+        "daily_use_hint",
         "activation_snapshot"
     )) {
         if (-not (Has-Property -Object $OrganizerToolStack -Name $propertyName)) {
@@ -1149,6 +1165,38 @@ function Assert-OrganizerToolStackContract {
     }
     if ($readinessState -eq "provider_credentials_missing" -and $credentialGapOperations.Count -eq 0) {
         throw "${FailurePrefix}: organizer_tool_stack readiness_state is provider_credentials_missing but credential_gap_operations is empty."
+    }
+    $dailyUseWorkflows = $OrganizerToolStack.daily_use_workflows
+    if ($null -eq $dailyUseWorkflows) {
+        throw "${FailurePrefix}: organizer_tool_stack daily_use_workflows is missing."
+    }
+    $actualDailyUseWorkflowIds = @()
+    if ($dailyUseWorkflows.PSObject -and $dailyUseWorkflows.PSObject.Properties) {
+        $actualDailyUseWorkflowIds = @($dailyUseWorkflows.PSObject.Properties.Name)
+    }
+    if (@(Compare-Object -ReferenceObject $expectedDailyUseWorkflowIds -DifferenceObject $actualDailyUseWorkflowIds -SyncWindow 0).Count -gt 0) {
+        throw "${FailurePrefix}: organizer_tool_stack daily_use_workflows drifted."
+    }
+    $dailyUseReadyWorkflows = @($OrganizerToolStack.daily_use_ready_workflows)
+    $dailyUseBlockedWorkflows = @($OrganizerToolStack.daily_use_blocked_workflows)
+    $dailyUseReadyWorkflowCount = [int]$OrganizerToolStack.daily_use_ready_workflow_count
+    $dailyUseTotalWorkflowCount = [int]$OrganizerToolStack.daily_use_total_workflow_count
+    if ($dailyUseTotalWorkflowCount -ne $expectedDailyUseWorkflowIds.Count) {
+        throw "${FailurePrefix}: organizer_tool_stack daily_use_total_workflow_count drifted."
+    }
+    if ($dailyUseReadyWorkflowCount -ne $dailyUseReadyWorkflows.Count) {
+        throw "${FailurePrefix}: organizer_tool_stack daily_use_ready_workflow_count does not match daily_use_ready_workflows."
+    }
+    $validDailyUseStates = @("all_daily_use_workflows_ready", "daily_use_workflows_blocked_by_provider_activation")
+    $dailyUseState = [string]$OrganizerToolStack.daily_use_state
+    if ($validDailyUseStates -notcontains $dailyUseState) {
+        throw "${FailurePrefix}: unexpected organizer_tool_stack daily_use_state '$($dailyUseState)'."
+    }
+    if ($dailyUseState -eq "all_daily_use_workflows_ready" -and $dailyUseBlockedWorkflows.Count -ne 0) {
+        throw "${FailurePrefix}: organizer_tool_stack daily_use_state is all_daily_use_workflows_ready but daily_use_blocked_workflows is not empty."
+    }
+    if ($dailyUseState -eq "daily_use_workflows_blocked_by_provider_activation" -and $dailyUseBlockedWorkflows.Count -eq 0) {
+        throw "${FailurePrefix}: organizer_tool_stack daily_use_state is daily_use_workflows_blocked_by_provider_activation but daily_use_blocked_workflows is empty."
     }
 
     $activationSnapshot = $OrganizerToolStack.activation_snapshot
@@ -1200,6 +1248,12 @@ function Assert-OrganizerToolStackContract {
         readiness_state = $readinessState
         ready_operations = $readyOperations
         credential_gap_operations = $credentialGapOperations
+        daily_use_ready_workflow_count = $dailyUseReadyWorkflowCount
+        daily_use_total_workflow_count = $dailyUseTotalWorkflowCount
+        daily_use_ready_workflows = $dailyUseReadyWorkflows
+        daily_use_blocked_workflows = $dailyUseBlockedWorkflows
+        daily_use_state = $dailyUseState
+        daily_use_hint = [string]$OrganizerToolStack.daily_use_hint
         activation_state = $activationState
         activation_next_actions = @($activationSnapshot.next_actions)
     }
@@ -1922,6 +1976,27 @@ if ([string]$v1Readiness.conversation_gate_state -ne "conversation_surface_ready
 if ([string]$v1Readiness.learned_state_gate_state -ne "inspection_surface_ready") {
     throw "Health check failed: unexpected v1_readiness.learned_state_gate_state '$($v1Readiness.learned_state_gate_state)'."
 }
+$validV1OrganizerDailyUseStates = @("all_daily_use_workflows_ready", "daily_use_workflows_blocked_by_provider_activation")
+if ($validV1OrganizerDailyUseStates -notcontains [string]$v1Readiness.organizer_daily_use_state) {
+    throw "Health check failed: unexpected v1_readiness.organizer_daily_use_state '$($v1Readiness.organizer_daily_use_state)'."
+}
+if ([int]$v1Readiness.organizer_daily_use_total_workflow_count -ne 3) {
+    throw "Health check failed: unexpected v1_readiness.organizer_daily_use_total_workflow_count '$($v1Readiness.organizer_daily_use_total_workflow_count)'."
+}
+$actualOrganizerReadyWorkflows = @()
+if ($v1Readiness.PSObject.Properties.Name -contains "organizer_daily_use_ready_workflows" -and $null -ne $v1Readiness.organizer_daily_use_ready_workflows) {
+    $actualOrganizerReadyWorkflows = @($v1Readiness.organizer_daily_use_ready_workflows)
+}
+$actualOrganizerBlockedWorkflows = @()
+if ($v1Readiness.PSObject.Properties.Name -contains "organizer_daily_use_blocked_workflows" -and $null -ne $v1Readiness.organizer_daily_use_blocked_workflows) {
+    $actualOrganizerBlockedWorkflows = @($v1Readiness.organizer_daily_use_blocked_workflows)
+}
+if ([string]$v1Readiness.organizer_daily_use_state -eq "all_daily_use_workflows_ready" -and $actualOrganizerBlockedWorkflows.Count -ne 0) {
+    throw "Health check failed: v1_readiness organizer_daily_use_state is all_daily_use_workflows_ready but organizer_daily_use_blocked_workflows is not empty."
+}
+if ([string]$v1Readiness.organizer_daily_use_state -eq "daily_use_workflows_blocked_by_provider_activation" -and $actualOrganizerBlockedWorkflows.Count -eq 0) {
+    throw "Health check failed: v1_readiness organizer_daily_use_state is daily_use_workflows_blocked_by_provider_activation but organizer_daily_use_blocked_workflows is empty."
+}
 $requiredV1Scenarios = @("T13.1", "T14.1", "T14.2", "T14.3", "T15.1", "T15.2", "T16.1", "T16.2", "T16.3", "T17.1", "T17.2")
 $actualV1Scenarios = @()
 if ($v1Readiness.PSObject.Properties.Name -contains "required_behavior_scenarios" -and $null -ne $v1Readiness.required_behavior_scenarios) {
@@ -2101,6 +2176,12 @@ if ($IncludeDebug) {
     }
     if ([string]$incidentV1Readiness.learned_state_gate_state -ne "inspection_surface_ready") {
         throw "Smoke request failed: unexpected incident_evidence v1_readiness learned_state_gate_state '$($incidentV1Readiness.learned_state_gate_state)'."
+    }
+    if ($validV1OrganizerDailyUseStates -notcontains [string]$incidentV1Readiness.organizer_daily_use_state) {
+        throw "Smoke request failed: unexpected incident_evidence v1_readiness organizer_daily_use_state '$($incidentV1Readiness.organizer_daily_use_state)'."
+    }
+    if ([int]$incidentV1Readiness.organizer_daily_use_total_workflow_count -ne 3) {
+        throw "Smoke request failed: unexpected incident_evidence v1_readiness organizer_daily_use_total_workflow_count '$($incidentV1Readiness.organizer_daily_use_total_workflow_count)'."
     }
     $incidentDeployment = $incidentEvidence.policy_posture.deployment
     if ($null -eq $incidentDeployment) {
@@ -2288,8 +2369,16 @@ $summary = @{
     organizer_tool_stack_readiness_state = [string]$organizerToolStackContract.readiness_state
     organizer_tool_stack_ready_operations = @($organizerToolStackContract.ready_operations)
     organizer_tool_stack_credential_gap_operations = @($organizerToolStackContract.credential_gap_operations)
+    organizer_tool_stack_daily_use_state = [string]$organizerToolStackContract.daily_use_state
+    organizer_tool_stack_daily_use_ready_workflow_count = [int]$organizerToolStackContract.daily_use_ready_workflow_count
+    organizer_tool_stack_daily_use_ready_workflows = @($organizerToolStackContract.daily_use_ready_workflows)
+    organizer_tool_stack_daily_use_blocked_workflows = @($organizerToolStackContract.daily_use_blocked_workflows)
     organizer_tool_activation_state = [string]$organizerToolStackContract.activation_state
     organizer_tool_activation_next_actions = @($organizerToolStackContract.activation_next_actions)
+    v1_organizer_daily_use_state = [string]$v1Readiness.organizer_daily_use_state
+    v1_organizer_daily_use_ready_workflow_count = [int]$v1Readiness.organizer_daily_use_ready_workflow_count
+    v1_organizer_daily_use_ready_workflows = @($actualOrganizerReadyWorkflows)
+    v1_organizer_daily_use_blocked_workflows = @($actualOrganizerBlockedWorkflows)
     web_knowledge_policy_owner = [string]$webKnowledgeWorkflowContract.policy_owner
     website_reading_workflow_policy_owner = [string]$webKnowledgeWorkflowContract.workflow_policy_owner
     website_reading_workflow_state = [string]$webKnowledgeWorkflowContract.workflow_state
@@ -2303,8 +2392,11 @@ $summary = @{
     website_reading_next_actions = @($webKnowledgeWorkflowContract.next_actions)
     incident_evidence_organizer_tool_stack_policy_owner = if ($null -ne $incidentOrganizerToolStackContract) { [string]$incidentOrganizerToolStackContract.policy_owner } else { $null }
     incident_evidence_organizer_tool_stack_readiness_state = if ($null -ne $incidentOrganizerToolStackContract) { [string]$incidentOrganizerToolStackContract.readiness_state } else { $null }
+    incident_evidence_organizer_tool_stack_daily_use_state = if ($null -ne $incidentOrganizerToolStackContract) { [string]$incidentOrganizerToolStackContract.daily_use_state } else { $null }
+    incident_evidence_organizer_tool_stack_daily_use_ready_workflow_count = if ($null -ne $incidentOrganizerToolStackContract) { [int]$incidentOrganizerToolStackContract.daily_use_ready_workflow_count } else { $null }
     incident_evidence_organizer_tool_activation_state = if ($null -ne $incidentOrganizerToolStackContract) { [string]$incidentOrganizerToolStackContract.activation_state } else { $null }
     incident_evidence_organizer_tool_activation_next_actions = if ($null -ne $incidentOrganizerToolStackContract) { @($incidentOrganizerToolStackContract.activation_next_actions) } else { @() }
+    incident_evidence_v1_organizer_daily_use_state = if ($null -ne $incidentV1Readiness) { [string]$incidentV1Readiness.organizer_daily_use_state } else { $null }
     incident_evidence_web_knowledge_policy_owner = if ($null -ne $incidentWebKnowledgeWorkflowContract) { [string]$incidentWebKnowledgeWorkflowContract.policy_owner } else { $null }
     incident_evidence_website_reading_workflow_state = if ($null -ne $incidentWebKnowledgeWorkflowContract) { [string]$incidentWebKnowledgeWorkflowContract.workflow_state } else { $null }
     incident_evidence_retrieval_policy_owner = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.retrieval_policy_owner } else { $null }
@@ -2343,6 +2435,8 @@ $summary = @{
     incident_bundle_organizer_tool_stack_readiness_state = $incidentEvidenceBundleCheck.organizer_tool_stack_readiness_state
     incident_bundle_organizer_tool_stack_ready_operations = $incidentEvidenceBundleCheck.organizer_tool_stack_ready_operations
     incident_bundle_organizer_tool_stack_credential_gap_operations = $incidentEvidenceBundleCheck.organizer_tool_stack_credential_gap_operations
+    incident_bundle_organizer_tool_stack_daily_use_state = $incidentEvidenceBundleCheck.organizer_tool_stack_daily_use_state
+    incident_bundle_organizer_tool_stack_daily_use_ready_workflow_count = $incidentEvidenceBundleCheck.organizer_tool_stack_daily_use_ready_workflow_count
     incident_bundle_organizer_tool_activation_state = $incidentEvidenceBundleCheck.organizer_tool_activation_state
     incident_bundle_organizer_tool_activation_next_actions = $incidentEvidenceBundleCheck.organizer_tool_activation_next_actions
     incident_bundle_web_knowledge_policy_owner = $incidentEvidenceBundleCheck.web_knowledge_policy_owner

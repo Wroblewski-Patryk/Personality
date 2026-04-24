@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-628
 - Title: Add end-to-end proof for organizer daily-use workflows
-- Status: BACKLOG
+- Status: DONE
 - Owner: QA/Test
 - Depends on: PRJ-627
 - Priority: P1
@@ -21,9 +21,9 @@ Prove the first daily-use organizer workflows end to end.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] Behavior validation covers the selected organizer daily-use workflows.
-- [ ] Release smoke or incident evidence proves the same acceptance posture.
-- [ ] Regression coverage pins the relevant workflow surfaces.
+- [x] Behavior validation covers the selected organizer daily-use workflows.
+- [x] Release smoke or incident evidence proves the same acceptance posture.
+- [x] Regression coverage pins the relevant workflow surfaces.
 
 ## Forbidden
 - new systems without approval
@@ -32,8 +32,8 @@ Prove the first daily-use organizer workflows end to end.
 - architecture changes without explicit approval
 
 ## Validation Evidence
-- Tests: targeted pytest coverage
-- Manual checks: behavior-validation and release-smoke evidence
+- Tests: `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py`
+- Manual checks: `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
 - Screenshots/logs:
 - High-risk checks: prove realistic workflow posture without widening write authority beyond approved boundaries
 
@@ -46,13 +46,13 @@ Prove the first daily-use organizer workflows end to end.
 - Follow-up architecture doc updates: testing guidance and ops notes likely
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
