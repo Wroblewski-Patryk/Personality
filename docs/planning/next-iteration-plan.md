@@ -181,8 +181,12 @@ Queue update (2026-04-24):
   - public website-reading stays allowed without opt-in
   - organizer mutations stay confirmation-gated instead of becoming implied by
     selected skill metadata
-- the next active slice is `PRJ-625`, which should synchronize docs and
-  context for this durable capability-record baseline
+- `PRJ-625` is now complete.
+- architecture, runtime reality, testing guidance, ops notes, planning, and
+  repository context now describe the same durable capability-record truth
+  model and its proof path
+- the next active slice is `PRJ-626`, which should freeze the first real
+  daily-use organizer workflows for ClickUp, Google Calendar, and Google Drive
 
 - `PRJ-615` Add machine-visible repo-vs-production truth and deploy-parity evidence.
   - Result:

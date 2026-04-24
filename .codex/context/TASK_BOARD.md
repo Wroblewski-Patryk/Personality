@@ -530,6 +530,25 @@ Last updated: 2026-04-24
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_deployment_trigger_scripts.py` -> `131 passed`
 
+- [x] PRJ-625 Sync docs/context for the durable capability-record baseline
+  - Owner: Product Docs Agent
+  - Group: Durable Role/Skill/Tool-Authorization Catalog
+  - Depends on: PRJ-624
+  - Priority: P1
+  - Status: DONE
+  - Why now:
+    - capability-record truth and evidence are already live, so runtime
+      reality, testing guidance, ops notes, planning, and context should all
+      describe the same model before organizer daily-use work continues
+  - Result:
+    - runtime reality, testing guidance, runbook, planning, and repository
+      context now all describe the same durable capability-record boundary:
+      described metadata, runtime selection, and authorization posture remain
+      separate truths
+  - Validation:
+    - doc/context cross-review against `PRJ-622..PRJ-624` architecture,
+      runtime, tests, and release-smoke contract
+
 - [x] PRJ-611 Sync docs/context for the capability-catalog baseline
   - Owner: Product Docs Agent
   - Group: Capability Catalog And Future-UI Bootstrap

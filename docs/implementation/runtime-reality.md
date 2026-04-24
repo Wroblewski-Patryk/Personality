@@ -258,6 +258,47 @@ Current evidence surfaces:
 - internal `GET /internal/state/inspect?user_id=...` knowledge summaries
 - behavior-validation scenarios `T17.1..T17.2`
 
+### Durable capability-record catalog
+
+The live runtime now exposes one fuller backend capability-record catalog
+instead of leaving future callers to reconstruct role, skill, and connector
+truth from unrelated surfaces.
+
+Current implementation details:
+
+- `/health.capability_catalog` exposes the global runtime policy posture for:
+  - described role presets
+  - described skill records
+  - runtime selection surfaces
+  - authorization posture for approved tool families and operations
+- internal `GET /internal/state/inspect?user_id=...` exposes the same catalog
+  with a user-scoped `authorization_subject` so future UI/admin callers can
+  tell whether they are reading global policy truth or a user-scoped
+  authorization view
+- role presets are surfaced as descriptive durable records with
+  `selection_authority=runtime_turn_selection`; they do not override runtime
+  role selection
+- skill records remain metadata-only guidance and are surfaced through
+  `described_skill_ids`, registry metadata, and current-turn selection
+  visibility; they do not grant executable authority by themselves
+- tool authorization remains bound to existing connector permission gates and
+  provider-readiness posture:
+  - public read operations such as `knowledge_search.search_web` and
+    `web_browser.read_page` remain authorized without opt-in
+  - organizer reads remain authorization-visible but opt-in-bound
+  - organizer mutations remain confirmation-gated
+
+Current evidence surfaces:
+
+- `/health.capability_catalog.capability_record_truth_model`
+- `/health.capability_catalog.role_posture`
+- `/health.capability_catalog.skill_catalog_posture`
+- `/health.capability_catalog.tool_and_connector_posture`
+- internal `GET /internal/state/inspect?user_id=...`
+- release smoke capability-catalog contract verification
+- runtime behavior regression proving that a work-partner website-reading turn
+  does not imply unrelated organizer mutation authority
+
 ### Retrieval depth and compression
 
 The live runtime no longer depends on a strict latest-five memory fetch:

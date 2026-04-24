@@ -217,9 +217,15 @@ Current execution note:
   - runtime behavior coverage now proves that selected work-partner skill
     metadata does not imply unrelated organizer write authority during bounded
     website-reading
-- `PRJ-625` is now the next active slice:
-  - the next gap is to synchronize canonical docs and context around this
-    durable capability-record truth model and evidence path
+- `PRJ-625` is now complete:
+  - runtime reality, testing guidance, ops notes, planning, and context now
+    all describe the same capability-record truth model and evidence path
+  - no remaining docs wording in this lane should imply self-modifying
+    executable skill learning or hidden tool authorization
+- `PRJ-626` is now the next active slice:
+  - the next gap is to freeze the first practical daily-use organizer
+    workflows on top of the already visible ClickUp, Calendar, and Drive
+    production stack
 - `PRJ-598` is complete in repo truth: deployment provenance is now
   machine-visible in `/health.deployment`, deploy webhook evidence, exported
   incident evidence, and release smoke.

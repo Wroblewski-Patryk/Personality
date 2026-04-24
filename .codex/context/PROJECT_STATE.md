@@ -10,6 +10,11 @@ Last updated: 2026-04-24
   user preferences over time
 - Commercial model: TBD
 - Current phase: no-UI V1 baseline achieved in repo; final operational V1-closure queue now active for live tool onboarding and daily-use readiness
+- 2026-04-24: `PRJ-625` is complete: runtime reality, testing guidance, ops
+  notes, planning, and repository context now all describe the same durable
+  capability-record truth model. Future callers no longer need to guess
+  whether a capability is merely described, currently selected, or actually
+  authorized to execute.
 - 2026-04-24: `PRJ-624` is complete: release-smoke and runtime behavior
   coverage now prove that capability-record truth stays honest. The backend
   catalog distinguishes described records from authorization posture, and a

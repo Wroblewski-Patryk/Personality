@@ -247,6 +247,39 @@ regression, not as an optional operator convenience. The bounded contract is:
 - follow-up turns may reuse recalled conclusions without silently re-running
   provider reads
 
+`GET /health` now also includes a fuller `capability_catalog` surface for
+operator and future UI/admin inspection.
+
+Use it to distinguish three different truths that should not be flattened into
+one "capability" claim:
+
+- described:
+  - durable role presets and durable skill records
+- selected:
+  - current-turn role and selected skill metadata
+- authorized:
+  - which tool families or operations are actually allowed under connector
+    permission gates and provider-readiness posture
+
+When triaging catalog drift:
+
+- start with `/health.capability_catalog.capability_record_truth_model`
+- inspect `/health.capability_catalog.role_posture` for described role presets
+  and runtime-owned selection posture
+- inspect `/health.capability_catalog.skill_catalog_posture` for
+  metadata-only skill posture and current-turn selection surfaces
+- inspect `/health.capability_catalog.tool_and_connector_posture` for:
+  - public read operations authorized without opt-in
+  - organizer reads that remain opt-in-bound
+  - organizer mutations that remain confirmation-gated
+- use internal `GET /internal/state/inspect?user_id=...` when the operator
+  needs the same catalog with user-scoped authorization posture
+
+Treat any release where capability-catalog evidence suggests that described
+skill metadata has become executable authority, or that organizer mutations
+are no longer confirmation-gated, as a boundary regression rather than a UX
+problem.
+
 `GET /health` now also includes a `memory_retrieval` object with semantic
 retrieval posture:
 

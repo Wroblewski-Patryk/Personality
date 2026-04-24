@@ -252,12 +252,24 @@ For meaningful repo changes, leave behind:
   - for backend capability-catalog slices, regression and release-proof
     evidence from:
     - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_deployment_trigger_scripts.py`
     - coverage should pin:
       - `/health.capability_catalog` bounded aggregation posture
       - internal `GET /internal/state/inspect?user_id=...` capability catalog
         parity with selection-visibility details
+      - `capability_record_truth_model` distinction between:
+        - described durable records
+        - runtime selection surfaces
+        - authorization posture
+      - described role presets and described skill ids remain visible without
+        implying executable authority
+      - authorization evidence keeps public read operations separate from
+        opt-in-bound reads and confirmation-gated organizer mutations
       - release-smoke and incident-evidence bundle failure when
         `capability_catalog` is missing or partial
+      - scenario-level proof that selected work-partner skill metadata does not
+        imply unrelated organizer mutation authority during bounded
+        website-reading
   - for no-UI `v1` life-assistant workflow slices, regression and behavior
     evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_goal_task_signals.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`

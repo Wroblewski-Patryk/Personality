@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-625
 - Title: Sync docs/context for the durable capability-record baseline
-- Status: BACKLOG
+- Status: DONE
 - Owner: Product Docs Agent
 - Depends on: PRJ-624
 - Priority: P1
@@ -21,9 +21,9 @@ Synchronize docs and context for durable capability records.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] Architecture/runtime/testing/ops docs describe the same durable capability-record baseline.
-- [ ] Planning docs and repository context reflect the same lane completion state.
-- [ ] No older wording remains that suggests self-modifying executable skill learning.
+- [x] Architecture/runtime/testing/ops docs describe the same durable capability-record baseline.
+- [x] Planning docs and repository context reflect the same lane completion state.
+- [x] No older wording remains that suggests self-modifying executable skill learning.
 
 ## Forbidden
 - new systems without approval
@@ -33,7 +33,7 @@ Synchronize docs and context for durable capability records.
 
 ## Validation Evidence
 - Tests: doc-and-context sync
-- Manual checks: cross-review against runtime/evidence contract
+- Manual checks: cross-review against runtime/evidence contract in architecture docs, `/health.capability_catalog`, internal inspection, `tests/test_api_routes.py`, `tests/test_runtime_pipeline.py`, and `scripts/run_release_smoke.ps1`
 - Screenshots/logs:
 - High-risk checks: keep the truthful boundary between metadata, selection, authorization, and execution
 
@@ -46,13 +46,13 @@ Synchronize docs and context for durable capability records.
 - Follow-up architecture doc updates: contracts/runtime reality/testing/ops/planning/context
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
