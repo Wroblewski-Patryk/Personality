@@ -191,9 +191,18 @@ Current execution note:
 - `PRJ-621` is now complete:
   - runtime reality, testing guidance, ops notes, and planning/context now all
     describe the same bounded website-reading proof path
-- `PRJ-622` is now the next active slice:
-  - the next gap is durable role/skill/tool-authorization catalog truth for
-    future callers and later UI/admin surfaces
+- `PRJ-622` is now complete:
+  - one explicit durable capability-record contract now freezes the boundary
+    between:
+    - description of role presets and skill records
+    - runtime selection of a role or skill guidance for the current turn
+    - per-user authorization of approved tools or bounded operations
+  - that truth model explicitly rejects turning skill growth into hidden
+    executable authority or turning authorization records into a second action
+    engine
+- `PRJ-623` is now the next active slice:
+  - the next gap is to expose a fuller runtime-backed catalog for those
+    durable records without inventing a parallel capability system
 - `PRJ-598` is complete in repo truth: deployment provenance is now
   machine-visible in `/health.deployment`, deploy webhook evidence, exported
   incident evidence, and release smoke.

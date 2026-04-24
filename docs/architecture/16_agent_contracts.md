@@ -227,6 +227,37 @@ continuity and learned runtime preferences.
 
 ---
 
+## Durable Capability-Record Contract
+
+Durable role presets, durable skill descriptions, and per-user tool
+authorization records now follow one explicit truth model.
+
+Contract rules:
+
+1. durable role records describe approved role presets, prompt variants,
+   selection hints, and provenance; runtime still owns active role selection
+   for the turn
+2. durable skill records describe guidance, limitations, linked approved tool
+   families, and provenance; they must not become direct execution authority
+3. durable tool-authorization records describe per-user permission posture for
+   approved tool families or bounded operations; they must not become a second
+   side-effect engine outside action
+4. backend truth surfaces must preserve the distinction between:
+   - description: what is stored durably
+   - selection: what runtime may choose or has chosen for the turn
+   - authorization: what a given user is actually allowed to execute
+5. capability aggregation surfaces may compose these records for operators or
+   future UI, but they must reuse existing role, skill, connector, and health
+   owners instead of inventing a parallel capability system
+6. "learned skill" posture remains metadata-only until architecture is
+   explicitly revised; no durable skill record may imply self-modifying
+   executable tool logic
+
+This keeps truthful growth visible without widening execution authority beyond
+the existing planning -> action boundary.
+
+---
+
 ## Adaptive Influence Governance Contract (PRJ-288 Baseline)
 
 Adaptive signals may influence foreground cognition only through one governed

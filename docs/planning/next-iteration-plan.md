@@ -158,8 +158,17 @@ Queue update (2026-04-24):
 - runtime reality, testing guidance, ops notes, and planning/context now
   describe the same bounded website-reading proof path instead of leaving it
   split between architecture and smoke-only knowledge
-- the next active slice is `PRJ-622`, which should turn role/skill/tool
-  authorization metadata into a more durable catalog for future callers
+- `PRJ-622` is now complete.
+- one bounded durable capability-record contract now freezes:
+  - role presets as descriptive durable records with runtime-owned selection
+  - skill descriptions as metadata and planning guidance without execution
+    authority
+  - per-user tool authorization as bounded permission posture for approved
+    tool families or operations
+- backend callers must preserve description, selection, and authorization as
+  separate truths instead of flattening them into one capability claim
+- the next active slice is `PRJ-623`, which should expose a fuller runtime
+  catalog for these durable records
 
 - `PRJ-615` Add machine-visible repo-vs-production truth and deploy-parity evidence.
   - Result:

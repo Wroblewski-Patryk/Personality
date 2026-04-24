@@ -10,6 +10,11 @@ Last updated: 2026-04-24
   user preferences over time
 - Commercial model: TBD
 - Current phase: no-UI V1 baseline achieved in repo; final operational V1-closure queue now active for live tool onboarding and daily-use readiness
+- 2026-04-24: `PRJ-622` is complete: canonical architecture now freezes one
+  durable capability-record truth model for role presets, skill descriptions,
+  and per-user tool authorization. Description, runtime selection, and
+  authorization are now explicit separate concerns, and durable skill growth
+  remains metadata-only rather than executable self-modification.
 - 2026-04-24: `PRJ-621` is complete: runtime reality, testing guidance, ops
   notes, and planning truth now all describe the same bounded website-reading
   proof path across `/health.connectors.web_knowledge_tools.website_reading_workflow`,

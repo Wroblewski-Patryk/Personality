@@ -176,6 +176,55 @@ So even when a skill description evolves:
 - runtime may inspect it as learned capability metadata
 - action remains the only side-effect owner
 
+## Tool Authorization Records
+
+Approved tool use may also be backed by durable per-user authorization
+records.
+
+That registry layer may store:
+
+- user identity or scope owner
+- approved tool family
+- approved operation or bounded workflow
+- authorization state such as available, opt-in required, confirmation
+  required, or blocked
+- provider-readiness hints and provenance
+
+These records exist so runtime and operator surfaces can describe which tools
+are merely available in the product, which ones are selectable in planning,
+and which ones are actually authorized for a given user.
+
+They do not create a second execution boundary.
+
+So even when authorization records evolve:
+
+- planning may use them as permission gates and bounded tool hints
+- runtime may expose them through truthful inspection surfaces
+- action remains the only side-effect owner
+
+## Durable Capability Records
+
+Role presets, skill descriptions, and per-user tool authorization records form
+one durable capability-record layer.
+
+That layer exists to preserve learned or configured capability metadata over
+time without changing the core architecture rule:
+
+- identity stays stable
+- runtime still selects the active role for the turn
+- skills remain descriptive guidance rather than executable authority
+- tool authorization remains a bounded permission posture, not a second action
+  engine
+
+The capability-record layer must always distinguish:
+
+- description: what is stored or described durably
+- selection: what runtime may choose for a turn
+- authorization: what tools or operations are actually allowed for a user
+
+Any caller that cannot preserve those distinctions should consume backend
+truth surfaces rather than reconstruct them client-side.
+
 ---
 
 ## Core Rule

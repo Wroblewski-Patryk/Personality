@@ -460,6 +460,33 @@ Last updated: 2026-04-24
   - Validation:
     - docs/context cross-review against `PRJ-620` runtime and test evidence
 
+- [x] PRJ-622 Freeze the durable capability-record baseline
+  - Owner: Planning Agent
+  - Group: Durable Role/Skill/Tool-Authorization Catalog
+  - Depends on: PRJ-621
+  - Priority: P1
+  - Status: DONE
+  - Why now:
+    - the website-reading baseline is already frozen and proven, so the next
+      truthful step is to freeze how durable role presets, durable skill
+      descriptions, and per-user tool authorization records should coexist
+      without widening execution authority
+  - Result:
+    - canonical architecture now defines one bounded durable capability-record
+      layer where:
+      - role presets remain descriptive records and runtime still owns active
+        role selection
+      - skill records remain metadata and planning guidance, not executable
+        authority
+      - tool authorization records remain bounded per-user permission posture,
+        not a second action engine
+      - backend callers must preserve description, selection, and authorization
+        as separate truths
+  - Validation:
+    - architecture/product cross-review of `docs/architecture/03_identity_roles_skills.md`,
+      `docs/architecture/16_agent_contracts.md`, existing backend capability
+      surfaces, and planning/context truth
+
 - [x] PRJ-611 Sync docs/context for the capability-catalog baseline
   - Owner: Product Docs Agent
   - Group: Capability Catalog And Future-UI Bootstrap
