@@ -242,29 +242,49 @@ Last updated: 2026-04-24
   one activation snapshot with provider-specific missing settings, opt-in or
   confirmation posture, and next actions for ClickUp, Google Calendar, and
   Google Drive.
-- `PRJ-602` is now the first `READY` slice because activation posture is now
-  actionable in `/health`, so the next step is to prove that same distinction
-  through release smoke and incident evidence.
+- `PRJ-602` is complete: release smoke, incident evidence, and
+  incident-evidence bundles now validate the same organizer-tool activation
+  snapshot exposed through `/health.connectors.organizer_tool_stack`, so
+  provider-readiness evidence no longer depends on `/health` alone.
+- `PRJ-603` is now the first `READY` slice because the activation posture is
+  now operator-actionable and release-proven, so the next step is to
+  synchronize contracts, runtime reality, testing guidance, ops notes, and
+  planning truth around how organizer-tool activation becomes production-real.
 
 ## READY
 
-- [ ] PRJ-602 Add release and incident evidence for organizer-tool activation posture
+- [ ] PRJ-603 Sync docs/context for organizer-tool credential activation
+  - Owner: Product Docs Agent
+  - Group: Organizer-Tool Credential Activation
+  - Depends on: PRJ-602
+  - Priority: P1
+  - Status: READY
+  - Why now:
+    - activation posture is now actionable in `/health` and proven through
+      smoke plus incident evidence, but canonical docs and repository truth
+      still need the richer activation contract
+  - Done when:
+    - contracts, runtime reality, testing guidance, ops notes, and planning
+      truth align on how organizer-tool activation becomes production-real
+  - Validation:
+    - doc-and-context sync
+
+- [x] PRJ-602 Add release and incident evidence for organizer-tool activation posture
   - Owner: QA/Test
   - Group: Organizer-Tool Credential Activation
   - Depends on: PRJ-601
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Why now:
     - activation is now actionable in `/health.connectors.organizer_tool_stack`,
-      but release and incident evidence still only distinguish the frozen stack
-      from a provider-ready stack at a coarser level
-  - Done when:
-    - smoke and incident evidence distinguish a frozen organizer baseline from
-      a fully provider-ready organizer stack using the shared activation
-      snapshot
+      but release and incident evidence still only distinguished the frozen
+      stack from a provider-ready stack at a coarser level
+  - Result:
+    - release smoke, incident evidence, and incident-evidence bundles now
+      validate the same `activation_snapshot` contract and next-action posture
+      as `/health.connectors.organizer_tool_stack`
   - Validation:
-    - targeted pytest coverage
-    - smoke or incident-evidence checks
+    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py tests/test_api_routes.py` -> `111 passed`
 
 - [x] PRJ-601 Expose one actionable onboarding surface for organizer-tool activation
   - Owner: Backend Builder

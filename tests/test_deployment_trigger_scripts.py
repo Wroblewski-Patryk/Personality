@@ -91,10 +91,79 @@ ORGANIZER_TOOL_STACK_CONFIRMATION_REQUIRED_OPERATIONS = [
     "task_system.clickup_create_task",
     "task_system.clickup_update_task",
 ]
+ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS = [
+    "configure_google_calendar_access_token_calendar_id_and_timezone",
+    "configure_google_drive_access_token_and_folder_id",
+]
 
 
 def _powershell_exe() -> str | None:
     return shutil.which("powershell") or shutil.which("pwsh")
+
+
+def _organizer_tool_activation_snapshot() -> dict[str, object]:
+    return {
+        "policy_owner": "production_organizer_tool_activation",
+        "provider_activation_total": 3,
+        "provider_activation_ready": 1,
+        "provider_activation_state": "provider_activation_incomplete",
+        "user_opt_in_required": True,
+        "mutation_confirmation_required": True,
+        "provider_requirements": {
+            "clickup": {
+                "provider": "clickup",
+                "required_settings": ["CLICKUP_API_TOKEN", "CLICKUP_LIST_ID"],
+                "activation_scope": [
+                    "task_system.clickup_create_task",
+                    "task_system.clickup_list_tasks",
+                    "task_system.clickup_update_task",
+                ],
+                "ready": True,
+                "missing_settings": [],
+                "user_opt_in_required": True,
+                "confirmation_required_operations": [
+                    "task_system.clickup_create_task",
+                    "task_system.clickup_update_task",
+                ],
+                "next_action": "ready_for_clickup_operator_acceptance",
+            },
+            "google_calendar": {
+                "provider": "google_calendar",
+                "required_settings": [
+                    "GOOGLE_CALENDAR_ACCESS_TOKEN",
+                    "GOOGLE_CALENDAR_CALENDAR_ID",
+                    "GOOGLE_CALENDAR_TIMEZONE",
+                ],
+                "activation_scope": ["calendar.google_calendar_read_availability"],
+                "ready": False,
+                "missing_settings": [
+                    "GOOGLE_CALENDAR_ACCESS_TOKEN",
+                    "GOOGLE_CALENDAR_CALENDAR_ID",
+                    "GOOGLE_CALENDAR_TIMEZONE",
+                ],
+                "user_opt_in_required": True,
+                "confirmation_required_operations": [],
+                "next_action": "configure_google_calendar_access_token_calendar_id_and_timezone",
+            },
+            "google_drive": {
+                "provider": "google_drive",
+                "required_settings": [
+                    "GOOGLE_DRIVE_ACCESS_TOKEN",
+                    "GOOGLE_DRIVE_FOLDER_ID",
+                ],
+                "activation_scope": ["cloud_drive.google_drive_list_files"],
+                "ready": False,
+                "missing_settings": [
+                    "GOOGLE_DRIVE_ACCESS_TOKEN",
+                    "GOOGLE_DRIVE_FOLDER_ID",
+                ],
+                "user_opt_in_required": True,
+                "confirmation_required_operations": [],
+                "next_action": "configure_google_drive_access_token_and_folder_id",
+            },
+        },
+        "next_actions": ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS,
+    }
 
 
 class _StubAionHandler(BaseHTTPRequestHandler):
@@ -291,6 +360,7 @@ def stub_aion_server() -> _StubAionServer:
                     "cloud_drive.google_drive_list_files",
                 ],
                 "readiness_state": "provider_credentials_missing",
+                "activation_snapshot": _organizer_tool_activation_snapshot(),
             }
         },
         "conversation_channels": {
@@ -510,6 +580,7 @@ def stub_aion_server() -> _StubAionServer:
                         "cloud_drive.google_drive_list_files",
                     ],
                     "readiness_state": "provider_credentials_missing",
+                    "activation_snapshot": _organizer_tool_activation_snapshot(),
                 },
                 "conversation_channels.telegram": {
                     "policy_owner": "telegram_conversation_reliability_telemetry",
@@ -741,6 +812,7 @@ def _write_incident_bundle(
                     "cloud_drive.google_drive_list_files",
                 ],
                 "readiness_state": "provider_credentials_missing",
+                "activation_snapshot": _organizer_tool_activation_snapshot(),
             },
             "conversation_channels.telegram": {
                 "policy_owner": "telegram_conversation_reliability_telemetry",
@@ -791,6 +863,7 @@ def _write_incident_bundle(
                     "cloud_drive.google_drive_list_files",
                 ],
                 "readiness_state": "provider_credentials_missing",
+                "activation_snapshot": _organizer_tool_activation_snapshot(),
             },
         },
     }
@@ -1169,8 +1242,14 @@ def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_r
         "calendar.google_calendar_read_availability",
         "cloud_drive.google_drive_list_files",
     ]
+    assert summary["organizer_tool_activation_state"] == "provider_activation_incomplete"
+    assert summary["organizer_tool_activation_next_actions"] == ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS
     assert summary["incident_evidence_organizer_tool_stack_policy_owner"] == "production_organizer_tool_stack"
     assert summary["incident_evidence_organizer_tool_stack_readiness_state"] == "provider_credentials_missing"
+    assert summary["incident_evidence_organizer_tool_activation_state"] == "provider_activation_incomplete"
+    assert summary["incident_evidence_organizer_tool_activation_next_actions"] == (
+        ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS
+    )
     assert summary["incident_evidence_retrieval_policy_owner"] == "retrieval_lifecycle_policy"
     assert summary["incident_evidence_retrieval_provider_requested"] == "openai"
     assert summary["incident_evidence_retrieval_provider_effective"] == "openai"
@@ -1237,6 +1316,10 @@ def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_pro
         "calendar.google_calendar_read_availability",
         "cloud_drive.google_drive_list_files",
     ]
+    assert summary["incident_bundle_organizer_tool_activation_state"] == "provider_activation_incomplete"
+    assert summary["incident_bundle_organizer_tool_activation_next_actions"] == (
+        ORGANIZER_TOOL_ACTIVATION_NEXT_ACTIONS
+    )
     assert summary["incident_bundle_learned_state_policy_owner"] == "learned_state_inspection_policy"
     assert summary["incident_bundle_learned_state_internal_inspection_path"] == "/internal/state/inspect"
     assert summary["incident_bundle_learned_state_inspection_sections"] == LEARNED_STATE_INSPECTION_SECTIONS
@@ -1432,6 +1515,27 @@ def test_release_smoke_fails_when_incident_evidence_organizer_tool_stack_contrac
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "Smoke request failed" in combined_output
     assert "organizer_tool_stack is missing approved_operations" in combined_output
+
+
+def test_release_smoke_fails_when_organizer_tool_activation_snapshot_is_missing(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original = dict(_StubAionHandler.health_payload)
+    broken = dict(original)
+    connectors = dict(broken["connectors"])
+    organizer_tool_stack = dict(connectors["organizer_tool_stack"])
+    organizer_tool_stack.pop("activation_snapshot", None)
+    connectors["organizer_tool_stack"] = organizer_tool_stack
+    broken["connectors"] = connectors
+    _StubAionHandler.health_payload = broken
+    try:
+        result = _run_release_smoke("-BaseUrl", stub_aion_server.base_url, cwd=ROOT)
+    finally:
+        _StubAionHandler.health_payload = original
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "organizer_tool_stack is missing activation_snapshot" in combined_output
 
 
 def test_release_smoke_fails_when_deployment_evidence_is_stale(

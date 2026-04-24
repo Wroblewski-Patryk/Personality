@@ -209,6 +209,8 @@ function Validate-IncidentEvidenceBundle {
         organizer_tool_stack_readiness_state = $null
         organizer_tool_stack_ready_operations = @()
         organizer_tool_stack_credential_gap_operations = @()
+        organizer_tool_activation_state = $null
+        organizer_tool_activation_next_actions = @()
         retrieval_policy_owner = $null
         retrieval_provider_requested = $null
         retrieval_provider_effective = $null
@@ -431,6 +433,8 @@ function Validate-IncidentEvidenceBundle {
         organizer_tool_stack_readiness_state = [string]$organizerToolStackContract.readiness_state
         organizer_tool_stack_ready_operations = @($organizerToolStackContract.ready_operations)
         organizer_tool_stack_credential_gap_operations = @($organizerToolStackContract.credential_gap_operations)
+        organizer_tool_activation_state = [string]$organizerToolStackContract.activation_state
+        organizer_tool_activation_next_actions = @($organizerToolStackContract.activation_next_actions)
         retrieval_policy_owner = [string]$retrievalAlignment.retrieval_policy_owner
         retrieval_provider_requested = [string]$retrievalAlignment.provider_requested
         retrieval_provider_effective = [string]$retrievalAlignment.provider_effective
@@ -444,6 +448,8 @@ function Validate-IncidentEvidenceBundle {
         learned_state_growth_summary_sections = @($learnedStateContract.growth_summary_sections)
         incident_organizer_tool_stack_policy_owner = [string]$incidentOrganizerToolStackContract.policy_owner
         incident_organizer_tool_stack_readiness_state = [string]$incidentOrganizerToolStackContract.readiness_state
+        incident_organizer_tool_activation_state = [string]$incidentOrganizerToolStackContract.activation_state
+        incident_organizer_tool_activation_next_actions = @($incidentOrganizerToolStackContract.activation_next_actions)
     }
 }
 
@@ -685,7 +691,8 @@ function Assert-OrganizerToolStackContract {
         "user_opt_in_required_operations",
         "ready_operations",
         "credential_gap_operations",
-        "readiness_state"
+        "readiness_state",
+        "activation_snapshot"
     )) {
         if (-not (Has-Property -Object $OrganizerToolStack -Name $propertyName)) {
             throw "${FailurePrefix}: organizer_tool_stack is missing $propertyName."
@@ -728,12 +735,57 @@ function Assert-OrganizerToolStackContract {
         throw "${FailurePrefix}: organizer_tool_stack readiness_state is provider_credentials_missing but credential_gap_operations is empty."
     }
 
+    $activationSnapshot = $OrganizerToolStack.activation_snapshot
+    if ($null -eq $activationSnapshot) {
+        throw "${FailurePrefix}: organizer_tool_stack activation_snapshot is missing."
+    }
+    if ([string]$activationSnapshot.policy_owner -ne "production_organizer_tool_activation") {
+        throw "${FailurePrefix}: unexpected organizer_tool_stack activation_snapshot policy_owner '$($activationSnapshot.policy_owner)'."
+    }
+    $validActivationStates = @("provider_activation_incomplete", "all_providers_ready_for_operator_acceptance")
+    $activationState = [string]$activationSnapshot.provider_activation_state
+    if ($validActivationStates -notcontains $activationState) {
+        throw "${FailurePrefix}: unexpected organizer_tool_stack activation state '$activationState'."
+    }
+    if (-not [bool]$activationSnapshot.user_opt_in_required) {
+        throw "${FailurePrefix}: organizer_tool_stack activation_snapshot.user_opt_in_required must stay true."
+    }
+    if (-not [bool]$activationSnapshot.mutation_confirmation_required) {
+        throw "${FailurePrefix}: organizer_tool_stack activation_snapshot.mutation_confirmation_required must stay true."
+    }
+    $providerRequirements = $activationSnapshot.provider_requirements
+    if ($null -eq $providerRequirements) {
+        throw "${FailurePrefix}: organizer_tool_stack activation_snapshot.provider_requirements is missing."
+    }
+    foreach ($providerName in @("clickup", "google_calendar", "google_drive")) {
+        $providerEntry = $providerRequirements.$providerName
+        if ($null -eq $providerEntry) {
+            throw "${FailurePrefix}: organizer_tool_stack activation_snapshot.provider_requirements.$providerName is missing."
+        }
+        foreach ($propertyName in @(
+            "provider",
+            "required_settings",
+            "activation_scope",
+            "ready",
+            "missing_settings",
+            "user_opt_in_required",
+            "confirmation_required_operations",
+            "next_action"
+        )) {
+            if (-not (Has-Property -Object $providerEntry -Name $propertyName)) {
+                throw "${FailurePrefix}: organizer_tool_stack activation_snapshot.provider_requirements.$providerName is missing $propertyName."
+            }
+        }
+    }
+
     return @{
         policy_owner = [string]$OrganizerToolStack.policy_owner
         stack_name = [string]$OrganizerToolStack.stack_name
         readiness_state = $readinessState
         ready_operations = $readyOperations
         credential_gap_operations = $credentialGapOperations
+        activation_state = $activationState
+        activation_next_actions = @($activationSnapshot.next_actions)
     }
 }
 
@@ -1752,8 +1804,12 @@ $summary = @{
     organizer_tool_stack_readiness_state = [string]$organizerToolStackContract.readiness_state
     organizer_tool_stack_ready_operations = @($organizerToolStackContract.ready_operations)
     organizer_tool_stack_credential_gap_operations = @($organizerToolStackContract.credential_gap_operations)
+    organizer_tool_activation_state = [string]$organizerToolStackContract.activation_state
+    organizer_tool_activation_next_actions = @($organizerToolStackContract.activation_next_actions)
     incident_evidence_organizer_tool_stack_policy_owner = if ($null -ne $incidentOrganizerToolStackContract) { [string]$incidentOrganizerToolStackContract.policy_owner } else { $null }
     incident_evidence_organizer_tool_stack_readiness_state = if ($null -ne $incidentOrganizerToolStackContract) { [string]$incidentOrganizerToolStackContract.readiness_state } else { $null }
+    incident_evidence_organizer_tool_activation_state = if ($null -ne $incidentOrganizerToolStackContract) { [string]$incidentOrganizerToolStackContract.activation_state } else { $null }
+    incident_evidence_organizer_tool_activation_next_actions = if ($null -ne $incidentOrganizerToolStackContract) { @($incidentOrganizerToolStackContract.activation_next_actions) } else { @() }
     incident_evidence_retrieval_policy_owner = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.retrieval_policy_owner } else { $null }
     incident_evidence_retrieval_provider_requested = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.provider_requested } else { $null }
     incident_evidence_retrieval_provider_effective = if ($null -ne $incidentRetrievalAlignment) { [string]$incidentRetrievalAlignment.provider_effective } else { $null }
@@ -1785,6 +1841,8 @@ $summary = @{
     incident_bundle_organizer_tool_stack_readiness_state = $incidentEvidenceBundleCheck.organizer_tool_stack_readiness_state
     incident_bundle_organizer_tool_stack_ready_operations = $incidentEvidenceBundleCheck.organizer_tool_stack_ready_operations
     incident_bundle_organizer_tool_stack_credential_gap_operations = $incidentEvidenceBundleCheck.organizer_tool_stack_credential_gap_operations
+    incident_bundle_organizer_tool_activation_state = $incidentEvidenceBundleCheck.organizer_tool_activation_state
+    incident_bundle_organizer_tool_activation_next_actions = $incidentEvidenceBundleCheck.organizer_tool_activation_next_actions
     incident_bundle_learned_state_policy_owner = $incidentEvidenceBundleCheck.learned_state_policy_owner
     incident_bundle_learned_state_internal_inspection_path = $incidentEvidenceBundleCheck.learned_state_internal_inspection_path
     incident_bundle_learned_state_inspection_sections = $incidentEvidenceBundleCheck.learned_state_inspection_sections

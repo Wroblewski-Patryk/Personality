@@ -396,9 +396,14 @@ Last updated: 2026-04-24
   now exposes one actionable activation snapshot with provider-specific
   required settings, missing settings, opt-in/confirmation posture, and next
   actions for the frozen organizer-tool stack.
-- 2026-04-24: `PRJ-602` is now the first `READY` task; the next slice should
-  prove that same activation posture through release smoke and incident
-  evidence so provider readiness no longer depends on `/health` alone.
+- 2026-04-24: `PRJ-602` is complete: release smoke, incident evidence, and
+  incident-evidence bundles now validate the same organizer-tool
+  `activation_snapshot` contract and next-action posture exposed through
+  `/health.connectors.organizer_tool_stack`.
+- 2026-04-24: `PRJ-603` is now the first `READY` task; the next slice should
+  synchronize canonical docs, runtime reality, testing guidance, ops notes,
+  and planning/context truth around the richer organizer-tool activation
+  contract.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.
