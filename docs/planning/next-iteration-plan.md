@@ -244,8 +244,18 @@ Queue update (2026-04-24):
   - not a new execution owner
   - not a second authorization matrix
   - not a self-modifying skill-learning claim
-- the next active slice is `PRJ-609`, which should expose one bounded backend
-  capability-catalog payload from those already approved source surfaces.
+- `PRJ-609` is complete: `/health.capability_catalog` and internal
+  `GET /internal/state/inspect?user_id=...` now expose one bounded backend
+  capability catalog composed from already approved source surfaces.
+- `PRJ-610` is complete: targeted API regressions, release smoke, and
+  incident-evidence bundle validation now pin the bounded
+  capability-catalog contract instead of leaving future UI/bootstrap work to
+  trust unproven aggregation shape.
+- `PRJ-611` is complete: runtime reality, testing guidance, ops notes,
+  planning truth, and repository context now describe the same
+  capability-catalog baseline and proof path.
+- the queue seeded through `PRJ-611` is now complete; no seeded `READY`,
+  `BACKLOG`, or `FUTURE` slice remains in this lane.
 
 - `PRJ-609` Expose one backend capability catalog for future UI/admin callers.
   - Result:

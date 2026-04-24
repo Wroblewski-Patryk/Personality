@@ -269,28 +269,63 @@ Last updated: 2026-04-24
   backend capability-catalog contract composed from existing health, internal
   inspection, role-skill, and connector surfaces instead of leaving future UI
   or admin work to reconstruct capability truth client-side.
-- `PRJ-609` is now the first `READY` slice because the capability-catalog
-  target contract is frozen and the next smallest useful step is to expose one
-  bounded backend catalog payload from those already approved source surfaces.
+- `PRJ-609..PRJ-611` are complete: `/health.capability_catalog`, internal
+  inspection, release smoke, and incident-evidence bundle validation now share
+  one bounded backend capability-catalog contract, and the queue seeded
+  through `PRJ-611` is complete.
+- no seeded `READY`, `BACKLOG`, or `FUTURE` slice remains after the
+  capability-catalog and future-UI bootstrap lane; the next slice should come
+  from fresh analysis rather than synthetic queue growth.
 
 ## READY
 
-- [ ] PRJ-609 Expose one backend capability catalog for future UI/admin callers
+- [x] PRJ-611 Sync docs/context for the capability-catalog baseline
+  - Owner: Product Docs Agent
+  - Group: Capability Catalog And Future-UI Bootstrap
+  - Depends on: PRJ-610
+  - Priority: P1
+  - Status: DONE
+  - Why now:
+    - the capability-catalog surface and proof path are live, so docs and
+      repository truth must describe the same backend-owned baseline
+  - Result:
+    - runtime reality, testing guidance, ops notes, planning truth, and
+      repository context now describe the same bounded capability-catalog
+      surface and its future UI/admin role
+  - Validation:
+    - docs/context cross-review against runtime and smoke contract
+
+- [x] PRJ-610 Add release and regression evidence for the capability catalog
+  - Owner: QA/Test
+  - Group: Capability Catalog And Future-UI Bootstrap
+  - Depends on: PRJ-609
+  - Priority: P1
+  - Status: DONE
+  - Why now:
+    - the capability catalog is now live in backend surfaces, so smoke and
+      regression evidence must pin it before future UI/admin callers depend on
+      it
+  - Result:
+    - release smoke and incident-evidence bundle validation now require the
+      same bounded capability-catalog contract that API regressions pin
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
+
+- [x] PRJ-609 Expose one backend capability catalog for future UI/admin callers
   - Owner: Backend Builder
   - Group: Capability Catalog And Future-UI Bootstrap
   - Depends on: PRJ-608
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Why now:
     - the capability-catalog contract is now frozen, so the backend can expose
       one bounded catalog payload without inventing new source-of-truth rules
-  - Done when:
-    - backend inspection surfaces expose one capability catalog that composes
-      existing role, skill, tool, and provider-readiness truth for future
-      UI/admin callers
+  - Result:
+    - `/health.capability_catalog` and internal inspection now expose one
+      bounded aggregated capability view composed from already approved backend
+      truth
   - Validation:
-    - relevant pytest coverage
-    - internal inspection checks
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
 
 - [x] PRJ-608 Freeze the backend capability-catalog baseline
   - Owner: Planner

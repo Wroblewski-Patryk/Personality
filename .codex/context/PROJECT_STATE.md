@@ -9,14 +9,16 @@ Last updated: 2026-04-24
   structured pipeline, replies through API or Telegram, and learns lightweight
   user preferences over time
 - Commercial model: TBD
-- Current phase: no-UI V1 baseline achieved; next external-tool activation queue seeded
+- Current phase: no-UI V1 baseline achieved; post-v1 queues currently clear after capability-catalog bootstrap
+- 2026-04-24: `PRJ-609..PRJ-611` are complete: `/health.capability_catalog`,
+  internal `GET /internal/state/inspect?user_id=...`, release smoke, and
+  incident-evidence bundle validation now share one bounded backend
+  capability-catalog contract for future UI/admin bootstrap, and the queue
+  seeded through `PRJ-611` is complete.
 - 2026-04-24: `PRJ-608` is complete: canonical architecture now freezes one
   bounded backend capability-catalog contract composed from existing health,
   internal-inspection, role-skill, and connector surfaces, keeping skills
   metadata-only and tools action-owned.
-- 2026-04-24: `PRJ-609` is now the first `READY` task; the next slice should
-  expose one bounded backend capability-catalog payload for future UI/admin
-  callers by composing those already approved source surfaces.
 - 2026-04-22: product staging is now explicit:
   - `MVP` is already exceeded by the current runtime
   - `v1` means a no-UI but production-usable life assistant over Telegram or

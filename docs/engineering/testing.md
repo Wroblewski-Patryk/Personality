@@ -229,10 +229,10 @@ For meaningful repo changes, leave behind:
   - provider-specific missing settings
   - provider-specific next actions
   - parity between `/health`, incident evidence, and incident-evidence bundles
-- for tool-grounded learning capture slices, regression and release-proof
-  evidence from:
-  - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py`
-  - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+  - for tool-grounded learning capture slices, regression and release-proof
+    evidence from:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py`
+    - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
   - coverage should pin:
     - approved external reads persist only bounded tool-grounded conclusion
       kinds through action-owned capture and memory-owned conclusion writes
@@ -244,8 +244,17 @@ For meaningful repo changes, leave behind:
     - scenario-level proof that later cognition can recall tool-grounded
       semantic conclusions without re-running the external read path in the
       follow-up turn
-- for no-UI `v1` life-assistant workflow slices, regression and behavior
-  evidence from:
+  - for backend capability-catalog slices, regression and release-proof
+    evidence from:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
+    - coverage should pin:
+      - `/health.capability_catalog` bounded aggregation posture
+      - internal `GET /internal/state/inspect?user_id=...` capability catalog
+        parity with selection-visibility details
+      - release-smoke and incident-evidence bundle failure when
+        `capability_catalog` is missing or partial
+  - for no-UI `v1` life-assistant workflow slices, regression and behavior
+    evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_goal_task_signals.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`
   - `.\scripts\run_behavior_validation.ps1 -GateMode operator`
   - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`

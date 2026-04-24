@@ -1151,6 +1151,9 @@ only on live `/health` during release or incident review.
 Bundle verification now also checks learned-state inspection posture from
 `incident_evidence.json`, so future UI and admin inspection readiness do not
 depend only on live `/health.learned_state` during release or incident review.
+Bundle verification now also checks the bounded capability-catalog contract
+from `health_snapshot.json`, so future UI/bootstrap work does not depend only
+on a live `/health.capability_catalog` call during incident or release review.
 Bundle verification now also checks durable-attention posture from
 `incident_evidence.json`, so release and incident review do not depend only on
 the public `/health` snapshot for attention-owner proof.
@@ -1254,6 +1257,18 @@ Important health surfaces for current release checks:
     - `planning_state.continuity_summary`
   - release smoke and incident-evidence bundle validation now fail if the
     learned-state posture loses any of those bounded contract sections
+- `capability_catalog`
+  - shared backend capability-catalog owner for future UI or admin callers
+  - one bounded aggregation of:
+    - role posture
+    - metadata-only skill catalog posture
+    - organizer and web-knowledge tool posture
+    - learned-state linkage
+  - use it when you need one backend-owned capability view without rebuilding
+    truth from multiple `/health` subtrees on the client side
+  - pair it with internal `GET /internal/state/inspect?user_id=...` when you
+    need the same catalog plus selection-visibility details from backend
+    inspection
 - `api_readiness`
   - shared backend API-readiness owner for later `v2` UI callers
   - canonical health surfaces for learned-state, role-skill, connectors, and

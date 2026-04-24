@@ -1198,9 +1198,16 @@ Current limitation:
 - `/health.api_readiness` now exposes the shared backend API-readiness owner
   plus the health, inspection, connector, and current-turn debug surfaces that
   later `v2` UI callers should consume
+- `/health.capability_catalog` now exposes the shared backend capability
+  catalog owner and one bounded aggregation of:
+  - role posture
+  - metadata-only skill catalog posture
+  - organizer and web-knowledge tool posture
+  - learned-state linkage for future UI/admin callers
 - `GET /internal/state/inspect?user_id=...` now exposes bounded backend-owned
   snapshots for:
   - `api_readiness`
+  - `capability_catalog`
   - `identity_state`
   - `learned_knowledge`
   - `role_skill_state`
@@ -1215,6 +1222,10 @@ Current limitation:
   health-level owner, path, and section-contract metadata so release smoke and
   behavior-validation gates can verify future-UI inspection readiness from
   exported evidence too
+- release smoke and incident-evidence bundle validation now also pin the
+  bounded capability-catalog contract from live `/health.capability_catalog`
+  and exported `health_snapshot.json`, so future UI/bootstrap work does not
+  have to trust an undocumented aggregation shape
 - the current bounded interpretation of `personality growth introspection` is:
   - learned preferences and learned knowledge summaries from repository-owned
     profile, runtime preferences, and conclusions

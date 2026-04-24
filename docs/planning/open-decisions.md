@@ -94,9 +94,16 @@ Current execution note:
     `/health.connectors`, and bounded internal inspection/debug surfaces
   - the catalog is explicitly not a new execution owner, a second
     authorization matrix, or a self-modifying skill-learning path
-- `PRJ-609` is now the current slice and should expose one backend
-  capability-catalog payload for future UI/admin bootstrap from those already
-  approved source surfaces.
+- `PRJ-609..PRJ-611` are now complete:
+  - `/health.capability_catalog` and internal
+    `GET /internal/state/inspect?user_id=...` expose one bounded backend
+    capability-catalog payload for future UI/admin bootstrap
+  - release smoke and incident-evidence bundle validation now pin the same
+    bounded capability-catalog contract
+  - runtime reality, testing guidance, ops notes, planning truth, and
+    repository context now describe the same capability-catalog baseline
+- the queue seeded through `PRJ-611` is complete and no seeded execution slice
+  remains in this lane.
 
 ## Post-V1 Architecture Gap Analysis (2026-04-23)
 
