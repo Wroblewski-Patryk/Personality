@@ -12,11 +12,20 @@ Core runtime topology is healthy, but the system is not yet fully ready for
 real-world tool onboarding and tool-grounded learning.
 
 1. Coolify deployment automation reliability
-   - not yet resolved
+   - baseline now frozen through `PRJ-597`
    - production can be healthy after a deploy, but user-observed behavior
      shows that pushes do not always trigger an automatic deploy on Coolify
-   - the repo needs one explicit baseline for what "repo-driven deploy" means,
-     how to prove it, and how to triage manual-fallback posture
+   - the repo now has one explicit baseline for what "repo-driven deploy"
+     means:
+     - push `main`
+     - Coolify source automation should enqueue deployment for the canonical
+       app
+     - operator verifies target commit in Coolify deployment history
+     - operator verifies production with release smoke
+   - remaining work is evidence and enforcement:
+     - machine-visible proof that primary automation fired
+     - explicit distinction between primary automation, webhook fallback, and
+       UI redeploy fallback
 2. organizer-tool credential activation
    - not yet resolved
    - `/health.connectors.organizer_tool_stack` is machine-visible and

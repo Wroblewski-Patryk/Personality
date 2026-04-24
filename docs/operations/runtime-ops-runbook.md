@@ -580,6 +580,30 @@ Primary deployment path:
 2. allow configured Coolify source automation/webhook to trigger deployment
 3. verify target commit is running before declaring release complete
 
+Repo-driven Coolify deployment-automation baseline (`PRJ-597`):
+
+1. canonical production app:
+   - project `icmgqml9uw3slzch9m9ok23z`
+   - environment `qxooi9coxat272krzjx221fv`
+   - application `jr1oehwlzl8tcn3h8gh2vvih`
+2. intended primary automation path:
+   - push `main`
+   - Coolify source automation should enqueue a deployment for that canonical
+     app without requiring a manual webhook click
+   - operator verifies the target commit in Coolify deployment history before
+     release smoke
+3. canonical production proof path:
+   - Coolify deployment history for the canonical app shows the pushed commit
+   - public production `GET /health` is green
+   - release smoke passes against the production URL
+4. bounded fallback posture:
+   - if source automation is delayed or absent, trigger the existing deploy
+     webhook helper first
+   - if webhook trigger is unavailable, use the Coolify UI redeploy for that
+     same canonical app
+   - fallback does not replace the repo-driven baseline; it is the explicit
+     recovery path when automation proof is missing
+
 Explicit fallback path (when automation is delayed or missing):
 
 1. trigger Coolify deploy webhook manually:

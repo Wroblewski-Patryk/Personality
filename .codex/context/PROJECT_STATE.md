@@ -369,6 +369,14 @@ Last updated: 2026-04-24
   freeze the repo-driven Coolify deployment-automation baseline before deeper
   provider activation and tool-grounded learning work assumes automatic deploy
   behavior.
+- 2026-04-24: `PRJ-597` is complete: repo-driven Coolify deployment
+  automation now has one explicit baseline with the canonical app identity,
+  intended primary automation path, bounded webhook/UI fallback path, and
+  operator proof surfaces.
+- 2026-04-24: `PRJ-598` is now the first `READY` task; the next slice should
+  make deployment provenance machine-visible in release evidence so production
+  does not depend on manual operator inference about whether source automation
+  or fallback triggered the current deploy.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.

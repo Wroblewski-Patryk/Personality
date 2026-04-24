@@ -220,30 +220,34 @@ Last updated: 2026-04-24
     tool-grounded learning capture contract
   - future UI/admin work still needs one clearer backend capability catalog for
     tools, roles, and metadata-only skills
-- `PRJ-597` is now the first `READY` slice because deploy automation drift can
-  silently invalidate all later provider-activation and tool-learning work.
+- `PRJ-597` is complete: repo-driven Coolify deployment automation now has one
+  explicit frozen baseline with canonical app identity, primary automation
+  path, bounded fallback path, and operator proof surfaces.
+- `PRJ-598` is now the first `READY` slice because the next missing piece is
+  machine-visible evidence that distinguishes healthy source automation from
+  webhook/UI fallback.
 
 ## READY
 
-- [ ] PRJ-597 Freeze the repo-driven Coolify deployment-automation baseline
-  - Owner: Planning Agent
+- [ ] PRJ-598 Add machine-visible release evidence for deployment automation posture
+  - Owner: Ops/Release
   - Group: Coolify Deployment Automation Reliability
-  - Depends on: PRJ-596
+  - Depends on: PRJ-597
   - Priority: P0
   - Status: READY
   - Why now:
-    - live production runtime is healthy, but user-observed behavior shows
-      that pushes do not reliably result in automatic Coolify deploys
-    - repo-driven deployment automation must be frozen before tool activation
-      or production learning slices rely on it
+    - the repo now has a frozen deploy baseline, but production still lacks
+      one machine-visible proof that distinguishes source-automation success
+      from webhook or UI fallback
+    - later tool-activation work should not depend on manually inferred deploy
+      provenance
   - Done when:
-    - one explicit production baseline records how repo-driven deploy
-      automation is expected to start on Coolify
-    - proof surfaces, rollback posture, and operator checks are frozen before
-      deeper deployment-automation enforcement or evidence work
+    - release evidence records whether the current production deploy came from
+      the primary automation path or from bounded fallback
+    - smoke or deploy evidence can fail clearly when deployment provenance is
+      missing or ambiguous
   - Validation:
-    - architecture/ops/deployment cross-review plus live production and
-      Coolify operational truth
+    - targeted pytest coverage plus release-smoke or deploy-evidence checks
 
 - [x] PRJ-575 Analyze post-v1 architecture gaps and seed the next execution queue
   - Owner: Planning Agent

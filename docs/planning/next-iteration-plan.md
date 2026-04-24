@@ -80,6 +80,28 @@ Why this order:
   - Validation:
     - architecture/ops/deployment cross-review plus live Coolify truth
 
+Queue update (2026-04-24):
+
+- `PRJ-597` is now complete.
+- repo-driven Coolify deployment automation is now frozen around one explicit
+  baseline:
+  - canonical app:
+    - project `icmgqml9uw3slzch9m9ok23z`
+    - environment `qxooi9coxat272krzjx221fv`
+    - application `jr1oehwlzl8tcn3h8gh2vvih`
+  - intended primary path:
+    - push `main`
+    - Coolify source automation enqueues a deploy for the canonical app
+    - operator verifies target commit in Coolify deployment history
+    - operator runs release smoke against the production URL
+  - bounded fallback:
+    - trigger deploy webhook helper first
+    - if webhook fallback is unavailable, use Coolify UI redeploy for the same
+      canonical app
+- the next active slice is `PRJ-598`, which should add machine-visible release
+  evidence for whether the primary automation path actually fired or whether
+  fallback was required.
+
 - `PRJ-598` Add machine-visible release evidence for deployment automation posture.
   - Result:
     - release evidence and operator guidance prove whether production deploy
