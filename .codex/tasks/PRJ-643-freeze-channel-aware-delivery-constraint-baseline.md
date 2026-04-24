@@ -5,7 +5,7 @@
 - Title: Freeze the channel-aware delivery constraint baseline
 - Status: BACKLOG
 - Owner: Planning Agent
-- Depends on: PRJ-642
+- Depends on: PRJ-650
 - Priority: P1
 
 ## Context

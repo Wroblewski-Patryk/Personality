@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+import re
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
@@ -27,6 +28,7 @@ from app.memory.models import (
     AionGoal,
     AionGoalMilestone,
     AionGoalMilestoneHistory,
+    AionPlannedWorkItem,
     AionGoalProgress,
     AionMemory,
     AionProfile,
@@ -44,6 +46,7 @@ from app.memory.models import (
 class MemoryRepository:
     ACTIVE_GOAL_STATUSES = ("active",)
     ACTIVE_TASK_STATUSES = ("todo", "in_progress", "blocked")
+    ACTIVE_PLANNED_WORK_STATUSES = ("pending", "due", "snoozed")
     ACTIVE_MILESTONE_STATUSES = ("active",)
     MEMORY_LAYER_EPISODIC: MemoryLayerKind = "episodic"
     MEMORY_LAYER_SEMANTIC: MemoryLayerKind = "semantic"
@@ -81,6 +84,11 @@ class MemoryRepository:
     GLOBAL_SCOPE_TYPE = GLOBAL_SCOPE_TYPE
     GLOBAL_SCOPE_KEY = GLOBAL_SCOPE_KEY
     PROACTIVE_OPT_IN_TRUTHY = frozenset({"1", "true", "yes", "on"})
+    PLANNED_WORK_KINDS = frozenset({"follow_up", "check_in", "reminder", "routine", "research_window"})
+    PLANNED_WORK_STATUSES = frozenset({"pending", "due", "snoozed", "completed", "cancelled"})
+    PLANNED_WORK_RECURRENCE_MODES = frozenset({"none", "daily", "weekly", "custom"})
+    PLANNED_WORK_CHANNELS = frozenset({"telegram", "api", "none"})
+    PLANNED_WORK_PROVENANCE = frozenset({"explicit_user_request", "planning_inference", "reflection_inference"})
 
     def __init__(
         self,
@@ -850,6 +858,85 @@ class MemoryRepository:
         )
         return [self._serialize_task(row) for row in rows[:limit]]
 
+    async def get_active_planned_work(
+        self,
+        user_id: str,
+        *,
+        goal_ids: list[int] | None = None,
+        task_ids: list[int] | None = None,
+        limit: int = 8,
+    ) -> list[dict]:
+        async with self.session_factory() as session:
+            statement = (
+                select(AionPlannedWorkItem)
+                .where(
+                    AionPlannedWorkItem.user_id == user_id,
+                    AionPlannedWorkItem.status.in_(self.ACTIVE_PLANNED_WORK_STATUSES),
+                )
+                .order_by(
+                    AionPlannedWorkItem.preferred_at.asc(),
+                    AionPlannedWorkItem.not_before.asc(),
+                    AionPlannedWorkItem.updated_at.desc(),
+                    AionPlannedWorkItem.id.desc(),
+                )
+                .limit(max(limit * 2, limit))
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+        goal_id_set = {goal_id for goal_id in (goal_ids or []) if goal_id is not None}
+        task_id_set = {task_id for task_id in (task_ids or []) if task_id is not None}
+        if goal_id_set:
+            linked_goal_rows = [row for row in rows if row.goal_id in goal_id_set]
+            rows = linked_goal_rows + [row for row in rows if row.goal_id not in goal_id_set]
+        if task_id_set:
+            linked_task_rows = [row for row in rows if row.task_id in task_id_set]
+            rows = linked_task_rows + [row for row in rows if row.task_id not in task_id_set]
+
+        def _planned_work_sort_key(row: AionPlannedWorkItem) -> tuple[datetime, datetime, datetime, int]:
+            max_dt = datetime.max.replace(tzinfo=timezone.utc)
+            preferred_at = self._coerce_datetime(row.preferred_at) or max_dt
+            not_before = self._coerce_datetime(row.not_before) or max_dt
+            updated_at = self._coerce_datetime(row.updated_at) or datetime.min.replace(tzinfo=timezone.utc)
+            return preferred_at, not_before, updated_at, int(row.id or 0)
+
+        rows = sorted(rows, key=_planned_work_sort_key)
+        return [self._serialize_planned_work(row) for row in rows[:limit]]
+
+    async def get_due_planned_work(
+        self,
+        *,
+        now: datetime | None = None,
+        limit: int = 8,
+    ) -> list[dict]:
+        due_at = self._coerce_datetime(now) or datetime.now(timezone.utc)
+        async with self.session_factory() as session:
+            statement = (
+                select(AionPlannedWorkItem)
+                .where(
+                    AionPlannedWorkItem.status.in_(("pending", "snoozed")),
+                    (
+                        (AionPlannedWorkItem.preferred_at.is_not(None) & (AionPlannedWorkItem.preferred_at <= due_at))
+                        | (
+                            AionPlannedWorkItem.preferred_at.is_(None)
+                            & AionPlannedWorkItem.not_before.is_not(None)
+                            & (AionPlannedWorkItem.not_before <= due_at)
+                        )
+                    ),
+                )
+                .order_by(
+                    AionPlannedWorkItem.preferred_at.asc(),
+                    AionPlannedWorkItem.not_before.asc(),
+                    AionPlannedWorkItem.updated_at.asc(),
+                    AionPlannedWorkItem.id.asc(),
+                )
+                .limit(limit)
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+        return [self._serialize_planned_work(row) for row in rows]
+
     async def get_recent_goal_progress(
         self,
         user_id: str,
@@ -1038,6 +1125,228 @@ class MemoryRepository:
             await session.refresh(row)
 
         return self._serialize_task(row)
+
+    async def upsert_planned_work_item(
+        self,
+        *,
+        user_id: str,
+        kind: str,
+        summary: str,
+        goal_id: int | None = None,
+        task_id: int | None = None,
+        not_before: datetime | None = None,
+        preferred_at: datetime | None = None,
+        expires_at: datetime | None = None,
+        recurrence_mode: str = "none",
+        recurrence_rule: str = "",
+        delivery_channel: str = "none",
+        requires_foreground_execution: bool = True,
+        quiet_hours_policy: str = "respect_user_context",
+        provenance: str = "explicit_user_request",
+        source_event_id: str | None = None,
+    ) -> dict:
+        normalized_kind = str(kind).strip().lower()
+        if normalized_kind not in self.PLANNED_WORK_KINDS:
+            normalized_kind = "follow_up"
+        normalized_summary = " ".join(str(summary or "").split())[:220]
+        normalized_recurrence_mode = str(recurrence_mode or "none").strip().lower()
+        if normalized_recurrence_mode not in self.PLANNED_WORK_RECURRENCE_MODES:
+            normalized_recurrence_mode = "none"
+        normalized_channel = str(delivery_channel or "none").strip().lower()
+        if normalized_channel not in self.PLANNED_WORK_CHANNELS:
+            normalized_channel = "none"
+        normalized_provenance = str(provenance or "explicit_user_request").strip().lower()
+        if normalized_provenance not in self.PLANNED_WORK_PROVENANCE:
+            normalized_provenance = "explicit_user_request"
+        normalized_quiet_hours_policy = " ".join(str(quiet_hours_policy or "respect_user_context").split())[:32]
+        normalized_recurrence_rule = " ".join(str(recurrence_rule or "").split())[:120]
+        normalized_source_event_id = str(source_event_id).strip()[:64] if source_event_id else None
+        match_summary = self._normalize_match_text(normalized_summary)
+
+        async with self.session_factory() as session:
+            statement = (
+                select(AionPlannedWorkItem)
+                .where(
+                    AionPlannedWorkItem.user_id == user_id,
+                    AionPlannedWorkItem.status.in_(self.ACTIVE_PLANNED_WORK_STATUSES),
+                )
+                .order_by(AionPlannedWorkItem.updated_at.desc(), AionPlannedWorkItem.id.desc())
+            )
+            result = await session.execute(statement)
+            rows = result.scalars().all()
+
+            row = next(
+                (
+                    item
+                    for item in rows
+                    if self._normalize_match_text(item.summary) == match_summary
+                    and item.kind == normalized_kind
+                    and (goal_id is None or item.goal_id == goal_id or item.goal_id is None)
+                    and (task_id is None or item.task_id == task_id or item.task_id is None)
+                ),
+                None,
+            )
+
+            if row is None:
+                row = AionPlannedWorkItem(
+                    user_id=user_id,
+                    goal_id=goal_id,
+                    task_id=task_id,
+                    kind=normalized_kind,
+                    summary=normalized_summary,
+                    status="pending",
+                    not_before=self._coerce_datetime(not_before),
+                    preferred_at=self._coerce_datetime(preferred_at),
+                    expires_at=self._coerce_datetime(expires_at),
+                    recurrence_mode=normalized_recurrence_mode,
+                    recurrence_rule=normalized_recurrence_rule,
+                    delivery_channel=normalized_channel,
+                    requires_foreground_execution=1 if requires_foreground_execution else 0,
+                    quiet_hours_policy=normalized_quiet_hours_policy,
+                    provenance=normalized_provenance,
+                    source_event_id=normalized_source_event_id,
+                )
+                session.add(row)
+            else:
+                row.goal_id = goal_id if goal_id is not None else row.goal_id
+                row.task_id = task_id if task_id is not None else row.task_id
+                row.kind = normalized_kind
+                row.summary = normalized_summary
+                row.status = "pending"
+                row.not_before = self._coerce_datetime(not_before)
+                row.preferred_at = self._coerce_datetime(preferred_at)
+                row.expires_at = self._coerce_datetime(expires_at)
+                row.recurrence_mode = normalized_recurrence_mode
+                row.recurrence_rule = normalized_recurrence_rule
+                row.delivery_channel = normalized_channel
+                row.requires_foreground_execution = 1 if requires_foreground_execution else 0
+                row.quiet_hours_policy = normalized_quiet_hours_policy
+                row.provenance = normalized_provenance
+                row.source_event_id = normalized_source_event_id
+
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_planned_work(row)
+
+    async def reschedule_planned_work_item(
+        self,
+        *,
+        work_id: int,
+        not_before: datetime | None = None,
+        preferred_at: datetime | None = None,
+        expires_at: datetime | None = None,
+    ) -> dict | None:
+        async with self.session_factory() as session:
+            row = await session.get(AionPlannedWorkItem, work_id)
+            if row is None:
+                return None
+            row.status = "pending"
+            row.not_before = self._coerce_datetime(not_before)
+            row.preferred_at = self._coerce_datetime(preferred_at)
+            row.expires_at = self._coerce_datetime(expires_at)
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_planned_work(row)
+
+    async def snooze_planned_work_item(
+        self,
+        *,
+        work_id: int,
+        until_at: datetime,
+        evaluated_at: datetime | None = None,
+    ) -> dict | None:
+        snooze_until = self._coerce_datetime(until_at)
+        if snooze_until is None:
+            return None
+        async with self.session_factory() as session:
+            row = await session.get(AionPlannedWorkItem, work_id)
+            if row is None:
+                return None
+            if row.status in {"completed", "cancelled"}:
+                return self._serialize_planned_work(row)
+            row.status = "snoozed"
+            row.not_before = snooze_until
+            row.preferred_at = snooze_until
+            row.last_evaluated_at = self._coerce_datetime(evaluated_at) or datetime.now(timezone.utc)
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_planned_work(row)
+
+    async def advance_planned_work_recurrence(
+        self,
+        *,
+        work_id: int,
+        evaluated_at: datetime | None = None,
+    ) -> dict | None:
+        effective_now = self._coerce_datetime(evaluated_at) or datetime.now(timezone.utc)
+        async with self.session_factory() as session:
+            row = await session.get(AionPlannedWorkItem, work_id)
+            if row is None:
+                return None
+            if row.status == "cancelled":
+                return self._serialize_planned_work(row)
+            next_preferred_at = self._next_recurrence_at(row=row, evaluated_at=effective_now)
+            if next_preferred_at is None:
+                return self._serialize_planned_work(row)
+            current_anchor = self._coerce_datetime(row.preferred_at) or self._coerce_datetime(row.not_before) or effective_now
+            expiry_offset = None
+            if row.expires_at is not None:
+                expires_at = self._coerce_datetime(row.expires_at)
+                if expires_at is not None:
+                    expiry_offset = expires_at - current_anchor
+            row.status = "pending"
+            row.not_before = next_preferred_at
+            row.preferred_at = next_preferred_at
+            row.expires_at = next_preferred_at + expiry_offset if expiry_offset is not None else None
+            row.last_evaluated_at = effective_now
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_planned_work(row)
+
+    async def cancel_planned_work_item(self, *, work_id: int) -> dict | None:
+        async with self.session_factory() as session:
+            row = await session.get(AionPlannedWorkItem, work_id)
+            if row is None:
+                return None
+            row.status = "cancelled"
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_planned_work(row)
+
+    async def complete_planned_work_item(self, *, work_id: int) -> dict | None:
+        async with self.session_factory() as session:
+            row = await session.get(AionPlannedWorkItem, work_id)
+            if row is None:
+                return None
+            row.status = "completed"
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_planned_work(row)
+
+    async def mark_planned_work_due(
+        self,
+        *,
+        work_id: int,
+        evaluated_at: datetime | None = None,
+    ) -> dict | None:
+        async with self.session_factory() as session:
+            row = await session.get(AionPlannedWorkItem, work_id)
+            if row is None:
+                return None
+            if row.status in {"completed", "cancelled"}:
+                return self._serialize_planned_work(row)
+            row.status = "due"
+            row.last_evaluated_at = self._coerce_datetime(evaluated_at) or datetime.now(timezone.utc)
+            await session.commit()
+            await session.refresh(row)
+
+        return self._serialize_planned_work(row)
 
     async def update_task_status(self, *, task_id: int, status: str) -> dict | None:
         async with self.session_factory() as session:
@@ -2202,6 +2511,30 @@ class MemoryRepository:
             "updated_at": row.updated_at,
         }
 
+    def _serialize_planned_work(self, row: AionPlannedWorkItem) -> dict:
+        return {
+            "id": row.id,
+            "user_id": row.user_id,
+            "goal_id": row.goal_id,
+            "task_id": row.task_id,
+            "kind": row.kind,
+            "summary": row.summary,
+            "status": row.status,
+            "not_before": self._coerce_datetime(row.not_before),
+            "preferred_at": self._coerce_datetime(row.preferred_at),
+            "expires_at": self._coerce_datetime(row.expires_at),
+            "recurrence_mode": row.recurrence_mode,
+            "recurrence_rule": row.recurrence_rule,
+            "delivery_channel": row.delivery_channel,
+            "requires_foreground_execution": bool(row.requires_foreground_execution),
+            "quiet_hours_policy": row.quiet_hours_policy,
+            "provenance": row.provenance,
+            "source_event_id": row.source_event_id,
+            "last_evaluated_at": self._coerce_datetime(row.last_evaluated_at),
+            "created_at": self._coerce_datetime(row.created_at),
+            "updated_at": self._coerce_datetime(row.updated_at),
+        }
+
     def _serialize_goal_progress(self, row: AionGoalProgress) -> dict:
         return {
             "id": row.id,
@@ -2557,6 +2890,27 @@ class MemoryRepository:
             "recovery_phase": "Stabilize goal recovery",
             "completion_window": "Drive goal to closure",
         }.get(phase, "Advance goal milestone")
+
+    def _next_recurrence_at(
+        self,
+        *,
+        row: AionPlannedWorkItem,
+        evaluated_at: datetime,
+    ) -> datetime | None:
+        recurrence_mode = str(row.recurrence_mode or "none").strip().lower()
+        base_at = self._coerce_datetime(row.preferred_at) or self._coerce_datetime(row.not_before) or evaluated_at
+        if recurrence_mode == "daily":
+            return base_at + timedelta(days=1)
+        if recurrence_mode == "weekly":
+            return base_at + timedelta(days=7)
+        if recurrence_mode == "custom":
+            recurrence_rule = str(row.recurrence_rule or "").strip().lower()
+            match = re.search(r"interval_days:(\d+)", recurrence_rule)
+            if match is None:
+                return None
+            interval_days = max(1, int(match.group(1)))
+            return base_at + timedelta(days=interval_days)
+        return None
 
     def _coerce_datetime(self, value: datetime | None) -> datetime | None:
         if value is None:

@@ -25,6 +25,68 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-25 - Implemented capabilities stay underused when runtime awareness is implicit
+- Context:
+  - fresh code-level analysis after the core no-UI `v1` planning lane showed
+    that planned work, bounded web search, page reading, and tool-grounded
+    learning are implemented and tested, but the foreground cognition path
+    still exposes those abilities only indirectly in several places.
+- Symptom:
+  - the personality can execute capability-specific paths when the user uses
+    explicit trigger phrasing like `search the web`, `read page`, or `remind
+    me tomorrow`, yet it may fail to act like it clearly knows about current
+    time, available tools, or its own bounded future-work posture on more
+    implicit turns.
+- Root cause:
+  - runtime capability truth exists mainly in health/debug or planner-side
+    heuristics, while prompt and foreground-context surfaces do not always
+    carry an explicit, reusable awareness contract for the active turn.
+- Guardrail:
+  - when a capability becomes part of the product baseline, add an explicit
+    foreground awareness contract for it instead of relying only on hidden
+    heuristics, event timestamps, or operator-visible health surfaces.
+- Preferred pattern:
+  - keep execution authority in planning and action
+  - add bounded turn-level awareness for time and approved tools
+  - prove the behavior with indirect, non-keyword-trigger scenarios
+- Avoid:
+  - assuming "implemented and green in tests" automatically means the
+    personality can recognize and use the capability naturally
+- Evidence:
+  - 2026-04-25 repo analysis across `app/core/runtime.py`,
+    `app/agents/planning.py`, `app/integrations/openai/prompting.py`, and
+    `tests/test_runtime_pipeline.py`
+
+### 2026-04-25 - Acceptance surfaces can drift semantically even when parity tests stay green
+- Context:
+  - after the core no-UI `v1` boundary was revised around conversation,
+    website reading, tool-grounded learning, and internal planned work, fresh
+    analysis still found old organizer-gate assumptions and surface-only
+    readiness wording in some repo truth.
+- Symptom:
+  - `/health.v1_readiness`, tests, and high-level docs can all look mutually
+    consistent while still overstating what is core `v1`, what is extension
+    posture, and which gates are truly derived from live runtime conditions.
+- Root cause:
+  - parity coverage was stronger than semantic-boundary coverage, so stale
+    acceptance meaning survived even though serialization and smoke checks were
+    already green.
+- Guardrail:
+  - whenever product boundary changes, review not only field presence and
+    parity, but also whether each readiness field is still a truthful summary
+    of the approved acceptance boundary.
+- Preferred pattern:
+  - freeze the acceptance boundary first
+  - derive readiness summaries from live owner surfaces
+  - keep extension posture visible, but separate from core-release blockers
+- Avoid:
+  - treating "field exists and matches incident evidence" as sufficient proof
+    that the field still means the right thing
+- Evidence:
+  - `PRJ-647` planning analysis
+  - `app/core/v1_readiness_policy.py`
+  - `docs/architecture/10_future_vision.md`
+
 ### 2026-04-24 - Coolify Docker Compose apps must not reference `SOURCE_COMMIT` directly in compose values
 - Context:
   - deploy parity was repaired up to automatic source automation, but live

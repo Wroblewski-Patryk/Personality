@@ -205,6 +205,13 @@ posture:
   follow-up behavior, attach behavior-validation evidence that covers the
   bounded `v1` workflow (`T13.1`) alongside incident evidence instead of
   relying on live `/health` alone
+- when a release or incident touches time-aware planned work posture, attach
+  evidence for:
+  - `T19.1` due planned-work delivery through the normal foreground runtime
+  - `T19.2` recurring planned-work reevaluation plus advancement after
+    foreground delivery
+  - `/health.v1_readiness.time_aware_planned_work_gate_state`
+  - `incident_evidence.policy_posture["v1_readiness"]`
 - when a release or incident touches search, browser, or ClickUp tool usage,
   attach behavior-validation evidence for:
   - `T14.1` analyst-driven DuckDuckGo search
@@ -1412,6 +1419,15 @@ Important health surfaces for current release checks:
  - `/health.v1_readiness.organizer_daily_use_*` must stay in parity with the
    same organizer-tool stack snapshot; treat drift between those two surfaces
    as a release-blocking regression rather than as a docs-only mismatch.
+- `/health.v1_readiness.time_aware_planned_work_*` is the compact operator
+  surface for core no-UI `v1` planned-work posture:
+  - `time_aware_planned_work_policy_owner`
+  - `time_aware_planned_work_delivery_path`
+  - `time_aware_planned_work_recurrence_owner`
+  - `time_aware_planned_work_gate_state`
+  Treat drift between those fields and exported
+  `incident_evidence.policy_posture["v1_readiness"]` as a release-blocking
+  regression rather than as optional observability polish.
 - `calendar.google_calendar_read_availability.state=credentials_missing`
   means the bounded calendar live-read adapter exists but runtime lacks
   credentials for provider-backed execution

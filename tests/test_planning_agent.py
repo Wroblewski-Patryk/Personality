@@ -2,7 +2,9 @@ from datetime import datetime, timezone
 
 from app.agents.planning import PlanningAgent
 from app.core.contracts import (
+    CancelPlannedWorkItemDomainIntent,
     CalendarSchedulingIntentDomainIntent,
+    CompletePlannedWorkItemDomainIntent,
     ConnectedDriveAccessDomainIntent,
     ConnectorCapabilityDiscoveryDomainIntent,
     ContextOutput,
@@ -13,6 +15,7 @@ from app.core.contracts import (
     MotivationOutput,
     PromoteInferredGoalDomainIntent,
     PromoteInferredTaskDomainIntent,
+    ReschedulePlannedWorkItemDomainIntent,
     RoleOutput,
     SkillCapabilityOutput,
     UpdateCollaborationPreferenceDomainIntent,
@@ -20,6 +23,7 @@ from app.core.contracts import (
     UpdateResponseStyleDomainIntent,
     UpdateTaskStatusDomainIntent,
     UpsertGoalDomainIntent,
+    UpsertPlannedWorkItemDomainIntent,
     UpsertTaskDomainIntent,
 )
 
@@ -539,7 +543,116 @@ def test_planning_agent_emits_reminder_task_and_proactive_preference_from_explic
     )
 
     assert any(isinstance(intent, UpsertTaskDomainIntent) for intent in result.domain_intents)
+    assert any(isinstance(intent, UpsertPlannedWorkItemDomainIntent) for intent in result.domain_intents)
     assert any(isinstance(intent, UpdateProactivePreferenceDomainIntent) for intent in result.domain_intents)
+
+
+def test_planning_agent_emits_recurring_routine_planned_work_from_daily_request() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Remind me every day to review my inbox."),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.76,
+            urgency=0.35,
+            valence=0.0,
+            arousal=0.38,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.7),
+    )
+
+    planned_work_intent = next(
+        intent for intent in result.domain_intents if isinstance(intent, UpsertPlannedWorkItemDomainIntent)
+    )
+    assert planned_work_intent.work_kind == "routine"
+    assert planned_work_intent.recurrence_mode == "daily"
+    assert planned_work_intent.recurrence_rule == ""
+
+
+def test_planning_agent_emits_custom_recurring_planned_work_rule_from_interval_request() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Remind me every 3 days to send the weekly metrics."),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.75,
+            urgency=0.34,
+            valence=0.0,
+            arousal=0.36,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.7),
+    )
+
+    planned_work_intent = next(
+        intent for intent in result.domain_intents if isinstance(intent, UpsertPlannedWorkItemDomainIntent)
+    )
+    assert planned_work_intent.work_kind == "routine"
+    assert planned_work_intent.recurrence_mode == "custom"
+    assert planned_work_intent.recurrence_rule == "interval_days:3"
+
+
+def test_planning_agent_emits_planned_work_reschedule_cancel_and_complete_intents() -> None:
+    active_planned_work = [
+        {
+            "id": 11,
+            "summary": "send the release summary tomorrow",
+            "kind": "reminder",
+            "status": "pending",
+        }
+    ]
+
+    reschedule_result = PlanningAgent().run(
+        event=_event(text="Reschedule the release summary reminder to tomorrow."),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.72,
+            urgency=0.31,
+            valence=0.0,
+            arousal=0.34,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.7),
+        active_planned_work=active_planned_work,
+    )
+    cancel_result = PlanningAgent().run(
+        event=_event(text="Cancel the reminder about the release summary."),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.7,
+            urgency=0.28,
+            valence=0.0,
+            arousal=0.31,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.7),
+        active_planned_work=active_planned_work,
+    )
+    complete_result = PlanningAgent().run(
+        event=_event(text="I already sent the release summary reminder."),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.71,
+            urgency=0.27,
+            valence=0.0,
+            arousal=0.3,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.7),
+        active_planned_work=active_planned_work,
+    )
+
+    assert any(
+        isinstance(intent, ReschedulePlannedWorkItemDomainIntent) and intent.work_id == 11
+        for intent in reschedule_result.domain_intents
+    )
+    assert any(
+        isinstance(intent, CancelPlannedWorkItemDomainIntent) and intent.work_id == 11
+        for intent in cancel_result.domain_intents
+    )
+    assert any(
+        isinstance(intent, CompletePlannedWorkItemDomainIntent) and intent.work_id == 11
+        for intent in complete_result.domain_intents
+    )
 
 
 def test_planning_agent_emits_daily_planning_task_from_explicit_request() -> None:
@@ -2236,3 +2349,67 @@ def test_planning_agent_keeps_proactive_path_separate_from_proposal_handoff_and_
     assert result.proposal_handoffs == []
     assert result.accepted_proposals == []
     assert result.connector_permission_gates == []
+
+
+def test_planning_agent_accepts_scheduler_due_planned_work_handoff_for_foreground_delivery() -> None:
+    result = PlanningAgent().run(
+        event=Event(
+            event_id="evt-scheduler-due-1",
+            source="scheduler",
+            subsource="maintenance_tick",
+            timestamp=datetime.now(timezone.utc),
+            payload={
+                "text": "planned work due: send the release summary",
+                "chat_id": 123456,
+                "planned_work_due": {
+                    "work_id": 9,
+                    "summary": "send the release summary",
+                    "work_kind": "reminder",
+                    "delivery_channel": "telegram",
+                    "source_event_id": "evt-reminder-1",
+                },
+            },
+            meta=EventMeta(user_id="123456", trace_id="t-scheduler-due-1"),
+        ),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.78,
+            urgency=0.66,
+            valence=0.0,
+            arousal=0.48,
+            mode="execute",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.8),
+        subconscious_proposals=[
+            {
+                "proposal_id": 611,
+                "proposal_type": "nudge_user",
+                "summary": "planned_work_due:9:send the release summary",
+                "payload": {
+                    "handoff_kind": "planned_work_due",
+                    "work_id": 9,
+                    "work_kind": "reminder",
+                    "summary": "send the release summary",
+                    "delivery_channel": "telegram",
+                    "source_event_id": "evt-reminder-1",
+                },
+                "confidence": 0.82,
+                "status": "pending",
+            }
+        ],
+    )
+
+    assert result.goal == "Deliver the due planned-work follow-up with one clear immediate next step."
+    assert result.steps == [
+        "interpret_event",
+        "review_context",
+        "integrate_subconscious_nudge",
+        "prepare_response",
+        "send_telegram_message",
+    ]
+    assert result.needs_response is True
+    assert result.needs_action is True
+    assert len(result.accepted_proposals) == 1
+    assert result.accepted_proposals[0].proposal_id == 611
+    assert result.proposal_handoffs[0].decision == "accept"
+    assert result.proposal_handoffs[0].reason == "scheduled_due_planned_work_handoff"

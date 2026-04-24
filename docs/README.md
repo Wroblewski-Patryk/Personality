@@ -77,6 +77,7 @@ near-term coordination direction without rewriting the canonical architecture.
 
 - `planning/open-decisions.md`
 - `planning/next-iteration-plan.md`
+- `planning/v2-product-entry-plan.md`
 
 Use these files for explicit follow-up on dual-loop coordination, attention
 gating, batched conversation handling, and future external productivity

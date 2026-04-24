@@ -11,6 +11,7 @@ from app.memory.models import (
     AionGoalMilestoneHistory,
     AionGoalProgress,
     AionMemory,
+    AionPlannedWorkItem,
     AionRelation,
     AionReflectionTask,
     AionSchedulerCadenceEvidence,
@@ -2186,5 +2187,139 @@ async def test_memory_repository_appends_and_reads_goal_progress_history(tmp_pat
         rows = (await session.execute(select(AionGoalProgress).order_by(AionGoalProgress.id.asc()))).scalars().all()
 
     assert len(rows) == 2
+
+    await engine.dispose()
+
+
+async def test_memory_repository_upserts_and_updates_planned_work_items(tmp_path) -> None:
+    database_path = tmp_path / "memory-planned-work.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    preferred_at = datetime(2026, 4, 25, 9, 0, tzinfo=timezone.utc)
+    first = await repository.upsert_planned_work_item(
+        user_id="u-1",
+        kind="reminder",
+        summary="send the release summary tomorrow",
+        preferred_at=preferred_at,
+        delivery_channel="telegram",
+        provenance="explicit_user_request",
+        source_event_id="evt-plan-1",
+    )
+    duplicate = await repository.upsert_planned_work_item(
+        user_id="u-1",
+        kind="reminder",
+        summary="send the release summary tomorrow",
+        preferred_at=preferred_at,
+        delivery_channel="telegram",
+        provenance="explicit_user_request",
+        source_event_id="evt-plan-2",
+    )
+    rescheduled_at = datetime(2026, 4, 26, 8, 30, tzinfo=timezone.utc)
+    rescheduled = await repository.reschedule_planned_work_item(
+        work_id=int(first["id"]),
+        preferred_at=rescheduled_at,
+    )
+    active = await repository.get_active_planned_work(user_id="u-1", limit=5)
+    completed = await repository.complete_planned_work_item(work_id=int(first["id"]))
+
+    assert first["id"] == duplicate["id"]
+    assert first["kind"] == "reminder"
+    assert first["delivery_channel"] == "telegram"
+    assert rescheduled is not None
+    assert rescheduled["preferred_at"] == rescheduled_at
+    assert len(active) == 1
+    assert active[0]["summary"] == "send the release summary tomorrow"
+    assert completed is not None
+    assert completed["status"] == "completed"
+    assert await repository.get_active_planned_work(user_id="u-1", limit=5) == []
+
+    async with session_factory() as session:
+        rows = (
+            await session.execute(
+                select(AionPlannedWorkItem).order_by(AionPlannedWorkItem.id.asc())
+            )
+        ).scalars().all()
+
+    assert len(rows) == 1
+    assert rows[0].source_event_id == "evt-plan-2"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_returns_due_planned_work_and_marks_it_due(tmp_path) -> None:
+    database_path = tmp_path / "memory-planned-work-due.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    due_at = datetime(2026, 4, 25, 9, 0, tzinfo=timezone.utc)
+    await repository.upsert_planned_work_item(
+        user_id="u-1",
+        kind="reminder",
+        summary="send the release summary",
+        preferred_at=due_at,
+    )
+    await repository.upsert_planned_work_item(
+        user_id="u-2",
+        kind="check_in",
+        summary="weekly check-in",
+        preferred_at=datetime(2026, 4, 28, 9, 0, tzinfo=timezone.utc),
+    )
+
+    due_items = await repository.get_due_planned_work(
+        now=datetime(2026, 4, 26, 9, 0, tzinfo=timezone.utc),
+        limit=5,
+    )
+    updated = await repository.mark_planned_work_due(
+        work_id=int(due_items[0]["id"]),
+        evaluated_at=datetime(2026, 4, 26, 9, 0, tzinfo=timezone.utc),
+    )
+
+    assert len(due_items) == 1
+    assert due_items[0]["summary"] == "send the release summary"
+    assert updated is not None
+    assert updated["status"] == "due"
+    assert updated["last_evaluated_at"] == datetime(2026, 4, 26, 9, 0, tzinfo=timezone.utc)
+
+    await engine.dispose()
+
+
+async def test_memory_repository_snoozes_and_advances_recurring_planned_work(tmp_path) -> None:
+    database_path = tmp_path / "memory-planned-work-recurring.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    preferred_at = datetime(2026, 4, 25, 8, 0, tzinfo=timezone.utc)
+    created = await repository.upsert_planned_work_item(
+        user_id="u-1",
+        kind="routine",
+        summary="daily review inbox",
+        preferred_at=preferred_at,
+        recurrence_mode="daily",
+        quiet_hours_policy="respect_user_context",
+    )
+    snoozed = await repository.snooze_planned_work_item(
+        work_id=int(created["id"]),
+        until_at=datetime(2026, 4, 25, 10, 0, tzinfo=timezone.utc),
+        evaluated_at=datetime(2026, 4, 25, 7, 30, tzinfo=timezone.utc),
+    )
+    advanced = await repository.advance_planned_work_recurrence(
+        work_id=int(created["id"]),
+        evaluated_at=datetime(2026, 4, 25, 10, 5, tzinfo=timezone.utc),
+    )
+
+    assert snoozed is not None
+    assert snoozed["status"] == "snoozed"
+    assert snoozed["preferred_at"] == datetime(2026, 4, 25, 10, 0, tzinfo=timezone.utc)
+    assert advanced is not None
+    assert advanced["status"] == "pending"
+    assert advanced["preferred_at"] == datetime(2026, 4, 26, 10, 0, tzinfo=timezone.utc)
+    assert advanced["recurrence_mode"] == "daily"
 
     await engine.dispose()

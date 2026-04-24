@@ -165,6 +165,7 @@ class GraphStageAdapters:
             theta=theta if isinstance(theta, dict) else None,
             active_goals=list(state.active_goals),
             active_tasks=list(state.active_tasks),
+            active_planned_work=list(state.active_planned_work),
             active_goal_milestones=list(state.active_goal_milestones),
             goal_milestone_history=list(state.goal_milestone_history),
             goal_progress_history=list(state.goal_progress_history),

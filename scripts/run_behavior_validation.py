@@ -329,6 +329,10 @@ def _evaluate_incident_evidence_input(
         "incident_evidence_v1_readiness_product_stage": None,
         "incident_evidence_v1_readiness_conversation_gate_state": None,
         "incident_evidence_v1_readiness_learned_state_gate_state": None,
+        "incident_evidence_v1_time_aware_planned_work_policy_owner": None,
+        "incident_evidence_v1_time_aware_planned_work_delivery_path": None,
+        "incident_evidence_v1_time_aware_planned_work_recurrence_owner": None,
+        "incident_evidence_v1_time_aware_planned_work_gate_state": None,
         "incident_evidence_attention_policy_owner": None,
         "incident_evidence_attention_selected_coordination_mode": None,
         "incident_evidence_attention_contract_store_state": None,
@@ -522,6 +526,18 @@ def _evaluate_incident_evidence_input(
     context["incident_evidence_v1_readiness_learned_state_gate_state"] = v1_readiness_policy.get(
         "learned_state_gate_state"
     )
+    context["incident_evidence_v1_time_aware_planned_work_policy_owner"] = v1_readiness_policy.get(
+        "time_aware_planned_work_policy_owner"
+    )
+    context["incident_evidence_v1_time_aware_planned_work_delivery_path"] = v1_readiness_policy.get(
+        "time_aware_planned_work_delivery_path"
+    )
+    context["incident_evidence_v1_time_aware_planned_work_recurrence_owner"] = v1_readiness_policy.get(
+        "time_aware_planned_work_recurrence_owner"
+    )
+    context["incident_evidence_v1_time_aware_planned_work_gate_state"] = v1_readiness_policy.get(
+        "time_aware_planned_work_gate_state"
+    )
     learned_state_policy = {}
     if isinstance(policy_posture, dict):
         candidate_learned_state_policy = policy_posture.get("learned_state")
@@ -565,6 +581,8 @@ def _evaluate_incident_evidence_input(
             "T17.2",
             "T18.1",
             "T18.2",
+            "T19.1",
+            "T19.2",
         }.issubset(required_behavior_scenarios)
         and {
             "knowledge_search.search_web",
@@ -575,6 +593,14 @@ def _evaluate_incident_evidence_input(
             "cloud_drive.google_drive_list_files",
         }.issubset(approved_tool_slices)
         and tool_grounded_valid
+        and v1_readiness_policy.get("time_aware_planned_work_policy_owner")
+        == "internal_time_aware_planned_work_policy"
+        and v1_readiness_policy.get("time_aware_planned_work_delivery_path")
+        == "attention_to_planning_to_expression_to_action"
+        and v1_readiness_policy.get("time_aware_planned_work_recurrence_owner")
+        == "scheduler_reevaluation_with_foreground_handoff"
+        and v1_readiness_policy.get("time_aware_planned_work_gate_state")
+        == "foreground_due_delivery_and_recurring_reevaluation_ready"
     )
     if not v1_readiness_valid:
         violations.append(GATE_REASON_INCIDENT_EVIDENCE_V1_READINESS_INVALID)

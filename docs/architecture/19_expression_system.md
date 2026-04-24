@@ -136,11 +136,24 @@ Different channels require different formatting.
 - short messages  
 - readable structure  
 - minimal formatting  
+- current stable repo baseline is still plain-text reply delivery
+- photo, voice, or generated-image behavior must not be improvised inside
+  expression; it needs an explicit action-owned delivery contract first
 
 ### Future (Web / App)
 
 - richer formatting  
 - structured UI elements  
+
+### Future Multimodal Channels
+
+- photo or screenshot may arrive as context after transport normalization
+- voice note may arrive as transcribed user text plus bounded attachment
+  metadata
+- generated image replies may be expressed as "image + caption" intent, but
+  only after a bounded multimodal handoff contract is approved
+- channel adaptation should stay transport-aware without creating separate
+  reasoning systems per channel
 
 ---
 
@@ -226,6 +239,9 @@ Expression must:
 - voice output  
 - UI rendering  
 - adaptive formatting  
+- photo-context understanding through normalized event payloads
+- voice-note-to-text intake through the event normalization boundary
+- generated-image reply plus caption through the action delivery boundary
 
 ---
 

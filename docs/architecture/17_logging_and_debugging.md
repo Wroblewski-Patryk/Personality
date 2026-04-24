@@ -250,9 +250,32 @@ It should expose:
   - learned-state inspection
   - website reading
   - tool-grounded learning reuse
-  - organizer daily use
+  - time-aware planned work
   - deploy parity
 - canonical runtime surfaces for each gate
+
+Organizer daily-use posture may still be mirrored from
+`/health.connectors.organizer_tool_stack` for operator convenience, but it
+should be labeled as extension readiness rather than a core no-UI `v1` gate.
+Core gate truth and extension posture must stay distinguishable in both live
+`/health.v1_readiness` and exported incident evidence.
+
+For the time-aware planned-work gate, the minimum machine-visible posture is:
+
+- `time_aware_planned_work_policy_owner`
+- `time_aware_planned_work_delivery_path`
+- `time_aware_planned_work_recurrence_owner`
+- `time_aware_planned_work_gate_state`
+- parity between `/health.v1_readiness` and exported
+  `incident_evidence.policy_posture["v1_readiness"]`
+
+When extension posture is mirrored into the same `v1_readiness` surface, the
+minimum rule is:
+
+- extension-only fields must not silently redefine the core final gate result
+- organizer daily-use or channel-specific delivery quality must remain
+  machine-visible without pretending to be a required cognition blocker for the
+  post-`PRJ-642` core boundary
 
 ---
 

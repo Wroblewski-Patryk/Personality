@@ -2567,6 +2567,8 @@ def test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready() ->
     assert "T17.2" in body["v1_readiness"]["required_behavior_scenarios"]
     assert "T18.1" in body["v1_readiness"]["required_behavior_scenarios"]
     assert "T18.2" in body["v1_readiness"]["required_behavior_scenarios"]
+    assert "T19.1" in body["v1_readiness"]["required_behavior_scenarios"]
+    assert "T19.2" in body["v1_readiness"]["required_behavior_scenarios"]
     assert "task_system.clickup_list_tasks" in body["v1_readiness"]["approved_tool_slices"]
     assert "task_system.clickup_update_task" in body["v1_readiness"]["approved_tool_slices"]
     assert "calendar.google_calendar_read_availability" in body["v1_readiness"]["approved_tool_slices"]
@@ -2596,12 +2598,26 @@ def test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready() ->
     ]
     assert body["v1_readiness"]["website_reading_workflow_state"] == "ready_for_direct_and_search_first_review"
     assert body["v1_readiness"]["tool_grounded_learning_state"] == "tool_grounded_learning_surface_ready"
+    assert body["v1_readiness"]["time_aware_planned_work_policy_owner"] == "internal_time_aware_planned_work_policy"
+    assert (
+        body["v1_readiness"]["time_aware_planned_work_delivery_path"]
+        == "attention_to_planning_to_expression_to_action"
+    )
+    assert (
+        body["v1_readiness"]["time_aware_planned_work_recurrence_owner"]
+        == "scheduler_reevaluation_with_foreground_handoff"
+    )
+    assert (
+        body["v1_readiness"]["time_aware_planned_work_gate_state"]
+        == "foreground_due_delivery_and_recurring_reevaluation_ready"
+    )
     assert body["v1_readiness"]["deploy_parity_state"] == "deploy_parity_surface_ready"
     assert body["v1_readiness"]["final_acceptance_gate_states"] == {
         "conversation_reliability": "conversation_surface_ready",
         "learned_state_inspection": "inspection_surface_ready",
         "website_reading": "ready_for_direct_and_search_first_review",
         "tool_grounded_learning": "tool_grounded_learning_surface_ready",
+        "time_aware_planned_work": "foreground_due_delivery_and_recurring_reevaluation_ready",
         "organizer_daily_use": "daily_use_workflows_blocked_by_provider_activation",
         "deploy_parity": "deploy_parity_surface_ready",
     }
@@ -2610,6 +2626,7 @@ def test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready() ->
         "learned_state_inspection": "/health.learned_state",
         "website_reading": "/health.connectors.web_knowledge_tools.website_reading_workflow",
         "tool_grounded_learning": "/health.learned_state.tool_grounded_learning",
+        "time_aware_planned_work": "/health.v1_readiness",
         "organizer_daily_use": "/health.connectors.organizer_tool_stack",
         "deploy_parity": "/health.deployment",
     }

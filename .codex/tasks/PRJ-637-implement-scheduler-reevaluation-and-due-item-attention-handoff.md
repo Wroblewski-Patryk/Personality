@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-637
 - Title: Implement scheduler reevaluation and due-item attention handoff
-- Status: BACKLOG
+- Status: DONE
 - Owner: Backend Builder
 - Depends on: PRJ-636
 - Priority: P0
@@ -23,9 +23,9 @@ attention or proposal handoffs for foreground processing.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] External scheduler cadence reevaluates planned work with current time and context.
-- [ ] Due items enter the existing attention or proposal boundary instead of bypassing it.
-- [ ] Background ownership remains side-effect-free with respect to user-visible delivery.
+- [x] External scheduler cadence reevaluates planned work with current time and context.
+- [x] Due items enter the existing attention or proposal boundary instead of bypassing it.
+- [x] Background ownership remains side-effect-free with respect to user-visible delivery.
 
 ## Forbidden
 - new systems without approval
@@ -34,10 +34,10 @@ attention or proposal handoffs for foreground processing.
 - architecture changes without explicit approval
 
 ## Validation Evidence
-- Tests: targeted scheduler/runtime attention coverage
-- Manual checks: verify due work reaches foreground through the canonical handoff path
+- Tests: `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_scheduler_worker.py tests/test_runtime_pipeline.py`
+- Manual checks: verified maintenance cadence only marks due planned work and upserts `nudge_user` subconscious proposals; it does not call Telegram/API delivery directly
 - Screenshots/logs:
-- High-risk checks: avoid direct Telegram/API delivery from background cadence
+- High-risk checks: due-item reevaluation remains side-effect-free and defers user-visible delivery to a later foreground slice
 
 ## Architecture Evidence (required for architecture-impacting tasks)
 - Architecture source reviewed: `docs/architecture/02_architecture.md`, `docs/architecture/15_runtime_flow.md`, `docs/architecture/16_agent_contracts.md`
@@ -48,14 +48,18 @@ attention or proposal handoffs for foreground processing.
 - Follow-up architecture doc updates: runtime reality and runbook
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 The important boundary is reevaluate in background, deliver in foreground.
+Implemented by reusing the existing subconscious proposal boundary:
+- scheduler maintenance cadence now reevaluates due planned work
+- due items are marked `due` and handed off as `nudge_user` subconscious proposals
+- no background path sends Telegram or API messages directly

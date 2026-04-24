@@ -1,6 +1,11 @@
+import re
+from datetime import timedelta
+
 from app.core.adaptive_policy import dominant_theta_channel, relation_value
 from app.core.contracts import (
+    CancelPlannedWorkItemDomainIntent,
     CalendarSchedulingIntentDomainIntent,
+    CompletePlannedWorkItemDomainIntent,
     ConnectedDriveAccessDomainIntent,
     ConnectorCapabilityDiscoveryDomainIntent,
     ConnectorPermissionGateOutput,
@@ -16,9 +21,11 @@ from app.core.contracts import (
     PromoteInferredTaskDomainIntent,
     ProactiveDecisionOutput,
     ProposalHandoffDecisionOutput,
+    ReschedulePlannedWorkItemDomainIntent,
     RoleOutput,
     SubconsciousProposalRecord,
     KnowledgeSearchDomainIntent,
+    UpsertPlannedWorkItemDomainIntent,
     WebBrowserAccessDomainIntent,
     UpdateProactiveStateDomainIntent,
     UpdateProactivePreferenceDomainIntent,
@@ -74,6 +81,7 @@ class PlanningAgent:
         theta: dict | None = None,
         active_goals: list[dict] | None = None,
         active_tasks: list[dict] | None = None,
+        active_planned_work: list[dict] | None = None,
         active_goal_milestones: list[dict] | None = None,
         goal_milestone_history: list[dict] | None = None,
         goal_progress_history: list[dict] | None = None,
@@ -338,13 +346,24 @@ class PlanningAgent:
                 continue
             prepare_index = steps.index("prepare_response") if "prepare_response" in steps else len(steps)
             steps.insert(prepare_index, step)
+        accepted_due_planned_work = self._accepted_due_planned_work_proposal(accepted_proposals)
+        if accepted_due_planned_work is not None:
+            goal = "Deliver the due planned-work follow-up with one clear immediate next step."
+            steps = ["interpret_event", "review_context", "integrate_subconscious_nudge", "prepare_response"]
+            delivery_channel = str(accepted_due_planned_work.payload.get("delivery_channel", "none")).strip().lower()
+            needs_response = True
+            needs_action = delivery_channel == "telegram" and isinstance(event.payload.get("chat_id"), (int, str))
+            if needs_action:
+                steps.append("send_telegram_message")
 
         domain_intents, inferred_promotion_diagnostics = self._build_domain_action_intents(
+            event=event,
             event_text=event_text,
             context_summary=context.summary,
             motivation=motivation,
             active_goals=active_goals or [],
             active_tasks=active_tasks or [],
+            active_planned_work=active_planned_work or [],
             relation_delivery=relation_delivery,
         )
         domain_intents.extend(self._build_connector_expansion_intents(accepted_proposals))
@@ -500,11 +519,13 @@ class PlanningAgent:
     def _build_domain_action_intents(
         self,
         *,
+        event: Event,
         event_text: str,
         context_summary: str,
         motivation: MotivationOutput,
         active_goals: list[dict],
         active_tasks: list[dict],
+        active_planned_work: list[dict],
         relation_delivery: str | None,
     ) -> tuple[list[DomainActionIntent], list[str]]:
         intents: list[DomainActionIntent] = []
@@ -532,6 +553,13 @@ class PlanningAgent:
                     status=task_signal.status,
                 )
             )
+        intents.extend(
+            self._planned_work_intents(
+                event=event,
+                event_text=event_text,
+                active_planned_work=active_planned_work,
+            )
+        )
 
         task_status_signal = detect_task_status_signal(event_text)
         if task_status_signal is not None:
@@ -603,6 +631,232 @@ class PlanningAgent:
         if not intents:
             return [NoopDomainIntent()], inferred_promotion_diagnostics
         return intents, inferred_promotion_diagnostics
+
+    def _planned_work_intents(
+        self,
+        *,
+        event: Event,
+        event_text: str,
+        active_planned_work: list[dict],
+    ) -> list[DomainActionIntent]:
+        normalized = normalize_for_matching(event_text)
+        if not normalized:
+            return []
+
+        intents: list[DomainActionIntent] = []
+        matched_work = self._match_planned_work_candidate(event_text=event_text, active_planned_work=active_planned_work)
+        preferred_at = self._planned_work_preferred_at(event=event, normalized_text=normalized)
+
+        if matched_work is not None and self._looks_like_cancel_planned_work(normalized):
+            intents.append(
+                CancelPlannedWorkItemDomainIntent(
+                    work_id=int(matched_work["id"]),
+                    reason="explicit_user_cancellation",
+                )
+            )
+            return intents
+
+        if matched_work is not None and self._looks_like_complete_planned_work(normalized):
+            intents.append(
+                CompletePlannedWorkItemDomainIntent(
+                    work_id=int(matched_work["id"]),
+                    reason="explicit_user_completion",
+                )
+            )
+            return intents
+
+        if matched_work is not None and self._looks_like_reschedule_planned_work(normalized) and preferred_at is not None:
+            intents.append(
+                ReschedulePlannedWorkItemDomainIntent(
+                    work_id=int(matched_work["id"]),
+                    not_before=preferred_at,
+                    preferred_at=preferred_at,
+                    reason="explicit_user_reschedule",
+                )
+            )
+            return intents
+
+        if self._looks_like_planned_work_request(normalized):
+            planned_kind = self._planned_work_kind(normalized)
+            summary = self._planned_work_summary(event_text=event_text)
+            if summary:
+                intents.append(
+                    UpsertPlannedWorkItemDomainIntent(
+                        work_kind=planned_kind,
+                        summary=summary,
+                        not_before=preferred_at,
+                        preferred_at=preferred_at,
+                        recurrence_mode=self._planned_work_recurrence_mode(normalized),
+                        recurrence_rule=self._planned_work_recurrence_rule(normalized),
+                        channel_hint=self._planned_work_channel_hint(event),
+                        provenance="explicit_user_request",
+                    )
+                )
+        return intents
+
+    def _looks_like_planned_work_request(self, normalized_text: str) -> bool:
+        if re.search(r"\bremind me every\s+\d+\s+days?\b", normalized_text) or re.search(
+            r"\bprzypominaj mi co\s+\d+\s+dni\b",
+            normalized_text,
+        ):
+            return True
+        return any(
+            phrase in normalized_text
+            for phrase in (
+                "remind me to ",
+                "remind me about ",
+                "remind me every day",
+                "remind me every week",
+                "please remind me to ",
+                "please remind me about ",
+                "przypomnij mi zeby ",
+                "przypomnij mi aby ",
+                "przypomnij mi o ",
+                "przypominaj mi codziennie",
+                "przypominaj mi co tydzien",
+                "przypominaj mi co tydzień",
+                "help me plan today",
+                "help me plan tomorrow",
+                "plan tomorrow",
+                "plan my day",
+                "weekly planning",
+                "help me plan this week",
+                "zaplanuj moj dzien",
+                "pomoz mi zaplanowac dzis",
+                "pomoz mi zaplanowac jutro",
+                "zaplanuj jutro",
+                "plan tygodnia",
+                "pomoz mi zaplanowac ten tydzien",
+            )
+        )
+
+    def _looks_like_cancel_planned_work(self, normalized_text: str) -> bool:
+        return any(
+            phrase in normalized_text
+            for phrase in (
+                "cancel the reminder",
+                "cancel reminder",
+                "stop reminding me about ",
+                "dont remind me about ",
+                "don't remind me about ",
+                "anuluj przypomnienie",
+                "nie przypominaj mi o ",
+                "usun przypomnienie",
+            )
+        )
+
+    def _looks_like_complete_planned_work(self, normalized_text: str) -> bool:
+        return any(
+            phrase in normalized_text
+            for phrase in (
+                "i already did ",
+                "i already sent ",
+                "done with ",
+                "completed ",
+                "juz zrobilem ",
+                "juz zrobilam ",
+                "juz wyslalem ",
+                "juz wyslalam ",
+                "to juz zrobione",
+            )
+        )
+
+    def _looks_like_reschedule_planned_work(self, normalized_text: str) -> bool:
+        return any(
+            phrase in normalized_text
+            for phrase in (
+                "reschedule",
+                "move the reminder",
+                "move reminder",
+                "instead tomorrow",
+                "instead next week",
+                "reschedule reminder",
+                "przeloz przypomnienie",
+                "przesun przypomnienie",
+            )
+        )
+
+    def _planned_work_kind(self, normalized_text: str) -> str:
+        if any(
+            token in normalized_text
+            for token in (
+                "every day",
+                "daily",
+                "every week",
+                "weekly",
+                "codziennie",
+                "co tydzien",
+                "co tydzień",
+            )
+        ):
+            return "routine"
+        if any(token in normalized_text for token in ("plan today", "plan tomorrow", "weekly planning", "zaplanuj", "plan my day")):
+            return "check_in"
+        return "reminder"
+
+    def _planned_work_summary(self, event_text: str) -> str:
+        task_signal = detect_task_signal(event_text)
+        if task_signal is not None:
+            return task_signal.name
+        return " ".join(str(event_text).split())[:160]
+
+    def _planned_work_preferred_at(self, *, event: Event, normalized_text: str):
+        base = event.timestamp
+        if "tomorrow" in normalized_text or "jutro" in normalized_text:
+            return base + timedelta(days=1)
+        if "next week" in normalized_text:
+            return base + timedelta(days=7)
+        if "today" in normalized_text or "dzis" in normalized_text:
+            return base
+        if "this week" in normalized_text or "ten tydzien" in normalized_text:
+            return base + timedelta(days=3)
+        return None
+
+    def _planned_work_recurrence_mode(self, normalized_text: str) -> str:
+        if re.search(r"\bevery\s+\d+\s+days?\b", normalized_text) or re.search(r"\bco\s+\d+\s+dni\b", normalized_text):
+            return "custom"
+        if any(
+            token in normalized_text
+            for token in ("every day", "daily", "codziennie", "kazdego dnia", "każdego dnia")
+        ):
+            return "daily"
+        if any(
+            token in normalized_text
+            for token in ("every week", "weekly", "co tydzien", "co tydzień")
+        ):
+            return "weekly"
+        return "none"
+
+    def _planned_work_recurrence_rule(self, normalized_text: str) -> str:
+        english_match = re.search(r"\bevery\s+(\d+)\s+days?\b", normalized_text)
+        if english_match is not None:
+            return f"interval_days:{int(english_match.group(1))}"
+        polish_match = re.search(r"\bco\s+(\d+)\s+dni\b", normalized_text)
+        if polish_match is not None:
+            return f"interval_days:{int(polish_match.group(1))}"
+        return ""
+
+    def _planned_work_channel_hint(self, event: Event) -> str:
+        if event.source == "telegram":
+            return "telegram"
+        if event.source == "api":
+            return "api"
+        return "none"
+
+    def _match_planned_work_candidate(self, *, event_text: str, active_planned_work: list[dict]) -> dict | None:
+        hint_tokens = self._text_tokens(event_text)
+        best_item: dict | None = None
+        best_score = 0
+        for item in active_planned_work:
+            item_id = item.get("id")
+            if item_id is None:
+                continue
+            item_tokens = self._text_tokens(str(item.get("summary", "")))
+            overlap = len(hint_tokens.intersection(item_tokens))
+            if overlap > best_score:
+                best_score = overlap
+                best_item = item
+        return best_item if best_score > 0 else None
 
     def _build_inferred_goal_task_intents(
         self,
@@ -1243,6 +1497,8 @@ class PlanningAgent:
 
             decision = "defer"
             reason = "requires_conscious_confirmation"
+            payload = proposal.payload if isinstance(proposal.payload, dict) else {}
+            planned_work_due_handoff = str(payload.get("handoff_kind", "")).strip().lower() == "planned_work_due"
             if event.source in {"api", "telegram"} and motivation.mode != "ignore":
                 if proposal.proposal_type in {"ask_user", "nudge_user"} and not accepted:
                     decision = "accept"
@@ -1277,6 +1533,11 @@ class PlanningAgent:
                         reason = "connector_capability_gap_detected"
                         accepted.append(proposal)
                         extra_steps.append("propose_connector_capability_expansion")
+            elif event.source == "scheduler" and planned_work_due_handoff and not accepted:
+                decision = "accept"
+                reason = "scheduled_due_planned_work_handoff"
+                accepted.append(proposal)
+                extra_steps.append("integrate_subconscious_nudge")
 
             handoffs.append(
                 ProposalHandoffDecisionOutput(
@@ -1286,6 +1547,16 @@ class PlanningAgent:
                 )
             )
         return handoffs, accepted, extra_steps
+
+    def _accepted_due_planned_work_proposal(
+        self,
+        accepted_proposals: list[SubconsciousProposalRecord],
+    ) -> SubconsciousProposalRecord | None:
+        for proposal in accepted_proposals:
+            payload = proposal.payload if isinstance(proposal.payload, dict) else {}
+            if str(payload.get("handoff_kind", "")).strip().lower() == "planned_work_due":
+                return proposal
+        return None
 
     def _theta_plan_step(self, theta: dict | None, steps: list[str]) -> str | None:
         channel = dominant_theta_channel(theta)

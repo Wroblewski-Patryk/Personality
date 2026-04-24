@@ -131,6 +131,10 @@ Fields:
 
 Stores time-aware future work derived from planning.
 
+This entity extends internal planning state. It is not a separate reminder
+subsystem, even when the eventual outward delivery is phrased as a reminder or
+check-in.
+
 Fields:
 
 - id
@@ -243,6 +247,10 @@ Fields:
 - goals -> planned_work_items (1:N)
 - tasks -> planned_work_items (1:N)
 - tool_registry -> user_tool_authorizations (1:N)
+
+Planned work may later produce due attention or bounded foreground delivery,
+but scheduler reevaluation and durable storage must not bypass the existing
+planning -> expression -> action boundary for user-visible output.
 
 ---
 

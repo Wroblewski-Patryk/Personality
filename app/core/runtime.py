@@ -343,6 +343,7 @@ class RuntimeOrchestrator:
         identity,
         active_goals: list[dict],
         active_tasks: list[dict],
+        active_planned_work: list[dict],
         active_goal_milestones: list[dict],
         goal_milestone_history: list[dict],
         goal_progress_history: list[dict],
@@ -383,6 +384,7 @@ class RuntimeOrchestrator:
                 "identity": identity,
                 "active_goals": list(active_goals),
                 "active_tasks": list(active_tasks),
+                "active_planned_work": list(active_planned_work),
                 "active_goal_milestones": list(active_goal_milestones),
                 "goal_milestone_history": list(goal_milestone_history),
                 "goal_progress_history": list(goal_progress_history),
@@ -432,6 +434,7 @@ class RuntimeOrchestrator:
         user_preferences: dict,
         active_goals: list[dict],
         active_tasks: list[dict],
+        active_planned_work: list[dict],
         active_goal_milestones: list[dict],
         goal_milestone_history: list[dict],
     ):
@@ -439,6 +442,7 @@ class RuntimeOrchestrator:
         reflection_triggered = False
         result_active_goals = active_goals
         result_active_tasks = active_tasks
+        result_active_planned_work = active_planned_work
         result_active_goal_milestones = active_goal_milestones
         result_goal_milestone_history = goal_milestone_history
 
@@ -536,6 +540,13 @@ class RuntimeOrchestrator:
                     goal_ids=refreshed_goal_ids,
                     limit=5,
                 )
+                refreshed_task_ids = [int(task["id"]) for task in refreshed_tasks if task.get("id") is not None]
+                refreshed_planned_work = await self.memory_repository.get_active_planned_work(
+                    user_id=event.meta.user_id,
+                    goal_ids=refreshed_goal_ids,
+                    task_ids=refreshed_task_ids,
+                    limit=8,
+                )
                 refreshed_milestones = await self.memory_repository.get_active_goal_milestones(
                     user_id=event.meta.user_id,
                     goal_ids=refreshed_goal_ids,
@@ -549,23 +560,25 @@ class RuntimeOrchestrator:
                 return (
                     refreshed_goals,
                     refreshed_tasks,
+                    refreshed_planned_work,
                     refreshed_milestones,
                     refreshed_milestone_history,
                 )
 
-            refreshed_goals, refreshed_tasks, refreshed_milestones, refreshed_milestone_history = await self._run_async_stage(
+            refreshed_goals, refreshed_tasks, refreshed_planned_work, refreshed_milestones, refreshed_milestone_history = await self._run_async_stage(
                 stage_logger=stage_logger,
                 stage_timings_ms=stage_timings_ms,
                 stage="state_refresh",
                 input_summary=f"user_id={event.meta.user_id}",
                 operation=refresh_runtime_state,
                 output_summary=lambda result: (
-                    f"goals={len(result[0])} tasks={len(result[1])} milestones={len(result[2])} "
-                    f"history={len(result[3])}"
+                    f"goals={len(result[0])} tasks={len(result[1])} planned_work={len(result[2])} "
+                    f"milestones={len(result[3])} history={len(result[4])}"
                 ),
             )
             result_active_goals = refreshed_goals
             result_active_tasks = refreshed_tasks
+            result_active_planned_work = refreshed_planned_work
             result_active_goal_milestones = self._enrich_goal_milestones(
                 active_goal_milestones=refreshed_milestones,
                 user_preferences=user_preferences,
@@ -585,6 +598,7 @@ class RuntimeOrchestrator:
             reflection_triggered,
             result_active_goals,
             result_active_tasks,
+            result_active_planned_work,
             result_active_goal_milestones,
             result_goal_milestone_history,
         )
@@ -743,6 +757,20 @@ class RuntimeOrchestrator:
             ),
             output_summary=lambda result: f"tasks={len(result)}",
         )
+        task_ids = [int(task["id"]) for task in active_tasks if task.get("id") is not None]
+        active_planned_work = await self._run_async_stage(
+            stage_logger=stage_logger,
+            stage_timings_ms=stage_timings_ms,
+            stage="planned_work_load",
+            input_summary=f"goal_ids={len(goal_ids)} task_ids={len(task_ids)}",
+            operation=lambda: self.memory_repository.get_active_planned_work(
+                user_id=event.meta.user_id,
+                goal_ids=goal_ids,
+                task_ids=task_ids,
+                limit=8,
+            ),
+            output_summary=lambda result: f"planned_work={len(result)}",
+        )
 
         raw_goal_milestones = await self._run_async_stage(
             stage_logger=stage_logger,
@@ -822,6 +850,7 @@ class RuntimeOrchestrator:
             identity=identity,
             active_goals=active_goals,
             active_tasks=active_tasks,
+            active_planned_work=active_planned_work,
             active_goal_milestones=active_goal_milestones,
             goal_milestone_history=goal_milestone_history,
             goal_progress_history=goal_progress_history,
@@ -992,6 +1021,7 @@ class RuntimeOrchestrator:
             reflection_triggered,
             result_active_goals,
             result_active_tasks,
+            result_active_planned_work,
             result_active_goal_milestones,
             result_goal_milestone_history,
         ) = await self._run_post_graph_followups(
@@ -1008,6 +1038,7 @@ class RuntimeOrchestrator:
             user_preferences=user_preferences,
             active_goals=active_goals,
             active_tasks=active_tasks,
+            active_planned_work=active_planned_work,
             active_goal_milestones=active_goal_milestones,
             goal_milestone_history=goal_milestone_history,
         )
@@ -1028,6 +1059,7 @@ class RuntimeOrchestrator:
             identity=identity,
             active_goals=result_active_goals,
             active_tasks=result_active_tasks,
+            active_planned_work=result_active_planned_work,
             active_goal_milestones=result_active_goal_milestones,
             goal_milestone_history=result_goal_milestone_history,
             goal_progress_history=goal_progress_history,

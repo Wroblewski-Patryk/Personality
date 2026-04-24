@@ -7,6 +7,60 @@ This plan translates the repo analysis into an execution roadmap that brings the
 The goal is not to add more features first.
 The goal is to make the current AION runtime more correct, more inspectable, and easier to extend without architectural drift.
 
+## Planned On 2026-04-25 For V2 Product Entry
+
+Fresh user-approved product direction now defines the next post-no-UI product
+entry target more explicitly:
+
+- the repository should evolve into product-facing top-level surfaces:
+  - `backend/`
+  - `web/`
+  - `mobile/`
+- the current Python + FastAPI runtime remains the backend owner
+- `web` becomes the first first-party UI surface
+- `mobile` is now a planned product surface from the beginning rather than a
+  later naming afterthought
+- production deploy after push must stay repo-driven and provable through the
+  same release-truth discipline as current no-UI work
+
+### Fresh Gap Snapshot
+
+Observed from current repo structure, runtime truth, and the approved `v2`
+direction:
+
+- the repo is still organized as a single Python service root, not a
+  product-shaped multi-surface workspace
+- root governance still assumes `app/`, `tests/`, `scripts/`, and
+  `pyproject.toml` live at the top level instead of under `backend/`
+- there is no frontend workspace yet
+- there is no mobile workspace yet
+- there is no backend-owned first-party auth/session contract yet
+- stable backend inspection surfaces exist, but there is still no dedicated
+  app-facing client API for web/mobile use
+- deploy automation currently proves one backend runtime; it does not yet
+  prove a `backend + web` topology after push
+
+### New Queue
+
+The next `v2` queue is now seeded through `PRJ-668`.
+
+New groups:
+
+- `PRJ-655..PRJ-659` V2 Product Topology And Repository Migration
+- `PRJ-660..PRJ-663` First-Party Auth And Client API Boundary
+- `PRJ-664..PRJ-666` Web Product Shell And Production Topology
+- `PRJ-667..PRJ-668` Mobile Product Foundation
+
+Why this order:
+
+- the repo topology must become truthful before feature UI work starts
+- auth and app-facing API must be backend-owned before web/mobile clients
+  consume runtime truth
+- `web` should be the first production client because it also proves the
+  combined deploy topology
+- `mobile` should inherit already-proven backend contracts instead of forcing a
+  premature app-stack commitment
+
 ## Planned On 2026-04-24 For Core V1 Time-Aware Planning
 
 The previous final no-UI `v1` closure lane assumed that organizer-tool
@@ -68,6 +122,50 @@ Why this order:
   - Validation:
     - architecture and planning cross-review
 
+Queue update (2026-04-24):
+
+- `PRJ-635` is now complete.
+- canonical architecture now states that reminders, check-ins, routines, and
+  future follow-ups are all variants of one internal planned-work model
+- core no-UI `v1` truth now explicitly keeps organizer-tool activation as a
+  later extension instead of a hidden closure prerequisite
+- data-model and contract docs now describe planned work as internal planning
+  state whose due delivery still crosses the existing
+  `attention -> planning -> expression -> action` path
+- `PRJ-636` is now complete.
+- runtime and storage now share one durable `planned_work` entity with typed
+  planner intents, action-owned persistence, runtime refresh, and migration
+  coverage instead of leaving time-aware future work as reminder-only wording
+- `PRJ-637` is now complete.
+- maintenance cadence now reevaluates due planned work, marks it `due`, and
+  hands it to the existing subconscious proposal boundary without sending
+  Telegram/API messages directly from background execution
+- `PRJ-638` is now complete.
+- due planned-work handoffs now become ordinary foreground runtime turns, the
+  scheduler emits one foreground event per newly-due item, and already-`due`
+  rows are not redispatched on every maintenance pass
+- `PRJ-639` is now complete.
+- recurring planned work now stays on the same durable entity with bounded
+  recurrence rules, quiet-hours-sensitive items snooze to the next morning,
+  and expired one-off items skip without opening a second scheduler lane
+- `PRJ-640` is now complete.
+- behavior validation now includes `T19.1` foreground due-item delivery and
+  `T19.2` recurring planned-work reevaluation plus recurrence advancement
+- `/health.v1_readiness`, incident evidence, and release smoke now prove the
+  same time-aware planned-work posture through one acceptance surface
+- `PRJ-641` is now complete.
+- bounded autonomous research windows are now frozen as `planned_work`
+  variants with explicit triggers, bounded read-only tool limits, and the same
+  tool-grounded-learning boundary as other external reads
+- `PRJ-642` is now complete.
+- product, runtime, testing, ops, planning, and context docs now describe the
+  same core no-UI `v1` boundary and later organizer-tool extension
+- the queue seeded through `PRJ-642` is now complete:
+  - no seeded `READY`, `BACKLOG`, or `FUTURE` slice remains after the
+    core-v1 time-aware-planning lane
+  - the next queue should be derived from fresh analysis instead of backlog
+    residue
+
 - `PRJ-636` Add the durable planned-work contract and storage shape.
   - Result:
     - runtime and storage gain one canonical future-work entity instead of a
@@ -119,33 +217,158 @@ Why this order:
   - Validation:
     - doc-and-context sync
 
-### Group 106 - Channel-Aware Delivery Adaptation
+## Planned On 2026-04-25 For Fully Convincing No-UI V1
+
+Fresh analysis after `PRJ-642` shows that core no-UI `v1` is implemented, but
+the repo still has a smaller set of gaps before the product story feels fully
+truthful and daily-usable.
+
+### Fresh Gap Snapshot
+
+Observed from canonical architecture, runtime surfaces, tests, and high-level
+docs:
+
+- `v1_readiness` still mixes core no-UI `v1` truth with later
+  organizer-extension posture in some runtime and regression surfaces
+- some readiness gates are still static or surface-validity-oriented instead of
+  being derived from live semantic source surfaces
+- Telegram delivery still uses one raw `sendMessage` path with no channel-aware
+  segmentation or explicit formatting policy
+- fresh user-driven analysis also suggests a later multimodal follow-up after
+  the current delivery-quality lane:
+  - photo context, voice-note transcription, and generated image reply still
+    need one explicit transport-neutral event and delivery contract instead of
+    being inferred from the current text-first Telegram baseline
+- high-level docs still contain older "still planned" wording that no longer
+  matches live runtime reality
+- organizer full credential activation and richer empathy rollout remain real
+  future improvements, but they are not the first blockers from this analysis
+
+### New Queue
+
+The next queue is now seeded through `PRJ-654`.
+
+New groups:
+
+- `PRJ-647..PRJ-650` V1 Readiness Truth And Acceptance Boundary
+- `PRJ-651..PRJ-654` Foreground Capability And Time Awareness
+- `PRJ-643..PRJ-646` Channel-Aware Delivery Baseline
+
+Why this order:
+
+- the repo should first make the final no-UI `v1` acceptance story truthful
+  before polishing downstream delivery behavior
+- after that, the runtime should make implemented time and bounded-tool
+  capabilities explicitly knowable to the active turn instead of relying only
+  on hidden heuristics or operator-visible health/debug surfaces
+- channel-aware Telegram delivery is the clearest next user-facing quality
+  improvement once the acceptance boundary and foreground capability awareness
+  are no longer ambiguous
+- dormant `PRJ-643..PRJ-646` remain useful, but they should land after the
+  readiness-truth and awareness lanes rather than before them
+
+### Group 106 - V1 Readiness Truth And Acceptance Boundary
+
+- `PRJ-647` Freeze the core-v1 versus extension acceptance boundary.
+  - Result:
+    - one explicit repo truth says which gates belong to core no-UI `v1` and
+      which remain extension posture
+  - Validation:
+    - architecture and planning cross-review
+
+Queue update (2026-04-25):
+
+- `PRJ-647` is now complete.
+- canonical architecture, planning truth, testing guidance, and runtime
+  reality now distinguish:
+  - core no-UI `v1` acceptance gates
+  - mirrored extension posture such as organizer daily use
+  - later delivery-quality work such as channel-aware Telegram formatting
+- `PRJ-648` is now the next active slice because `/health.v1_readiness`
+  still needs to be tightened to that clarified boundary.
+
+- `PRJ-648` Implement truthful v1-readiness gate evaluation.
+  - Result:
+    - `/health.v1_readiness` becomes a live summary of the approved boundary
+      instead of mixing static ready states with extension posture
+  - Validation:
+    - targeted `/health` and runtime-policy coverage
+
+- `PRJ-649` Add proof for v1-readiness truthfulness.
+  - Result:
+    - regressions and release evidence fail on semantic readiness drift, not
+      only missing fields
+  - Validation:
+    - targeted pytest plus release-smoke regressions
+
+- `PRJ-650` Sync docs and context for truthful v1-readiness.
+  - Result:
+    - product, runtime, testing, ops, and context truth now tell the same
+      story about what still blocks a fully convincing no-UI `v1`
+  - Validation:
+    - doc-and-context sync
+
+### Group 107 - Foreground Capability And Time Awareness
+
+- `PRJ-651` Freeze the foreground capability-and-time awareness contract.
+  - Result:
+    - one explicit contract says how current time, active planned-work posture,
+      and approved bounded tool families become visible to the active
+      foreground turn without widening execution authority
+  - Validation:
+    - architecture and runtime-contract cross-review
+
+- `PRJ-652` Implement explicit foreground awareness for time and approved tools.
+  - Result:
+    - runtime context and prompt surfaces now carry bounded awareness of
+      current time, approved tool posture, and active planned-work posture
+      instead of relying only on implicit timestamps and trigger phrases
+  - Validation:
+    - targeted runtime, planning, and prompt-path coverage
+
+- `PRJ-653` Add proof for indirect capability use and temporal reasoning.
+  - Result:
+    - regressions and behavior scenarios now prove that the personality can use
+      bounded time/tool awareness on indirect turns rather than only
+      keyword-triggered ones
+  - Validation:
+    - targeted pytest plus behavior validation
+
+- `PRJ-654` Sync docs and context for foreground capability awareness.
+  - Result:
+    - runtime reality, testing guidance, planning truth, and context now all
+      describe the same bounded awareness contract
+  - Validation:
+    - doc-and-context sync
+
+### Group 108 - Channel-Aware Delivery Baseline
 
 - `PRJ-643` Freeze the channel-aware delivery constraint baseline.
   - Result:
-    - one explicit delivery contract says channel limits and formatting belong
-      to action/delivery adaptation, not to planning or expression heuristics
+    - one explicit delivery contract says channel adaptation belongs below
+      expression, inside the action/delivery boundary
   - Validation:
     - architecture and delivery-contract cross-review
 
 - `PRJ-644` Implement channel-aware Telegram segmentation and formatting.
   - Result:
-    - Telegram delivery segments long content and applies explicit formatting
-      policy while leaving API and future UI free to use different limits
+    - Telegram delivery can segment long outbound messages and apply explicit
+      formatting policy without pushing channel limits up into planning or
+      expression
   - Validation:
     - targeted delivery-router and Telegram client coverage
 
 - `PRJ-645` Add proof for long-message and markdown delivery.
   - Result:
-    - regression and release evidence prove long-message handling and markdown
-      adaptation instead of leaving them as transport accidents
+    - regression and smoke evidence now prove long-message handling and
+      formatting behavior instead of leaving them as transport accidents
   - Validation:
-    - targeted pytest plus release-evidence checks
+    - targeted pytest plus release or evidence checks
 
 - `PRJ-646` Sync docs for channel-aware delivery.
   - Result:
-    - docs/context describe one shared channel-aware delivery contract without
-      implying Telegram limits for UI or API
+    - product, runtime, testing, ops, and planning truth all describe one
+      shared channel-aware delivery contract
   - Validation:
     - doc-and-context sync
 

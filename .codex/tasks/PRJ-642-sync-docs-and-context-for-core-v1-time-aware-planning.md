@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-642
 - Title: Sync docs and context for core V1 time-aware planning
-- Status: BACKLOG
+- Status: DONE
 - Owner: Product Docs Agent
 - Depends on: PRJ-641
 - Priority: P1
@@ -60,3 +60,20 @@ for organizer tools as a later extension.
 ## Notes
 This slice should make the repository speak with one voice about core `v1`
 time-aware planning and later organizer activation.
+
+Completed on 2026-04-24.
+
+Result:
+
+- product, runtime, testing, ops, planning, and context docs now describe the
+  same core no-UI `v1` boundary around conversation, bounded web reading,
+  tool-grounded learning, and internal time-aware planned work
+- organizer tools are now described consistently as a later extension or sync
+  layer instead of a hidden core-`v1` blocker
+- the seeded queue through `PRJ-642` is now closed; the next execution queue
+  should come from fresh analysis instead of leftover backlog residue
+
+Validation:
+
+- doc-and-context cross-review across architecture, testing, runbook,
+  planning, and `.codex/context/` source-of-truth files

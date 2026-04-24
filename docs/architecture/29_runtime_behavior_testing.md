@@ -358,6 +358,19 @@ Current scenario anchors:
   conclusions
 - `T18.1`: final no-UI `v1` website-reading then recall flow
 - `T18.2`: final no-UI `v1` organizer review then follow-up focus flow
+- `T19.1`: due planned-work delivery re-enters the normal foreground runtime
+  path and resolves proposal handoff explicitly
+- `T19.2`: recurring planned work is reevaluated by scheduler-owned cadence
+  and advanced after foreground delivery without opening a second scheduler
+  lane
+
+Boundary note:
+
+- `T18.2` and the organizer daily-use family remain valid extension evidence
+  for later tool-readiness and work-partner quality
+- after the post-`PRJ-642` product revision, they should not by themselves
+  redefine the core no-UI `v1` blocker set unless architecture truth is
+  explicitly revised again
 - durable-attention burst-coalescing regression in API/runtime integration
   coverage, paired with:
   - `incident_evidence.policy_posture["attention"]`

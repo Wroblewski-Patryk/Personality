@@ -29,6 +29,29 @@ But all must be normalized.
 
 ---
 
+## Text-First Baseline And Multimodal Direction
+
+The current canonical event examples remain text-first.
+
+This means the stable repo contract still treats normalized user text as the
+primary conscious-turn input, even when the transport is Telegram.
+
+Future multimodal support is allowed only through the same normalization
+boundary, not by letting raw transport payloads leak directly into cognition.
+
+If photo, voice, or later app-native media support is added, the transport
+adapter should first reduce it into bounded normalized fields such as:
+
+- user text
+- caption text
+- speech transcription
+- attachment metadata needed for later action-owned retrieval or delivery
+
+Raw binary provider payloads must remain outside the cognitive contract until
+an explicit normalized media schema is approved.
+
+---
+
 ## Event Structure
 
 {
@@ -98,6 +121,39 @@ Operational metadata
     "trace_id": "trace_2"
   }
 }
+
+---
+
+## Future Multimodal Example
+
+Illustrative direction only; this is not yet the frozen production contract:
+
+{
+  "event_id": "evt_003",
+  "source": "telegram",
+  "subsource": "user_message",
+  "timestamp": "2026-01-01T10:05:00Z",
+  "payload": {
+    "text": "Powiedz, co widzisz na zdjęciu",
+    "caption_text": "to ja na spacerze",
+    "speech_text": null,
+    "attachments": [
+      {
+        "kind": "image",
+        "provider_file_id": "telegram-file-id",
+        "mime_type": "image/jpeg"
+      }
+    ]
+  },
+  "meta": {
+    "user_id": "user_1",
+    "trace_id": "trace_3"
+  }
+}
+
+Any final multimodal payload shape must stay transport-neutral enough to work
+for Telegram now and a later first-party app without creating parallel event
+contracts per channel.
 
 ---
 

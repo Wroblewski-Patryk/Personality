@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta, timezone
 
 from app.workers.scheduler import SchedulerWorker
 
@@ -49,6 +50,12 @@ class FakeMemoryRepository:
         self.stats_calls: list[dict] = []
         self.proactive_candidates: list[dict] = []
         self.cadence_evidence_writes: list[dict] = []
+        self.due_planned_work: list[dict] = []
+        self.subconscious_proposals: list[dict] = []
+        self.planned_work_due_updates: list[dict] = []
+        self.planned_work_snoozes: list[dict] = []
+        self.planned_work_recurrence_updates: list[dict] = []
+        self.planned_work_cancellations: list[int] = []
 
     async def get_reflection_task_stats(
         self,
@@ -94,6 +101,103 @@ class FakeMemoryRepository:
         self.cadence_evidence_writes.append(payload)
         return payload
 
+    async def get_due_planned_work(self, *, now: datetime | None = None, limit: int = 8) -> list[dict]:
+        due_at = now or datetime.now(timezone.utc)
+        rows = []
+        for item in self.due_planned_work:
+            if item.get("status") not in {"pending", "snoozed"}:
+                continue
+            preferred_at = item.get("preferred_at")
+            if preferred_at is not None and preferred_at <= due_at:
+                rows.append(item)
+        return rows[:limit]
+
+    async def upsert_subconscious_proposal(self, **kwargs) -> dict:
+        payload = {
+            "proposal_id": len(self.subconscious_proposals) + 1,
+            "status": "pending",
+            **kwargs,
+        }
+        self.subconscious_proposals.append(payload)
+        return payload
+
+    async def mark_planned_work_due(self, *, work_id: int, evaluated_at: datetime | None = None) -> dict | None:
+        for item in self.due_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "due"
+                item["last_evaluated_at"] = evaluated_at
+                payload = {
+                    "work_id": work_id,
+                    "evaluated_at": evaluated_at,
+                    "status": "due",
+                }
+                self.planned_work_due_updates.append(payload)
+                return dict(item)
+        return None
+
+    async def snooze_planned_work_item(
+        self,
+        *,
+        work_id: int,
+        until_at: datetime,
+        evaluated_at: datetime | None = None,
+    ) -> dict | None:
+        for item in self.due_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "snoozed"
+                item["preferred_at"] = until_at
+                item["not_before"] = until_at
+                item["last_evaluated_at"] = evaluated_at
+                payload = {
+                    "work_id": work_id,
+                    "until_at": until_at,
+                    "evaluated_at": evaluated_at,
+                    "status": "snoozed",
+                }
+                self.planned_work_snoozes.append(payload)
+                return dict(item)
+        return None
+
+    async def advance_planned_work_recurrence(self, *, work_id: int, evaluated_at: datetime | None = None) -> dict | None:
+        for item in self.due_planned_work:
+            if int(item["id"]) != work_id:
+                continue
+            mode = str(item.get("recurrence_mode", "none")).strip().lower()
+            if mode == "daily":
+                delta = timedelta(days=1)
+            elif mode == "weekly":
+                delta = timedelta(days=7)
+            elif mode == "custom":
+                rule = str(item.get("recurrence_rule", "")).strip().lower()
+                interval = 1
+                if rule.startswith("interval_days:"):
+                    interval = max(1, int(rule.split(":", 1)[1]))
+                delta = timedelta(days=interval)
+            else:
+                return None
+            anchor = item.get("preferred_at") or item.get("not_before") or evaluated_at or datetime.now(timezone.utc)
+            item["status"] = "pending"
+            item["preferred_at"] = anchor + delta
+            item["not_before"] = anchor + delta
+            item["last_evaluated_at"] = evaluated_at
+            payload = {
+                "work_id": work_id,
+                "evaluated_at": evaluated_at,
+                "status": "pending",
+                "preferred_at": item["preferred_at"],
+            }
+            self.planned_work_recurrence_updates.append(payload)
+            return dict(item)
+        return None
+
+    async def cancel_planned_work_item(self, *, work_id: int) -> dict | None:
+        for item in self.due_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "cancelled"
+                self.planned_work_cancellations.append(work_id)
+                return dict(item)
+        return None
+
 
 class FakeRuntime:
     def __init__(self, *, status: str = "success", actions: list[str] | None = None):
@@ -108,6 +212,7 @@ class FakeRuntime:
                 "subsource": event.subsource,
                 "chat_id": event.payload.get("chat_id"),
                 "trigger": event.payload.get("proactive", {}).get("trigger"),
+                "planned_work_due": event.payload.get("planned_work_due"),
             }
         )
 
@@ -217,7 +322,183 @@ async def test_scheduler_worker_maintenance_tick_uses_reflection_worker_guardrai
         "retryable_failed": 1,
         "exhausted_failed": 0,
         "stuck_processing": 0,
+        "due_planned_work": 0,
+        "proposal_handoffs_created": 0,
+        "foreground_events_emitted": 0,
+        "foreground_delivery_successes": 0,
+        "foreground_delivery_blocked": 0,
+        "foreground_failures": 0,
+        "delivery_delayed": 0,
+        "delivery_skipped": 0,
+        "recurrence_advanced": 0,
     }
+
+
+async def test_scheduler_worker_maintenance_tick_hands_due_planned_work_to_proposal_boundary() -> None:
+    reflection_worker = FakeReflectionWorker(running=False)
+    repository = FakeMemoryRepository()
+    repository.due_planned_work = [
+        {
+            "id": 9,
+            "user_id": "u-1",
+            "kind": "reminder",
+            "summary": "send the release summary",
+            "status": "pending",
+            "delivery_channel": "telegram",
+            "preferred_at": datetime.now(timezone.utc) - timedelta(minutes=5),
+            "source_event_id": "evt-reminder-1",
+        }
+    ]
+    scheduler = SchedulerWorker(
+        memory_repository=repository,  # type: ignore[arg-type]
+        reflection_worker=reflection_worker,  # type: ignore[arg-type]
+        enabled=True,
+        reflection_runtime_mode="deferred",
+        reflection_interval_seconds=900,
+        maintenance_interval_seconds=3600,
+    )
+
+    summary = await scheduler.run_maintenance_tick_once(reason="planned_work_due_check")
+
+    assert summary["executed"] is True
+    assert summary["due_planned_work"] == 1
+    assert summary["proposal_handoffs_created"] == 1
+    assert summary["foreground_events_emitted"] == 0
+    assert summary["delivery_delayed"] == 0
+    assert summary["delivery_skipped"] == 0
+    assert summary["recurrence_advanced"] == 0
+    assert repository.subconscious_proposals[0]["proposal_type"] == "nudge_user"
+    assert repository.subconscious_proposals[0]["payload"]["handoff_kind"] == "planned_work_due"
+    assert repository.subconscious_proposals[0]["payload"]["work_id"] == 9
+    assert repository.planned_work_due_updates[0]["work_id"] == 9
+
+
+async def test_scheduler_worker_maintenance_tick_dispatches_due_planned_work_via_runtime_foreground() -> None:
+    reflection_worker = FakeReflectionWorker(running=False)
+    repository = FakeMemoryRepository()
+    repository.due_planned_work = [
+        {
+            "id": 11,
+            "user_id": "123456",
+            "kind": "follow_up",
+            "summary": "check the release outcome",
+            "status": "pending",
+            "delivery_channel": "telegram",
+            "requires_foreground_execution": True,
+            "preferred_at": datetime.now(timezone.utc) - timedelta(minutes=3),
+            "source_event_id": "evt-follow-up-11",
+        }
+    ]
+    runtime = FakeRuntime(status="success", actions=["send_telegram_message"])
+    scheduler = SchedulerWorker(
+        memory_repository=repository,  # type: ignore[arg-type]
+        reflection_worker=reflection_worker,  # type: ignore[arg-type]
+        enabled=True,
+        reflection_runtime_mode="deferred",
+        reflection_interval_seconds=900,
+        maintenance_interval_seconds=3600,
+    )
+    scheduler.set_runtime(runtime)
+
+    summary = await scheduler.run_maintenance_tick_once(reason="planned_work_foreground_delivery")
+
+    assert summary["due_planned_work"] == 1
+    assert summary["proposal_handoffs_created"] == 1
+    assert summary["foreground_events_emitted"] == 1
+    assert summary["foreground_delivery_successes"] == 1
+    assert summary["foreground_delivery_blocked"] == 0
+    assert summary["foreground_failures"] == 0
+    assert summary["delivery_delayed"] == 0
+    assert summary["delivery_skipped"] == 0
+    assert summary["recurrence_advanced"] == 0
+    assert runtime.calls == [
+        {
+            "user_id": "123456",
+            "subsource": "maintenance_tick",
+            "chat_id": 123456,
+            "trigger": None,
+            "planned_work_due": {
+                "work_id": 11,
+                "summary": "check the release outcome",
+                "work_kind": "follow_up",
+                "delivery_channel": "telegram",
+                "source_event_id": "evt-follow-up-11",
+            },
+        }
+    ]
+
+
+async def test_scheduler_worker_delays_due_planned_work_during_quiet_hours() -> None:
+    reflection_worker = FakeReflectionWorker(running=False)
+    repository = FakeMemoryRepository()
+    repository.due_planned_work = [
+        {
+            "id": 12,
+            "user_id": "123456",
+            "kind": "reminder",
+            "summary": "send the status update",
+            "status": "pending",
+            "delivery_channel": "telegram",
+            "quiet_hours_policy": "respect_user_context",
+            "preferred_at": datetime(2026, 4, 25, 22, 30, tzinfo=timezone.utc),
+        }
+    ]
+    scheduler = SchedulerWorker(
+        memory_repository=repository,  # type: ignore[arg-type]
+        reflection_worker=reflection_worker,  # type: ignore[arg-type]
+        enabled=True,
+        reflection_runtime_mode="deferred",
+        reflection_interval_seconds=900,
+        maintenance_interval_seconds=3600,
+    )
+
+    summary = await scheduler._handoff_due_planned_work(now=datetime(2026, 4, 25, 22, 45, tzinfo=timezone.utc))
+
+    assert summary["due_planned_work"] == 0
+    assert summary["proposal_handoffs_created"] == 0
+    assert summary["delivery_delayed"] == 1
+    assert summary["delivery_skipped"] == 0
+    assert summary["recurrence_advanced"] == 0
+    assert repository.planned_work_snoozes[0]["work_id"] == 12
+    assert repository.planned_work_snoozes[0]["until_at"] == datetime(2026, 4, 26, 7, 0, tzinfo=timezone.utc)
+
+
+async def test_scheduler_worker_advances_recurring_due_planned_work_after_successful_delivery() -> None:
+    reflection_worker = FakeReflectionWorker(running=False)
+    repository = FakeMemoryRepository()
+    repository.due_planned_work = [
+        {
+            "id": 13,
+            "user_id": "123456",
+            "kind": "routine",
+            "summary": "daily planning review",
+            "status": "pending",
+            "delivery_channel": "telegram",
+            "recurrence_mode": "daily",
+            "recurrence_rule": "",
+            "requires_foreground_execution": True,
+            "preferred_at": datetime.now(timezone.utc) - timedelta(minutes=5),
+            "source_event_id": "evt-routine-13",
+        }
+    ]
+    runtime = FakeRuntime(status="success", actions=["send_telegram_message"])
+    scheduler = SchedulerWorker(
+        memory_repository=repository,  # type: ignore[arg-type]
+        reflection_worker=reflection_worker,  # type: ignore[arg-type]
+        enabled=True,
+        reflection_runtime_mode="deferred",
+        reflection_interval_seconds=900,
+        maintenance_interval_seconds=3600,
+    )
+    scheduler.set_runtime(runtime)
+
+    summary = await scheduler.run_maintenance_tick_once(reason="recurring_due_delivery")
+
+    assert summary["due_planned_work"] == 1
+    assert summary["foreground_delivery_successes"] == 1
+    assert summary["recurrence_advanced"] == 1
+    assert repository.planned_work_recurrence_updates[0]["work_id"] == 13
+    assert repository.due_planned_work[0]["status"] == "pending"
 
 
 async def test_scheduler_worker_start_is_noop_when_scheduler_disabled() -> None:
@@ -336,6 +617,15 @@ async def test_scheduler_worker_external_maintenance_tick_runs_when_execution_mo
         "retryable_failed": 1,
         "exhausted_failed": 0,
         "stuck_processing": 0,
+        "due_planned_work": 0,
+        "proposal_handoffs_created": 0,
+        "foreground_events_emitted": 0,
+        "foreground_delivery_successes": 0,
+        "foreground_delivery_blocked": 0,
+        "foreground_failures": 0,
+        "delivery_delayed": 0,
+        "delivery_skipped": 0,
+        "recurrence_advanced": 0,
     }
     assert repository.stats_calls == [
         {
@@ -398,6 +688,7 @@ async def test_scheduler_worker_external_proactive_tick_runs_when_execution_mode
             "subsource": "proactive_tick",
             "chat_id": 123456,
             "trigger": "task_blocked",
+            "planned_work_due": None,
         }
     ]
     assert repository.cadence_evidence_writes[-1]["cadence_kind"] == "proactive"
@@ -479,6 +770,7 @@ async def test_scheduler_worker_proactive_tick_emits_bounded_scheduler_events() 
             "subsource": "proactive_tick",
             "chat_id": 123456,
             "trigger": "task_blocked",
+            "planned_work_due": None,
         }
     ]
 

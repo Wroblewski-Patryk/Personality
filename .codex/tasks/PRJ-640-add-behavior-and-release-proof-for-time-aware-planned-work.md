@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-640
 - Title: Add behavior and release proof for time-aware planned work
-- Status: BACKLOG
+- Status: DONE
 - Owner: QA/Test
 - Depends on: PRJ-639
 - Priority: P0
@@ -60,3 +60,22 @@ work.
 
 ## Notes
 This is the acceptance lane for time-aware planned work as a core `v1` capability.
+
+Completed on 2026-04-24.
+
+Result:
+
+- behavior validation now includes `T19.1` for due planned-work foreground
+  delivery and `T19.2` for recurring planned-work reevaluation plus bounded
+  recurrence advancement
+- `/health.v1_readiness` and exported
+  `incident_evidence.policy_posture["v1_readiness"]` now expose the same
+  compact time-aware planned-work posture
+- release-smoke and incident-evidence regressions now fail when that
+  planned-work acceptance contract drifts
+
+Validation:
+
+- `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py::test_runtime_behavior_time_aware_planned_work_scenarios`
+- `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py::test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready`
+- `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py -k "v1_readiness or time_aware_planned_work"`

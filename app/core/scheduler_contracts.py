@@ -306,6 +306,9 @@ def normalize_scheduler_payload(payload: dict[str, Any] | None, *, subsource: st
             normalized_payload["chat_id"] = chat_id
     elif isinstance(raw_chat_id, int):
         normalized_payload["chat_id"] = raw_chat_id
+    planned_work_due = raw_payload.get("planned_work_due")
+    if isinstance(planned_work_due, Mapping):
+        normalized_payload["planned_work_due"] = dict(planned_work_due)
     if normalized_subsource == SCHEDULER_PROACTIVE_TICK:
         proactive_trigger = normalize_proactive_trigger(
             str(raw_payload.get("proactive_trigger") or raw_payload.get("trigger") or "")

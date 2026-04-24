@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-641
 - Title: Freeze the bounded autonomous research-window policy
-- Status: BACKLOG
+- Status: DONE
 - Owner: Planning Agent
 - Depends on: PRJ-640
 - Priority: P1
@@ -59,3 +59,22 @@ Freeze one bounded policy for research windows on top of planned work.
 
 ## Notes
 This task is intentionally policy-first and should stay bounded to approved tool families.
+
+Completed on 2026-04-24.
+
+Result:
+
+- canonical contracts now freeze `research_window` as a planned-work variant,
+  not a separate autonomy engine
+- approved triggers, read-only tool limits, and fallback posture are explicit
+  inside the time-aware planned-work contract
+- the policy now states that spare research windows may only reuse bounded
+  `knowledge_search.search_web` and `web_browser.read_page` plus the existing
+  tool-grounded learning boundary
+
+Validation:
+
+- architecture and product cross-review across
+  `docs/architecture/10_future_vision.md`,
+  `docs/architecture/15_runtime_flow.md`, and
+  `docs/architecture/16_agent_contracts.md`

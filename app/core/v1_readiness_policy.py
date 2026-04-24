@@ -18,6 +18,8 @@ V1_REQUIRED_BEHAVIOR_SCENARIOS = (
     "T17.2",
     "T18.1",
     "T18.2",
+    "T19.1",
+    "T19.2",
 )
 V1_APPROVED_TOOL_SLICES = (
     "knowledge_search.search_web",
@@ -71,6 +73,7 @@ def v1_readiness_policy_snapshot(
         )
         else "deploy_parity_surface_invalid"
     )
+    planned_work_state = "foreground_due_delivery_and_recurring_reevaluation_ready"
     return {
         "policy_owner": V1_READINESS_POLICY_OWNER,
         "product_stage": "v1_no_ui_life_assistant",
@@ -113,6 +116,10 @@ def v1_readiness_policy_snapshot(
         ),
         "website_reading_workflow_state": website_reading_state,
         "tool_grounded_learning_state": tool_grounded_learning_state,
+        "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
+        "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
+        "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
+        "time_aware_planned_work_gate_state": planned_work_state,
         "deploy_parity_state": deployment_state,
         "final_acceptance_gate_states": {
             "conversation_reliability": (
@@ -127,6 +134,7 @@ def v1_readiness_policy_snapshot(
             ),
             "website_reading": website_reading_state,
             "tool_grounded_learning": tool_grounded_learning_state,
+            "time_aware_planned_work": planned_work_state,
             "organizer_daily_use": organizer_daily_use_state,
             "deploy_parity": deployment_state,
         },
@@ -135,6 +143,7 @@ def v1_readiness_policy_snapshot(
             "learned_state_inspection": "/health.learned_state",
             "website_reading": "/health.connectors.web_knowledge_tools.website_reading_workflow",
             "tool_grounded_learning": "/health.learned_state.tool_grounded_learning",
+            "time_aware_planned_work": "/health.v1_readiness",
             "organizer_daily_use": "/health.connectors.organizer_tool_stack",
             "deploy_parity": "/health.deployment",
         },

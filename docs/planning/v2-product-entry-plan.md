@@ -1,0 +1,163 @@
+# V2 Product Entry Plan
+
+## Purpose
+
+This document records the approved entry plan for `v2`.
+
+The goal is to evolve Personality from a backend-first no-UI `v1` runtime into
+one product-shaped repository and deployment baseline with:
+
+- `backend/` for the AION runtime and API
+- `web/` for the first-party browser client
+- `mobile/` for the later mobile client
+
+This plan does not replace the canonical AION architecture.
+It defines the repository, product-surface, and deployment work needed so the
+existing backend can grow into a coherent multi-surface product without
+creating a second logic stack outside the Python runtime.
+
+## Approved Direction
+
+Approved on 2026-04-25 through user decision:
+
+- keep Python + FastAPI as the backend runtime
+- use product-facing top-level directories:
+  - `backend/`
+  - `web/`
+  - `mobile/`
+- keep only repo-wide and deployment-wide files in the root
+- introduce backend-owned authentication for first-party clients
+- expose UI-safe app-facing API surfaces instead of reusing internal debug
+  inspection endpoints directly
+
+## Target Repository Topology
+
+Target root:
+
+```text
+/
+  README.md
+  AGENTS.md
+  .gitignore
+  .env.example
+  docker-compose.yml
+  docker-compose.coolify.yml
+  /backend
+  /web
+  /mobile
+  /docs
+  /docker
+```
+
+Target meaning of each top-level product folder:
+
+- `backend/`
+  - FastAPI application
+  - AION runtime
+  - persistence, memory, reflection, scheduler, integrations
+  - first-party auth/session logic
+  - app-facing API for web and mobile
+- `web/`
+  - React + TypeScript + Vite
+  - Tailwind + daisyUI
+  - browser UI for login, settings, chat, and personality inspection
+- `mobile/`
+  - later mobile client workspace
+  - must reuse backend-owned auth and client API contracts
+  - concrete mobile stack remains a bounded follow-up decision
+
+## Architecture Guardrails
+
+- backend remains the only owner of cognition, memory, planning, action,
+  reflection, and external integrations
+- web and mobile are product clients, not second runtimes
+- internal debug and admin inspection surfaces stay operator-only unless an
+  explicit client-safe boundary is created
+- auth and session state belong to backend-owned contracts
+- deployment automation must remain repo-driven and production-proof after the
+  topology change
+
+## Production Baseline For V2 Entry
+
+The initial `v2` production goal is not "ship every screen at once".
+
+It is:
+
+1. the repo can be restructured into `backend/`, `web/`, and `mobile/`
+2. the existing Python runtime still deploys correctly after push
+3. the `web` client can be built and deployed from the same repo-driven flow
+4. backend auth and app-facing API become stable enough for first-party
+   clients
+5. `mobile` has a reserved workspace and contract path instead of being an
+   afterthought
+
+Production expectation for the first `v2` web release:
+
+- current backend workers and API keep their bounded ownership
+- `web` becomes a separately buildable client surface
+- repo-driven Coolify deploy remains the source of truth after push
+- release smoke must prove the deployed backend revision and deployed web
+  revision belong to the same repository truth
+
+## Execution Order
+
+### Group 109 - V2 Product Topology And Repository Migration
+
+- `PRJ-655` Freeze the `backend/web/mobile` repository topology and naming.
+- `PRJ-656` Move the current Python runtime into `backend/` without changing
+  runtime behavior.
+- `PRJ-657` Normalize tooling, docs, compose paths, test commands, and
+  migration paths after the `backend/` move.
+- `PRJ-658` Scaffold the `web/` workspace with React + TypeScript + Vite +
+  Tailwind + daisyUI.
+- `PRJ-659` Scaffold the `mobile/` workspace as a reserved product surface
+  with a minimal baseline and explicit no-runtime-logic posture.
+
+### Group 110 - First-Party Auth And Client API Boundary
+
+- `PRJ-660` Freeze the backend auth/session and user-identity mapping contract
+  for first-party clients.
+- `PRJ-661` Implement the backend auth/session baseline.
+- `PRJ-662` Freeze the app-facing client API boundary for settings, chat, and
+  personality inspection.
+- `PRJ-663` Implement the UI-safe app-facing API surfaces over existing
+  backend truth.
+
+### Group 111 - Web Product Shell
+
+- `PRJ-664` Build the `web/` product shell for:
+  - login
+  - settings
+  - chat
+  - personality inspector
+- `PRJ-665` Integrate `web/` build and serving into the production topology.
+- `PRJ-666` Add release smoke and deploy proof for the combined backend + web
+  repo-driven push-deploy baseline.
+
+### Group 112 - Mobile Product Foundation
+
+- `PRJ-667` Freeze the mobile client stack and shared client-contract baseline.
+- `PRJ-668` Build the initial `mobile/` foundation using the same auth and
+  client API boundary as `web/`.
+
+## Definition Of Success
+
+The `v2` entry phase is successful when:
+
+- the repository truth, docs, and deploy scripts all describe the same
+  `backend/web/mobile` topology
+- the current AION runtime runs from `backend/` without semantic drift
+- `web/` exists as a real buildable client surface with daisyUI baseline
+- `mobile/` exists as a deliberate product surface with an approved contract
+  path
+- backend-owned auth/session and app-facing API are stable enough for
+  first-party clients
+- production push deploy still works and is proven by smoke/release evidence
+
+## Non-Goals For The Entry Phase
+
+- rewriting the AION runtime into JavaScript or TypeScript
+- exposing debug/admin surfaces directly to product clients
+- building a second domain model in `web/` or `mobile/`
+- shipping fully mature mobile release automation in the same slice as the
+  first topology move

@@ -16,20 +16,29 @@ A good structure prevents chaos as the system grows.
 
 ## Core Structure
 
+Target `v2` structure:
+
 aion/
-- app/
-- tests/
+- backend/
+- web/
+- mobile/
 - docs/
 - docker/
-- pyproject.toml
 - docker-compose.yml
 - .env.example
+
+Current transition note:
+
+- today the runtime still lives in the repository root
+- approved `v2` direction moves that runtime into `backend/`
+- `web/` and `mobile/` become explicit product surfaces instead of being
+  implied future additions
 
 ---
 
 ## Application Layer
 
-app/
+backend/app/
 
 - api/
 - agents/
@@ -133,7 +142,7 @@ External systems live here.
 
 ## Tests
 
-tests/
+backend/tests/
 
 - unit tests  
 - integration tests  

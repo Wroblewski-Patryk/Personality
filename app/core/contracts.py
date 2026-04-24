@@ -96,6 +96,29 @@ class TaskRecordOutput(BaseModel):
     status: str
 
 
+class PlannedWorkRecordOutput(BaseModel):
+    id: int | None = None
+    user_id: str
+    goal_id: int | None = None
+    task_id: int | None = None
+    kind: Literal["follow_up", "check_in", "reminder", "routine", "research_window"]
+    summary: str
+    status: Literal["pending", "due", "snoozed", "completed", "cancelled"] = "pending"
+    not_before: datetime | None = None
+    preferred_at: datetime | None = None
+    expires_at: datetime | None = None
+    recurrence_mode: Literal["none", "daily", "weekly", "custom"] = "none"
+    recurrence_rule: str = ""
+    delivery_channel: Literal["telegram", "api", "none"] = "none"
+    requires_foreground_execution: bool = True
+    quiet_hours_policy: str = "respect_user_context"
+    provenance: Literal["explicit_user_request", "planning_inference", "reflection_inference"] = "explicit_user_request"
+    source_event_id: str | None = None
+    last_evaluated_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
 class GoalProgressRecordOutput(BaseModel):
     id: int | None = None
     goal_id: int
@@ -256,6 +279,44 @@ class UpdateTaskStatusDomainIntent(BaseModel):
     task_hint: str
 
 
+class UpsertPlannedWorkItemDomainIntent(BaseModel):
+    intent_type: Literal["upsert_planned_work_item"] = "upsert_planned_work_item"
+    work_kind: Literal["follow_up", "check_in", "reminder", "routine", "research_window"]
+    summary: str
+    goal_id: int | None = None
+    task_id: int | None = None
+    not_before: datetime | None = None
+    preferred_at: datetime | None = None
+    expires_at: datetime | None = None
+    recurrence_mode: Literal["none", "daily", "weekly", "custom"] = "none"
+    recurrence_rule: str = ""
+    channel_hint: Literal["telegram", "api", "none"] = "none"
+    requires_foreground_execution: bool = True
+    quiet_hours_policy: str = "respect_user_context"
+    provenance: Literal["explicit_user_request", "planning_inference", "reflection_inference"] = "explicit_user_request"
+
+
+class ReschedulePlannedWorkItemDomainIntent(BaseModel):
+    intent_type: Literal["reschedule_planned_work_item"] = "reschedule_planned_work_item"
+    work_id: int
+    not_before: datetime | None = None
+    preferred_at: datetime | None = None
+    expires_at: datetime | None = None
+    reason: str = ""
+
+
+class CancelPlannedWorkItemDomainIntent(BaseModel):
+    intent_type: Literal["cancel_planned_work_item"] = "cancel_planned_work_item"
+    work_id: int
+    reason: str = ""
+
+
+class CompletePlannedWorkItemDomainIntent(BaseModel):
+    intent_type: Literal["complete_planned_work_item"] = "complete_planned_work_item"
+    work_id: int
+    reason: str = ""
+
+
 class PromoteInferredGoalDomainIntent(BaseModel):
     intent_type: Literal["promote_inferred_goal"] = "promote_inferred_goal"
     name: str
@@ -390,6 +451,10 @@ DomainActionIntent = Annotated[
     | UpsertGoalDomainIntent
     | UpsertTaskDomainIntent
     | UpdateTaskStatusDomainIntent
+    | UpsertPlannedWorkItemDomainIntent
+    | ReschedulePlannedWorkItemDomainIntent
+    | CancelPlannedWorkItemDomainIntent
+    | CompletePlannedWorkItemDomainIntent
     | PromoteInferredGoalDomainIntent
     | PromoteInferredTaskDomainIntent
     | MaintainTaskStatusDomainIntent
@@ -569,6 +634,7 @@ class RuntimeResult(BaseModel):
     identity: IdentityOutput
     active_goals: list[GoalRecordOutput] = Field(default_factory=list)
     active_tasks: list[TaskRecordOutput] = Field(default_factory=list)
+    active_planned_work: list[PlannedWorkRecordOutput] = Field(default_factory=list)
     active_goal_milestones: list[GoalMilestoneRecordOutput] = Field(default_factory=list)
     goal_milestone_history: list[GoalMilestoneHistoryRecordOutput] = Field(default_factory=list)
     goal_progress_history: list[GoalProgressRecordOutput] = Field(default_factory=list)

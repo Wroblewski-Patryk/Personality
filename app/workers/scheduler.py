@@ -217,7 +217,32 @@ class SchedulerWorker:
             "retryable_failed": int(reflection_stats["retryable_failed"]),
             "exhausted_failed": int(reflection_stats["exhausted_failed"]),
             "stuck_processing": int(reflection_stats["stuck_processing"]),
+            "due_planned_work": 0,
+            "proposal_handoffs_created": 0,
+            "foreground_events_emitted": 0,
+            "foreground_delivery_successes": 0,
+            "foreground_delivery_blocked": 0,
+            "foreground_failures": 0,
+            "delivery_delayed": 0,
+            "delivery_skipped": 0,
+            "recurrence_advanced": 0,
         }
+        due_summary = await self._handoff_due_planned_work(now=now)
+        summary["due_planned_work"] = int(due_summary["due_planned_work"])
+        summary["proposal_handoffs_created"] = int(due_summary["proposal_handoffs_created"])
+        summary["delivery_delayed"] = int(due_summary["delivery_delayed"])
+        summary["delivery_skipped"] = int(due_summary["delivery_skipped"])
+        summary["recurrence_advanced"] = int(due_summary["recurrence_advanced"])
+        foreground_summary = await self._dispatch_due_planned_work_foreground(
+            items=list(due_summary["items"]),
+            reason=reason,
+            now=now,
+        )
+        summary["foreground_events_emitted"] = int(foreground_summary["events_emitted"])
+        summary["foreground_delivery_successes"] = int(foreground_summary["delivery_successes"])
+        summary["foreground_delivery_blocked"] = int(foreground_summary["delivery_blocked"])
+        summary["foreground_failures"] = int(foreground_summary["failures"])
+        summary["recurrence_advanced"] += int(foreground_summary["recurrence_advanced"])
         self._last_maintenance_tick_at = now
         self._last_maintenance_summary = summary
         await self._record_cadence_evidence(
@@ -286,7 +311,32 @@ class SchedulerWorker:
             "retryable_failed": int(reflection_stats["retryable_failed"]),
             "exhausted_failed": int(reflection_stats["exhausted_failed"]),
             "stuck_processing": int(reflection_stats["stuck_processing"]),
+            "due_planned_work": 0,
+            "proposal_handoffs_created": 0,
+            "foreground_events_emitted": 0,
+            "foreground_delivery_successes": 0,
+            "foreground_delivery_blocked": 0,
+            "foreground_failures": 0,
+            "delivery_delayed": 0,
+            "delivery_skipped": 0,
+            "recurrence_advanced": 0,
         }
+        due_summary = await self._handoff_due_planned_work(now=now)
+        summary["due_planned_work"] = int(due_summary["due_planned_work"])
+        summary["proposal_handoffs_created"] = int(due_summary["proposal_handoffs_created"])
+        summary["delivery_delayed"] = int(due_summary["delivery_delayed"])
+        summary["delivery_skipped"] = int(due_summary["delivery_skipped"])
+        summary["recurrence_advanced"] = int(due_summary["recurrence_advanced"])
+        foreground_summary = await self._dispatch_due_planned_work_foreground(
+            items=list(due_summary["items"]),
+            reason=reason,
+            now=now,
+        )
+        summary["foreground_events_emitted"] = int(foreground_summary["events_emitted"])
+        summary["foreground_delivery_successes"] = int(foreground_summary["delivery_successes"])
+        summary["foreground_delivery_blocked"] = int(foreground_summary["delivery_blocked"])
+        summary["foreground_failures"] = int(foreground_summary["failures"])
+        summary["recurrence_advanced"] += int(foreground_summary["recurrence_advanced"])
         self._last_maintenance_tick_at = now
         self._last_maintenance_summary = summary
         await self._record_cadence_evidence(
@@ -296,6 +346,196 @@ class SchedulerWorker:
             now=now,
         )
         return summary
+
+    async def _handoff_due_planned_work(self, *, now: datetime) -> dict[str, Any]:
+        if not hasattr(self.memory_repository, "get_due_planned_work"):
+            return {
+                "due_planned_work": 0,
+                "proposal_handoffs_created": 0,
+                "delivery_delayed": 0,
+                "delivery_skipped": 0,
+                "recurrence_advanced": 0,
+                "items": [],
+            }
+
+        due_items = await self.memory_repository.get_due_planned_work(now=now, limit=8)
+        proposal_handoffs_created = 0
+        delivery_delayed = 0
+        delivery_skipped = 0
+        recurrence_advanced = 0
+        handoff_items: list[dict] = []
+        for item in due_items:
+            if self._planned_work_expired(item=item, now=now):
+                if await self._advance_or_cancel_due_item(item=item, now=now):
+                    recurrence_advanced += 1
+                else:
+                    delivery_skipped += 1
+                continue
+            quiet_hours_decision = await self._apply_quiet_hours_policy(item=item, now=now)
+            if quiet_hours_decision == "delayed":
+                delivery_delayed += 1
+                continue
+            if quiet_hours_decision == "skipped":
+                if str(item.get("recurrence_mode", "none")).strip().lower() != "none":
+                    recurrence_advanced += 1
+                else:
+                    delivery_skipped += 1
+                continue
+            if hasattr(self.memory_repository, "upsert_subconscious_proposal"):
+                await self.memory_repository.upsert_subconscious_proposal(
+                    user_id=str(item.get("user_id", "")),
+                    proposal_type="nudge_user",
+                    summary=f"planned_work_due:{int(item['id'])}:{str(item.get('summary', ''))}",
+                    payload={
+                        "handoff_kind": "planned_work_due",
+                        "work_id": int(item["id"]),
+                        "work_kind": str(item.get("kind", "follow_up")),
+                        "summary": str(item.get("summary", "")),
+                        "delivery_channel": str(item.get("delivery_channel", "none")),
+                        "preferred_at": item.get("preferred_at"),
+                        "source_event_id": item.get("source_event_id"),
+                    },
+                    confidence=0.82,
+                    source_event_id=str(item.get("source_event_id", "") or "") or None,
+                )
+                proposal_handoffs_created += 1
+            if hasattr(self.memory_repository, "mark_planned_work_due"):
+                await self.memory_repository.mark_planned_work_due(
+                    work_id=int(item["id"]),
+                    evaluated_at=now,
+                )
+            handoff_items.append(item)
+
+        return {
+            "due_planned_work": len(handoff_items),
+            "proposal_handoffs_created": proposal_handoffs_created,
+            "delivery_delayed": delivery_delayed,
+            "delivery_skipped": delivery_skipped,
+            "recurrence_advanced": recurrence_advanced,
+            "items": handoff_items,
+        }
+
+    async def _dispatch_due_planned_work_foreground(self, *, items: list[dict], reason: str, now: datetime) -> dict[str, int]:
+        if self.runtime is None or not hasattr(self.runtime, "run"):
+            return {
+                "events_emitted": 0,
+                "delivery_successes": 0,
+                "delivery_blocked": 0,
+                "failures": 0,
+                "recurrence_advanced": 0,
+            }
+
+        events_emitted = 0
+        delivery_successes = 0
+        delivery_blocked = 0
+        failures = 0
+        recurrence_advanced = 0
+
+        for item in items:
+            if not bool(item.get("requires_foreground_execution", True)):
+                continue
+            delivery_channel = str(item.get("delivery_channel", "none")).strip().lower()
+            chat_id = self._foreground_delivery_chat_id(item) if delivery_channel == "telegram" else None
+            event = build_scheduler_event(
+                subsource=SCHEDULER_MAINTENANCE_TICK,
+                user_id=str(item.get("user_id", "")),
+                payload={
+                    "text": f"planned work due: {str(item.get('summary', ''))}",
+                    "chat_id": chat_id,
+                    "planned_work_due": {
+                        "work_id": int(item["id"]),
+                        "summary": str(item.get("summary", "")),
+                        "work_kind": str(item.get("kind", "follow_up")),
+                        "delivery_channel": delivery_channel,
+                        "source_event_id": item.get("source_event_id"),
+                    },
+                },
+            )
+            try:
+                result = await self.runtime.run(event)
+            except Exception:
+                failures += 1
+                continue
+            events_emitted += 1
+            if result.action_result.status == "success":
+                delivery_successes += 1
+                if await self._advance_recurring_item_if_needed(item=item, now=now):
+                    recurrence_advanced += 1
+            elif result.action_result.status in {"noop", "partial"}:
+                delivery_blocked += 1
+            else:
+                failures += 1
+
+        return {
+            "events_emitted": events_emitted,
+            "delivery_successes": delivery_successes,
+            "delivery_blocked": delivery_blocked,
+            "failures": failures,
+            "recurrence_advanced": recurrence_advanced,
+        }
+
+    async def _apply_quiet_hours_policy(self, *, item: dict, now: datetime) -> str:
+        policy = str(item.get("quiet_hours_policy", "respect_user_context")).strip().lower()
+        if policy == "deliver_anytime" or not self._is_quiet_hours(now=now):
+            return "deliver"
+        if policy == "skip_if_quiet_hours":
+            await self._advance_or_cancel_due_item(item=item, now=now)
+            return "skipped"
+        if hasattr(self.memory_repository, "snooze_planned_work_item"):
+            await self.memory_repository.snooze_planned_work_item(
+                work_id=int(item["id"]),
+                until_at=self._next_quiet_hours_release(now=now),
+                evaluated_at=now,
+            )
+            return "delayed"
+        return "deliver"
+
+    async def _advance_recurring_item_if_needed(self, *, item: dict, now: datetime) -> bool:
+        if str(item.get("recurrence_mode", "none")).strip().lower() == "none":
+            return False
+        if not hasattr(self.memory_repository, "advance_planned_work_recurrence"):
+            return False
+        updated = await self.memory_repository.advance_planned_work_recurrence(
+            work_id=int(item["id"]),
+            evaluated_at=now,
+        )
+        return updated is not None
+
+    async def _advance_or_cancel_due_item(self, *, item: dict, now: datetime) -> bool:
+        if await self._advance_recurring_item_if_needed(item=item, now=now):
+            return True
+        if hasattr(self.memory_repository, "cancel_planned_work_item"):
+            await self.memory_repository.cancel_planned_work_item(work_id=int(item["id"]))
+        return False
+
+    def _planned_work_expired(self, *, item: dict, now: datetime) -> bool:
+        expires_at = item.get("expires_at")
+        if not isinstance(expires_at, datetime):
+            return False
+        return expires_at <= now
+
+    def _is_quiet_hours(self, *, now: datetime) -> bool:
+        hour = now.astimezone(timezone.utc).hour
+        return hour >= 22 or hour < 7
+
+    def _next_quiet_hours_release(self, *, now: datetime) -> datetime:
+        current = now.astimezone(timezone.utc)
+        release = current.replace(hour=7, minute=0, second=0, microsecond=0)
+        if current.hour >= 7:
+            release += timedelta(days=1)
+        return release
+
+    def _foreground_delivery_chat_id(self, item: dict) -> int | str | None:
+        raw_chat_id = item.get("chat_id")
+        if isinstance(raw_chat_id, (int, str)):
+            return raw_chat_id
+        user_id = str(item.get("user_id", "")).strip()
+        if user_id.lstrip("-").isdigit():
+            try:
+                return int(user_id)
+            except ValueError:
+                return user_id
+        return None
 
     async def run_proactive_tick_once(self, *, reason: str = "cadence") -> dict[str, Any]:
         now = self._utcnow()

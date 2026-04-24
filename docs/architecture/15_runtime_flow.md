@@ -360,6 +360,8 @@ Typical outcomes:
 - reschedule the item
 - cancel the item
 - emit a bounded attention item or proposal for later foreground handling
+- reopen a bounded `research_window` as the same kind of foreground handoff
+  rather than as an autonomous background browsing loop
 
 Background reevaluation must not send user-visible messages directly.
 If something becomes due, it still crosses into the normal attention ->

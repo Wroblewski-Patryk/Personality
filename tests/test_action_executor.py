@@ -8,7 +8,9 @@ from app.core.contracts import (
     ActionDelivery,
     ActionDeliveryConnectorIntent,
     ActionDeliveryExecutionEnvelope,
+    CancelPlannedWorkItemDomainIntent,
     CalendarSchedulingIntentDomainIntent,
+    CompletePlannedWorkItemDomainIntent,
     ConnectedDriveAccessDomainIntent,
     ConnectorCapabilityDiscoveryDomainIntent,
     ConnectorPermissionGateOutput,
@@ -27,7 +29,9 @@ from app.core.contracts import (
     PromoteInferredGoalDomainIntent,
     PromoteInferredTaskDomainIntent,
     ProactiveDeliveryGuardOutput,
+    ReschedulePlannedWorkItemDomainIntent,
     RoleOutput,
+    UpsertPlannedWorkItemDomainIntent,
     UpdateProactivePreferenceDomainIntent,
     UpdateProactiveStateDomainIntent,
     UpdateCollaborationPreferenceDomainIntent,
@@ -46,7 +50,10 @@ class FakeMemoryRepository:
         self.task_updates: list[dict] = []
         self.active_goals: list[dict] = []
         self.active_tasks: list[dict] = []
+        self.active_planned_work: list[dict] = []
         self.task_status_updates: list[dict] = []
+        self.planned_work_updates: list[dict] = []
+        self.planned_work_status_updates: list[dict] = []
         self.relation_updates: list[dict] = []
         self.conclusion_updates: list[dict] = []
         self.written_episodes: list[dict] = []
@@ -82,8 +89,19 @@ class FakeMemoryRepository:
         self.active_tasks.append(payload)
         return payload
 
-    async def get_active_tasks(self, user_id: str, limit: int = 5) -> list[dict]:
+    async def get_active_tasks(self, user_id: str, *, goal_ids: list[int] | None = None, limit: int = 5) -> list[dict]:
         return self.active_tasks[:limit]
+
+    async def get_active_planned_work(
+        self,
+        user_id: str,
+        *,
+        goal_ids: list[int] | None = None,
+        task_ids: list[int] | None = None,
+        limit: int = 8,
+    ) -> list[dict]:
+        rows = [item for item in self.active_planned_work if item.get("status") in {"pending", "due", "snoozed"}]
+        return rows[:limit]
 
     async def update_task_status(self, *, task_id: int, status: str) -> dict | None:
         for task in self.active_tasks:
@@ -92,6 +110,40 @@ class FakeMemoryRepository:
                 payload = {"task_id": task_id, "status": status}
                 self.task_status_updates.append(payload)
                 return task
+        return None
+
+    async def upsert_planned_work_item(self, **kwargs) -> dict:
+        payload = {"id": len(self.active_planned_work) + 1, "status": "pending", **kwargs}
+        self.planned_work_updates.append(payload)
+        self.active_planned_work.append(payload)
+        return payload
+
+    async def reschedule_planned_work_item(self, *, work_id: int, **kwargs) -> dict | None:
+        for item in self.active_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "pending"
+                item.update(kwargs)
+                payload = {"work_id": work_id, "status": item["status"], **kwargs}
+                self.planned_work_status_updates.append(payload)
+                return item
+        return None
+
+    async def cancel_planned_work_item(self, *, work_id: int) -> dict | None:
+        for item in self.active_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "cancelled"
+                payload = {"work_id": work_id, "status": item["status"]}
+                self.planned_work_status_updates.append(payload)
+                return item
+        return None
+
+    async def complete_planned_work_item(self, *, work_id: int) -> dict | None:
+        for item in self.active_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "completed"
+                payload = {"work_id": work_id, "status": item["status"]}
+                self.planned_work_status_updates.append(payload)
+                return item
         return None
 
     async def upsert_relation(self, **kwargs) -> dict:
@@ -1300,6 +1352,83 @@ async def test_persist_episode_updates_matching_task_status_from_domain_intent()
 
     assert record.payload["task_status_update"] == "fix deployment blocker:done"
     assert memory_repository.task_status_updates == [{"task_id": 5, "status": "done"}]
+
+
+async def test_persist_episode_upserts_and_updates_planned_work_from_domain_intents() -> None:
+    memory_repository = FakeMemoryRepository()
+    memory_repository.active_goals = [
+        {
+            "id": 7,
+            "user_id": "u-1",
+            "name": "ship the MVP this week",
+            "description": "User-declared goal: ship the MVP this week",
+            "priority": "high",
+            "status": "active",
+            "goal_type": "operational",
+        }
+    ]
+    memory_repository.active_tasks = [
+        {
+            "id": 5,
+            "user_id": "u-1",
+            "goal_id": 7,
+            "name": "send the release summary tomorrow",
+            "description": "User-declared task: send the release summary tomorrow",
+            "priority": "medium",
+            "status": "todo",
+        }
+    ]
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    upsert_plan = _plan(
+        domain_intents=[
+            UpsertPlannedWorkItemDomainIntent(
+                work_kind="reminder",
+                summary="send the release summary tomorrow",
+                preferred_at=datetime(2026, 4, 25, 9, 0, tzinfo=timezone.utc),
+                channel_hint="telegram",
+                provenance="explicit_user_request",
+            )
+        ]
+    )
+    upsert_record = await executor.persist_episode(
+        event=_event("Remind me to send the release summary tomorrow."),
+        perception=_perception(["general", "release"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=upsert_plan,
+        action_result=await executor.execute(upsert_plan, _delivery()),
+        expression=_expression(),
+    )
+
+    status_plan = _plan(
+        domain_intents=[
+            ReschedulePlannedWorkItemDomainIntent(
+                work_id=1,
+                preferred_at=datetime(2026, 4, 26, 8, 30, tzinfo=timezone.utc),
+            ),
+            CancelPlannedWorkItemDomainIntent(work_id=1),
+            CompletePlannedWorkItemDomainIntent(work_id=1),
+        ]
+    )
+    status_record = await executor.persist_episode(
+        event=_event("Please reschedule, then cancel, then mark the release summary reminder done."),
+        perception=_perception(["general", "release"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role(),
+        plan=status_plan,
+        action_result=await executor.execute(status_plan, _delivery()),
+        expression=_expression(),
+    )
+
+    assert upsert_record.payload["planned_work_update"] == "reminder:send the release summary tomorrow:pending"
+    assert memory_repository.planned_work_updates[0]["goal_id"] == 7
+    assert memory_repository.planned_work_updates[0]["task_id"] == 5
+    assert status_record.payload["planned_work_status_update"] == "send the release summary tomorrow:completed:completed"
+    assert memory_repository.planned_work_status_updates[0]["work_id"] == 1
+    assert memory_repository.planned_work_status_updates[-1]["status"] == "completed"
 
 
 async def test_persist_episode_promotes_inferred_goal_from_typed_domain_intent() -> None:

@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-638
 - Title: Implement foreground delivery for due planned work
-- Status: BACKLOG
+- Status: DONE
 - Owner: Backend Builder
 - Depends on: PRJ-637
 - Priority: P0
@@ -23,9 +23,9 @@ expression, and action.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] Due planned work can result in a Telegram or API follow-up through the existing foreground path.
-- [ ] Completion, snooze, and cancellation semantics remain explicit state transitions.
-- [ ] No direct delivery path exists outside planning -> expression -> action.
+- [x] Due planned work can result in a Telegram or API follow-up through the existing foreground path.
+- [x] Completion, snooze, and cancellation semantics remain explicit state transitions.
+- [x] No direct delivery path exists outside planning -> expression -> action.
 
 ## Forbidden
 - new systems without approval
@@ -48,14 +48,36 @@ expression, and action.
 - Follow-up architecture doc updates: testing and ops notes
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 This is still internal-first planning state; organizer sync remains a later extension.
+
+## Result
+
+- due planned-work handoffs now re-enter the normal foreground runtime path
+  and are delivered through the existing `planning -> expression -> action`
+  boundary instead of a scheduler-owned direct-send shortcut
+- scheduler maintenance now emits one foreground runtime event per newly-due
+  work item and the due-query baseline avoids repeated redispatch of already
+  `due` rows
+- proposal handoff resolution remains explicit, so scheduled due delivery still
+  leaves normal conscious-turn artifacts and proposal lifecycle evidence
+
+## Validation Evidence
+
+- Tests:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_scheduler_worker.py tests/test_runtime_pipeline.py`
+- Manual checks:
+  - reviewed the foreground path to confirm due planned work only reaches
+    Telegram via the existing runtime action boundary
+- High-risk checks:
+  - due items no longer re-enter cadence selection after they are marked `due`
+    during scheduler reevaluation

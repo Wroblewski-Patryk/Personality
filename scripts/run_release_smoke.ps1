@@ -1976,6 +1976,18 @@ if ([string]$v1Readiness.conversation_gate_state -ne "conversation_surface_ready
 if ([string]$v1Readiness.learned_state_gate_state -ne "inspection_surface_ready") {
     throw "Health check failed: unexpected v1_readiness.learned_state_gate_state '$($v1Readiness.learned_state_gate_state)'."
 }
+if ([string]$v1Readiness.time_aware_planned_work_policy_owner -ne "internal_time_aware_planned_work_policy") {
+    throw "Health check failed: unexpected v1_readiness.time_aware_planned_work_policy_owner '$($v1Readiness.time_aware_planned_work_policy_owner)'."
+}
+if ([string]$v1Readiness.time_aware_planned_work_delivery_path -ne "attention_to_planning_to_expression_to_action") {
+    throw "Health check failed: unexpected v1_readiness.time_aware_planned_work_delivery_path '$($v1Readiness.time_aware_planned_work_delivery_path)'."
+}
+if ([string]$v1Readiness.time_aware_planned_work_recurrence_owner -ne "scheduler_reevaluation_with_foreground_handoff") {
+    throw "Health check failed: unexpected v1_readiness.time_aware_planned_work_recurrence_owner '$($v1Readiness.time_aware_planned_work_recurrence_owner)'."
+}
+if ([string]$v1Readiness.time_aware_planned_work_gate_state -ne "foreground_due_delivery_and_recurring_reevaluation_ready") {
+    throw "Health check failed: unexpected v1_readiness.time_aware_planned_work_gate_state '$($v1Readiness.time_aware_planned_work_gate_state)'."
+}
 $validV1OrganizerDailyUseStates = @("all_daily_use_workflows_ready", "daily_use_workflows_blocked_by_provider_activation")
 if ($validV1OrganizerDailyUseStates -notcontains [string]$v1Readiness.organizer_daily_use_state) {
     throw "Health check failed: unexpected v1_readiness.organizer_daily_use_state '$($v1Readiness.organizer_daily_use_state)'."
@@ -1997,7 +2009,7 @@ if ([string]$v1Readiness.organizer_daily_use_state -eq "all_daily_use_workflows_
 if ([string]$v1Readiness.organizer_daily_use_state -eq "daily_use_workflows_blocked_by_provider_activation" -and $actualOrganizerBlockedWorkflows.Count -eq 0) {
     throw "Health check failed: v1_readiness organizer_daily_use_state is daily_use_workflows_blocked_by_provider_activation but organizer_daily_use_blocked_workflows is empty."
 }
-$requiredV1Scenarios = @("T13.1", "T14.1", "T14.2", "T14.3", "T15.1", "T15.2", "T16.1", "T16.2", "T16.3", "T17.1", "T17.2")
+$requiredV1Scenarios = @("T13.1", "T14.1", "T14.2", "T14.3", "T15.1", "T15.2", "T16.1", "T16.2", "T16.3", "T17.1", "T17.2", "T18.1", "T18.2", "T19.1", "T19.2")
 $actualV1Scenarios = @()
 if ($v1Readiness.PSObject.Properties.Name -contains "required_behavior_scenarios" -and $null -ne $v1Readiness.required_behavior_scenarios) {
     $actualV1Scenarios = @($v1Readiness.required_behavior_scenarios)
@@ -2177,6 +2189,18 @@ if ($IncludeDebug) {
     if ([string]$incidentV1Readiness.learned_state_gate_state -ne "inspection_surface_ready") {
         throw "Smoke request failed: unexpected incident_evidence v1_readiness learned_state_gate_state '$($incidentV1Readiness.learned_state_gate_state)'."
     }
+    if ([string]$incidentV1Readiness.time_aware_planned_work_policy_owner -ne "internal_time_aware_planned_work_policy") {
+        throw "Smoke request failed: unexpected incident_evidence v1_readiness time_aware_planned_work_policy_owner '$($incidentV1Readiness.time_aware_planned_work_policy_owner)'."
+    }
+    if ([string]$incidentV1Readiness.time_aware_planned_work_delivery_path -ne "attention_to_planning_to_expression_to_action") {
+        throw "Smoke request failed: unexpected incident_evidence v1_readiness time_aware_planned_work_delivery_path '$($incidentV1Readiness.time_aware_planned_work_delivery_path)'."
+    }
+    if ([string]$incidentV1Readiness.time_aware_planned_work_recurrence_owner -ne "scheduler_reevaluation_with_foreground_handoff") {
+        throw "Smoke request failed: unexpected incident_evidence v1_readiness time_aware_planned_work_recurrence_owner '$($incidentV1Readiness.time_aware_planned_work_recurrence_owner)'."
+    }
+    if ([string]$incidentV1Readiness.time_aware_planned_work_gate_state -ne "foreground_due_delivery_and_recurring_reevaluation_ready") {
+        throw "Smoke request failed: unexpected incident_evidence v1_readiness time_aware_planned_work_gate_state '$($incidentV1Readiness.time_aware_planned_work_gate_state)'."
+    }
     if ($validV1OrganizerDailyUseStates -notcontains [string]$incidentV1Readiness.organizer_daily_use_state) {
         throw "Smoke request failed: unexpected incident_evidence v1_readiness organizer_daily_use_state '$($incidentV1Readiness.organizer_daily_use_state)'."
     }
@@ -2199,7 +2223,7 @@ if ($IncludeDebug) {
             throw "Smoke request failed: incident_evidence deployment is missing fallback trigger mode '$requiredFallbackMode'."
         }
     }
-    $incidentRequiredV1Scenarios = @("T13.1", "T14.1", "T14.2", "T14.3", "T15.1", "T15.2", "T16.1", "T16.2", "T16.3", "T17.1", "T17.2")
+    $incidentRequiredV1Scenarios = @("T13.1", "T14.1", "T14.2", "T14.3", "T15.1", "T15.2", "T16.1", "T16.2", "T16.3", "T17.1", "T17.2", "T18.1", "T18.2", "T19.1", "T19.2")
     $incidentActualV1Scenarios = @()
     if ($incidentV1Readiness.PSObject.Properties.Name -contains "required_behavior_scenarios" -and $null -ne $incidentV1Readiness.required_behavior_scenarios) {
         $incidentActualV1Scenarios = @($incidentV1Readiness.required_behavior_scenarios)

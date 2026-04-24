@@ -2,7 +2,9 @@ from app.core.action_delivery import action_delivery_envelope_matches_plan
 from app.core.contracts import (
     ActionDelivery,
     ActionResult,
+    CancelPlannedWorkItemDomainIntent,
     CalendarSchedulingIntentDomainIntent,
+    CompletePlannedWorkItemDomainIntent,
     ConnectedDriveAccessDomainIntent,
     ConnectorCapabilityDiscoveryDomainIntent,
     ContextOutput,
@@ -17,7 +19,9 @@ from app.core.contracts import (
     PlanOutput,
     PromoteInferredGoalDomainIntent,
     PromoteInferredTaskDomainIntent,
+    ReschedulePlannedWorkItemDomainIntent,
     RoleOutput,
+    UpsertPlannedWorkItemDomainIntent,
     KnowledgeSearchDomainIntent,
     WebBrowserAccessDomainIntent,
     MaintainRelationDomainIntent,
@@ -169,6 +173,8 @@ class ActionExecutor:
         goal_update = str(intent_updates["goal_update"])
         task_update = str(intent_updates["task_update"])
         task_status_update = str(intent_updates["task_status_update"])
+        planned_work_update = str(intent_updates["planned_work_update"])
+        planned_work_status_update = str(intent_updates["planned_work_status_update"])
         calendar_connector_update = str(intent_updates["calendar_connector_update"])
         task_connector_update = str(intent_updates["task_connector_update"])
         drive_connector_update = str(intent_updates["drive_connector_update"])
@@ -204,6 +210,8 @@ class ActionExecutor:
             "goal_update": goal_update,
             "task_update": task_update,
             "task_status_update": task_status_update,
+            "planned_work_update": planned_work_update,
+            "planned_work_status_update": planned_work_status_update,
             "calendar_connector_update": calendar_connector_update,
             "task_connector_update": task_connector_update,
             "drive_connector_update": drive_connector_update,
@@ -714,6 +722,8 @@ class ActionExecutor:
         goal_update = ""
         task_update = ""
         task_status_update = ""
+        planned_work_update = ""
+        planned_work_status_update = ""
         calendar_connector_update = ""
         task_connector_update = ""
         drive_connector_update = ""
@@ -728,6 +738,7 @@ class ActionExecutor:
         executed_intents: list[str] = []
         active_goals_cache: list[dict] | None = None
         active_tasks_cache: list[dict] | None = None
+        active_planned_work_cache: list[dict] | None = None
 
         for intent in plan.domain_intents:
             executed_intents.append(intent.intent_type)
@@ -847,6 +858,93 @@ class ActionExecutor:
                     task_status_update = f"{updated_task['name']}:{updated_task['status']}"
                 continue
 
+            if isinstance(intent, UpsertPlannedWorkItemDomainIntent):
+                if active_goals_cache is None:
+                    active_goals_cache = await self.memory_repository.get_active_goals(
+                        user_id=event.meta.user_id,
+                        limit=5,
+                    )
+                if active_tasks_cache is None:
+                    goal_ids = [int(goal["id"]) for goal in active_goals_cache if goal.get("id") is not None]
+                    active_tasks_cache = await self.memory_repository.get_active_tasks(
+                        user_id=event.meta.user_id,
+                        goal_ids=goal_ids,
+                        limit=8,
+                    )
+                linked_goal_id = intent.goal_id
+                linked_task_id = intent.task_id
+                if linked_goal_id is None:
+                    linked_goal_id = self._match_goal_for_task(intent.summary, active_goals_cache)
+                if linked_task_id is None:
+                    matched_task = self._match_task_for_status(intent.summary, active_tasks_cache)
+                    linked_task_id = int(matched_task["id"]) if matched_task is not None and matched_task.get("id") is not None else None
+                stored_planned_work = await self.memory_repository.upsert_planned_work_item(
+                    user_id=event.meta.user_id,
+                    kind=intent.work_kind,
+                    summary=intent.summary,
+                    goal_id=linked_goal_id,
+                    task_id=linked_task_id,
+                    not_before=intent.not_before,
+                    preferred_at=intent.preferred_at,
+                    expires_at=intent.expires_at,
+                    recurrence_mode=intent.recurrence_mode,
+                    recurrence_rule=intent.recurrence_rule,
+                    delivery_channel=intent.channel_hint,
+                    requires_foreground_execution=bool(intent.requires_foreground_execution),
+                    quiet_hours_policy=intent.quiet_hours_policy,
+                    provenance=intent.provenance,
+                    source_event_id=event.event_id,
+                )
+                planned_work_update = (
+                    f"{stored_planned_work['kind']}:"
+                    f"{stored_planned_work['summary']}:"
+                    f"{stored_planned_work['status']}"
+                )
+                if active_planned_work_cache is None:
+                    active_planned_work_cache = [stored_planned_work]
+                else:
+                    active_planned_work_cache.append(stored_planned_work)
+                continue
+
+            if isinstance(intent, ReschedulePlannedWorkItemDomainIntent):
+                updated_planned_work = await self.memory_repository.reschedule_planned_work_item(
+                    work_id=int(intent.work_id),
+                    not_before=intent.not_before,
+                    preferred_at=intent.preferred_at,
+                    expires_at=intent.expires_at,
+                )
+                if updated_planned_work is not None:
+                    planned_work_status_update = (
+                        f"{updated_planned_work['summary']}:"
+                        f"{updated_planned_work['status']}:"
+                        "rescheduled"
+                    )
+                continue
+
+            if isinstance(intent, CancelPlannedWorkItemDomainIntent):
+                updated_planned_work = await self.memory_repository.cancel_planned_work_item(
+                    work_id=int(intent.work_id),
+                )
+                if updated_planned_work is not None:
+                    planned_work_status_update = (
+                        f"{updated_planned_work['summary']}:"
+                        f"{updated_planned_work['status']}:"
+                        "cancelled"
+                    )
+                continue
+
+            if isinstance(intent, CompletePlannedWorkItemDomainIntent):
+                updated_planned_work = await self.memory_repository.complete_planned_work_item(
+                    work_id=int(intent.work_id),
+                )
+                if updated_planned_work is not None:
+                    planned_work_status_update = (
+                        f"{updated_planned_work['summary']}:"
+                        f"{updated_planned_work['status']}:"
+                        "completed"
+                    )
+                continue
+
             if isinstance(intent, MaintainTaskStatusDomainIntent):
                 if active_tasks_cache is None:
                     active_tasks_cache = await self.memory_repository.get_active_tasks(
@@ -941,6 +1039,8 @@ class ActionExecutor:
             "goal_update": goal_update,
             "task_update": task_update,
             "task_status_update": task_status_update,
+            "planned_work_update": planned_work_update,
+            "planned_work_status_update": planned_work_status_update,
             "calendar_connector_update": calendar_connector_update,
             "task_connector_update": task_connector_update,
             "drive_connector_update": drive_connector_update,

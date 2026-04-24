@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -25,6 +25,7 @@ from app.core.reflection_scope_policy import (
 from app.core.runtime import RuntimeOrchestrator
 from app.expression.generator import ExpressionAgent
 from app.motivation.engine import MotivationEngine
+from app.workers.scheduler import SchedulerWorker
 from tests.empathy_fixtures import EMPATHY_SUPPORT_SCENARIOS
 
 
@@ -43,13 +44,26 @@ class FakeMemoryRepository:
         self.user_theta: dict | None = None
         self.active_goals: list[dict] = []
         self.active_tasks: list[dict] = []
+        self.active_planned_work: list[dict] = []
         self.active_goal_milestones: list[dict] = []
         self.goal_milestone_history: list[dict] = []
         self.goal_progress_history: list[dict] = []
         self.reflection_tasks: list[dict] = []
+        self.reflection_stats = {
+            "total": 0,
+            "pending": 0,
+            "processing": 0,
+            "completed": 0,
+            "failed": 0,
+            "retryable_failed": 0,
+            "exhausted_failed": 0,
+            "stuck_processing": 0,
+        }
         self.pending_subconscious_proposals: list[dict] = []
         self.resolved_subconscious_proposals: list[dict] = []
         self.proactive_candidates: list[dict] = []
+        self.planned_work_due_updates: list[dict] = []
+        self.planned_work_recurrence_updates: list[dict] = []
 
 
     async def get_recent_for_user(self, user_id: str, limit: int = 5) -> list[dict]:
@@ -130,6 +144,23 @@ class FakeMemoryRepository:
             return (goal_linked + rest)[:limit]
         return active[:limit]
 
+    async def get_active_planned_work(
+        self,
+        user_id: str,
+        *,
+        goal_ids: list[int] | None = None,
+        task_ids: list[int] | None = None,
+        limit: int = 8,
+    ) -> list[dict]:
+        rows = [item for item in self.active_planned_work if item.get("status") in {"pending", "due", "snoozed"}]
+        goal_id_set = {goal_id for goal_id in (goal_ids or []) if goal_id is not None}
+        task_id_set = {task_id for task_id in (task_ids or []) if task_id is not None}
+        if goal_id_set:
+            rows = [item for item in rows if item.get("goal_id") in goal_id_set or item.get("goal_id") is None]
+        if task_id_set:
+            rows = [item for item in rows if item.get("task_id") in task_id_set or item.get("task_id") is None]
+        return rows[:limit]
+
     async def get_active_goal_milestones(self, user_id: str, *, goal_ids: list[int] | None = None, limit: int = 6) -> list[dict]:
         rows = [item for item in self.active_goal_milestones if item.get("status") == "active"]
         if goal_ids:
@@ -138,6 +169,30 @@ class FakeMemoryRepository:
 
     async def get_pending_subconscious_proposals(self, user_id: str, limit: int = 8) -> list[dict]:
         return self.pending_subconscious_proposals[:limit]
+
+    async def upsert_subconscious_proposal(self, **kwargs) -> dict:
+        proposal_type = str(kwargs.get("proposal_type", "nudge_user"))
+        summary = str(kwargs.get("summary", ""))
+        existing = next(
+            (
+                proposal
+                for proposal in self.pending_subconscious_proposals
+                if str(proposal.get("proposal_type", "")) == proposal_type
+                and str(proposal.get("summary", "")) == summary
+                and str(proposal.get("status", "pending")) in {"pending", "deferred"}
+            ),
+            None,
+        )
+        if existing is not None:
+            existing.update(kwargs)
+            return dict(existing)
+        payload = {
+            "proposal_id": len(self.pending_subconscious_proposals) + 1,
+            "status": "pending",
+            **kwargs,
+        }
+        self.pending_subconscious_proposals.append(payload)
+        return payload
 
     async def resolve_subconscious_proposal(
         self,
@@ -254,6 +309,100 @@ class FakeMemoryRepository:
         self.active_tasks.append(payload)
         return payload
 
+    async def upsert_planned_work_item(self, **kwargs) -> dict:
+        payload = {
+            "id": len(self.active_planned_work) + 1,
+            "status": "pending",
+            **kwargs,
+        }
+        self.active_planned_work.append(payload)
+        return payload
+
+    async def reschedule_planned_work_item(self, *, work_id: int, **kwargs) -> dict | None:
+        for item in self.active_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "pending"
+                item.update(kwargs)
+                return item
+        return None
+
+    async def cancel_planned_work_item(self, *, work_id: int) -> dict | None:
+        for item in self.active_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "cancelled"
+                return item
+        return None
+
+    async def complete_planned_work_item(self, *, work_id: int) -> dict | None:
+        for item in self.active_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "completed"
+                return item
+        return None
+
+    async def get_due_planned_work(self, *, now: datetime | None = None, limit: int = 8) -> list[dict]:
+        due_at = now or datetime.now(timezone.utc)
+        rows: list[dict] = []
+        for item in self.active_planned_work:
+            if item.get("status") not in {"pending", "snoozed"}:
+                continue
+            preferred_at = item.get("preferred_at")
+            not_before = item.get("not_before")
+            if preferred_at is not None and preferred_at <= due_at:
+                rows.append(item)
+                continue
+            if preferred_at is None and not_before is not None and not_before <= due_at:
+                rows.append(item)
+        return rows[:limit]
+
+    async def mark_planned_work_due(self, *, work_id: int, evaluated_at: datetime | None = None) -> dict | None:
+        for item in self.active_planned_work:
+            if int(item["id"]) == work_id:
+                item["status"] = "due"
+                item["last_evaluated_at"] = evaluated_at
+                payload = {
+                    "work_id": work_id,
+                    "status": "due",
+                    "evaluated_at": evaluated_at,
+                }
+                self.planned_work_due_updates.append(payload)
+                return item
+        return None
+
+    async def advance_planned_work_recurrence(
+        self,
+        *,
+        work_id: int,
+        evaluated_at: datetime | None = None,
+    ) -> dict | None:
+        for item in self.active_planned_work:
+            if int(item["id"]) != work_id:
+                continue
+            mode = str(item.get("recurrence_mode", "none")).strip().lower()
+            if mode == "daily":
+                delta_seconds = 86400
+            elif mode == "weekly":
+                delta_seconds = 7 * 86400
+            else:
+                delta_seconds = 0
+            preferred_at = item.get("preferred_at") or evaluated_at or datetime.now(timezone.utc)
+            next_preferred_at = preferred_at
+            if delta_seconds > 0:
+                next_preferred_at = preferred_at + timedelta(seconds=delta_seconds)
+            item["status"] = "pending"
+            item["preferred_at"] = next_preferred_at
+            item["not_before"] = next_preferred_at
+            item["last_evaluated_at"] = evaluated_at
+            payload = {
+                "work_id": work_id,
+                "recurrence_mode": mode,
+                "preferred_at": next_preferred_at,
+                "evaluated_at": evaluated_at,
+            }
+            self.planned_work_recurrence_updates.append(payload)
+            return item
+        return None
+
     async def sync_goal_milestone(self, **kwargs) -> dict:
         payload = {
             "id": len(self.active_goal_milestones) + 1,
@@ -322,6 +471,16 @@ class FakeMemoryRepository:
         limit: int = 8,
     ) -> list[dict]:
         return self.proactive_candidates[:limit]
+
+    async def get_reflection_task_stats(
+        self,
+        *,
+        max_attempts: int,
+        stuck_after_seconds: int,
+        retry_backoff_seconds: tuple[int, ...],
+        now=None,
+    ) -> dict[str, int]:
+        return dict(self.reflection_stats)
 
 
 class PersistingFakeMemoryRepository(FakeMemoryRepository):
@@ -705,6 +864,7 @@ async def test_runtime_pipeline_api_source() -> None:
     assert set(result.stage_timings_ms) == {
         "memory_load",
         "task_load",
+        "planned_work_load",
         "goal_milestone_load",
         "goal_milestone_history_load",
         "goal_progress_load",
@@ -4756,6 +4916,83 @@ async def test_runtime_pipeline_reenters_deferred_subconscious_proposal_for_cons
     assert memory.resolved_subconscious_proposals[0]["decision"] == "accept"
 
 
+async def test_runtime_pipeline_delivers_due_planned_work_through_foreground_path() -> None:
+    memory = FakeMemoryRepository(recent_memory=[])
+    memory.pending_subconscious_proposals = [
+        {
+            "proposal_id": 91,
+            "proposal_type": "nudge_user",
+            "summary": "planned_work_due:9:send the release summary",
+            "payload": {
+                "handoff_kind": "planned_work_due",
+                "work_id": 9,
+                "work_kind": "reminder",
+                "summary": "send the release summary",
+                "delivery_channel": "telegram",
+                "source_event_id": "evt-reminder-1",
+            },
+            "confidence": 0.82,
+            "status": "pending",
+            "research_policy": "read_only",
+            "allowed_tools": [],
+            "source_event_id": "evt-reminder-1",
+        }
+    ]
+    runtime = RuntimeOrchestrator(
+        perception_agent=PerceptionAgent(),
+        context_agent=ContextAgent(),
+        motivation_engine=MotivationEngine(),
+        role_agent=RoleAgent(),
+        planning_agent=PlanningAgent(),
+        expression_agent=ExpressionAgent(openai_client=FakeOpenAIClient()),
+        action_executor=ActionExecutor(memory_repository=memory, telegram_client=FakeTelegramClient()),
+        memory_repository=memory,
+        reflection_worker=FakeReflectionWorker(),
+    )
+
+    event = build_scheduler_event(
+        subsource="maintenance_tick",
+        user_id="123456",
+        payload={
+            "text": "planned work due: send the release summary",
+            "chat_id": 123456,
+            "planned_work_due": {
+                "work_id": 9,
+                "summary": "send the release summary",
+                "work_kind": "reminder",
+                "delivery_channel": "telegram",
+                "source_event_id": "evt-reminder-1",
+            },
+        },
+    )
+
+    result = await runtime.run(event)
+
+    assert result.plan.goal == "Deliver the due planned-work follow-up with one clear immediate next step."
+    assert result.plan.steps == [
+        "interpret_event",
+        "review_context",
+        "integrate_subconscious_nudge",
+        "prepare_response",
+        "send_telegram_message",
+    ]
+    assert result.plan.needs_response is True
+    assert result.plan.needs_action is True
+    assert len(result.plan.proposal_handoffs) == 1
+    assert result.plan.proposal_handoffs[0].proposal_id == 91
+    assert result.plan.proposal_handoffs[0].decision == "accept"
+    assert result.plan.proposal_handoffs[0].reason == "scheduled_due_planned_work_handoff"
+    assert len(result.plan.accepted_proposals) == 1
+    assert result.plan.accepted_proposals[0].proposal_id == 91
+    assert result.expression.channel == "telegram"
+    assert result.action_result.status == "success"
+    assert result.action_result.actions == ["send_telegram_message"]
+    assert len(memory.resolved_subconscious_proposals) == 1
+    assert memory.resolved_subconscious_proposals[0]["proposal_id"] == 91
+    assert memory.resolved_subconscious_proposals[0]["decision"] == "accept"
+    assert "proposal_handoff" in result.stage_timings_ms
+
+
 async def test_runtime_pipeline_emits_connector_expansion_discovery_outputs_from_pending_proposal() -> None:
     memory = FakeMemoryRepository(recent_memory=[])
     memory.pending_subconscious_proposals = [
@@ -5418,12 +5655,15 @@ async def test_runtime_pipeline_captures_reminder_preference_and_daily_planning_
     )
 
     active_task_names = {str(task.get("name", "")) for task in memory.active_tasks}
+    active_planned_work_summaries = {str(item.get("summary", "")) for item in memory.active_planned_work}
 
     assert reminder_result.memory_record is not None
     assert planning_result.memory_record is not None
     assert reminder_result.memory_record.payload["proactive_preference_update"] == "proactive_opt_in:true"
+    assert reminder_result.memory_record.payload["planned_work_update"] == "reminder:send the release summary tomorrow:pending"
     assert memory.user_preferences["proactive_opt_in"] is True
     assert "send the release summary tomorrow" in active_task_names
+    assert "send the release summary tomorrow" in active_planned_work_summaries
     assert "plan tomorrow" in active_task_names
 
 
@@ -6518,6 +6758,159 @@ async def test_runtime_behavior_final_v1_daily_use_scenarios() -> None:
         [
             BehaviorScenarioDefinition(test_id="T18.1", run=website_read_then_recall_scenario),
             BehaviorScenarioDefinition(test_id="T18.2", run=organizer_review_then_focus_scenario),
+        ]
+    )
+    assert len(results) == 2
+    assert {result.status for result in results} == {"pass"}
+
+
+async def test_runtime_behavior_time_aware_planned_work_scenarios() -> None:
+    class _BehaviorReflectionWorker:
+        running = False
+
+        async def run_pending_once(self, limit: int = 1) -> list[dict]:
+            return []
+
+        def snapshot(self) -> dict[str, object]:
+            return {
+                "running": False,
+                "max_attempts": 3,
+                "stuck_processing_seconds": 180,
+                "retry_backoff_seconds": (5, 30, 120),
+            }
+
+    async def due_delivery_foreground_scenario() -> BehaviorScenarioCheck:
+        memory = PersistingFakeMemoryRepository(recent_memory=[])
+        runtime = _build_behavior_runtime(memory)
+        memory.pending_subconscious_proposals = [
+            {
+                "proposal_id": 91,
+                "proposal_type": "nudge_user",
+                "summary": "planned_work_due:9:send the release summary",
+                "payload": {
+                    "handoff_kind": "planned_work_due",
+                    "work_id": 9,
+                    "work_kind": "reminder",
+                    "summary": "send the release summary",
+                    "delivery_channel": "telegram",
+                    "source_event_id": "evt-reminder-1",
+                },
+                "status": "pending",
+            }
+        ]
+        memory.active_planned_work = [
+            {
+                "id": 9,
+                "user_id": "daily-user",
+                "kind": "reminder",
+                "summary": "send the release summary",
+                "status": "due",
+                "delivery_channel": "telegram",
+                "source_event_id": "evt-reminder-1",
+            }
+        ]
+
+        result = await runtime.run(
+            Event(
+                event_id="evt-time-aware-behavior-1",
+                source="scheduler",
+                subsource="maintenance_tick",
+                timestamp=datetime.now(timezone.utc),
+                payload={
+                    "text": "planned work due: send the release summary",
+                    "chat_id": 123456,
+                    "planned_work_due": {
+                        "work_id": 9,
+                        "summary": "send the release summary",
+                        "work_kind": "reminder",
+                        "delivery_channel": "telegram",
+                        "source_event_id": "evt-reminder-1",
+                    },
+                },
+                meta=EventMeta(user_id="daily-user", trace_id="t-time-aware-behavior-1"),
+            )
+        )
+
+        passed = (
+            result.expression.channel == "telegram"
+            and result.action_result.status == "success"
+            and result.action_result.actions == ["send_telegram_message"]
+            and len(memory.resolved_subconscious_proposals) == 1
+            and memory.resolved_subconscious_proposals[0]["decision"] == "accept"
+            and memory.resolved_subconscious_proposals[0]["reason"] == "scheduled_due_planned_work_handoff"
+            and result.plan.proposal_handoffs[0].decision == "accept"
+        )
+        return BehaviorScenarioCheck(
+            passed=passed,
+            reason="time_aware_planned_work_foreground_due_delivery"
+            if passed
+            else "time_aware_planned_work_foreground_due_delivery_regression",
+            trace_id=result.event.meta.trace_id,
+            notes=(
+                f"channel={result.expression.channel};"
+                f"actions={','.join(result.action_result.actions)};"
+                f"handoff_decision={result.plan.proposal_handoffs[0].decision};"
+                f"resolved={len(memory.resolved_subconscious_proposals)}"
+            ),
+        )
+
+    async def recurring_reevaluation_scenario() -> BehaviorScenarioCheck:
+        memory = PersistingFakeMemoryRepository(recent_memory=[])
+        runtime = _build_behavior_runtime(memory)
+        reminder_result = await runtime.run(
+            _behavior_event(
+                event_id="evt-time-aware-behavior-2",
+                trace_id="t-time-aware-behavior-2",
+                user_id="daily-user",
+                text="Remind me every day to review deployment health.",
+            )
+        )
+        recurring_item = memory.active_planned_work[0]
+        recurring_item["preferred_at"] = datetime.now(timezone.utc) - timedelta(minutes=5)
+        recurring_item["not_before"] = recurring_item["preferred_at"]
+        recurring_item["delivery_channel"] = "telegram"
+        recurring_item["source_event_id"] = "evt-time-aware-behavior-2"
+
+        scheduler = SchedulerWorker(
+            memory_repository=memory,  # type: ignore[arg-type]
+            reflection_worker=_BehaviorReflectionWorker(),  # type: ignore[arg-type]
+            enabled=True,
+            reflection_runtime_mode="deferred",
+            reflection_interval_seconds=900,
+            maintenance_interval_seconds=3600,
+        )
+        scheduler.set_runtime(runtime)
+        summary = await scheduler.run_maintenance_tick_once(reason="behavior_recurring_due_delivery")
+
+        recurrence_update = memory.planned_work_recurrence_updates[0] if memory.planned_work_recurrence_updates else {}
+        passed = (
+            reminder_result.memory_record is not None
+            and recurring_item["recurrence_mode"] == "daily"
+            and recurring_item["status"] == "pending"
+            and summary["foreground_delivery_successes"] == 1
+            and summary["recurrence_advanced"] == 1
+            and recurrence_update.get("work_id") == recurring_item["id"]
+            and isinstance(recurrence_update.get("preferred_at"), datetime)
+            and recurrence_update["preferred_at"] > datetime.now(timezone.utc)
+        )
+        return BehaviorScenarioCheck(
+            passed=passed,
+            reason="time_aware_planned_work_recurring_reevaluation"
+            if passed
+            else "time_aware_planned_work_recurring_reevaluation_regression",
+            trace_id="t-time-aware-behavior-2-maintenance",
+            notes=(
+                f"recurrence_mode={recurring_item.get('recurrence_mode', '')};"
+                f"status={recurring_item.get('status', '')};"
+                f"foreground_successes={summary['foreground_delivery_successes']};"
+                f"recurrence_advanced={summary['recurrence_advanced']}"
+            ),
+        )
+
+    results = await execute_behavior_scenarios(
+        [
+            BehaviorScenarioDefinition(test_id="T19.1", run=due_delivery_foreground_scenario),
+            BehaviorScenarioDefinition(test_id="T19.2", run=recurring_reevaluation_scenario),
         ]
     )
     assert len(results) == 2

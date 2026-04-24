@@ -1312,6 +1312,9 @@ Current limitation:
   daily-use contract instead of relying only on direct `/health` inspection
 - `/health.v1_readiness` now mirrors that organizer proof with
   `organizer_daily_use_state`, workflow counts, and ready/blocked workflow ids
+- after the core-v1 boundary revision, that organizer posture should be treated
+  as mirrored extension readiness rather than as a hidden core no-UI `v1`
+  blocker
 
 ---
 

@@ -4,6 +4,71 @@
 
 The current repo already works as an MVP slice, but several architecture-level docs describe systems that are not implemented yet. This file keeps the next real decisions visible and tied to the current codebase.
 
+## V2 Product Surface And Repository Topology (2026-04-25)
+
+Fresh user approval now resolves the top-level `v2` product topology.
+
+1. approved repository direction
+   - the repository should move toward product-facing top-level directories:
+     - `backend/`
+     - `web/`
+     - `mobile/`
+   - only repo-wide and deployment-wide files should remain in the root
+2. approved backend direction
+   - the current Python + FastAPI AION runtime remains the backend owner
+   - `backend/` is the correct product-facing name even though it contains
+     more than just raw API handlers
+3. approved client direction
+   - `web/` is the first dedicated UI surface
+   - `mobile/` is part of the approved product topology now, even if its first
+     implementation lands after `web`
+4. approved auth direction
+   - first-party auth/session should be backend-owned
+   - product clients should not rely on raw `user_id` headers or internal
+     debug surfaces as their trust boundary
+5. still-open bounded follow-ups
+   - the exact mobile stack remains intentionally deferred to a later bounded
+     decision inside the approved `mobile/` folder
+   - the exact production serving topology for `web` versus `backend` routes
+     should be frozen together with the deploy task, not guessed ad hoc during
+     the initial folder move
+
+## Multimodal Telegram And App Boundary (2026-04-25)
+
+Fresh user-driven analysis now highlights a real product gap just below the
+current text-first Telegram baseline.
+
+1. current repo fact
+   - canonical contracts describe text-first event ingestion and text-first
+     response delivery through Telegram or API
+   - project truth still records Telegram delivery as single-message and
+     plain-text without richer channel-aware policy
+   - user-reported Telegram behavior suggests photo-plus-caption input is not
+     yet a trustworthy foreground path and should not be treated as random
+     transport noise
+2. decision still open
+   - the repo does not yet freeze one explicit multimodal event and delivery
+     boundary for:
+     - photo context
+     - voice-note-to-text intake
+     - generated image reply plus caption
+3. required architecture constraints
+   - multimodal ingress must still normalize into one shared event contract
+   - action must remain the only owner of provider media fetch, upload, and
+     outbound media send methods
+   - Telegram and a later first-party app should share one transport-neutral
+     cognitive contract rather than separate reasoning paths
+   - raw media payloads must not bypass the existing normalization or
+     planning -> expression -> action boundary
+4. likely next doc or implementation slice after the current readiness-truth
+   and channel-aware delivery work
+   - freeze a bounded multimodal payload shape for normalized event input
+   - freeze a bounded multimodal response-execution handoff
+   - decide whether photo understanding is direct model input, action-owned
+     preprocessing, or both under explicit permission and evidence rules
+   - decide what operator-visible health or incident surfaces prove the media
+     path is working instead of silently falling back to text-only behavior
+
 ## Core V1 Time-Aware Planning Revision (2026-04-24)
 
 The approved product and architecture revision now treats core no-UI `v1` as:
@@ -33,15 +98,103 @@ Queue seeded from this revision:
 
 Current execution note:
 
+- `PRJ-635` is now complete:
+  - canonical architecture now freezes one explicit time-aware planned-work
+    baseline for core no-UI `v1`
+  - reminders, check-ins, routines, and future follow-ups now share one
+    internal planned-work model instead of implying a separate reminder lane
+  - organizer-tool activation remains a later extension or sync lane, not a
+    hidden blocker for core `v1` closure
+  - due planned work is now explicitly required to cross the existing
+    `attention -> planning -> expression -> action` path for user-visible
+    delivery
+- `PRJ-636..PRJ-639` are now complete:
+  - the repo now has one durable planned-work entity plus action-owned
+    persistence, scheduler reevaluation, foreground due delivery, bounded
+    recurrence rules, and context-aware delay-versus-skip handling
+- `PRJ-640` is now complete:
+  - behavior validation, `/health.v1_readiness`, exported incident evidence,
+    and release smoke now prove the same time-aware planned-work contract
+- `PRJ-641` is now complete:
+  - bounded autonomous research windows are now frozen as `planned_work`
+    variants with explicit trigger, read-only tool, and tool-grounded-learning
+    guardrails
+- `PRJ-642` is now complete:
+  - architecture, testing, ops, planning, and context truth now describe the
+    same core no-UI `v1` boundary and later organizer-tool extension
+- the seeded queue through `PRJ-642` is now complete:
+  - no seeded `READY`, `BACKLOG`, or `FUTURE` slice remains in this lane
+  - future delivery or organizer follow-up should come from fresh analysis,
+    not leftover backlog residue
 - `PRJ-632..PRJ-633` are superseded by this revision:
   - they assumed organizer daily-use should stay part of the final core `v1`
     gate
   - that is no longer the approved product boundary
-- a delivery-specific follow-up is now also seeded after `PRJ-642`:
-  - Telegram length and formatting problems should be fixed as a
-    channel-aware delivery concern
-  - future UI/API channels must remain free to declare different output limits
-    and rendering capabilities
+Future note after this lane:
+
+- Telegram length and formatting still look like a likely next analysis topic,
+  but they are no longer kept as a pre-seeded backlog after `PRJ-642`
+
+## Fully Convincing No-UI V1 Analysis (2026-04-25)
+
+Fresh comparison of canonical docs, runtime surfaces, regression proof, and
+high-level repo truth now shows that core no-UI `v1` is implemented, but a
+smaller set of truthfulness and delivery gaps remains before the product story
+feels fully convincing.
+
+1. truthful `v1_readiness`
+   - not yet fully resolved
+   - the approved product boundary now treats organizer tooling as a later
+     extension, but some runtime and regression surfaces still mix organizer
+     daily-use posture into the final no-UI `v1` acceptance story
+   - some gate fields also remain static or surface-validity-oriented instead
+     of being derived from live owner surfaces
+2. channel-aware Telegram delivery
+   - not yet resolved
+   - the delivery layer still sends one raw Telegram message without explicit
+     segmentation or formatting policy
+   - this is now the clearest user-facing quality gap after the core-v1
+     planning lane
+3. high-level docs drift
+   - partially resolved
+   - canonical architecture is in better shape, but `docs/overview.md` and
+     some runtime-reality wording still imply planned/deferred capability
+     slices that are already live
+4. organizer full provider activation and richer empathy rollout
+   - intentionally not first in this queue
+   - both remain useful later lanes, but fresh analysis says they are not the
+     highest-signal blockers right now
+
+Queue seeded from this analysis:
+
+- `PRJ-647..PRJ-650` V1 Readiness Truth And Acceptance Boundary
+- `PRJ-651..PRJ-654` Foreground Capability And Time Awareness
+- `PRJ-643..PRJ-646` Channel-Aware Delivery Baseline
+
+Current execution note:
+
+- `PRJ-647` is now complete:
+  - canonical architecture, planning truth, testing guidance, and runtime
+    reality now explicitly separate core no-UI `v1` gates from mirrored
+    extension posture
+  - organizer daily-use posture is now described as extension readiness rather
+    than as a hidden blocker inside the post-`PRJ-642` core boundary
+- `PRJ-648` is now the first `READY` slice:
+  - the next remaining gap is to make `/health.v1_readiness` reflect that
+    clarified boundary truthfully
+- fresh code analysis now also records a narrower follow-up gap after
+  `PRJ-650`:
+  - planning, planned work, bounded web search, page reading, and
+    tool-grounded learning are implemented and tested
+  - but current-time awareness and capability awareness remain only partially
+    explicit in the foreground turn contract and reply-prompt surfaces
+  - the next post-`PRJ-650` lane should therefore make these capabilities
+    explicitly knowable to the active turn before channel-delivery polish
+- dormant `PRJ-643..PRJ-646` stay useful:
+  - they are now explicitly sequenced after `PRJ-654`, not discarded
+  - the topic was real, but fresh analysis says readiness truth should come
+    first, followed by foreground awareness of already-implemented capability
+    posture
 
 ## Final Operational V1 Closure Analysis (2026-04-24)
 

@@ -30,12 +30,14 @@ def test_schema_baseline_includes_expected_tables() -> None:
         "aion_theta",
         "aion_goal",
         "aion_task",
+        "aion_planned_work_item",
         "aion_goal_progress",
         "aion_goal_milestone",
         "aion_goal_milestone_history",
         "aion_reflection_task",
         "aion_subconscious_proposal",
         "aion_attention_turn",
+        "aion_scheduler_cadence_evidence",
     }
 
 

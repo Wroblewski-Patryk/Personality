@@ -110,6 +110,8 @@ life-assistant workflows end to end through the existing runtime:
 1. time-aware planned future work
    - explicit user phrasing may create or update internal active work
    - that future-facing work may be one-time or recurring
+   - reminders, check-ins, routines, and future follow-ups are all variants of
+     one internal planned-work model
    - "reminder" is only one possible outward expression of that planned work,
      not a separate subsystem
    - later due-item delivery must still go through scheduler -> attention ->
@@ -204,9 +206,18 @@ green across:
 5. time-aware planned work posture
    - internal planned future work and follow-up reevaluation must remain
      machine-visible and behavior-validated
+   - behavior anchors now include:
+     - `T19.1` foreground due-item delivery through the normal runtime path
+     - `T19.2` recurring planned-work reevaluation through scheduler-owned
+       cadence plus foreground delivery
 
 That acceptance bundle belongs to backend runtime truth, incident evidence,
 release smoke, and behavior validation. It does not require a dedicated UI.
+
+Organizer-tool daily-use posture may still be exposed alongside that bundle as
+extension readiness, but it is not part of the core no-UI `v1` blocker set.
+If organizer providers are not fully activated, the repo should report that as
+later-extension posture rather than silently downgrading core `v1`.
 
 Canonical no-UI `v1` readiness surfaces:
 
@@ -230,12 +241,43 @@ Canonical final no-UI `v1` acceptance bundle gates:
    - `/health.learned_state.tool_grounded_learning`
    - `/health.v1_readiness.tool_grounded_learning_state`
 5. time-aware planned work
-   - planned future-work health or runtime surface defined by the planning and
-     scheduler contract
-   - matching `v1_readiness` gate state for planned future work
+   - `/health.v1_readiness.time_aware_planned_work_gate_state`
+   - matching debug/exported
+     `incident_evidence.policy_posture["v1_readiness"]`
 6. deploy parity and provenance
    - `/health.deployment`
    - `/health.v1_readiness.deploy_parity_state`
+
+Extension-only readiness that may be shown near the same bundle, but should
+not redefine the core no-UI `v1` gate:
+
+1. organizer daily-use posture
+   - `/health.connectors.organizer_tool_stack`
+   - optional summary fields mirrored from `/health.v1_readiness`
+   - blocked organizer provider activation means later-extension readiness is
+     incomplete, not that core no-UI `v1` vanished
+2. bounded autonomous research windows
+   - remain a later extension on top of `planned_work`
+3. channel-aware delivery polish
+   - Telegram or later UI-specific formatting and segmentation posture is
+     delivery-quality work, not a separate core-`v1` cognition gate
+4. multimodal conversation boundary
+   - later delivery and ingress work may widen the same personality to accept:
+     - photo context plus user caption
+     - voice note converted into bounded text for the normal runtime path
+     - generated image reply plus optional caption
+   - that expansion must still reuse:
+     - one normalized event contract for ingress
+     - the existing planning -> expression -> action boundary for delivery
+     - one transport-neutral cognitive contract shared by Telegram and a later
+       first-party app
+   - raw provider media payloads or channel-specific send methods must not
+     become a second cognition path outside normalization and action
+
+Bounded autonomous research windows belong to the same future-work model, but
+they are not a separate core-`v1` gate. They remain a later extension on top
+of `planned_work` with the same bounded search/browser and tool-grounded
+learning rules.
 
 The final no-UI `v1` claim is valid only when these gates are green in live
 production and the matching behavior scenarios remain in the required scenario
@@ -337,6 +379,8 @@ Beyond the no-UI `v1` backend surface:
 - mobile app  
 - voice interface  
 - dashboards  
+- multimodal chat where voice and image still reduce into one shared runtime
+  contract instead of channel-specific logic forks
 
 ---
 

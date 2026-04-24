@@ -1,6 +1,6 @@
 # TASK_BOARD
 
-Last updated: 2026-04-24
+Last updated: 2026-04-25
 
 ## Agent Workflow Refresh (2026-04-18)
 
@@ -305,108 +305,416 @@ Last updated: 2026-04-24
   - scheduler-owned reevaluation with foreground delivery through the existing
     attention -> planning -> expression -> action path
   - bounded autonomous research windows built on the same future-work model
-- after that queue, a delivery-adaptation fix lane is seeded through
-  `PRJ-646`:
-  - Telegram length limits and formatting should be handled in the delivery
-    layer
-  - API and future UI channels must remain free to declare different limits
-    and rendering capabilities
+- `PRJ-635` is complete: canonical architecture now freezes one explicit
+  time-aware planned-work baseline for core no-UI `v1`, where reminders,
+  check-ins, routines, and future follow-ups are all variants of internal
+  planned work, due delivery still crosses
+  `attention -> planning -> expression -> action`, and organizer-tool
+  activation is no longer a hidden core-`v1` blocker.
+- `PRJ-636` is complete: runtime contracts, storage, action-owned persistence,
+  and test coverage now share one durable `planned_work` baseline instead of
+  leaving time-aware future work as reminder-only phrasing or transient task
+  heuristics.
+- `PRJ-637` is complete: maintenance cadence now reevaluates due planned work,
+  marks it as `due`, and hands it to the existing subconscious proposal
+  boundary instead of sending user-visible delivery directly from the
+  background scheduler.
+- `PRJ-638` is complete: due planned-work handoffs now re-enter the normal
+  foreground runtime path, proposal resolution remains explicit, and scheduler
+  delivery no longer needs a direct-send escape hatch outside
+  `planning -> expression -> action`.
+- `PRJ-639` is complete: recurring planned work now advances through bounded
+  recurrence rules, quiet-hours-sensitive items delay instead of bypassing the
+  boundary, and expired one-off items skip cleanly without growing a second
+  scheduler.
+- `PRJ-640` is complete: behavior validation now includes `T19.1` and
+  `T19.2`, `/health.v1_readiness` plus incident evidence expose the same
+  time-aware planned-work posture, and release smoke now fails when that proof
+  drifts.
+- `PRJ-641` is complete: bounded autonomous research windows are now frozen as
+  `planned_work` variants with explicit triggers, read-only tool limits, and
+  tool-grounded-learning guardrails.
+- `PRJ-642` is complete: product, runtime, testing, ops, planning, and
+  context truth now describe the same core no-UI `v1` boundary and later
+  organizer-tool extension.
+- the queue seeded through `PRJ-642` is now complete; no seeded `READY`,
+  `BACKLOG`, or `FUTURE` slice remains in this lane.
+- 2026-04-25 fresh analysis now seeds the next queue through `PRJ-654`.
+- the highest-signal remaining gaps before a fully convincing no-UI `v1`
+  are now:
+  - truthful `v1_readiness` semantics after the core-v1 boundary revision
+  - foreground capability/time awareness, so implemented planning, temporal,
+    and bounded web capabilities become explicitly knowable to the active turn
+  - channel-aware Telegram delivery for long messages and formatting
+  - high-level docs drift between live runtime reality and older
+    "still planned" wording
+- the next queue is intentionally ordered as:
+  - `PRJ-647..PRJ-650` V1 Readiness Truth And Acceptance Boundary
+  - `PRJ-651..PRJ-654` Foreground Capability And Time Awareness
+  - `PRJ-643..PRJ-646` Channel-Aware Delivery Baseline
+- retained dormant task ids `PRJ-643..PRJ-646` stay valid, but they now depend
+  on the readiness-truth and awareness lanes because delivery polish should not
+  land on top of an ambiguous final-acceptance story or an under-signaled
+  foreground capability model.
+- fresh code analysis on 2026-04-25 confirms:
+  - planned work and scheduler handoff are implemented
+  - bounded `knowledge_search.search_web` and `web_browser.read_page` are
+    implemented and action-executed
+  - but foreground turn awareness of current time, approved tools, and active
+    planned-work posture is still only partially explicit across context,
+    prompt, and runtime capability surfaces
+- the next post-`PRJ-650` lane should therefore prioritize explicit awareness
+  before Telegram delivery polish.
+- fresh user-reported Telegram behavior now also confirms a later,
+  still-unfrozen gap after the current readiness-truth and channel-delivery
+  lanes:
+  - the repo still lacks one explicit multimodal interaction contract for
+    photo context, voice-note transcription, and generated image reply
+    delivery
+- `PRJ-647` is complete: canonical architecture, planning truth, testing
+  guidance, and runtime reality now distinguish core no-UI `v1` gates from
+  mirrored extension posture. Organizer daily-use is now explicit extension
+  readiness rather than a hidden core blocker inside the post-`PRJ-642`
+  product boundary.
+- 2026-04-25: fresh user-approved `v2` direction now also seeds a later
+  product-entry lane through `PRJ-668`.
+- that lane is intentionally ordered after the current no-UI `v1` truth and
+  awareness backlog because it changes repository topology and production
+  deploy shape:
+  - `PRJ-655..PRJ-659` V2 Product Topology And Repository Migration
+  - `PRJ-660..PRJ-663` First-Party Auth And Client API Boundary
+  - `PRJ-664..PRJ-666` Web Product Shell And Production Topology
+  - `PRJ-667..PRJ-668` Mobile Product Foundation
 
 ## READY
 
-- [ ] PRJ-635 Freeze the time-aware planned-work baseline for core no-UI V1
-  - Owner: Planning Agent
-  - Group: Core V1 Time-Aware Planned Work
-  - Depends on: PRJ-631
+- [ ] PRJ-648 Implement truthful v1-readiness gate evaluation
+  - Owner: Backend Builder
+  - Group: V1 Readiness Truth And Acceptance Boundary
+  - Depends on: PRJ-647
   - Priority: P0
   - Status: READY
-  - Why now:
-    - the approved architecture revision should become canonical repo truth
-      before runtime work starts, otherwise reminder-like behavior will keep
-      drifting between docs and implementation
-  - Result:
-    - one explicit architecture contract says that reminders, check-ins,
-      routines, and future follow-ups are all variants of internal planned
-      work
-  - Validation:
-    - architecture and planning cross-review
+  - Validation: targeted `/health` and runtime-policy coverage
 
-- [ ] PRJ-636 Add the durable planned-work contract and storage shape
+- [x] PRJ-636 Add the durable planned-work contract and storage shape
   - Owner: Backend Builder
   - Group: Core V1 Time-Aware Planned Work
   - Depends on: PRJ-635
   - Priority: P0
-  - Status: BACKLOG
+  - Status: DONE
+  - Validation: `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py tests/test_schema_baseline.py`
 
-- [ ] PRJ-637 Implement scheduler reevaluation and due-item attention handoff
+- [x] PRJ-637 Implement scheduler reevaluation and due-item attention handoff
   - Owner: Backend Builder
   - Group: Core V1 Time-Aware Planned Work
   - Depends on: PRJ-636
   - Priority: P0
-  - Status: BACKLOG
+  - Status: DONE
+  - Validation: `.\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_scheduler_worker.py tests/test_runtime_pipeline.py`
 
-- [ ] PRJ-638 Implement foreground delivery for due planned work
+- [x] PRJ-638 Implement foreground delivery for due planned work
   - Owner: Backend Builder
   - Group: Core V1 Time-Aware Planned Work
   - Depends on: PRJ-637
   - Priority: P0
-  - Status: BACKLOG
+  - Status: DONE
+  - Result:
+    - due planned-work handoffs now become normal foreground runtime turns and
+      can be delivered through the existing Telegram/API response path
+    - scheduler cadence emits one foreground event per newly-due item and does
+      not repeatedly reselect already-`due` rows
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_planning_agent.py tests/test_scheduler_worker.py tests/test_runtime_pipeline.py`
 
-- [ ] PRJ-639 Add recurring work and context-aware delivery rules
+- [x] PRJ-639 Add recurring work and context-aware delivery rules
   - Owner: Backend Builder
   - Group: Core V1 Time-Aware Planned Work
   - Depends on: PRJ-638
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
+  - Result:
+    - recurring planned work now uses bounded recurrence rules on the existing
+      entity instead of a second scheduling subsystem
+    - maintenance cadence now delays, skips, or advances due items through
+      explicit planned-work state transitions
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_planning_agent.py tests/test_scheduler_worker.py tests/test_memory_repository.py`
 
-- [ ] PRJ-640 Add behavior and release proof for time-aware planned work
+- [x] PRJ-640 Add behavior and release proof for time-aware planned work
   - Owner: QA/Test
   - Group: Core V1 Time-Aware Planned Work
   - Depends on: PRJ-639
   - Priority: P0
-  - Status: BACKLOG
+  - Status: DONE
+  - Result:
+    - behavior validation now proves due planned-work foreground delivery and
+      recurring reevaluation through `T19.1..T19.2`
+    - `/health.v1_readiness`, incident evidence, and release smoke now pin the
+      same compact time-aware planned-work posture
+  - Validation:
+    - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py::test_runtime_behavior_time_aware_planned_work_scenarios`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py::test_health_endpoint_shows_strict_rollout_hint_when_production_is_ready`
+    - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py -k "v1_readiness or time_aware_planned_work"`
 
-- [ ] PRJ-641 Freeze the bounded autonomous research-window policy
+- [x] PRJ-641 Freeze the bounded autonomous research-window policy
   - Owner: Planning Agent
   - Group: Bounded Autonomous Research Windows
   - Depends on: PRJ-640
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
+  - Result:
+    - `research_window` is now frozen as a planned-work variant instead of a
+      separate autonomy engine
+    - approved triggers, bounded read-only tool limits, and tool-grounded
+      learning guardrails are now explicit in canonical contracts
+  - Validation:
+    - architecture and product cross-review
 
-- [ ] PRJ-642 Sync docs and context for core V1 time-aware planning
+- [x] PRJ-642 Sync docs and context for core V1 time-aware planning
   - Owner: Product Docs Agent
   - Group: Bounded Autonomous Research Windows
   - Depends on: PRJ-641
   - Priority: P1
+  - Status: DONE
+  - Result:
+    - architecture, runtime, testing, ops, planning, and context truth now
+      describe the same core no-UI `v1` time-aware-planning boundary
+    - organizer tools are consistently described as a later extension instead
+      of a core-`v1` blocker
+    - no seeded queue remains after this lane; future follow-up should come
+      from fresh analysis
+  - Validation:
+    - doc-and-context cross-review
+
+## BACKLOG
+
+- [ ] PRJ-649 Add proof for v1-readiness truthfulness
+  - Owner: QA/Test
+  - Group: V1 Readiness Truth And Acceptance Boundary
+  - Depends on: PRJ-648
+  - Priority: P0
   - Status: BACKLOG
+  - Validation: targeted pytest plus release-smoke regressions
+
+- [ ] PRJ-650 Sync docs and context for truthful v1-readiness
+  - Owner: Product Docs Agent
+  - Group: V1 Readiness Truth And Acceptance Boundary
+  - Depends on: PRJ-649
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: doc-and-context sync
+
+- [ ] PRJ-651 Freeze the foreground capability-and-time awareness contract
+  - Owner: Planning Agent
+  - Group: Foreground Capability And Time Awareness
+  - Depends on: PRJ-650
+  - Priority: P0
+  - Status: BACKLOG
+  - Validation: architecture and runtime-contract cross-review
+
+- [ ] PRJ-652 Implement explicit foreground awareness for time and approved tools
+  - Owner: Backend Builder
+  - Group: Foreground Capability And Time Awareness
+  - Depends on: PRJ-651
+  - Priority: P0
+  - Status: BACKLOG
+  - Validation: targeted runtime, planning, and prompt-path coverage
+
+- [ ] PRJ-653 Add proof for indirect capability use and temporal reasoning
+  - Owner: QA/Test
+  - Group: Foreground Capability And Time Awareness
+  - Depends on: PRJ-652
+  - Priority: P0
+  - Status: BACKLOG
+  - Validation: targeted pytest plus behavior scenarios
+
+- [ ] PRJ-654 Sync docs and context for foreground capability awareness
+  - Owner: Product Docs Agent
+  - Group: Foreground Capability And Time Awareness
+  - Depends on: PRJ-653
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: doc-and-context sync
 
 - [ ] PRJ-643 Freeze the channel-aware delivery constraint baseline
   - Owner: Planning Agent
-  - Group: Channel-Aware Delivery Adaptation
-  - Depends on: PRJ-642
+  - Group: Channel-Aware Delivery Baseline
+  - Depends on: PRJ-654
   - Priority: P1
   - Status: BACKLOG
+  - Validation: architecture and delivery-contract cross-review
 
 - [ ] PRJ-644 Implement channel-aware Telegram segmentation and formatting
   - Owner: Backend Builder
-  - Group: Channel-Aware Delivery Adaptation
+  - Group: Channel-Aware Delivery Baseline
   - Depends on: PRJ-643
   - Priority: P1
   - Status: BACKLOG
+  - Validation: targeted delivery-router and Telegram client coverage
 
 - [ ] PRJ-645 Add proof for long-message and markdown delivery
   - Owner: QA/Test
-  - Group: Channel-Aware Delivery Adaptation
+  - Group: Channel-Aware Delivery Baseline
   - Depends on: PRJ-644
   - Priority: P1
   - Status: BACKLOG
+  - Validation: targeted pytest plus release or evidence checks
 
 - [ ] PRJ-646 Sync docs for channel-aware delivery
   - Owner: Product Docs Agent
-  - Group: Channel-Aware Delivery Adaptation
+  - Group: Channel-Aware Delivery Baseline
   - Depends on: PRJ-645
   - Priority: P2
   - Status: BACKLOG
+  - Validation: doc-and-context sync
+
+- [ ] PRJ-655 Freeze the `backend/web/mobile` v2 product topology and naming
+  - Owner: Planning Agent
+  - Group: V2 Product Topology And Repository Migration
+  - Depends on: PRJ-646
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: architecture, governance, and planning cross-review
+
+- [ ] PRJ-656 Move the current Python runtime into `backend/` without behavior drift
+  - Owner: Backend Builder
+  - Group: V2 Product Topology And Repository Migration
+  - Depends on: PRJ-655
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: targeted pytest plus path and script regression coverage
+
+- [ ] PRJ-657 Normalize tooling, docs, and deploy paths after the `backend/` move
+  - Owner: Ops/Release
+  - Group: V2 Product Topology And Repository Migration
+  - Depends on: PRJ-656
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: compose, migration, smoke, and script path verification
+
+- [ ] PRJ-658 Scaffold the `web/` workspace with React, TypeScript, Vite, Tailwind, and daisyUI
+  - Owner: Frontend Builder
+  - Group: V2 Product Topology And Repository Migration
+  - Depends on: PRJ-657
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: workspace bootstrap and production build smoke
+
+- [ ] PRJ-659 Scaffold the `mobile/` workspace as a reserved product surface
+  - Owner: Frontend Builder
+  - Group: V2 Product Topology And Repository Migration
+  - Depends on: PRJ-658
+  - Priority: P2
+  - Status: BACKLOG
+  - Validation: workspace bootstrap and contract-boundary review
+
+- [ ] PRJ-660 Freeze first-party backend auth/session and user mapping contracts
+  - Owner: Planning Agent
+  - Group: First-Party Auth And Client API Boundary
+  - Depends on: PRJ-659
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: architecture and runtime-contract cross-review
+
+- [ ] PRJ-661 Implement the backend auth/session baseline for first-party clients
+  - Owner: Backend Builder
+  - Group: First-Party Auth And Client API Boundary
+  - Depends on: PRJ-660
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: targeted auth, API, and security regression coverage
+
+- [ ] PRJ-662 Freeze the app-facing client API boundary for web and mobile
+  - Owner: Planning Agent
+  - Group: First-Party Auth And Client API Boundary
+  - Depends on: PRJ-661
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: architecture and endpoint-contract cross-review
+
+- [ ] PRJ-663 Implement UI-safe app-facing API surfaces over existing backend truth
+  - Owner: Backend Builder
+  - Group: First-Party Auth And Client API Boundary
+  - Depends on: PRJ-662
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: targeted endpoint and runtime contract coverage
+
+- [ ] PRJ-664 Build the first `web/` shell for login, settings, chat, and personality inspection
+  - Owner: Frontend Builder
+  - Group: Web Product Shell And Production Topology
+  - Depends on: PRJ-663
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: web smoke, route coverage, and client integration checks
+
+- [ ] PRJ-665 Integrate `web/` build and serving into the production topology
+  - Owner: Ops/Release
+  - Group: Web Product Shell And Production Topology
+  - Depends on: PRJ-664
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: compose, Coolify, and production-topology smoke verification
+
+- [ ] PRJ-666 Add release smoke and repo-driven post-push deploy proof for `backend + web`
+  - Owner: QA/Test
+  - Group: Web Product Shell And Production Topology
+  - Depends on: PRJ-665
+  - Priority: P1
+  - Status: BACKLOG
+  - Validation: release smoke, incident-evidence parity, and deploy-proof coverage
+
+- [ ] PRJ-667 Freeze the mobile client stack and shared contract baseline
+  - Owner: Planning Agent
+  - Group: Mobile Product Foundation
+  - Depends on: PRJ-666
+  - Priority: P2
+  - Status: BACKLOG
+  - Validation: product and architecture cross-review
+
+- [ ] PRJ-668 Build the initial `mobile/` foundation on the shared auth and client API boundary
+  - Owner: Frontend Builder
+  - Group: Mobile Product Foundation
+  - Depends on: PRJ-667
+  - Priority: P2
+  - Status: BACKLOG
+  - Validation: mobile workspace smoke and shared-client contract verification
+
+## DONE
+
+- [x] PRJ-647 Freeze the core-v1 versus extension acceptance boundary
+  - Owner: Planning Agent
+  - Group: V1 Readiness Truth And Acceptance Boundary
+  - Depends on: PRJ-642
+  - Priority: P0
+  - Status: DONE
+  - Result:
+    - canonical architecture and planning truth now explicitly separate core
+      no-UI `v1` gates from later extension posture
+    - organizer daily-use posture is now described as mirrored extension
+      readiness, not as a hidden blocker of the post-`PRJ-642` core boundary
+    - the next runtime slice now has one clear contract target for truthful
+      `v1_readiness`
+  - Validation:
+    - architecture and planning cross-review
+
+- [x] PRJ-635 Freeze the time-aware planned-work baseline for core no-UI V1
+  - Owner: Planning Agent
+  - Group: Core V1 Time-Aware Planned Work
+  - Depends on: PRJ-631
+  - Priority: P0
+  - Status: DONE
+  - Result:
+    - canonical architecture now states that reminders, check-ins, routines,
+      and future follow-ups are all variants of one internal planned-work
+      model
+    - core no-UI `v1` now explicitly treats organizer-tool activation as a
+      later extension instead of a hidden closure prerequisite
+    - planned-work storage and due-delivery posture now stay tied to internal
+      planning state plus the existing
+      `attention -> planning -> expression -> action` boundary
+  - Validation:
+    - architecture and planning cross-review
 
 - [x] PRJ-614 Freeze the final operational V1-closure baseline
   - Owner: Planning Agent

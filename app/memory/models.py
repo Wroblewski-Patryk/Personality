@@ -212,6 +212,40 @@ class AionTask(Base):
     )
 
 
+class AionPlannedWorkItem(Base):
+    __tablename__ = "aion_planned_work_item"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    goal_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    task_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    kind: Mapped[str] = mapped_column(String(24), nullable=False, index=True)
+    summary: Mapped[str] = mapped_column(String(220), nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="pending", index=True)
+    not_before: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    preferred_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    recurrence_mode: Mapped[str] = mapped_column(String(16), nullable=False, default="none")
+    recurrence_rule: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    delivery_channel: Mapped[str] = mapped_column(String(16), nullable=False, default="none")
+    requires_foreground_execution: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    quiet_hours_policy: Mapped[str] = mapped_column(String(32), nullable=False, default="respect_user_context")
+    provenance: Mapped[str] = mapped_column(String(32), nullable=False, default="explicit_user_request")
+    source_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    last_evaluated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
 class AionGoalProgress(Base):
     __tablename__ = "aion_goal_progress"
 

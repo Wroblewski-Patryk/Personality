@@ -7,14 +7,23 @@ Keep the repository predictable, easy to scan, and friendly for human and AI con
 ## Root Rules
 
 - Keep the root focused on runtime, packaging, deployment, and repo entry files.
-- Allowed in root for this project:
+- Approved `v2` target topology uses product-facing root folders:
+  - `backend/`
+  - `web/`
+  - `mobile/`
+- Current transition note:
+  - until the approved `v2` migration lands, the existing Python runtime still
+    lives in the repository root
+  - the target topology is now approved repo truth, but migration work is
+    still required before filesystem reality fully matches it
+- Allowed in root for the target topology:
   - `README.md`
-  - `pyproject.toml`
+  - `AGENTS.md`
   - `docker-compose*.yml`
   - `.env.example`
-  - `app/`
-  - `tests/`
-  - `scripts/`
+  - `backend/`
+  - `web/`
+  - `mobile/`
   - `docker/`
   - `docs/`
 - Do not add random project documentation directly in the root unless the file is true repo metadata.
@@ -33,13 +42,15 @@ Keep the repository predictable, easy to scan, and friendly for human and AI con
 
 ## Code Layout Rules
 
-- `app/api/` is for HTTP entry points and request translation only.
-- `app/core/` owns contracts, runtime orchestration, configuration, and shared infrastructure glue.
-- `app/agents/`, `app/motivation/`, and `app/expression/` contain stage logic.
-- `app/integrations/` contains external system clients.
-- `app/memory/` contains persistence models and repository logic.
-- `tests/` should mirror behavior-focused coverage, not internal implementation trivia.
-- `scripts/` should contain repeatable operator and developer helpers only.
+- `backend/app/api/` is for HTTP entry points and request translation only.
+- `backend/app/core/` owns contracts, runtime orchestration, configuration, and shared infrastructure glue.
+- `backend/app/agents/`, `backend/app/motivation/`, and `backend/app/expression/` contain stage logic.
+- `backend/app/integrations/` contains external system clients.
+- `backend/app/memory/` contains persistence models and repository logic.
+- `backend/tests/` should mirror behavior-focused coverage, not internal implementation trivia.
+- `backend/scripts/` should contain repeatable operator and developer helpers only.
+- `web/` is the dedicated browser-client workspace.
+- `mobile/` is the dedicated mobile-client workspace.
 
 ## Migration Rule
 

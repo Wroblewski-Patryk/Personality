@@ -123,6 +123,7 @@ class GraphRuntimeState(BaseModel):
     identity: IdentityOutput | None = None
     active_goals: list[dict[str, Any]] = Field(default_factory=list)
     active_tasks: list[dict[str, Any]] = Field(default_factory=list)
+    active_planned_work: list[dict[str, Any]] = Field(default_factory=list)
     active_goal_milestones: list[dict[str, Any]] = Field(default_factory=list)
     goal_milestone_history: list[dict[str, Any]] = Field(default_factory=list)
     goal_progress_history: list[dict[str, Any]] = Field(default_factory=list)
@@ -200,6 +201,10 @@ def runtime_result_to_graph_state(
             operational={
                 "active_goals": [goal.model_dump(mode="python") for goal in result.active_goals],
                 "active_tasks": [task.model_dump(mode="python") for task in result.active_tasks],
+                "active_planned_work": [
+                    item.model_dump(mode="python")
+                    for item in result.active_planned_work
+                ],
                 "active_goal_milestones": [
                     milestone.model_dump(mode="python")
                     for milestone in result.active_goal_milestones
@@ -218,6 +223,9 @@ def runtime_result_to_graph_state(
         identity=result.identity,
         active_goals=[goal.model_dump(mode="python") for goal in result.active_goals],
         active_tasks=[task.model_dump(mode="python") for task in result.active_tasks],
+        active_planned_work=[
+            item.model_dump(mode="python") for item in result.active_planned_work
+        ],
         active_goal_milestones=[
             milestone.model_dump(mode="python") for milestone in result.active_goal_milestones
         ],
@@ -272,6 +280,7 @@ def graph_state_to_runtime_result(state: GraphRuntimeState) -> RuntimeResult:
         identity=state.identity,
         active_goals=state.active_goals,
         active_tasks=state.active_tasks,
+        active_planned_work=state.active_planned_work,
         active_goal_milestones=state.active_goal_milestones,
         goal_milestone_history=state.goal_milestone_history,
         goal_progress_history=state.goal_progress_history,

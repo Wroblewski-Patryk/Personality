@@ -289,12 +289,26 @@ For meaningful repo changes, leave behind:
       read
     - `T18.2` organizer review plus later focus guidance without re-running
       the organizer read
-    - `v1_readiness.required_behavior_scenarios` includes `T18.1..T18.2`
+    - `T19.1` due planned-work delivery stays inside the normal foreground
+      runtime path
+    - `T19.2` recurring planned work advances through scheduler-owned
+      reevaluation instead of a second scheduling subsystem
+    - `v1_readiness.required_behavior_scenarios` includes `T18.1..T19.2`
     - explicit planning phrasing creates the bounded task anchor
       `plan tomorrow`
     - scenario-level proof that reminder capture, planning continuity, and
       scheduler-owned proactive follow-up still compose into one end-to-end
       `v1` workflow (`T13.1`)
+- for time-aware planned-work proof slices, regression and release evidence
+  from:
+  - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
+  - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+  - coverage should pin:
+    - `/health.v1_readiness.time_aware_planned_work_*`
+    - exported `incident_evidence.policy_posture["v1_readiness"]` parity for
+      the same planned-work posture
+    - release-smoke failure when planned-work gate state drifts or disappears
+    - required behavior scenarios `T19.1..T19.2`
 - for runtime-topology, adaptive-governance, planning-governance, or
   deployment-policy surface changes, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`

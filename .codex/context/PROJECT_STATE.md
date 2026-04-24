@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Last updated: 2026-04-24
+Last updated: 2026-04-25
 
 ## Product Snapshot
 
@@ -10,6 +10,49 @@ Last updated: 2026-04-24
   user preferences over time
 - Commercial model: TBD
 - Current phase: no-UI V1 baseline achieved in repo; core-V1 time-aware planning revision now active before later organizer-tool onboarding
+- 2026-04-25: approved post-no-UI `v2` entry direction is now explicit:
+  - the repository should evolve toward product-facing top-level folders
+    `backend/`, `web/`, and `mobile/`
+  - the current Python + FastAPI AION runtime remains the backend owner and is
+    expected to move into `backend/`
+  - `web/` is the first dedicated UI surface
+  - `mobile/` is now part of the approved product topology, even if it lands
+    after the first web release
+  - first-party auth/session should be backend-owned
+  - repo-driven production deploy after push must remain truthful through the
+    topology change instead of becoming a manual or undocumented side path
+- 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
+  explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
+  routines, and future follow-ups are variants of one internal planned-work
+  model, due-item delivery still crosses
+  `attention -> planning -> expression -> action`, and organizer-tool
+  activation is no longer a hidden prerequisite for core no-UI `v1` closure.
+- 2026-04-24: `PRJ-636` is complete: the repo now has one durable
+  `planned_work` contract and storage shape, action-owned create/reschedule/
+  cancel/complete persistence, and regression coverage without introducing a
+  parallel reminder subsystem.
+- 2026-04-24: `PRJ-637` is complete: maintenance cadence now reevaluates due
+  planned work, marks it `due`, and hands it to the existing subconscious
+  proposal boundary instead of sending user-visible delivery directly from the
+  background scheduler.
+- 2026-04-24: `PRJ-638` is complete: due planned-work handoffs now re-enter
+  the normal foreground runtime path, are delivered only through the existing
+  `planning -> expression -> action` boundary, and proposal resolution remains
+  explicit for scheduler-origin follow-ups.
+- 2026-04-24: `PRJ-639` is complete: recurring planned work now advances
+  through bounded recurrence rules on the same durable entity, quiet-hours
+  sensitive items snooze instead of bypassing delivery guardrails, and expired
+  one-off items skip cleanly without creating a second scheduler.
+- 2026-04-24: `PRJ-640` is complete: behavior validation now includes `T19.1`
+  and `T19.2`, `/health.v1_readiness` and exported incident evidence expose
+  the same time-aware planned-work posture, and release smoke now fails when
+  that acceptance contract drifts.
+- 2026-04-24: `PRJ-641` is complete: bounded autonomous research windows are
+  now frozen as `planned_work` variants with explicit trigger, read-only tool,
+  and tool-grounded-learning guardrails instead of a separate autonomy engine.
+- 2026-04-24: `PRJ-642` is complete: architecture, runtime, testing, ops,
+  planning, and context truth now describe the same core no-UI `v1` boundary
+  and later organizer-tool extension.
 - 2026-04-24: core no-UI `v1` is now explicitly reinterpreted around stable
   conversation, bounded internet reading, tool-grounded learning, and
   internal time-aware planned work. Organizer-tool activation remains prepared
@@ -20,14 +63,55 @@ Last updated: 2026-04-24
   - scheduler-owned reevaluation with foreground delivery through the existing
     action boundary
   - bounded autonomous research windows built on that same model
-- 2026-04-24: a delivery-specific follow-up queue is now seeded through
-  `PRJ-646` after the core time-aware-planning lane:
-  - Telegram length limits should be handled by channel-aware delivery
-    segmentation rather than expression-stage truncation
-  - Telegram formatting should be handled by explicit delivery formatting
-    policy rather than raw markdown leaking through by accident
-  - future UI/API channels must remain free to use different length and
-    formatting capabilities
+- 2026-04-24: the queue seeded through `PRJ-642` is now complete. No seeded
+  `READY`, `BACKLOG`, or `FUTURE` slice remains for the core time-aware
+  planning lane; any follow-up delivery-adaptation work should be derived from
+  fresh analysis instead of backlog residue.
+- 2026-04-25: fresh repo analysis now seeds the next queue through `PRJ-654`.
+  The highest-signal remaining gaps before a fully convincing no-UI `v1`
+  are:
+  - `v1_readiness` still mixes core-v1 truth with later organizer-extension
+    posture in some runtime and regression surfaces
+  - some `v1_readiness` gate fields are still static or surface-validity
+    summaries rather than live semantic readiness
+  - the foreground runtime still lacks one explicit capability-awareness and
+    time-awareness contract, so implemented planning, temporal, and bounded
+    web capabilities may remain under-signaled to the active turn
+  - Telegram delivery is still single-message and plain-text, with no
+    channel-aware segmentation or formatting policy
+  - high-level docs such as `docs/overview.md` still carry older
+    "planned/deferred" wording that no longer matches the implemented runtime
+- 2026-04-25: fresh user-driven product analysis now also records a likely
+  post-text-delivery follow-up lane:
+  - Telegram and later app interaction still need one explicit multimodal
+    boundary for photo context, voice-note-to-text intake, and generated image
+    reply plus caption
+  - current architecture is still text-first at the normalized event and
+    response-handoff level, so media behavior should not be treated as already
+    covered by the stable no-UI `v1` contract
+- 2026-04-25: the next queue is intentionally ordered as:
+  - `PRJ-647..PRJ-650` V1 Readiness Truth And Acceptance Boundary
+  - `PRJ-651..PRJ-654` Foreground Capability And Time Awareness
+  - `PRJ-643..PRJ-646` Channel-Aware Delivery Baseline
+- 2026-04-25: `PRJ-647` is complete: canonical architecture, planning truth,
+  testing guidance, and runtime reality now explicitly distinguish:
+  - core no-UI `v1` acceptance gates
+  - mirrored extension posture such as organizer daily use
+  - later delivery-quality work such as channel-aware Telegram formatting
+- 2026-04-25: `PRJ-648` is now the first `READY` slice and should make
+  `/health.v1_readiness` reflect that clarified boundary truthfully.
+- 2026-04-25: fresh code analysis now shows a narrower product gap after
+  truthful readiness:
+  - planning, planned work, bounded web search, page reading, and
+    tool-grounded learning are implemented
+  - but time/context/tool awareness is still only partially explicit in the
+    foreground turn contract and reply prompt surfaces
+  - the next follow-up lane after `PRJ-650` should therefore make those
+    capabilities explicitly knowable to the active turn before delivery polish
+    work continues
+- 2026-04-25: organizer full provider activation and richer empathy rollout
+  remain valuable later lanes, but they are not the first blockers in this
+  fresh post-`PRJ-642` queue.
 - 2026-04-24: `PRJ-628` is complete: organizer daily-use posture is now proven
   through release smoke, incident-evidence bundles, and behavior validation,
   not only through `/health` or provider-activation summaries.

@@ -98,6 +98,10 @@ V1_REQUIRED_BEHAVIOR_SCENARIOS = [
     "T16.3",
     "T17.1",
     "T17.2",
+    "T18.1",
+    "T18.2",
+    "T19.1",
+    "T19.2",
 ]
 V1_APPROVED_TOOL_SLICES = [
     "knowledge_search.search_web",
@@ -614,6 +618,10 @@ def stub_aion_server() -> _StubAionServer:
             "product_stage": "v1_no_ui_life_assistant",
             "conversation_gate_state": "conversation_surface_ready",
             "learned_state_gate_state": "inspection_surface_ready",
+            "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
+            "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
+            "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
+            "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
             "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
             "organizer_daily_use_total_workflow_count": 3,
             "organizer_daily_use_ready_workflow_count": 1,
@@ -935,6 +943,10 @@ def stub_aion_server() -> _StubAionServer:
                     "product_stage": "v1_no_ui_life_assistant",
                     "conversation_gate_state": "conversation_surface_ready",
                     "learned_state_gate_state": "inspection_surface_ready",
+                    "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
+                    "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
+                    "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
+                    "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
                     "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
                     "organizer_daily_use_ready_workflow_count": 1,
                     "organizer_daily_use_total_workflow_count": 3,
@@ -1250,6 +1262,10 @@ def _write_incident_bundle(
                 "product_stage": "v1_no_ui_life_assistant",
                 "conversation_gate_state": "conversation_surface_ready",
                 "learned_state_gate_state": "inspection_surface_ready",
+                "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
+                "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
+                "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
+                "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
                 "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
                 "organizer_daily_use_ready_workflow_count": 1,
                 "organizer_daily_use_total_workflow_count": 3,
@@ -1432,6 +1448,10 @@ def _write_incident_bundle(
             "product_stage": "v1_no_ui_life_assistant",
             "conversation_gate_state": "conversation_surface_ready",
             "learned_state_gate_state": "inspection_surface_ready",
+            "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
+            "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
+            "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
+            "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
             "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
             "organizer_daily_use_ready_workflow_count": 1,
             "organizer_daily_use_total_workflow_count": 3,
@@ -2239,6 +2259,55 @@ def test_release_smoke_fails_when_incident_evidence_learned_state_contract_is_pa
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "Smoke request failed" in combined_output
     assert "learned_state is missing growth_summary_sections" in combined_output
+
+
+def test_release_smoke_fails_when_v1_readiness_time_aware_planned_work_contract_is_missing(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original = dict(_StubAionHandler.health_payload["v1_readiness"])
+    broken = dict(original)
+    broken.pop("time_aware_planned_work_gate_state", None)
+    _StubAionHandler.health_payload["v1_readiness"] = broken
+
+    try:
+        result = _run_release_smoke("-BaseUrl", stub_aion_server.base_url, cwd=ROOT)
+    finally:
+        _StubAionHandler.health_payload["v1_readiness"] = original
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "time_aware_planned_work_gate_state" in combined_output
+
+
+def test_release_smoke_fails_when_incident_evidence_v1_time_aware_planned_work_contract_drifts(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    incident_evidence = _StubAionHandler.event_payload["incident_evidence"]
+    assert isinstance(incident_evidence, dict)
+    original_payload = incident_evidence
+    policy_posture = dict(incident_evidence["policy_posture"])
+    v1_readiness = dict(policy_posture["v1_readiness"])
+    v1_readiness["time_aware_planned_work_gate_state"] = "planned_work_surface_invalid"
+    policy_posture["v1_readiness"] = v1_readiness
+    _StubAionHandler.event_payload["incident_evidence"] = {
+        **incident_evidence,
+        "policy_posture": policy_posture,
+    }
+
+    try:
+        result = _run_release_smoke(
+            "-BaseUrl",
+            stub_aion_server.base_url,
+            "-IncludeDebug",
+            cwd=ROOT,
+        )
+    finally:
+        _StubAionHandler.event_payload["incident_evidence"] = original_payload
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "Smoke request failed" in combined_output
+    assert "time_aware_planned_work_gate_state" in combined_output
 
 
 def test_release_smoke_fails_when_learned_state_tool_grounded_contract_is_missing(

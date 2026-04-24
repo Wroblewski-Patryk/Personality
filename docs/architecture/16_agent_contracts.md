@@ -458,6 +458,10 @@ External cadence cutover proof baseline:
 
 Time-aware planned work is the canonical future-work layer for no-UI `v1`.
 
+For core no-UI `v1`, this future-work layer is part of the required product
+baseline, while organizer-tool activation remains a later extension rather
+than a closure prerequisite.
+
 It extends existing goals, tasks, proactive cadence, and scheduler ownership
 without introducing a separate reminder engine.
 
@@ -514,6 +518,42 @@ Rules:
 7. current time, timezone posture, quiet-hour posture, active goals, and
    recent user context are valid reevaluation inputs; they do not by
    themselves grant direct delivery authority
+
+### Bounded Autonomous Research-Window Policy
+
+Research windows remain planned-work items, not a separate autonomy engine.
+
+Rules:
+
+1. `kind=research_window` is valid only as a planned-work variant on the same
+   durable entity as reminders, follow-ups, and routines
+2. research-window creation requires one bounded trigger:
+   - explicit user request to check later, revisit later, or research in a
+     spare window
+   - accepted conscious proposal linked to an already active user goal or
+     task
+   - explicit follow-up commitment already captured in planned work
+3. background cadence may only reevaluate or hand off a research window; it
+   must not perform uncontrolled browsing directly from the background
+4. foreground execution of a research window remains limited to the existing
+   approved read-only tool slices:
+   - `knowledge_search.search_web`
+   - `web_browser.read_page`
+5. each research window must stay bounded to one topic or decision frame plus
+   a small number of reads; it is not a standing crawl, monitor, or open-ended
+   browsing loop
+6. research windows must preserve the same safety and execution guardrails as
+   other external reads:
+   - no credential bypass
+   - no hidden-auth browsing
+   - no direct mutations in external systems
+   - no second planning or side-effect engine outside action
+7. any durable learning produced by a research window still goes only through
+   the existing action-owned tool-grounded summary path and memory-owned
+   persistence
+8. if bounded evidence is not found, the runtime should fall back to a normal
+   foreground outcome such as no-op, defer, or ask-user follow-up rather than
+   widening browsing authority
 
 Durable attention rollout baseline:
 
@@ -1571,6 +1611,33 @@ Rules:
    from implicit expression coupling
 3. handoff creation is side-effect-free; action remains the only execution
    owner
+
+Current no-UI `v1` delivery baseline:
+
+1. the stable production contract is still text-first
+2. Telegram delivery remains bounded to a normal outbound text reply using the
+   resolved `chat_id`
+3. richer channel behavior such as segmentation, media attachments, or
+   generated-image replies requires an explicit bounded handoff extension
+   before action may execute it
+
+Future multimodal direction:
+
+1. if the repo later supports photo context, voice-note transcription, or
+   image reply delivery, the handoff should widen through explicit bounded
+   content blocks or attachment descriptors rather than ad hoc transport flags
+2. expression may describe the intended communicative payload, for example:
+   - reply text
+   - caption text
+   - requested output modality
+   - bounded attachment descriptors
+3. action and integration routing must remain the only owners of:
+   - provider file upload or fetch
+   - Telegram or app-specific media-send methods
+   - final delivery execution evidence
+4. multimodal support must stay channel-neutral enough that Telegram and a
+   later first-party app can share one cognitive handoff shape with
+   transport-specific execution adapters
 
 ---
 
