@@ -33,6 +33,10 @@ real-world tool onboarding and tool-grounded learning.
      `provider_credentials_missing`
    - the repo needs one explicit baseline for when the first ClickUp +
      Calendar + Drive stack becomes actually provider-ready
+   - `PRJ-601` now exposes a shared `activation_snapshot` with
+     provider-specific missing settings and next actions
+   - `PRJ-602` now proves the same activation posture through release smoke,
+     incident evidence, and incident-evidence bundles
 3. tool-grounded learning capture
    - not yet resolved
    - bounded search, browser, and connector reads already exist, but there is
@@ -60,8 +64,18 @@ Current execution note:
   incident evidence, and release smoke.
 - `PRJ-599` is complete as the docs/context sync slice for deployment
   provenance.
-- `PRJ-600` is the current baseline-freezing slice before organizer-tool
-  credential activation surfaces become more actionable.
+- `PRJ-600..PRJ-602` are complete:
+  - the production organizer-tool credential baseline is frozen
+  - `/health.connectors.organizer_tool_stack` now exposes one actionable
+    activation snapshot
+  - release smoke plus incident evidence now validate the same activation
+    snapshot and next-action posture
+- `PRJ-603` is complete:
+  - runtime reality, testing guidance, ops notes, planning truth, and
+    repository context now describe the richer organizer-tool activation
+    snapshot and provider-specific next-action posture consistently
+- `PRJ-604` is the current baseline-freezing slice for tool-grounded learning
+  capture.
 
 ## Post-V1 Architecture Gap Analysis (2026-04-23)
 

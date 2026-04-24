@@ -400,10 +400,13 @@ Last updated: 2026-04-24
   incident-evidence bundles now validate the same organizer-tool
   `activation_snapshot` contract and next-action posture exposed through
   `/health.connectors.organizer_tool_stack`.
-- 2026-04-24: `PRJ-603` is now the first `READY` task; the next slice should
-  synchronize canonical docs, runtime reality, testing guidance, ops notes,
-  and planning/context truth around the richer organizer-tool activation
-  contract.
+- 2026-04-24: `PRJ-603` is complete: runtime reality, testing guidance, ops
+  notes, planning truth, and repository context now describe the same richer
+  organizer-tool activation snapshot and provider-specific next-action
+  posture.
+- 2026-04-24: `PRJ-604` is now the first `READY` task; the next slice should
+  freeze the bounded contract for how approved external-read results may
+  become durable learned knowledge without creating a second execution path.
 - 2026-04-22: `PRJ-560` is now the first `READY` task; the next slice should
   freeze the backend work-partner role baseline so future orchestration can
   grow from one explicit role contract instead of diffuse product wording.

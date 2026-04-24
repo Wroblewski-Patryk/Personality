@@ -1045,6 +1045,15 @@ What is already live:
   approved operations, read-only operations, confirmation-required operations,
   opt-in-required operations, ready operations, credential-gap operations, and
   readiness state
+ - the same surface now includes `activation_snapshot`, which is the canonical
+   operator onboarding view for the frozen stack:
+   - `policy_owner=production_organizer_tool_activation`
+   - `provider_activation_state`
+   - `provider_activation_ready` versus `provider_activation_total`
+   - `provider_requirements` for ClickUp, Google Calendar, and Google Drive
+   - provider-specific `missing_settings`
+   - provider-specific `next_action`
+   - top-level `next_actions`
 - these live tool slices still remain bounded:
   - search returns result evidence only
   - browser returns page-read evidence only

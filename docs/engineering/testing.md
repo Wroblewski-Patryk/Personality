@@ -218,11 +218,17 @@ For meaningful repo changes, leave behind:
       - `T16.3` work-partner Google Drive metadata listing
 - for organizer-tool production-readiness slices, regression and release-proof
   evidence from:
-  - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_api_routes.py`
-  - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
-  - `.\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'`
-  - coverage should pin the shared `/health.connectors.organizer_tool_stack`
-    contract plus matching incident-evidence and bundle proof
+- `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py tests/test_api_routes.py`
+- `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
+- `.\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'`
+- coverage should pin the shared `/health.connectors.organizer_tool_stack`
+  contract plus matching incident-evidence and bundle proof
+- organizer-tool activation coverage should also pin
+  `organizer_tool_stack.activation_snapshot`, including:
+  - activation-state transitions
+  - provider-specific missing settings
+  - provider-specific next actions
+  - parity between `/health`, incident evidence, and incident-evidence bundles
 - for no-UI `v1` life-assistant workflow slices, regression and behavior
   evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_goal_task_signals.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_memory_repository.py tests/test_runtime_pipeline.py`

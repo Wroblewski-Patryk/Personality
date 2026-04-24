@@ -246,28 +246,52 @@ Last updated: 2026-04-24
   incident-evidence bundles now validate the same organizer-tool activation
   snapshot exposed through `/health.connectors.organizer_tool_stack`, so
   provider-readiness evidence no longer depends on `/health` alone.
-- `PRJ-603` is now the first `READY` slice because the activation posture is
-  now operator-actionable and release-proven, so the next step is to
-  synchronize contracts, runtime reality, testing guidance, ops notes, and
-  planning truth around how organizer-tool activation becomes production-real.
+- `PRJ-603` is complete: runtime reality, testing guidance, ops notes,
+  planning truth, and repository context now describe the same
+  organizer-tool activation snapshot, activation-state triage, and
+  provider-specific next-action posture as the release-smoke and
+  incident-evidence contract.
+- `PRJ-604` is now the first `READY` slice because organizer-tool activation
+  is now frozen, actionable, and release-proven, so the next missing lane is
+  the bounded contract for how approved external-read results become durable
+  learned knowledge.
 
 ## READY
 
-- [ ] PRJ-603 Sync docs/context for organizer-tool credential activation
+- [ ] PRJ-604 Freeze the bounded tool-grounded learning contract
+  - Owner: Planner
+  - Group: Tool-Grounded Learning Capture
+  - Depends on: PRJ-603
+  - Priority: P1
+  - Status: READY
+  - Why now:
+    - external reads already exist through bounded search, browser, and
+      organizer-tool operations, but the repo still lacks one explicit durable
+      contract for how those reads may become learned knowledge
+  - Done when:
+    - one explicit bounded contract defines how approved external-read results
+      may become durable learned knowledge, preferences, or reflection signals
+      without creating a second execution path
+  - Validation:
+    - architecture/product/runtime cross-review
+
+- [x] PRJ-603 Sync docs/context for organizer-tool credential activation
   - Owner: Product Docs Agent
   - Group: Organizer-Tool Credential Activation
   - Depends on: PRJ-602
   - Priority: P1
-  - Status: READY
+  - Status: DONE
   - Why now:
     - activation posture is now actionable in `/health` and proven through
       smoke plus incident evidence, but canonical docs and repository truth
       still need the richer activation contract
-  - Done when:
-    - contracts, runtime reality, testing guidance, ops notes, and planning
-      truth align on how organizer-tool activation becomes production-real
+  - Result:
+    - runtime reality, testing guidance, ops notes, planning truth, and
+      repository context now describe the richer organizer-tool activation
+      snapshot plus provider-specific next-action posture consistently
   - Validation:
-    - doc-and-context sync
+    - docs/context cross-review against `/health.connectors.organizer_tool_stack`
+      and the `PRJ-602` release-smoke contract
 
 - [x] PRJ-602 Add release and incident evidence for organizer-tool activation posture
   - Owner: QA/Test

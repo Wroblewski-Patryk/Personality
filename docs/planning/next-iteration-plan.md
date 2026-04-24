@@ -154,6 +154,23 @@ Queue update (2026-04-24):
   - Validation:
     - doc-and-context sync
 
+Queue update (2026-04-24):
+
+- `PRJ-600` is complete: one explicit production credential-activation
+  baseline is frozen for ClickUp, Google Calendar, and Google Drive.
+- `PRJ-601` is complete: `/health.connectors.organizer_tool_stack` now exposes
+  a shared actionable `activation_snapshot` with provider-specific gaps and
+  next actions.
+- `PRJ-602` is complete: release smoke, incident evidence, and
+  incident-evidence bundles now validate the same activation snapshot and
+  next-action posture as `/health.connectors.organizer_tool_stack`.
+- `PRJ-603` is complete: runtime reality, testing guidance, ops notes,
+  planning truth, and repository context now describe the richer
+  organizer-tool activation snapshot and next-action posture consistently.
+- the next active slice is `PRJ-604`, which should freeze the bounded
+  tool-grounded learning contract before external reads start contributing to
+  durable learned state.
+
 ### Group 97 - Tool-Grounded Learning Capture
 
 - `PRJ-604` Freeze the bounded tool-grounded learning contract.

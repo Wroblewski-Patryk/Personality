@@ -1298,6 +1298,19 @@ Important health surfaces for current release checks:
   - `read_only_operations`
   - `confirmation_required_operations`
   - `user_opt_in_required_operations`
+  - `activation_snapshot`
+    - use this as the primary operator onboarding view for production
+      credential activation
+    - `provider_activation_state=provider_activation_incomplete` means the
+      frozen organizer baseline is live in contract terms but still missing one
+      or more provider credentials
+    - `provider_activation_state=all_providers_ready_for_operator_acceptance`
+      means all three providers are configured and the stack is ready for
+      operator acceptance checks
+    - `provider_requirements.*.missing_settings` tells you which secrets or
+      identifiers are missing per provider
+    - `provider_requirements.*.next_action` and top-level `next_actions` are
+      the canonical follow-up instructions to clear activation gaps
   - `ready_operations`
   - `credential_gap_operations`
   - `readiness_state`
