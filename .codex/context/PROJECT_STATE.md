@@ -334,9 +334,30 @@ Last updated: 2026-04-25
     - `PRJ-700` Behavior Regression Proof For Memory, Time, And Tool Awareness
     - `PRJ-701` Canonical Docs And Testing Guidance Sync
     - `PRJ-702` Final Validation, Context Sync, And Learning Closure
-- 2026-04-25: `PRJ-696` is now the first `READY` slice for this lane:
-  - it should freeze one explicit foreground-awareness contract before any code
-    change expands prompts, runtime payloads, or planner heuristics
+- 2026-04-25: explicit user reprioritization resumed the foreground-awareness
+  lane and `PRJ-696..PRJ-702` are now complete:
+  - foreground runtime now carries one explicit bounded turn-awareness payload
+    with current-turn timestamp, known user name, memory continuity posture,
+    and bounded `search_web` / `read_page` readiness
+  - auth-owned `display_name` now flows into identity/context outputs and can
+    answer direct user name-recall turns without inventing a new identity
+    subsystem
+  - expression now answers direct current-time asks from `event.timestamp`,
+    receives explicit foreground-awareness in prompt construction, and rejects
+    false capability-denial wording when runtime truth already exposes memory
+    continuity or bounded tools
+  - planning now infers bounded weather/latest-fact search and page-read for
+    URLs or bare domains without requiring literal trigger phrases
+  - action-owned bounded external reads can now enrich same-turn delivery text
+    while leaving side-effect execution inside the action layer
+  - focused validation for the lane passed with `293 passed` across:
+    - `tests/test_identity_service.py`
+    - `tests/test_openai_prompting.py`
+    - `tests/test_context_agent.py`
+    - `tests/test_expression_agent.py`
+    - `tests/test_planning_agent.py`
+    - `tests/test_action_executor.py`
+    - `tests/test_runtime_pipeline.py`
 - 2026-04-25: fresh product analysis now seeds the next linked-channel chat UX
   lane through `PRJ-717`:
   - linked Telegram identity continuity is already repaired at the backend

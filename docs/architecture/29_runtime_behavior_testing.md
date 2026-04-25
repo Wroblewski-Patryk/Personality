@@ -199,6 +199,8 @@ Pass condition:
 
 - context explains the current turn using relevant history and constraints
   rather than isolated-message interpretation
+- foreground truth for active-turn name, time, memory continuity, and bounded
+  tool readiness is visible when those facts already exist
 
 ---
 
@@ -261,6 +263,8 @@ Validate:
 - tone consistency with selected role and motivation
 - language consistency with user and identity context
 - message quality in both debug and user-facing modes
+- truthful capability posture when memory continuity, current-turn time, or
+  bounded external-read tools are already available in the active turn
 
 ---
 
@@ -363,6 +367,12 @@ Current scenario anchors:
 - `T19.2`: recurring planned work is reevaluated by scheduler-owned cadence
   and advanced after foreground delivery without opening a second scheduler
   lane
+- `T20.1`: linked user name recall from foreground identity facts
+- `T20.2`: current-turn time answer from `event.timestamp`
+- `T20.3`: implicit weather lookup through bounded search without literal
+  `search the web`
+- `T20.4`: website-content lookup from URL or bare domain through bounded
+  page-read without literal `read page`
 
 Boundary note:
 

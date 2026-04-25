@@ -46,7 +46,8 @@ def _identity() -> IdentityOutput:
 def test_context_summary_stays_simple_without_recent_memory() -> None:
     result = ContextAgent().run(event=_event(), perception=_perception(), recent_memory=[])
 
-    assert result.summary == "User said: 'hello' with detected intent 'share_information'."
+    assert "User said: 'hello' with detected intent 'share_information'." in result.summary
+    assert "Foreground awareness: Current turn timestamp:" in result.summary
     assert result.related_tags == ["general", "language:en"]
 
 
@@ -118,6 +119,21 @@ def test_context_summary_can_include_identity_stance() -> None:
     )
 
     assert "Identity stance: direct, supportive, analytical." in result.summary
+
+
+def test_context_summary_includes_foreground_awareness_name_memory_and_tools() -> None:
+    result = ContextAgent().run(
+        event=_event("jak sie nazywam"),
+        perception=_perception(),
+        recent_memory=[{"summary": "earlier recall", "payload": {"event": "hello"}}],
+        identity=_identity().model_copy(update={"display_name": "Patryk"}),
+    )
+
+    assert result.known_user_name == "Patryk"
+    assert result.memory_continuity_available is True
+    assert "search_web" in result.available_tool_hints
+    assert "read_page" in result.available_tool_hints
+    assert "Known user name: Patryk." in result.foreground_awareness_summary
 
 
 def test_context_summary_includes_relevant_active_goals_and_tasks() -> None:
@@ -1170,7 +1186,9 @@ def test_context_skips_irrelevant_memory_for_specific_request() -> None:
 
     result = ContextAgent().run(event=event, perception=_perception(), recent_memory=recent_memory)
 
-    assert result.summary == "User said: 'status update please' with detected intent 'share_information'."
+    assert result.summary.startswith("User said: 'status update please' with detected intent 'share_information'.")
+    assert "Relevant recent memory:" not in result.summary
+    assert "Foreground awareness: Current turn timestamp:" in result.summary
 
 
 def test_context_keeps_memory_for_ambiguous_short_follow_up() -> None:

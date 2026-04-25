@@ -10,7 +10,7 @@ from app.core.contracts import (
     RoleOutput,
 )
 from app.integrations.openai.client import OpenAIClient
-from app.utils.language import fallback_message
+from app.utils.language import fallback_message, normalize_for_matching
 from app.utils.preferences import (
     apply_response_style,
     preferred_collaboration_preference,
@@ -66,30 +66,54 @@ class ExpressionAgent:
                 relation_support_intensity=relation_support_intensity,
             )
         else:
-            llm_reply = await self.openai_client.generate_reply(
-                user_text=text,
-                context_summary=context.summary,
-                role_name=role.selected,
-                response_language=perception.language,
-                response_style=response_style,
-                plan_goal=plan.goal,
-                motivation_mode=motivation.mode,
-                response_tone=tone,
-                collaboration_preference=collaboration_preference,
-                identity_summary=identity.summary if identity is not None else "",
+            direct_reply = self._direct_foreground_reply(
+                event=event,
+                text=text,
+                language=perception.language,
+                identity=identity,
             )
-            message = llm_reply or self._build_fallback_message(
-                perception=perception,
-                context=context,
-                plan=plan,
+            if direct_reply is not None:
+                message = direct_reply
+            else:
+                llm_reply = await self.openai_client.generate_reply(
+                    user_text=text,
+                    context_summary=context.summary,
+                    foreground_awareness_summary=context.foreground_awareness_summary,
+                    role_name=role.selected,
+                    response_language=perception.language,
+                    response_style=response_style,
+                    plan_goal=plan.goal,
+                    motivation_mode=motivation.mode,
+                    response_tone=tone,
+                    collaboration_preference=collaboration_preference,
+                    identity_summary=identity.summary if identity is not None else "",
+                    current_turn_timestamp=event.timestamp.isoformat(),
+                )
+                message = llm_reply or self._build_fallback_message(
+                    perception=perception,
+                    context=context,
+                    plan=plan,
+                    role=role,
+                    motivation=motivation,
+                    affective=perception.affective,
+                    response_style=response_style,
+                    theta=theta,
+                    collaboration_preference=collaboration_preference,
+                    relation_support_intensity=relation_support_intensity,
+                )
+                if self._looks_like_false_capability_denial(message, context=context):
+                    message = self._build_fallback_message(
+                        perception=perception,
+                        context=context,
+                        plan=plan,
                 role=role,
                 motivation=motivation,
                 affective=perception.affective,
                 response_style=response_style,
-                theta=theta,
-                collaboration_preference=collaboration_preference,
-                relation_support_intensity=relation_support_intensity,
-            )
+                        theta=theta,
+                        collaboration_preference=collaboration_preference,
+                        relation_support_intensity=relation_support_intensity,
+                    )
 
         if event.source == "telegram":
             channel = "telegram"
@@ -153,6 +177,11 @@ class ExpressionAgent:
             )
 
         if "Relevant recent memory:" in context.summary:
+            return apply_response_style(
+                fallback_message(perception.language, "memory", plan.goal),
+                response_style,
+            )
+        if context.memory_continuity_available:
             return apply_response_style(
                 fallback_message(perception.language, "memory", plan.goal),
                 response_style,
@@ -256,6 +285,67 @@ class ExpressionAgent:
     def _needs_support(self, affective: AffectiveAssessmentOutput) -> bool:
         label = str(affective.affect_label).strip().lower()
         return bool(affective.needs_support) or label == "support_distress"
+
+    def _direct_foreground_reply(
+        self,
+        *,
+        event: Event,
+        text: str,
+        language: str,
+        identity: IdentityOutput | None,
+    ) -> str | None:
+        normalized = normalize_for_matching(text)
+        display_name = str((identity.display_name if identity is not None else "") or "").strip()
+        if display_name and self._is_name_recall_question(normalized):
+            if language == "pl":
+                return f"Nazywasz sie {display_name}."
+            return f"Your name is {display_name}."
+        if self._is_time_question(normalized):
+            return self._format_current_time_reply(event.timestamp, language=language)
+        return None
+
+    def _is_name_recall_question(self, normalized_text: str) -> bool:
+        markers = (
+            "jak sie nazywam",
+            "pamietasz moje imie",
+            "czy pamietasz moje imie",
+            "what is my name",
+            "do you know my name",
+            "remember my name",
+        )
+        return any(marker in normalized_text for marker in markers)
+
+    def _is_time_question(self, normalized_text: str) -> bool:
+        markers = (
+            "ktora godzina",
+            "jaka jest godzina",
+            "podaj godzine",
+            "what time is it",
+            "current time",
+            "time is it",
+        )
+        return any(marker in normalized_text for marker in markers)
+
+    def _format_current_time_reply(self, timestamp, *, language: str) -> str:
+        exact = timestamp.strftime("%Y-%m-%d %H:%M:%S %Z").strip()
+        if language == "pl":
+            return f"W czasie tego turnu jest {exact}."
+        return f"For this turn, the current time is {exact}."
+
+    def _looks_like_false_capability_denial(self, message: str, *, context: ContextOutput) -> bool:
+        normalized = normalize_for_matching(message)
+        denial_markers = (
+            "i cannot remember",
+            "i cant remember",
+            "i do not have memory",
+            "i don't have memory",
+            "nie mam mozliwosci zapamietywania",
+            "nie moge zapamietywac",
+            "nie pamietam nic o tobie",
+        )
+        if not any(marker in normalized for marker in denial_markers):
+            return False
+        return context.memory_continuity_available or bool(context.known_user_name)
 
     def _relation_value(self, *, relations: list[dict], relation_type: str, min_confidence: float) -> str | None:
         for relation in relations:

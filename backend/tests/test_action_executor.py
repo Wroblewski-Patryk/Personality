@@ -446,6 +446,42 @@ async def test_execute_uses_telegram_delivery_contract_for_telegram_responses() 
     assert telegram_client.calls == [{"chat_id": 123456, "text": "hello"}]
 
 
+async def test_execute_appends_bounded_web_results_to_delivery_message() -> None:
+    memory_repository = FakeMemoryRepository()
+    telegram_client = FakeTelegramClient()
+    executor = ActionExecutor(
+        memory_repository=memory_repository,
+        telegram_client=telegram_client,
+        knowledge_search_client=FakeDuckDuckGoSearchClient(),
+        web_browser_client=FakeGenericHttpPageClient(),
+    )
+    plan = _plan(
+        domain_intents=[
+            KnowledgeSearchDomainIntent(
+                operation="search_web",
+                provider_hint="duckduckgo_html",
+                mode="read_only",
+                query_hint="weather in berlin today",
+            ),
+            WebBrowserAccessDomainIntent(
+                operation="read_page",
+                provider_hint="generic_http",
+                mode="read_only",
+                page_hint="luckysparrow.ch",
+            ),
+        ]
+    )
+
+    result = await executor.execute(plan, _delivery(channel="telegram", chat_id=123456))
+
+    assert result.status == "success"
+    assert result.actions == ["duckduckgo_search_web", "generic_http_read_page", "send_telegram_message"]
+    delivered_text = str(telegram_client.calls[-1]["text"])
+    assert "Web lookup:" in delivered_text
+    assert "Page review:" in delivered_text
+    assert "https://luckysparrow.ch" in delivered_text
+
+
 async def test_execute_fails_when_telegram_delivery_contract_has_no_chat_id() -> None:
     memory_repository = FakeMemoryRepository()
     telegram_client = FakeTelegramClient()

@@ -16,6 +16,7 @@ class IdentityService:
         self,
         *,
         user_profile: dict | None = None,
+        auth_user: dict | None = None,
         user_preferences: dict | None = None,
         user_theta: dict | None = None,
     ) -> IdentityOutput:
@@ -23,6 +24,7 @@ class IdentityService:
             user_profile=user_profile,
             user_preferences=user_preferences,
         )
+        display_name = str((auth_user or {}).get("display_name", "") or "").strip() or None
         preferred_language = resolved_preferences["preferred_language"]
         response_style = resolved_preferences["response_style"]
         collaboration_preference = resolved_preferences["collaboration_preference"]
@@ -33,11 +35,13 @@ class IdentityService:
             values=list(self.CORE_VALUES),
             behavioral_style=list(self.CORE_STYLE),
             boundaries=list(self.CORE_BOUNDARIES),
+            display_name=display_name,
             preferred_language=preferred_language,
             response_style=response_style,
             collaboration_preference=collaboration_preference,
             theta_orientation=theta_orientation,
             summary=self._summary(
+                display_name=display_name,
                 preferred_language=preferred_language,
                 response_style=response_style,
                 collaboration_preference=collaboration_preference,
@@ -62,6 +66,7 @@ class IdentityService:
     def _summary(
         self,
         *,
+        display_name: str | None,
         preferred_language: str | None,
         response_style: str | None,
         collaboration_preference: str | None,
@@ -71,6 +76,8 @@ class IdentityService:
             "Mission: help the user move forward with clear, constructive support.",
             "Core style: direct, supportive, analytical.",
         ]
+        if display_name:
+            parts.append(f"Known user display name: {display_name}.")
         if preferred_language:
             parts.append(f"Preferred language context: {preferred_language}.")
         if response_style:

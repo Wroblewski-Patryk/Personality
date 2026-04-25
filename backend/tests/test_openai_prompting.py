@@ -36,6 +36,7 @@ def test_openai_prompt_builder_fallback_without_langchain() -> None:
     messages = builder.build_reply_messages(
         user_text="hello",
         context_summary="ctx",
+        foreground_awareness_summary="Current turn timestamp: 2026-04-25T21:22:00+00:00. Memory continuity is available from loaded runtime state.",
         role_name="advisor",
         response_language="en",
         response_style="concise",
@@ -44,15 +45,22 @@ def test_openai_prompt_builder_fallback_without_langchain() -> None:
         response_tone="supportive",
         collaboration_preference="guided",
         identity_summary="helpful and clear",
+        current_turn_timestamp="2026-04-25T21:22:00+00:00",
     )
 
     assert len(messages) == 2
     assert messages[0]["role"] == "system"
     assert "advisor" in messages[0]["content"]
     assert "English" in messages[0]["content"]
+    assert "2026-04-25T21:22:00+00:00" in messages[0]["content"]
     assert messages[1] == {
         "role": "user",
-        "content": "Context: ctx\n\nUser message: hello",
+        "content": (
+            "Context: ctx\n"
+            "Foreground awareness: Current turn timestamp: 2026-04-25T21:22:00+00:00. "
+            "Memory continuity is available from loaded runtime state.\n\n"
+            "User message: hello"
+        ),
     }
 
 

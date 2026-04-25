@@ -1,4 +1,5 @@
 from app.core.contracts import ContextOutput, Event, IdentityOutput, PerceptionOutput
+from app.core.web_knowledge_policy import web_knowledge_tooling_snapshot
 from app.utils.goal_task_selection import (
     priority_rank as shared_priority_rank,
     select_active_goals as shared_select_active_goals,
@@ -735,8 +736,31 @@ class ContextAgent:
     ) -> ContextOutput:
         text = str(event.payload.get("text", "")).strip()
         identity_hint = ""
+        known_user_name = None
         if identity is not None:
             identity_hint = f" Identity stance: {', '.join(identity.behavioral_style)}."
+            known_user_name = str(identity.display_name or "").strip() or None
+            if known_user_name:
+                identity_hint += f" Known user name: {known_user_name}."
+        tooling_snapshot = web_knowledge_tooling_snapshot()
+        available_tool_hints: list[str] = []
+        if bool(tooling_snapshot["knowledge_search"].get("ready", False)):
+            available_tool_hints.append("search_web")
+        if bool(tooling_snapshot["web_browser"].get("ready", False)):
+            available_tool_hints.append("read_page")
+        memory_continuity_available = bool(recent_memory or conclusions or relations or known_user_name)
+        foreground_parts = [
+            f"Current turn timestamp: {event.timestamp.isoformat()}.",
+        ]
+        if known_user_name:
+            foreground_parts.append(f"Known user name: {known_user_name}.")
+        foreground_parts.append(
+            "Memory continuity is "
+            + ("available from loaded runtime state." if memory_continuity_available else "not strongly grounded in this turn.")
+        )
+        if available_tool_hints:
+            foreground_parts.append("Bounded tools available now: " + ", ".join(available_tool_hints) + ".")
+        foreground_awareness_summary = " ".join(foreground_parts)
         current_tokens = self._current_topic_tokens(event=event, perception=perception)
         selected_goals = self._select_active_goals(active_goals or [], current_tokens=current_tokens)
         selected_tasks = self._select_active_tasks(
@@ -807,6 +831,8 @@ class ContextAgent:
             + conclusion_hint
             + relation_hint
             + memory_hint
+            + " Foreground awareness: "
+            + foreground_awareness_summary
         )
         risk_level = 0.1 if text else 0.4
 
@@ -815,6 +841,10 @@ class ContextAgent:
             related_goals=[str(goal.get("name", "")).strip() for goal in selected_goals if goal.get("name")],
             related_tags=self._related_tags(perception),
             risk_level=risk_level,
+            foreground_awareness_summary=foreground_awareness_summary,
+            known_user_name=known_user_name,
+            memory_continuity_available=memory_continuity_available,
+            available_tool_hints=available_tool_hints,
         )
 
     def _format_milestone_hint(self, milestone: dict) -> str:

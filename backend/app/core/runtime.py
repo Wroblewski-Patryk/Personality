@@ -615,8 +615,14 @@ class RuntimeOrchestrator:
         self.logger.info("start event_id=%s trace_id=%s source=%s", event.event_id, event.meta.trace_id, event.source)
 
         async def load_memory_bundle():
-            user_profile, user_theta, active_goals = await asyncio.gather(
+            auth_user_coro = (
+                self.memory_repository.get_auth_user_by_id(user_id=event.meta.user_id)
+                if hasattr(self.memory_repository, "get_auth_user_by_id")
+                else asyncio.sleep(0, result=None)
+            )
+            user_profile, auth_user, user_theta, active_goals = await asyncio.gather(
                 self.memory_repository.get_user_profile(user_id=event.meta.user_id),
+                auth_user_coro,
                 self.memory_repository.get_user_theta(user_id=event.meta.user_id),
                 self.memory_repository.get_active_goals(user_id=event.meta.user_id, limit=5),
             )
@@ -702,6 +708,7 @@ class RuntimeOrchestrator:
             return (
                 memory,
                 user_profile,
+                auth_user,
                 runtime_user_preferences,
                 identity_preferences,
                 user_conclusions,
@@ -713,7 +720,7 @@ class RuntimeOrchestrator:
                 pending_subconscious_proposals,
             )
 
-        memory, user_profile, user_preferences, identity_preferences, user_conclusions, affective_conclusions, relations, user_theta, active_goals, hybrid_diagnostics, pending_subconscious_proposals = await self._run_async_stage(
+        memory, user_profile, auth_user, user_preferences, identity_preferences, user_conclusions, affective_conclusions, relations, user_theta, active_goals, hybrid_diagnostics, pending_subconscious_proposals = await self._run_async_stage(
             stage_logger=stage_logger,
             stage_timings_ms=stage_timings_ms,
             stage="memory_load",
@@ -721,12 +728,12 @@ class RuntimeOrchestrator:
             operation=load_memory_bundle,
             output_summary=lambda result: (
                 "memory="
-                f"{len(result[0])} profile={self._present_label(result[1])} runtime_preferences={len(result[2])} "
-                f"identity_preferences={len(result[3])} conclusions={len(result[4])} affective={len(result[5])} "
-                f"relations={len(result[6])} theta={self._present_label(result[7])} goals={len(result[8])} "
-                f"hybrid_vector_hits={result[9].get('vector_hits', 0)} "
-                f"hybrid_lexical_hits={result[9].get('episodic_lexical_hits', 0)} "
-                f"pending_proposals={len(result[10])}"
+                f"{len(result[0])} profile={self._present_label(result[1])} auth_user={self._present_label(result[2])} "
+                f"runtime_preferences={len(result[3])} identity_preferences={len(result[4])} conclusions={len(result[5])} "
+                f"affective={len(result[6])} relations={len(result[7])} theta={self._present_label(result[8])} "
+                f"goals={len(result[9])} hybrid_vector_hits={result[10].get('vector_hits', 0)} "
+                f"hybrid_lexical_hits={result[10].get('episodic_lexical_hits', 0)} "
+                f"pending_proposals={len(result[11])}"
             ),
         )
         attention_gate = evaluate_proactive_attention_gate(
@@ -827,10 +834,12 @@ class RuntimeOrchestrator:
             ),
             operation=lambda: self.identity_service.build(
                 user_profile=user_profile,
+                auth_user=auth_user,
                 user_preferences=identity_preferences,
                 user_theta=user_theta,
             ),
             output_summary=lambda result: (
+                f"display_name={result.display_name or 'none'} "
                 f"preferred_language={result.preferred_language or 'none'} "
                 f"response_style={result.response_style or 'none'} "
                 f"collaboration={result.collaboration_preference or 'none'}"
@@ -882,6 +891,14 @@ class RuntimeOrchestrator:
         assert expression is not None
         action_result = graph_state.action_result
         assert action_result is not None
+        action_delivery = graph_state.action_delivery
+        if action_delivery is not None:
+            enriched_message = self.action_executor.enrich_delivery_message(
+                delivery=action_delivery,
+                action_result=action_result,
+            )
+            if enriched_message != expression.message:
+                expression = expression.model_copy(update={"message": enriched_message})
         retrieval_depth_policy = retrieval_depth_policy_snapshot(
             episodic_limit=self.MEMORY_LOAD_LIMIT,
             conclusion_limit=8,

@@ -500,6 +500,26 @@ The next foreground-awareness repair lane is now seeded through `PRJ-702`.
     - manual replay for linked-name recall, time answer, weather lookup, and
       website-content lookup
 
+Implementation status on 2026-04-25:
+
+- explicit user reprioritization resumed this lane even though it had been
+  deferred behind the second UX/UI pass
+- `PRJ-696..PRJ-702` are now complete in the repo baseline
+- the runtime now exposes one explicit foreground-awareness contract for:
+  - current-turn time
+  - auth/profile-owned human-facing identity facts
+  - memory continuity posture
+  - bounded `search_web` and `read_page` readiness
+- direct foreground answers now cover linked-name recall and current-turn time
+  without inventing a second subsystem
+- planner heuristics now infer weather/latest-fact search and URL/domain page
+  reads through the existing bounded tool families
+- same-turn bounded external-read results can now enrich delivery text while
+  action remains the execution owner
+- focused lane validation passed:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_identity_service.py tests/test_openai_prompting.py tests/test_context_agent.py tests/test_expression_agent.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py; Pop-Location`
+  - result: `293 passed`
+
 ## Planned On 2026-04-25 For Shared Chat Transcript And Linked Telegram Continuity
 
 Fresh product feedback now clarifies that linked Telegram identity continuity

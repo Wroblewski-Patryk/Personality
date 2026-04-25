@@ -87,6 +87,8 @@ Incident-evidence bundle export helper:
 - Runtime stage changes:
   - update or add tests around changed stage outputs
   - run the full pytest suite
+  - when the change touches foreground-awareness, also run:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_identity_service.py tests/test_openai_prompting.py tests/test_context_agent.py tests/test_expression_agent.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py; Pop-Location`
 - API contract changes:
   - add endpoint-level coverage
   - confirm the returned serialized shape still matches expectations
@@ -249,6 +251,15 @@ For meaningful repo changes, leave behind:
       - `T14.1` analyst-driven DuckDuckGo search
       - `T14.2` analyst-driven generic HTTP page read
       - `T14.3` executor-aligned ClickUp task update
+- for foreground-awareness repair slices, regression evidence from:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_identity_service.py tests/test_openai_prompting.py tests/test_context_agent.py tests/test_expression_agent.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py; Pop-Location`
+- coverage should pin:
+    - foreground context fields for current-turn awareness
+    - linked-name recall from auth/profile-owned identity facts
+    - current-turn time answers grounded in `event.timestamp`
+    - implicit weather lookup through bounded search
+    - implicit website-content lookup from explicit URL or bare domain
+    - rejection of false capability-denial wording when foreground truth is present
 - for backend work-partner orchestration slices, regression and behavior
   evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_role_agent.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py`

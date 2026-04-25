@@ -123,11 +123,14 @@ Before deeper cognition, AION loads the stable baseline needed for interpretatio
 This can include:
 
 - identity
+- auth-owned human-facing identity facts such as linked display name
 - recent memory
 - semantic conclusions
 - theta
 - active goals
 - active tasks
+- current-turn timestamp posture and bounded tool-readiness posture needed for
+  truthful foreground answers
 
 This is the continuity layer of the turn.
 
@@ -178,6 +181,7 @@ The output should explain:
 - why it matters
 - what background matters now
 - what constraints or risks are present
+- which bounded foreground truths are already available for this turn
 
 ### Step 8. Motivation Evaluation
 
@@ -245,6 +249,16 @@ It decides:
 
 Expression answers "what and how to communicate."
 It also emits the explicit response-execution handoff consumed by action.
+
+Foreground truthfulness rules in this step:
+
+- expression may answer current-turn name or time questions directly from
+  foreground truth when those facts are already loaded
+- expression must not deny memory continuity, current-turn time awareness, or
+  bounded page-read/search capability when the active turn already carries
+  those facts
+- when action-owned bounded read results exist in the same turn, the outward
+  reply may summarize them without moving execution authority out of action
 
 ### Step 12. Action
 

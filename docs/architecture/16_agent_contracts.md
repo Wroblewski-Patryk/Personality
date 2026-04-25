@@ -1296,12 +1296,26 @@ Build situational understanding for the current turn.
 {
   "context": {
     "summary": "...",
+    "foreground_awareness_summary": "...",
+    "known_user_name": "optional display name",
+    "memory_continuity_available": true,
+    "available_tool_hints": ["search_web", "read_page"],
     "related_goals": [],
     "related_tags": [],
     "risk_level": 0.0
   }
 }
 ```
+
+Foreground-awareness guardrails:
+
+1. context must carry a bounded foreground-awareness summary for the active
+   turn when runtime truth already knows current-turn time, human-facing
+   identity facts, memory continuity posture, or bounded tool readiness
+2. this foreground-awareness payload is descriptive turn truth, not a second
+   planning or action subsystem
+3. downstream stages may use it for truthful answers and tool selection, but
+   execution authority still stays in planning and action
 
 ---
 
@@ -1592,6 +1606,17 @@ Form the outward communication of the turn.
   }
 }
 ```
+
+Foreground truthfulness guardrails:
+
+1. expression may answer current-turn name or time questions directly from
+   foreground runtime truth when those facts are already present
+2. expression must not claim that memory continuity, current-turn time
+   awareness, or bounded search/page-read capability are unavailable when the
+   active foreground-awareness contract marks them as available
+3. if bounded external-read results already exist in the same turn, expression
+   or the action-delivery handoff may summarize them, but action remains the
+   side-effect owner of those reads
 
 ---
 

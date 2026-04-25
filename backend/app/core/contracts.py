@@ -64,6 +64,10 @@ class ContextOutput(BaseModel):
     related_goals: list[str] = Field(default_factory=list)
     related_tags: list[str] = Field(default_factory=list)
     risk_level: float
+    foreground_awareness_summary: str = ""
+    known_user_name: str | None = None
+    memory_continuity_available: bool = False
+    available_tool_hints: list[str] = Field(default_factory=list)
 
 
 class IdentityOutput(BaseModel):
@@ -71,6 +75,7 @@ class IdentityOutput(BaseModel):
     values: list[str] = Field(default_factory=list)
     behavioral_style: list[str] = Field(default_factory=list)
     boundaries: list[str] = Field(default_factory=list)
+    display_name: str | None = None
     preferred_language: str | None = None
     response_style: str | None = None
     collaboration_preference: str | None = None

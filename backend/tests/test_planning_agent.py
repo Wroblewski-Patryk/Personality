@@ -146,6 +146,44 @@ def test_planning_agent_carries_work_partner_skills_and_tool_intents() -> None:
     assert any(intent.intent_type == "knowledge_search_intent" for intent in result.domain_intents)
 
 
+def test_planning_agent_infers_weather_lookup_without_explicit_search_marker() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Jaka jest pogoda w Berlinie dzisiaj?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.71,
+            urgency=0.28,
+            valence=0.0,
+            arousal=0.31,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.72),
+    )
+
+    search_intent = next(intent for intent in result.domain_intents if intent.intent_type == "knowledge_search_intent")
+    assert search_intent.operation == "search_web"
+    assert "pogoda" in search_intent.query_hint.lower()
+
+
+def test_planning_agent_infers_page_read_for_bare_domain_without_read_page_marker() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Co jest na luckysparrow.ch?"),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.73,
+            urgency=0.22,
+            valence=0.0,
+            arousal=0.3,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.7),
+    )
+
+    browser_intent = next(intent for intent in result.domain_intents if intent.intent_type == "web_browser_access_intent")
+    assert browser_intent.operation == "read_page"
+    assert browser_intent.page_hint == "https://luckysparrow.ch"
+
+
 def test_planning_agent_emits_goal_upsert_domain_intent() -> None:
     result = PlanningAgent().run(
         event=_event(text="My goal is to ship the MVP this week."),

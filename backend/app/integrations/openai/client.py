@@ -21,6 +21,7 @@ class OpenAIClient:
         self,
         user_text: str,
         context_summary: str,
+        foreground_awareness_summary: str,
         role_name: str,
         response_language: str,
         response_style: str | None,
@@ -29,6 +30,7 @@ class OpenAIClient:
         response_tone: str,
         collaboration_preference: str | None,
         identity_summary: str = "",
+        current_turn_timestamp: str = "",
     ) -> str | None:
         if not self.client:
             return None
@@ -37,6 +39,7 @@ class OpenAIClient:
             messages = self.prompt_builder.build_reply_messages(
                 user_text=user_text,
                 context_summary=context_summary,
+                foreground_awareness_summary=foreground_awareness_summary,
                 role_name=role_name,
                 response_language=response_language,
                 response_style=response_style,
@@ -45,6 +48,7 @@ class OpenAIClient:
                 response_tone=response_tone,
                 collaboration_preference=collaboration_preference,
                 identity_summary=identity_summary,
+                current_turn_timestamp=current_turn_timestamp,
             )
             response = await self.client.responses.create(
                 model=self.model,

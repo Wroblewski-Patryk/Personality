@@ -530,7 +530,7 @@ class PlanningAgent:
     ) -> tuple[list[DomainActionIntent], list[str]]:
         intents: list[DomainActionIntent] = []
         inferred_promotion_diagnostics: list[str] = []
-        lowered_text = event_text.strip().lower()
+        lowered_text = normalize_for_matching(event_text.strip())
 
         goal_signal = detect_goal_signal(event_text)
         if goal_signal is not None:
@@ -609,11 +609,11 @@ class PlanningAgent:
         if connected_drive_intent is not None:
             intents.append(connected_drive_intent)
 
-        knowledge_search_intent = self._knowledge_search_intent(lowered_text)
+        knowledge_search_intent = self._knowledge_search_intent(event_text=event_text, normalized_text=lowered_text)
         if knowledge_search_intent is not None:
             intents.append(knowledge_search_intent)
 
-        web_browser_intent = self._web_browser_access_intent(lowered_text)
+        web_browser_intent = self._web_browser_access_intent(event_text=event_text, normalized_text=lowered_text)
         if web_browser_intent is not None:
             intents.append(web_browser_intent)
 
@@ -1339,7 +1339,7 @@ class PlanningAgent:
             file_hint=lowered_text[:120],
         )
 
-    def _knowledge_search_intent(self, lowered_text: str) -> KnowledgeSearchDomainIntent | None:
+    def _knowledge_search_intent(self, *, event_text: str, normalized_text: str) -> KnowledgeSearchDomainIntent | None:
         search_markers = (
             "search the web",
             "search online",
@@ -1353,23 +1353,43 @@ class PlanningAgent:
             "szukaj w internecie",
             "sprawdz w internecie",
         )
-        if not any(marker in lowered_text for marker in search_markers):
+        weather_markers = (
+            "weather",
+            "forecast",
+            "pogoda",
+            "prognoza pogody",
+        )
+        current_fact_markers = (
+            "latest",
+            "news",
+            "najnowsze",
+            "aktualne",
+            "dzisiaj",
+            "today",
+        )
+        should_search = any(marker in normalized_text for marker in search_markers)
+        if not should_search:
+            if any(marker in normalized_text for marker in weather_markers):
+                should_search = True
+            elif any(marker in normalized_text for marker in current_fact_markers) and "http" not in normalized_text:
+                should_search = True
+        if not should_search:
             return None
-        if any(keyword in lowered_text for keyword in ("should i search", "czy warto szukac", "suggest search")):
+        if any(keyword in normalized_text for keyword in ("should i search", "czy warto szukac", "suggest search")):
             return KnowledgeSearchDomainIntent(
                 operation="suggest_search",
                 provider_hint="duckduckgo_html",
                 mode=resolve_connector_operation_policy("knowledge_search", "suggest_search").mode,
-                query_hint=lowered_text[:160],
+                query_hint=event_text[:160],
             )
         return KnowledgeSearchDomainIntent(
             operation="search_web",
             provider_hint="duckduckgo_html",
             mode=resolve_connector_operation_policy("knowledge_search", "search_web").mode,
-            query_hint=lowered_text[:160],
+            query_hint=event_text[:160],
         )
 
-    def _web_browser_access_intent(self, lowered_text: str) -> WebBrowserAccessDomainIntent | None:
+    def _web_browser_access_intent(self, *, event_text: str, normalized_text: str) -> WebBrowserAccessDomainIntent | None:
         browser_markers = (
             "open page",
             "read page",
@@ -1383,21 +1403,37 @@ class PlanningAgent:
             "odwiedz strone",
             "przegladaj strone",
         )
-        if not any(marker in lowered_text for marker in browser_markers):
+        explicit_target = self._extract_bounded_website_target(event_text)
+        if not any(marker in normalized_text for marker in browser_markers) and explicit_target is None:
             return None
-        if any(keyword in lowered_text for keyword in ("should we browse", "suggest page", "review page later")):
+        if any(keyword in normalized_text for keyword in ("should we browse", "suggest page", "review page later")):
             return WebBrowserAccessDomainIntent(
                 operation="suggest_page_review",
                 provider_hint="generic_http",
                 mode=resolve_connector_operation_policy("web_browser", "suggest_page_review").mode,
-                page_hint=lowered_text[:160],
+                page_hint=explicit_target or event_text[:160],
             )
         return WebBrowserAccessDomainIntent(
             operation="read_page",
             provider_hint="generic_http",
             mode=resolve_connector_operation_policy("web_browser", "read_page").mode,
-            page_hint=lowered_text[:160],
+            page_hint=explicit_target or event_text[:160],
         )
+
+    def _extract_bounded_website_target(self, text: str) -> str | None:
+        raw = str(text or "").strip()
+        if not raw:
+            return None
+        url_match = re.search(r"(https?://[^\s]+)", raw, re.IGNORECASE)
+        if url_match is not None:
+            return url_match.group(1).strip("()[]<>,.;'\"")[:500]
+        domain_match = re.search(r"\b((?:[a-z0-9-]+\.)+[a-z]{2,})(?:/[^\s]*)?\b", raw, re.IGNORECASE)
+        if domain_match is None:
+            return None
+        domain = domain_match.group(1).strip("()[]<>,.;'\"")
+        if "." not in domain:
+            return None
+        return f"https://{domain}"[:500]
 
     def _build_connector_permission_gates(
         self,

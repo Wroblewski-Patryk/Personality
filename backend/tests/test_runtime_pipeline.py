@@ -34,6 +34,7 @@ class FakeMemoryRepository:
         self.recent_memory = recent_memory or []
         self.recent_limits: list[int] = []
         self.user_profile = user_profile
+        self.auth_user: dict | None = None
         self.profile_updates: list[dict] = []
         self.conclusion_updates: list[dict] = []
         self.relation_updates: list[dict] = []
@@ -72,6 +73,9 @@ class FakeMemoryRepository:
 
     async def get_user_profile(self, user_id: str) -> dict | None:
         return self.user_profile
+
+    async def get_auth_user_by_id(self, user_id: str) -> dict | None:
+        return self.auth_user
 
     async def get_user_runtime_preferences(
         self,
@@ -726,6 +730,7 @@ class FakeOpenAIClient:
         self,
         user_text: str,
         context_summary: str,
+        foreground_awareness_summary: str,
         role_name: str,
         response_language: str,
         response_style: str | None,
@@ -734,11 +739,13 @@ class FakeOpenAIClient:
         response_tone: str,
         collaboration_preference: str | None,
         identity_summary: str = "",
+        current_turn_timestamp: str = "",
     ) -> str | None:
         self.calls.append(
             {
                 "user_text": user_text,
                 "context_summary": context_summary,
+                "foreground_awareness_summary": foreground_awareness_summary,
                 "role_name": role_name,
                 "response_language": response_language,
                 "response_style": response_style or "",
@@ -747,6 +754,7 @@ class FakeOpenAIClient:
                 "response_tone": response_tone,
                 "collaboration_preference": collaboration_preference or "",
                 "identity_summary": identity_summary,
+                "current_turn_timestamp": current_turn_timestamp,
             }
         )
         return "Mocked OpenAI reply"

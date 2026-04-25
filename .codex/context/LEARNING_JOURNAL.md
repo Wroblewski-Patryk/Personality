@@ -1076,6 +1076,13 @@ fixes for this repository.
 - Evidence:
   - `docs/planning/foreground-memory-time-and-tool-awareness-repair-plan.md`
   - `.codex/tasks/PRJ-695-plan-foreground-memory-time-and-tool-awareness-repair.md`
+  - `.codex/tasks/PRJ-696-foreground-awareness-contract-freeze.md`
+  - `.codex/tasks/PRJ-702-final-validation-context-sync-and-learning-closure.md`
+  - `backend/tests/test_identity_service.py`
+  - `backend/tests/test_expression_agent.py`
+  - `backend/tests/test_planning_agent.py`
+  - `backend/tests/test_action_executor.py`
+  - `backend/tests/test_runtime_pipeline.py`
 
 ### 2026-04-19 - API events need explicit user scoping to avoid shared-language drift
 - Context: language/profile memory is keyed by `user_id`, while API requests

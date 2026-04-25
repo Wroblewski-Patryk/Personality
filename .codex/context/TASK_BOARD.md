@@ -227,9 +227,6 @@ Last updated: 2026-04-25
   - the repo now contains one detailed execution-ready plan for the foreground
     memory, time, and bounded-tool awareness repair lane in
     `docs/planning/foreground-memory-time-and-tool-awareness-repair-plan.md`
-- `PRJ-696` is now the first `READY` slice:
-  - freeze the foreground-awareness contract so implementation reuses existing
-    runtime, identity, and bounded-tool systems without widening authority
 - planned execution order for this lane:
   - `PRJ-696` Foreground Awareness Contract Freeze
   - `PRJ-697` Runtime Turn-Awareness Payload And Prompt Propagation
@@ -238,6 +235,33 @@ Last updated: 2026-04-25
   - `PRJ-700` Behavior Regression Proof For Memory, Time, And Tool Awareness
   - `PRJ-701` Canonical Docs And Testing Guidance Sync
   - `PRJ-702` Final Validation, Context Sync, And Learning Closure
+- implementation progress on 2026-04-25:
+  - explicit user reprioritization resumed the foreground-awareness lane even
+    though it had been deferred behind the second UX/UI pass
+  - `PRJ-696..PRJ-702` are now complete:
+    - foreground context now carries explicit turn-awareness truth for current
+      turn time, known user name, memory continuity posture, and bounded tool
+      readiness
+    - runtime and OpenAI prompting now propagate that foreground-awareness
+      contract into the reply path
+    - auth-owned `display_name` now reaches identity/context outputs and can
+      answer direct name-recall turns
+    - expression now answers direct time questions from `event.timestamp` and
+      rejects false capability-denial wording when foreground truth is present
+    - planning now infers bounded weather/latest-fact search and page-read for
+      explicit URLs or bare domains without requiring literal `search the web`
+      or `read page`
+    - same-turn bounded external-read results can now be summarized in the
+      delivered reply while action remains the side-effect owner
+    - focused validation for the lane passed:
+      - `tests/test_identity_service.py`
+      - `tests/test_openai_prompting.py`
+      - `tests/test_context_agent.py`
+      - `tests/test_expression_agent.py`
+      - `tests/test_planning_agent.py`
+      - `tests/test_action_executor.py`
+      - `tests/test_runtime_pipeline.py`
+      - result: `293 passed`
 - fresh product analysis on 2026-04-25 now also seeds the next linked-channel
   chat transcript lane through `PRJ-717`:
   - linked Telegram identity continuity is already repaired, so the next
@@ -285,8 +309,8 @@ Last updated: 2026-04-25
     shell
 - user direction on 2026-04-25 now prioritizes this fresh UX/UI lane ahead of
   the foreground-awareness queue through `PRJ-702`:
-  - `PRJ-696..PRJ-702` remain planned but are intentionally deferred until the
-    current UX/UI second-pass lane is complete or user direction changes again
+  - that defer note is now superseded by later explicit user reprioritization:
+    `PRJ-696..PRJ-702` were executed and completed on 2026-04-25
 - `PRJ-703` is now the first `READY` slice:
   - reframe `/login` around product value, trust, and fast session entry while
     removing user-facing build chrome from the primary public experience

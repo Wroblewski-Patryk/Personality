@@ -21,6 +21,7 @@ class OpenAIPromptBuilder:
         *,
         user_text: str,
         context_summary: str,
+        foreground_awareness_summary: str,
         role_name: str,
         response_language: str,
         response_style: str | None,
@@ -29,6 +30,7 @@ class OpenAIPromptBuilder:
         response_tone: str,
         collaboration_preference: str | None,
         identity_summary: str,
+        current_turn_timestamp: str,
     ) -> list[dict[str, str]]:
         variables = {
             "role_name": role_name,
@@ -40,6 +42,8 @@ class OpenAIPromptBuilder:
             "collaboration_preference": collaboration_preference or "default",
             "identity_summary": identity_summary or "default",
             "context_summary": context_summary,
+            "foreground_awareness_summary": foreground_awareness_summary or "default",
+            "current_turn_timestamp": current_turn_timestamp,
             "user_text": user_text,
         }
         if self.langchain_available:
@@ -75,17 +79,21 @@ class OpenAIPromptBuilder:
                         "The user's stable response style preference is '{response_style}'. "
                         "The user's stable collaboration preference is '{collaboration_preference}'. "
                         "The stable identity summary is '{identity_summary}'. "
+                        "The current turn timestamp is '{current_turn_timestamp}'. "
+                        "Explicit foreground awareness for this turn is '{foreground_awareness_summary}'. "
                         "Respond clearly, preserve momentum, use the context summary when useful, "
                         "stay in the preferred response language unless the user explicitly asks to switch, "
                         "honor the response style preference when it is present, "
                         "keep the wording aligned with the desired response tone, "
                         "if a collaboration preference exists, match the response shape to it, "
-                        "and do not contradict the stable identity."
+                        "do not contradict the stable identity, "
+                        "and do not deny memory continuity, current-turn time awareness, or bounded search/page-reading "
+                        "when the foreground awareness says they are available."
                     ),
                 ),
                 (
                     "human",
-                    "Context: {context_summary}\n\nUser message: {user_text}",
+                    "Context: {context_summary}\nForeground awareness: {foreground_awareness_summary}\n\nUser message: {user_text}",
                 ),
             ]
         )
@@ -133,17 +141,25 @@ class OpenAIPromptBuilder:
                     f"The user's stable response style preference is '{variables['response_style']}'. "
                     f"The user's stable collaboration preference is '{variables['collaboration_preference']}'. "
                     f"The stable identity summary is '{variables['identity_summary']}'. "
+                    f"The current turn timestamp is '{variables['current_turn_timestamp']}'. "
+                    f"Explicit foreground awareness for this turn is '{variables['foreground_awareness_summary']}'. "
                     "Respond clearly, preserve momentum, use the context summary when useful, "
                     "stay in the preferred response language unless the user explicitly asks to switch, "
                     "honor the response style preference when it is present, "
                     "keep the wording aligned with the desired response tone, "
                     "if a collaboration preference exists, match the response shape to it, "
-                    "and do not contradict the stable identity."
+                    "do not contradict the stable identity, "
+                    "and do not deny memory continuity, current-turn time awareness, or bounded search/page-reading "
+                    "when the foreground awareness says they are available."
                 ),
             },
             {
                 "role": "user",
-                "content": f"Context: {variables['context_summary']}\n\nUser message: {variables['user_text']}",
+                "content": (
+                    f"Context: {variables['context_summary']}\n"
+                    f"Foreground awareness: {variables['foreground_awareness_summary']}\n\n"
+                    f"User message: {variables['user_text']}"
+                ),
             },
         ]
 

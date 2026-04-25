@@ -22,6 +22,7 @@ class NoReplyOpenAI:
         self,
         user_text: str,
         context_summary: str,
+        foreground_awareness_summary: str,
         role_name: str,
         response_language: str,
         response_style: str | None,
@@ -30,6 +31,7 @@ class NoReplyOpenAI:
         response_tone: str,
         collaboration_preference: str | None,
         identity_summary: str = "",
+        current_turn_timestamp: str = "",
     ) -> str | None:
         return None
 
@@ -42,6 +44,7 @@ class ReplyOpenAI:
         self,
         user_text: str,
         context_summary: str,
+        foreground_awareness_summary: str,
         role_name: str,
         response_language: str,
         response_style: str | None,
@@ -50,11 +53,13 @@ class ReplyOpenAI:
         response_tone: str,
         collaboration_preference: str | None,
         identity_summary: str = "",
+        current_turn_timestamp: str = "",
     ) -> str | None:
         self.calls.append(
             {
                 "user_text": user_text,
                 "context_summary": context_summary,
+                "foreground_awareness_summary": foreground_awareness_summary,
                 "role_name": role_name,
                 "response_language": response_language,
                 "response_style": response_style or "",
@@ -63,6 +68,7 @@ class ReplyOpenAI:
                 "response_tone": response_tone,
                 "collaboration_preference": collaboration_preference or "",
                 "identity_summary": identity_summary,
+                "current_turn_timestamp": current_turn_timestamp,
             }
         )
         return "OpenAI response"
@@ -80,7 +86,13 @@ def _event(text: str = "hello") -> Event:
 
 
 def _context() -> ContextOutput:
-    return ContextOutput(summary="ctx", related_goals=[], related_tags=["general"], risk_level=0.1)
+    return ContextOutput(
+        summary="ctx",
+        related_goals=[],
+        related_tags=["general"],
+        risk_level=0.1,
+        foreground_awareness_summary="Current turn timestamp: 2026-04-25T21:22:00+00:00.",
+    )
 
 
 def _perception(language: str = "en", affective: AffectiveAssessmentOutput | None = None) -> PerceptionOutput:
@@ -285,6 +297,7 @@ async def test_expression_uses_openai_when_available() -> None:
         {
             "user_text": "hello",
             "context_summary": "ctx",
+            "foreground_awareness_summary": "Current turn timestamp: 2026-04-25T21:22:00+00:00.",
             "role_name": "advisor",
             "response_language": "en",
             "response_style": "",
@@ -293,6 +306,7 @@ async def test_expression_uses_openai_when_available() -> None:
             "response_tone": "supportive",
             "collaboration_preference": "",
             "identity_summary": "",
+            "current_turn_timestamp": openai.calls[0]["current_turn_timestamp"],
         }
     ]
 
@@ -380,3 +394,34 @@ async def test_expression_passes_identity_summary_to_openai() -> None:
     )
 
     assert "constructive support" in openai.calls[0]["identity_summary"]
+
+
+async def test_expression_answers_name_question_from_identity_display_name() -> None:
+    agent = ExpressionAgent(openai_client=ReplyOpenAI())
+    result = await agent.run(
+        _event("jak sie nazywam?"),
+        _perception(language="pl"),
+        _context(),
+        _plan(),
+        _role(),
+        _motivation(),
+        identity=_identity().model_copy(update={"display_name": "Patryk"}),
+    )
+
+    assert result.message == "Nazywasz sie Patryk."
+
+
+async def test_expression_answers_time_question_from_event_timestamp() -> None:
+    agent = ExpressionAgent(openai_client=ReplyOpenAI())
+    event = _event("ktora godzina?")
+    event = event.model_copy(update={"timestamp": datetime(2026, 4, 25, 21, 22, tzinfo=timezone.utc)})
+    result = await agent.run(
+        event,
+        _perception(language="pl"),
+        _context(),
+        _plan(),
+        _role(),
+        _motivation(),
+    )
+
+    assert result.message == "W czasie tego turnu jest 2026-04-25 21:22:00 UTC."

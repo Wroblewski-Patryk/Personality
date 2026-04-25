@@ -1,3 +1,5 @@
+import re
+
 from app.core.action_delivery import action_delivery_envelope_matches_plan
 from app.core.contracts import (
     ActionDelivery,
@@ -146,7 +148,14 @@ class ActionExecutor:
             if connector_execution_result is not None:
                 return connector_execution_result
             return ActionResult(status="noop", actions=[], notes="No response required.")
-        delivery_result = await self.delivery_router.deliver(delivery)
+        effective_delivery = delivery
+        if connector_execution_result is not None:
+            enriched_message = self.enrich_delivery_message(
+                delivery=delivery,
+                action_result=connector_execution_result,
+            )
+            effective_delivery = delivery.model_copy(update={"message": enriched_message})
+        delivery_result = await self.delivery_router.deliver(effective_delivery)
         if connector_execution_result is None:
             return delivery_result
         return self._merge_connector_execution_with_delivery(
@@ -584,7 +593,7 @@ class ActionExecutor:
                 notes.append(
                     "Browser page read returned: "
                     f"{page.get('title') or 'untitled'} [{page.get('content_type')}] "
-                    f"{str(page.get('url', ''))[:120]}."
+                    f"{str(page.get('url', ''))[:120]}. Summary: {excerpt or 'no bounded excerpt available'}."
                 )
                 learning_candidates.append(
                     self._tool_learning_candidate(
@@ -689,11 +698,47 @@ class ActionExecutor:
         url = str(item.get("url", "") or "").strip()[:120] or "unknown"
         return f"{title} ({url})"
 
+    def enrich_delivery_message(self, *, delivery: ActionDelivery, action_result: ActionResult) -> str:
+        supplements: list[str] = []
+        notes = str(action_result.notes or "")
+        markers = (
+            ("Web search returned:", "Web lookup"),
+            ("Browser page read returned:", "Page review"),
+        )
+        positions = [
+            (notes.find(marker), marker, label)
+            for marker, label in markers
+            if notes.find(marker) != -1
+        ]
+        positions.sort(key=lambda item: item[0])
+        for index, (start, marker, label) in enumerate(positions):
+            if start == -1:
+                continue
+            next_start = len(notes)
+            if index + 1 < len(positions):
+                next_start = positions[index + 1][0]
+            start = notes.find(marker)
+            segment = notes[start:next_start].strip()
+            if not segment:
+                continue
+            segment = segment.rstrip()
+            if segment.endswith("Execution envelope:"):
+                segment = segment.removesuffix("Execution envelope:").rstrip()
+            normalized = segment.removeprefix(marker).strip()
+            normalized = normalized.rstrip(". ")
+            if normalized:
+                supplements.append(f"{label}: {normalized}")
+        if not supplements:
+            return delivery.message
+        return f"{delivery.message}\n\n" + "\n".join(supplements)
+
     def _extract_url(self, value: str) -> str:
         for token in str(value or "").split():
             token = token.strip("()[]<>,.;'\"")
             if token.startswith(("http://", "https://")):
                 return token[:500]
+            if re.fullmatch(r"(?:[a-z0-9-]+\.)+[a-z]{2,}", token, re.IGNORECASE):
+                return f"https://{token[:492]}"
         return ""
 
     def _match_clickup_task(self, task_hint: str, tasks: list[dict]) -> dict | None:
