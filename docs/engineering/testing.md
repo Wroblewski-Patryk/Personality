@@ -102,6 +102,10 @@ Incident-evidence bundle export helper:
     coverage for `/app/tools/overview`, `/app/tools/preferences`, and
     Telegram link-state transitions
   - when deploy parity is affected, extend release smoke or deployment-script coverage
+  - when the change touches account reset UX or destructive settings posture:
+    - pin backend route coverage for `POST /app/me/reset-data`
+    - pin repository cleanup coverage for preserved-versus-cleared state
+    - verify the web shell build after wiring the destructive confirmation flow
 - Memory or database changes:
   - add repository or integration coverage
   - verify startup table creation or migration behavior
@@ -172,6 +176,21 @@ For meaningful repo changes, leave behind:
     - provider-blocked posture when Telegram is not configured
     - web build success for the tools screen consuming only backend-owned
       contract fields
+- for destructive reset and runtime-cleanup slices, regression and release
+  evidence from:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_runtime_pipeline.py; Pop-Location`
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q; Pop-Location`
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - coverage should pin:
+    - authenticated `POST /app/me/reset-data` confirmation guard and logout posture
+    - preservation of auth identity, profile state, linked integrations, and
+      user-managed operational preferences
+    - clearing of runtime continuity, planning state, queue/proposal state,
+      and relation/theta state
+    - operator-script confirmation guards for:
+      - `single_user_runtime_reset`
+      - `runtime_only_preserve_auth`
+    - product-shell success path returning the user to `/login` after reset
 - for observability-export and incident-evidence slices, regression and gate
   evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_observability_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`

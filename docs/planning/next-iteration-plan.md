@@ -112,8 +112,18 @@ Queue update (2026-04-25):
   - operator scripts now support:
     - `single_user_runtime_reset`
     - `runtime_only_preserve_auth`
-- `PRJ-721` is now the next implementation slice for the account-settings
-  reset UX and confirmation flow.
+- `PRJ-721` is now complete:
+  - the existing settings shell now exposes a dedicated destructive reset card
+    with explicit retention copy and confirmation-text gating
+  - success handling now returns the user to `/login` after the backend
+    revokes all sessions
+- `PRJ-722` is now complete:
+  - runtime ops runbook and testing guidance now describe the same bounded
+    destructive posture
+  - full-lane validation is green:
+    - backend full suite: `937 passed`
+    - web build: passed
+  - the destructive-data lane seeded through `PRJ-722` is now complete
 
 ## Planned On 2026-04-25 For V2 Product Entry
 

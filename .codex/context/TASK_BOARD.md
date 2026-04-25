@@ -51,9 +51,21 @@ Last updated: 2026-04-25
   - operator entrypoints now exist for:
     - `single_user_runtime_reset`
     - `runtime_only_preserve_auth`
-- `PRJ-721` is now the first `READY` slice:
-  - add the account-settings reset UX and confirmation flow on top of the
-    now-shared backend cleanup owner
+- `PRJ-721` is now complete:
+  - the authenticated settings route now exposes one dedicated destructive
+    reset card on top of the shared backend cleanup owner
+  - the flow requires the exact confirmation phrase before enabling reset
+  - success now drops the local session back to `/login` after backend session
+    revocation, keeping the product behavior aligned with the backend contract
+- `PRJ-722` is now complete:
+  - full-lane validation is now green:
+    - backend: `937 passed`
+    - web: production build passed
+  - runtime ops guidance now documents:
+    - self-service reset boundary
+    - bounded operator cleanup commands
+    - destructive guardrails
+  - the destructive-data lane seeded through `PRJ-722` is now complete
 
 ## Current Active Lane
 

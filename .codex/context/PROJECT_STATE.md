@@ -56,9 +56,27 @@ Last updated: 2026-04-25
       - runtime continuity is cleared
       - managed settings and linked profile state are preserved
       - all auth sessions are revoked after reset
-  - `PRJ-721` is now the next implementation slice:
-    - the web account settings flow should expose the bounded reset action and
-      confirmation UX on top of the shared backend contract
+  - `PRJ-721` is now complete:
+    - the web settings route now exposes a dedicated destructive reset card
+      instead of hiding reset inside the normal settings save flow
+    - the UI now explains the retention boundary explicitly:
+      - clear runtime continuity and learned state
+      - preserve account, profile, UI settings, proactive preference, and
+        linked integrations
+    - the reset CTA stays locked until the exact confirmation phrase is
+      entered, then returns the user to `/login` after backend session
+      revocation
+  - `PRJ-722` is now complete:
+    - runtime ops guidance now records the bounded operator cleanup commands
+      and the preserved-versus-cleared destructive boundary
+    - testing guidance now records the required evidence for reset and cleanup
+      slices across repository, route, and web-shell surfaces
+    - full-lane validation passed:
+      - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q; Pop-Location`
+        -> `937 passed`
+      - `Push-Location .\web; npm run build; Pop-Location`
+        -> build passed
+    - the destructive-data lane seeded through `PRJ-722` is now complete
 - 2026-04-25: approved post-no-UI `v2` entry direction is now explicit:
   - the repository should evolve toward product-facing top-level folders
     `backend/`, `web/`, and `mobile/`

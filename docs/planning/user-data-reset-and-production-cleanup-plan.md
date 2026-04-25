@@ -298,4 +298,16 @@ Validation:
   - `POST /app/me/reset-data` reuses that owner for self-service runtime reset
   - operator scripts now support bounded runtime cleanup with explicit
     confirmation guards
-- `PRJ-721` is now the next UI-facing slice.
+- `PRJ-721` is now complete:
+  - the first-party settings route now exposes a dedicated destructive reset
+    card with exact-phrase confirmation
+  - the product shell now returns the user to login after successful reset,
+    matching the backend session-revocation contract
+- `PRJ-722` is now complete:
+  - the runtime ops runbook now documents the bounded operator cleanup flow
+  - testing guidance now records the required regression proof for reset and
+    cleanup slices
+  - final lane validation is green:
+    - backend full suite: `937 passed`
+    - web build: passed
+- the destructive-data lane seeded through `PRJ-722` is now complete.

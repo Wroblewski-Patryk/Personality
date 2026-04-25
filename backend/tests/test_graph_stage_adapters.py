@@ -32,6 +32,7 @@ class _FakeOpenAIClient:
         self,
         user_text: str,
         context_summary: str,
+        foreground_awareness_summary: str,
         role_name: str,
         response_language: str,
         response_style: str | None,
@@ -40,6 +41,7 @@ class _FakeOpenAIClient:
         response_tone: str,
         collaboration_preference: str | None,
         identity_summary: str = "",
+        current_turn_timestamp: str = "",
     ) -> str | None:
         return f"Mocked graph reply for: {user_text}"
 

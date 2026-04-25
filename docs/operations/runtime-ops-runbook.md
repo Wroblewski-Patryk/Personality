@@ -1574,6 +1574,80 @@ instead of defaulting to shared `anonymous` state.
 
 Use the smoke helper when you want a repeatable operator check instead of crafting requests manually.
 
+### Runtime Data Reset And Cleanup
+
+Destructive reset posture now has two explicit, separate operator-safe paths:
+
+- authenticated self-service reset for one user:
+  - backend route: `POST /app/me/reset-data`
+  - product surface: account settings in the first-party web shell
+- operator-owned runtime cleanup:
+  - script: `backend/scripts/run_user_data_cleanup.py`
+  - wrappers:
+    - `backend/scripts/run_user_data_cleanup.ps1`
+    - `backend/scripts/run_user_data_cleanup.sh`
+
+Current destructive boundary:
+
+- preserved:
+  - auth account identity
+  - profile state
+  - `display_name`
+  - `preferred_language`
+  - `ui_language`
+  - linked integrations and linked channels
+  - user-managed operational preferences:
+    - `proactive_opt_in`
+    - `telegram_enabled`
+    - `clickup_enabled`
+    - `google_calendar_enabled`
+    - `google_drive_enabled`
+- cleared:
+  - episodic memory
+  - semantic embeddings
+  - non-preserved conclusions
+  - relations
+  - theta
+  - goals, tasks, planned work, progress, and milestones
+  - attention turns
+  - reflection tasks
+  - subconscious proposals
+- auth-session posture:
+  - all auth sessions are revoked, including the current session
+
+Use the single-user operator path when an authenticated self-service reset is
+not possible or when support must intervene for one account:
+
+```powershell
+Push-Location .\backend
+..\.venv\Scripts\python .\scripts\run_user_data_cleanup.py `
+  --mode single_user_runtime_reset `
+  --user-id "<user_id>" `
+  --confirm-user-id "<user_id>"
+Pop-Location
+```
+
+Use the bounded runtime-only production cleanup path only for operator-owned
+environment resets that must preserve auth accounts and profile state:
+
+```powershell
+Push-Location .\backend
+..\.venv\Scripts\python .\scripts\run_user_data_cleanup.py `
+  --mode runtime_only_preserve_auth `
+  --confirm-runtime-cleanup
+Pop-Location
+```
+
+Guardrails:
+
+- do not expose the production cleanup path through product UI
+- do not treat runtime reset as account deletion
+- do not run destructive cleanup without the required explicit confirmation flag
+- after any successful reset, expect the next user action to be a fresh login
+- when investigating a "lost memory" report, confirm first whether a
+  self-service or operator reset was executed, because the post-reset product
+  state intentionally preserves shell settings while removing runtime continuity
+
 ### Configure Telegram Webhook
 
 Use the helper script or call:
