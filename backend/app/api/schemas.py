@@ -106,3 +106,21 @@ class AppChatMessageResponse(BaseModel):
 
 class AppPersonalityOverviewResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
+
+
+class AppToolsOverviewResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class AppToolsPreferencesPatchRequest(BaseModel):
+    telegram_enabled: bool | None = None
+    clickup_enabled: bool | None = None
+    google_calendar_enabled: bool | None = None
+    google_drive_enabled: bool | None = None
+
+
+class AppTelegramLinkStartResponse(BaseModel):
+    link_code: str
+    instruction_text: str
+    link_state: str
+    expires_in_seconds: int

@@ -779,6 +779,38 @@ class MemoryRepository:
             "preferred_language": row.preferred_language,
             "language_confidence": row.language_confidence,
             "language_source": row.language_source,
+            "telegram_chat_id": row.telegram_chat_id,
+            "telegram_user_id": row.telegram_user_id,
+            "telegram_link_code": row.telegram_link_code,
+            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
+            "telegram_linked_at": row.telegram_linked_at,
+            "updated_at": row.updated_at,
+        }
+
+    async def get_user_profile_by_telegram_link_code(self, link_code: str) -> dict | None:
+        normalized_code = str(link_code or "").strip().upper()
+        if not normalized_code:
+            return None
+        async with self.session_factory() as session:
+            statement = (
+                select(AionProfile)
+                .where(AionProfile.telegram_link_code == normalized_code)
+                .limit(1)
+            )
+            result = await session.execute(statement)
+            row = result.scalar_one_or_none()
+        if row is None:
+            return None
+        return {
+            "user_id": row.user_id,
+            "preferred_language": row.preferred_language,
+            "language_confidence": row.language_confidence,
+            "language_source": row.language_source,
+            "telegram_chat_id": row.telegram_chat_id,
+            "telegram_user_id": row.telegram_user_id,
+            "telegram_link_code": row.telegram_link_code,
+            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
+            "telegram_linked_at": row.telegram_linked_at,
             "updated_at": row.updated_at,
         }
 
@@ -1866,6 +1898,30 @@ class MemoryRepository:
                     str(row.content or "").strip().lower() in self.PROACTIVE_OPT_IN_TRUTHY,
                     row,
                 )
+            elif row.kind == "telegram_enabled":
+                set_preference(
+                    "telegram_enabled",
+                    str(row.content or "").strip().lower() in self.PROACTIVE_OPT_IN_TRUTHY,
+                    row,
+                )
+            elif row.kind == "clickup_enabled":
+                set_preference(
+                    "clickup_enabled",
+                    str(row.content or "").strip().lower() in self.PROACTIVE_OPT_IN_TRUTHY,
+                    row,
+                )
+            elif row.kind == "google_calendar_enabled":
+                set_preference(
+                    "google_calendar_enabled",
+                    str(row.content or "").strip().lower() in self.PROACTIVE_OPT_IN_TRUTHY,
+                    row,
+                )
+            elif row.kind == "google_drive_enabled":
+                set_preference(
+                    "google_drive_enabled",
+                    str(row.content or "").strip().lower() in self.PROACTIVE_OPT_IN_TRUTHY,
+                    row,
+                )
             elif row.kind == "affective_support_pattern":
                 set_preference("affective_support_pattern", row.content, row)
             elif row.kind == "affective_support_sensitivity":
@@ -2057,6 +2113,86 @@ class MemoryRepository:
             "preferred_language": row.preferred_language,
             "language_confidence": row.language_confidence,
             "language_source": row.language_source,
+            "telegram_chat_id": row.telegram_chat_id,
+            "telegram_user_id": row.telegram_user_id,
+            "telegram_link_code": row.telegram_link_code,
+            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
+            "telegram_linked_at": row.telegram_linked_at,
+            "updated_at": row.updated_at,
+        }
+
+    async def create_or_rotate_telegram_link_code(
+        self,
+        *,
+        user_id: str,
+        link_code: str,
+        issued_at: datetime,
+    ) -> dict:
+        normalized_code = str(link_code or "").strip().upper()[:32]
+        async with self.session_factory() as session:
+            row = await session.get(AionProfile, user_id)
+            if row is None:
+                row = AionProfile(
+                    user_id=user_id,
+                    preferred_language="en",
+                    language_confidence=0.0,
+                    language_source="default",
+                )
+                session.add(row)
+            row.telegram_link_code = normalized_code or None
+            row.telegram_link_code_issued_at = self._coerce_datetime(issued_at)
+            await session.commit()
+            await session.refresh(row)
+        return {
+            "user_id": row.user_id,
+            "preferred_language": row.preferred_language,
+            "language_confidence": row.language_confidence,
+            "language_source": row.language_source,
+            "telegram_chat_id": row.telegram_chat_id,
+            "telegram_user_id": row.telegram_user_id,
+            "telegram_link_code": row.telegram_link_code,
+            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
+            "telegram_linked_at": row.telegram_linked_at,
+            "updated_at": row.updated_at,
+        }
+
+    async def set_user_telegram_link(
+        self,
+        *,
+        user_id: str,
+        chat_id: str,
+        telegram_user_id: str | None,
+        linked_at: datetime,
+    ) -> dict:
+        normalized_chat_id = str(chat_id or "").strip()
+        normalized_telegram_user_id = str(telegram_user_id or "").strip() or None
+        async with self.session_factory() as session:
+            row = await session.get(AionProfile, user_id)
+            if row is None:
+                row = AionProfile(
+                    user_id=user_id,
+                    preferred_language="en",
+                    language_confidence=0.0,
+                    language_source="default",
+                )
+                session.add(row)
+            row.telegram_chat_id = normalized_chat_id or None
+            row.telegram_user_id = normalized_telegram_user_id
+            row.telegram_linked_at = self._coerce_datetime(linked_at)
+            row.telegram_link_code = None
+            row.telegram_link_code_issued_at = None
+            await session.commit()
+            await session.refresh(row)
+        return {
+            "user_id": row.user_id,
+            "preferred_language": row.preferred_language,
+            "language_confidence": row.language_confidence,
+            "language_source": row.language_source,
+            "telegram_chat_id": row.telegram_chat_id,
+            "telegram_user_id": row.telegram_user_id,
+            "telegram_link_code": row.telegram_link_code,
+            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
+            "telegram_linked_at": row.telegram_linked_at,
             "updated_at": row.updated_at,
         }
 

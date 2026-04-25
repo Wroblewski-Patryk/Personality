@@ -29,6 +29,61 @@ Last updated: 2026-04-25
   - the production image now builds `web/`, FastAPI serves the built SPA, and
     release smoke validates that the served web revision matches backend
     runtime build truth after push
+- 2026-04-25: a new `v2` follow-up planning lane is now seeded for
+  tool-and-channel visibility in the first-party web client:
+  - the next product-facing settings expansion should expose one dedicated
+    backend-owned tools overview instead of asking the web client to infer
+    connector truth from mixed inspection payloads
+  - UI switches must distinguish:
+    - integral product capabilities that are always on
+    - user-owned enablement preferences
+    - provider readiness blocked by environment configuration
+  - Telegram should be planned as a user-linking flow between backend auth
+    identity and an existing bot/channel, not as browser-managed secret entry
+  - future third-party integrations such as Trello or a custom Nest app
+    should enter through the same grouped tools model rather than ad hoc
+    settings cards
+- 2026-04-25: `PRJ-669..PRJ-670` are complete:
+  - backend now exposes `GET /app/tools/overview` as the authenticated
+    app-facing grouped tools and channels contract
+  - the response is composed from connector execution truth, organizer-stack
+    readiness, web knowledge tooling, Telegram channel telemetry, and current
+    user preference state instead of duplicating connector logic in the client
+  - integral first-party capabilities such as internal chat, web search, and
+    web browser are now explicit app-facing states
+  - Telegram is surfaced as provider-backed but link-required, while Trello
+    and Nest remain truthful planned placeholders
+- 2026-04-25: `PRJ-671` is complete:
+  - `web/` now includes a dedicated `Tools` route backed by
+    `GET /app/tools/overview`
+  - the first browser tools screen renders grouped communication, task,
+    knowledge, and organizer sections directly from backend truth
+  - the UI is intentionally read-only where backend mutation or user linking
+    is not implemented yet, avoiding false affordances for provider setup or
+    user toggles
+- 2026-04-25: `PRJ-672` is complete:
+  - backend now persists user-owned tool and channel enablement through the
+    existing conclusion-backed preference mechanism instead of a second
+    settings subsystem
+  - `PATCH /app/tools/preferences` now updates supported toggles for Telegram,
+    ClickUp, Google Calendar, and Google Drive
+  - `GET /app/tools/overview` now distinguishes provider readiness from
+    user-requested enablement and effective enabled state
+  - the web `Tools` route now renders working toggles only for supported
+    preferences while keeping unsupported items read-only
+- 2026-04-25: `PRJ-673` is complete:
+  - backend now exposes `POST /app/tools/telegram/link/start` so an
+    authenticated user can generate a bounded Telegram link code without
+    browser-side secret entry
+  - Telegram `/link CODE` commands now attach the confirmed Telegram chat to
+    the backend auth identity through the existing profile model instead of a
+    parallel linking subsystem
+  - `GET /app/tools/overview` now reflects Telegram `not_linked`,
+    `pending_confirmation`, and `linked` states separately from provider
+    readiness and user enablement
+  - the web `Tools` route now shows a real Telegram linking panel with code
+    generation and confirmation instructions only when backend truth says the
+    channel is enabled and still requires linking
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work

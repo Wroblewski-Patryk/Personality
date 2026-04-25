@@ -70,6 +70,11 @@ class AionProfile(Base):
     preferred_language: Mapped[str] = mapped_column(String(8), nullable=False)
     language_confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     language_source: Mapped[str] = mapped_column(String(32), nullable=False, default="default")
+    telegram_chat_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    telegram_user_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    telegram_link_code: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    telegram_link_code_issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    telegram_linked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

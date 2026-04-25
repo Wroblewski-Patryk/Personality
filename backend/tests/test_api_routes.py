@@ -298,6 +298,8 @@ class FakeSettings:
         attention_coordination_mode: str = "in_process",
         app_build_revision: str = "test-build-revision",
         deployment_trigger_mode: str = "source_automation",
+        clickup_api_token: str | None = None,
+        clickup_list_id: str | None = None,
         google_calendar_access_token: str | None = None,
         google_calendar_calendar_id: str | None = None,
         google_calendar_timezone: str | None = None,
@@ -340,6 +342,8 @@ class FakeSettings:
         self.attention_coordination_mode = attention_coordination_mode
         self.app_build_revision = app_build_revision
         self.deployment_trigger_mode = deployment_trigger_mode
+        self.clickup_api_token = clickup_api_token
+        self.clickup_list_id = clickup_list_id
         self.google_calendar_access_token = google_calendar_access_token
         self.google_calendar_calendar_id = google_calendar_calendar_id
         self.google_calendar_timezone = google_calendar_timezone
@@ -377,7 +381,14 @@ class FakeMemoryRepository:
             "stuck_processing": 0,
         }
         self.attention_turns: dict[tuple[str, str], dict] = {}
-        self.user_profile = {"preferred_language": "pl"}
+        self.user_profile = {
+            "preferred_language": "pl",
+            "telegram_chat_id": None,
+            "telegram_user_id": None,
+            "telegram_link_code": None,
+            "telegram_link_code_issued_at": None,
+            "telegram_linked_at": None,
+        }
         self.user_preferences = {
             "response_style": "concise",
             "collaboration_preference": "guided",
@@ -680,6 +691,42 @@ class FakeMemoryRepository:
         self.user_profile["language_confidence"] = 1.0
         return dict(self.user_profile)
 
+    async def create_or_rotate_telegram_link_code(
+        self,
+        *,
+        user_id: str,
+        link_code: str,
+        issued_at: datetime,
+    ) -> dict:
+        self.user_profile["telegram_link_code"] = str(link_code).upper()
+        self.user_profile["telegram_link_code_issued_at"] = issued_at
+        return dict(self.user_profile)
+
+    async def get_user_profile_by_telegram_link_code(self, link_code: str) -> dict | None:
+        candidate = str(self.user_profile.get("telegram_link_code", "") or "").strip().upper()
+        if candidate and candidate == str(link_code or "").strip().upper():
+            return {
+                "user_id": self.auth_users_by_email.get("user@example.com")
+                or next(iter(self.auth_users.keys()), "unknown-user"),
+                **dict(self.user_profile),
+            }
+        return None
+
+    async def set_user_telegram_link(
+        self,
+        *,
+        user_id: str,
+        chat_id: str,
+        telegram_user_id: str | None,
+        linked_at: datetime,
+    ) -> dict:
+        self.user_profile["telegram_chat_id"] = str(chat_id)
+        self.user_profile["telegram_user_id"] = str(telegram_user_id) if telegram_user_id is not None else None
+        self.user_profile["telegram_linked_at"] = linked_at
+        self.user_profile["telegram_link_code"] = None
+        self.user_profile["telegram_link_code_issued_at"] = None
+        return dict(self.user_profile)
+
     async def upsert_conclusion(
         self,
         user_id: str,
@@ -697,6 +744,13 @@ class FakeMemoryRepository:
             self.user_preferences["collaboration_preference"] = content
         elif kind == "proactive_opt_in":
             self.user_preferences["proactive_opt_in"] = content == "true"
+        elif kind in {
+            "telegram_enabled",
+            "clickup_enabled",
+            "google_calendar_enabled",
+            "google_drive_enabled",
+        }:
+            self.user_preferences[kind] = content == "true"
         return {
             "user_id": user_id,
             "kind": kind,
@@ -907,6 +961,13 @@ def _client(
     attention_coordination_mode: str = "in_process",
     app_build_revision: str = "test-build-revision",
     deployment_trigger_mode: str = "source_automation",
+    clickup_api_token: str | None = None,
+    clickup_list_id: str | None = None,
+    google_calendar_access_token: str | None = None,
+    google_calendar_calendar_id: str | None = None,
+    google_calendar_timezone: str | None = None,
+    google_drive_access_token: str | None = None,
+    google_drive_folder_id: str | None = None,
 ) -> tuple[TestClient, FakeRuntime, FakeTelegramClient]:
     app = FastAPI()
     app.include_router(router)
@@ -996,6 +1057,13 @@ def _client(
         attention_coordination_mode=attention_coordination_mode,
         app_build_revision=app_build_revision,
         deployment_trigger_mode=deployment_trigger_mode,
+        clickup_api_token=clickup_api_token,
+        clickup_list_id=clickup_list_id,
+        google_calendar_access_token=google_calendar_access_token,
+        google_calendar_calendar_id=google_calendar_calendar_id,
+        google_calendar_timezone=google_calendar_timezone,
+        google_drive_access_token=google_drive_access_token,
+        google_drive_folder_id=google_drive_folder_id,
     )
     app.state.memory_repository = memory_repository
     app.state.reflection_worker = reflection_worker
@@ -4681,3 +4749,260 @@ def test_app_personality_overview_uses_authenticated_user() -> None:
     body = response.json()
     assert body["user_id"] == user_id
     assert body["identity_state"]["profile"]["preferred_language"] == "pl"
+
+
+def test_app_tools_overview_requires_authenticated_session() -> None:
+    client, _, _ = _client()
+
+    response = client.get("/app/tools/overview")
+
+    assert response.status_code == 401
+
+
+def test_app_tools_overview_exposes_grouped_backend_truth() -> None:
+    client, _, _ = _client(secret="expected-secret")
+    register_response = client.post(
+        "/app/auth/register",
+        json={
+            "email": "user@example.com",
+            "password": "super-secret-123",
+        },
+    )
+    user_id = register_response.json()["user"]["id"]
+
+    response = client.get("/app/tools/overview")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["policy_owner"] == "app_tools_overview_contract"
+    assert body["user_id"] == user_id
+    assert body["group_order"] == [
+        "communication",
+        "task_management",
+        "knowledge_and_web",
+        "calendar_and_files",
+    ]
+    assert body["summary"] == {
+        "total_groups": 4,
+        "total_items": 9,
+        "integral_enabled_count": 3,
+        "provider_ready_count": 4,
+        "provider_blocked_count": 5,
+        "link_required_count": 1,
+        "planned_placeholder_count": 2,
+    }
+
+    groups = {group["id"]: group for group in body["groups"]}
+    communication = {item["id"]: item for item in groups["communication"]["items"]}
+    task_management = {item["id"]: item for item in groups["task_management"]["items"]}
+    knowledge = {item["id"]: item for item in groups["knowledge_and_web"]["items"]}
+    organizer = {item["id"]: item for item in groups["calendar_and_files"]["items"]}
+
+    assert communication["internal_chat"]["status"] == "integral_active"
+    assert communication["internal_chat"]["enabled"] is True
+    assert communication["internal_chat"]["integral"] is True
+    assert communication["internal_chat"]["user_control"] == {
+        "toggle_allowed": False,
+        "preference_supported": False,
+        "requested_enabled": None,
+    }
+    assert communication["telegram"]["status"] == "provider_ready_link_required"
+    assert communication["telegram"]["link_required"] is True
+    assert communication["telegram"]["link_state"] == "not_linked"
+    assert communication["telegram"]["user_control"] == {
+        "toggle_allowed": True,
+        "preference_supported": True,
+        "requested_enabled": False,
+    }
+    assert communication["telegram"]["provider"] == {
+        "name": "telegram",
+        "ready": True,
+        "configured": True,
+    }
+
+    assert task_management["clickup"]["status"] == "provider_configuration_required"
+    assert task_management["clickup"]["provider"]["ready"] is False
+    assert task_management["clickup"]["user_control"]["requested_enabled"] is False
+    assert task_management["trello"]["status"] == "planned_placeholder"
+    assert task_management["nest"]["status"] == "planned_placeholder"
+
+    assert knowledge["web_search"]["status"] == "integral_active"
+    assert knowledge["web_browser"]["status"] == "integral_active"
+    assert knowledge["web_search"]["provider"]["ready"] is True
+    assert knowledge["web_browser"]["provider"]["ready"] is True
+
+    assert organizer["google_calendar"]["status"] == "provider_configuration_required"
+    assert organizer["google_drive"]["status"] == "provider_configuration_required"
+
+
+def test_app_tools_overview_marks_provider_backed_integrations_ready_when_configured() -> None:
+    client, _, _ = _client(
+        secret="expected-secret",
+        clickup_api_token="clickup-token",
+        clickup_list_id="list-1",
+        google_calendar_access_token="calendar-token",
+        google_calendar_calendar_id="calendar-id",
+        google_calendar_timezone="Europe/Warsaw",
+        google_drive_access_token="drive-token",
+        google_drive_folder_id="folder-1",
+    )
+    client.post(
+        "/app/auth/register",
+        json={
+            "email": "user@example.com",
+            "password": "super-secret-123",
+        },
+    )
+
+    response = client.get("/app/tools/overview")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["summary"]["provider_ready_count"] == 7
+    assert body["summary"]["provider_blocked_count"] == 2
+
+    groups = {group["id"]: group for group in body["groups"]}
+    task_management = {item["id"]: item for item in groups["task_management"]["items"]}
+    organizer = {item["id"]: item for item in groups["calendar_and_files"]["items"]}
+
+    assert task_management["clickup"]["status"] == "provider_ready"
+    assert task_management["clickup"]["enabled"] is False
+    assert task_management["clickup"]["user_control"]["requested_enabled"] is False
+    assert task_management["clickup"]["provider"] == {
+        "name": "clickup",
+        "ready": True,
+        "configured": True,
+    }
+    assert organizer["google_calendar"]["status"] == "provider_ready"
+    assert organizer["google_calendar"]["enabled"] is False
+    assert organizer["google_calendar"]["user_control"]["requested_enabled"] is False
+    assert organizer["google_drive"]["status"] == "provider_ready"
+    assert organizer["google_drive"]["enabled"] is False
+    assert organizer["google_drive"]["user_control"]["requested_enabled"] is False
+
+
+def test_app_patch_tools_preferences_updates_requested_enablement_state() -> None:
+    client, _, _ = _client(
+        secret="expected-secret",
+        clickup_api_token="clickup-token",
+        clickup_list_id="list-1",
+        google_calendar_access_token="calendar-token",
+        google_calendar_calendar_id="calendar-id",
+        google_calendar_timezone="Europe/Warsaw",
+        google_drive_access_token="drive-token",
+        google_drive_folder_id="folder-1",
+    )
+    client.post(
+        "/app/auth/register",
+        json={
+            "email": "user@example.com",
+            "password": "super-secret-123",
+        },
+    )
+
+    response = client.patch(
+        "/app/tools/preferences",
+        json={
+            "telegram_enabled": True,
+            "clickup_enabled": True,
+            "google_calendar_enabled": True,
+            "google_drive_enabled": False,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    groups = {group["id"]: group for group in body["groups"]}
+    communication = {item["id"]: item for item in groups["communication"]["items"]}
+    task_management = {item["id"]: item for item in groups["task_management"]["items"]}
+    organizer = {item["id"]: item for item in groups["calendar_and_files"]["items"]}
+
+    assert communication["telegram"]["user_control"]["requested_enabled"] is True
+    assert communication["telegram"]["enabled"] is False
+    assert task_management["clickup"]["user_control"]["requested_enabled"] is True
+    assert task_management["clickup"]["enabled"] is True
+    assert organizer["google_calendar"]["user_control"]["requested_enabled"] is True
+    assert organizer["google_calendar"]["enabled"] is True
+    assert organizer["google_drive"]["user_control"]["requested_enabled"] is False
+    assert organizer["google_drive"]["enabled"] is False
+
+
+def test_app_patch_tools_preferences_requires_authenticated_session() -> None:
+    client, _, _ = _client()
+
+    response = client.patch("/app/tools/preferences", json={"telegram_enabled": True})
+
+    assert response.status_code == 401
+
+
+def test_app_start_telegram_link_requires_authenticated_session() -> None:
+    client, _, _ = _client()
+
+    response = client.post("/app/tools/telegram/link/start")
+
+    assert response.status_code == 401
+
+
+def test_app_start_telegram_link_creates_pending_link_code() -> None:
+    client, _, _ = _client()
+    client.post(
+        "/app/auth/register",
+        json={
+            "email": "user@example.com",
+            "password": "super-secret-123",
+        },
+    )
+
+    response = client.post("/app/tools/telegram/link/start")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["link_code"]) == 6
+    assert body["link_state"] == "pending_confirmation"
+    assert body["expires_in_seconds"] == 900
+    assert "/link" in body["instruction_text"]
+
+    overview = client.get("/app/tools/overview")
+    telegram = {
+        item["id"]: item
+        for item in overview.json()["groups"][0]["items"]
+    }["telegram"]
+    assert telegram["link_state"] == "pending_confirmation"
+    assert telegram["status"] == "provider_ready_link_required"
+
+
+def test_event_endpoint_confirms_telegram_link_code_and_updates_tools_overview() -> None:
+    client, _, telegram_client = _client(secret="expected-secret")
+    client.post(
+        "/app/auth/register",
+        json={
+            "email": "user@example.com",
+            "password": "super-secret-123",
+        },
+    )
+    client.patch("/app/tools/preferences", json={"telegram_enabled": True})
+    link_start = client.post("/app/tools/telegram/link/start")
+    link_code = link_start.json()["link_code"]
+
+    response = client.post(
+        "/event",
+        json=_telegram_update(33, f"/link {link_code}"),
+        headers={"X-Telegram-Bot-Api-Secret-Token": "expected-secret"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["runtime"]["action_status"] == "telegram_link_confirmed"
+    assert telegram_client.calls[-1] == {
+        "chat_id": "123",
+        "text": "Telegram is now linked to your AION account.",
+    }
+
+    overview = client.get("/app/tools/overview")
+    telegram = {
+        item["id"]: item
+        for item in overview.json()["groups"][0]["items"]
+    }["telegram"]
+    assert telegram["link_state"] == "linked"
+    assert telegram["status"] == "provider_ready"
+    assert telegram["enabled"] is True
+    assert telegram["link_required"] is False

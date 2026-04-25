@@ -47,10 +47,35 @@ Completed on 2026-04-25:
   - `web/` now provides the first product shell for auth, chat, settings, and personality inspection
   - the production image now builds `web/` and serves the built SPA from backend-owned topology
   - release smoke now proves backend runtime revision and served web revision move together after push
+- `PRJ-669..PRJ-670`
+  - backend now exposes an authenticated grouped tools and channels contract
+    through `/app/tools/overview`
+  - the response is built from backend truth for connectors, web knowledge
+    tooling, Telegram readiness, and explicit placeholders for future tools
+  - the first web tools screen can now consume one app-facing source of truth
+    instead of inferring connector state from mixed overview payloads
+- `PRJ-671`
+  - `web/` now includes the first dedicated tools screen
+  - grouped tools state is rendered directly from backend truth and remains
+    read-only where mutation or linking is not implemented yet
+- `PRJ-672`
+  - supported tool and channel toggles now persist through backend-owned user
+    preferences
+  - the web tools screen now includes working toggles for supported items
+    while preserving read-only posture for unsupported or integral entries
+- `PRJ-673`
+  - backend now exposes a bounded Telegram user-linking flow through
+    `/app/tools/telegram/link/start` and Telegram `/link CODE` confirmation
+  - Telegram link state now flows through the same app-facing tools contract
+    instead of being guessed in the browser client
+  - the web tools screen now shows truthful code-generation and confirmation
+    guidance only when backend state says Telegram is enabled and still
+    awaiting user linking
 
 Next active lane:
 
-- `PRJ-667..PRJ-668` mobile foundation
+- `PRJ-674` tools and channels proof and alignment
+- `PRJ-667..PRJ-668` mobile foundation remains planned after that lane
 
 ## Target Repository Topology
 
@@ -161,6 +186,21 @@ Production expectation for the first `v2` web release:
 - `PRJ-667` Freeze the mobile client stack and shared client-contract baseline.
 - `PRJ-668` Build the initial `mobile/` foundation using the same auth and
   client API boundary as `web/`.
+
+### Group 113 - Tools And Channels Visibility
+
+- `PRJ-669` Freeze the backend-owned app-facing contract for grouped tools,
+  channels, and capability states.
+- `PRJ-670` Implement the backend `tools overview` read model from existing
+  connector, channel, and readiness truth.
+- `PRJ-671` Build the first `web` tools screen with grouped sections and
+  backend-truth state rendering.
+- `PRJ-672` Add user-owned enablement preferences for allowed tools and
+  channels without introducing browser-managed provider secrets.
+- `PRJ-673` Implement Telegram user-linking flow between backend auth identity
+  and Telegram channel identity.
+- `PRJ-674` Add release, testing, and documentation proof so the tools screen
+  and its enablement states stay aligned with backend truth.
 
 ## Definition Of Success
 

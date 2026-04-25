@@ -19,6 +19,9 @@ from app.api.schemas import (
     AppRegisterRequest,
     AppSettingsPatchRequest,
     AppSettingsResponse,
+    AppTelegramLinkStartResponse,
+    AppToolsPreferencesPatchRequest,
+    AppToolsOverviewResponse,
     EventQueueResponse,
     EventResponse,
     EventReplyResponse,
@@ -44,6 +47,7 @@ from app.core.background_adaptive_outputs import summarize_loaded_adaptive_state
 from app.core.identity_policy import identity_policy_snapshot
 from app.core.learned_state_policy import learned_state_policy_snapshot
 from app.core.tool_grounded_learning import is_tool_grounded_conclusion_kind
+from app.core.app_tools_policy import app_tools_overview_snapshot
 from app.core.adaptive_governance import adaptive_identity_governance_snapshot
 from app.core.affective_diagnostics import affective_input_policy_snapshot
 from app.core.affective_policy import affective_assessment_policy_snapshot
@@ -117,6 +121,7 @@ DEBUG_SHARED_BREAK_GLASS_USED_HEADER = "X-AION-Debug-Shared-Break-Glass-Used"
 AUTH_SESSION_COOKIE_DEFAULT = "aion_session"
 AUTH_SESSION_TTL_HOURS_DEFAULT = 24 * 30
 AUTH_PBKDF2_ITERATIONS = 200_000
+TELEGRAM_LINK_CODE_TTL_SECONDS = 900
 
 
 def _runtime_from_request(request: Request) -> RuntimeOrchestrator:
@@ -176,6 +181,10 @@ def _new_auth_session_id() -> str:
 
 def _new_auth_session_token() -> str:
     return f"aion_sess_{secrets.token_urlsafe(32)}"
+
+
+def _new_telegram_link_code() -> str:
+    return secrets.token_hex(3).upper()
 
 
 def _auth_cookie_name(settings) -> str:
@@ -730,6 +739,83 @@ async def _build_learned_state_snapshot(*, request: Request, user_id: str) -> di
     }
 
 
+async def _try_handle_telegram_link_command(
+    *,
+    payload: dict[str, Any],
+    request: Request,
+) -> dict[str, Any] | None:
+    message = payload.get("message") if isinstance(payload.get("message"), dict) else {}
+    text = str(message.get("text", "") or "").strip()
+    if not text.lower().startswith("/link "):
+        return None
+
+    link_code = text.split(maxsplit=1)[1].strip().upper() if len(text.split(maxsplit=1)) > 1 else ""
+    chat = message.get("chat") if isinstance(message.get("chat"), dict) else {}
+    sender = message.get("from") if isinstance(message.get("from"), dict) else {}
+    chat_id = str(chat.get("id", "") or "").strip()
+    telegram_user_id = str(sender.get("id", "") or "").strip() or None
+    memory_repository = _memory_repository_from_request(request)
+    telegram_client = _telegram_from_request(request)
+    matched_profile = await memory_repository.get_user_profile_by_telegram_link_code(link_code)
+    issued_at = matched_profile.get("telegram_link_code_issued_at") if isinstance(matched_profile, dict) else None
+    if isinstance(issued_at, datetime):
+        normalized_issued_at = issued_at if issued_at.tzinfo is not None else issued_at.replace(tzinfo=timezone.utc)
+        if normalized_issued_at + timedelta(seconds=TELEGRAM_LINK_CODE_TTL_SECONDS) < datetime.now(timezone.utc):
+            matched_profile = None
+
+    if not matched_profile or not chat_id:
+        if chat_id:
+            await telegram_client.send_message(
+                chat_id=chat_id,
+                text="This Telegram link code is invalid or has already been used.",
+            )
+        return {
+            "event_id": f"telegram-link-invalid-{uuid4().hex[:12]}",
+            "trace_id": uuid4().hex,
+            "source": "telegram",
+            "reply": {
+                "message": "This Telegram link code is invalid or has already been used.",
+                "language": "en",
+                "tone": "direct",
+                "channel": "telegram",
+            },
+            "runtime": {
+                "role": "system",
+                "motivation_mode": "respond",
+                "action_status": "telegram_link_invalid",
+                "reflection_triggered": False,
+            },
+        }
+
+    await memory_repository.set_user_telegram_link(
+        user_id=str(matched_profile["user_id"]),
+        chat_id=chat_id,
+        telegram_user_id=telegram_user_id,
+        linked_at=datetime.now(timezone.utc),
+    )
+    await telegram_client.send_message(
+        chat_id=chat_id,
+        text="Telegram is now linked to your AION account.",
+    )
+    return {
+        "event_id": f"telegram-link-success-{uuid4().hex[:12]}",
+        "trace_id": uuid4().hex,
+        "source": "telegram",
+        "reply": {
+            "message": "Telegram is now linked to your AION account.",
+            "language": "en",
+            "tone": "supportive",
+            "channel": "telegram",
+        },
+        "runtime": {
+            "role": "system",
+            "motivation_mode": "respond",
+            "action_status": "telegram_link_confirmed",
+            "reflection_triggered": False,
+        },
+    }
+
+
 async def _handle_event_request(
     *,
     payload: dict[str, Any],
@@ -755,6 +841,16 @@ async def _handle_event_request(
                 chat_id=telegram_chat_id,
             )
             raise HTTPException(status_code=403, detail="Invalid Telegram webhook secret token.")
+    if looks_like_telegram:
+        link_command_response = await _try_handle_telegram_link_command(payload=payload, request=request)
+        if link_command_response is not None:
+            _telegram_telemetry_from_request(request).record_ingress_processed(
+                update_id=telegram_update_id,
+                chat_id=telegram_chat_id,
+                action_status=str(link_command_response.get("runtime", {}).get("action_status", "telegram_link")),
+                reflection_triggered=False,
+            )
+            return link_command_response
     if include_debug:
         _enforce_debug_access(request=request, settings=settings)
 
@@ -1354,6 +1450,88 @@ async def app_chat_message(
 async def app_personality_overview(request: Request) -> dict[str, Any]:
     user, _ = await _require_app_auth(request)
     return await _build_learned_state_snapshot(request=request, user_id=str(user["id"]))
+
+
+@router.get("/app/tools/overview", response_model=AppToolsOverviewResponse)
+async def app_tools_overview(request: Request) -> dict[str, Any]:
+    user, _ = await _require_app_auth(request)
+    user_id = str(user["id"])
+    memory_repository = _memory_repository_from_request(request)
+    settings = _settings_from_request(request)
+    telegram_channel = _telegram_telemetry_from_request(request).snapshot(
+        bot_token_configured=bool(getattr(settings, "telegram_bot_token", "")),
+        webhook_secret_configured=bool(getattr(settings, "telegram_webhook_secret", "")),
+    )
+    return app_tools_overview_snapshot(
+        settings=settings,
+        user_id=user_id,
+        user_preferences=await memory_repository.get_user_runtime_preferences(user_id),
+        user_profile=await memory_repository.get_user_profile(user_id),
+        telegram_channel=telegram_channel,
+    )
+
+
+@router.patch("/app/tools/preferences", response_model=AppToolsOverviewResponse)
+async def app_patch_tools_preferences(
+    body: AppToolsPreferencesPatchRequest,
+    request: Request,
+) -> dict[str, Any]:
+    user, _ = await _require_app_auth(request)
+    user_id = str(user["id"])
+    memory_repository = _memory_repository_from_request(request)
+    settings = _settings_from_request(request)
+
+    preference_updates = {
+        "telegram_enabled": body.telegram_enabled,
+        "clickup_enabled": body.clickup_enabled,
+        "google_calendar_enabled": body.google_calendar_enabled,
+        "google_drive_enabled": body.google_drive_enabled,
+    }
+    for kind, value in preference_updates.items():
+        if value is None:
+            continue
+        await memory_repository.upsert_conclusion(
+            user_id=user_id,
+            kind=kind,
+            content="true" if value else "false",
+            confidence=1.0,
+            source="app_tools_preferences",
+        )
+
+    telegram_channel = _telegram_telemetry_from_request(request).snapshot(
+        bot_token_configured=bool(getattr(settings, "telegram_bot_token", "")),
+        webhook_secret_configured=bool(getattr(settings, "telegram_webhook_secret", "")),
+    )
+    return app_tools_overview_snapshot(
+        settings=settings,
+        user_id=user_id,
+        user_preferences=await memory_repository.get_user_runtime_preferences(user_id),
+        user_profile=await memory_repository.get_user_profile(user_id),
+        telegram_channel=telegram_channel,
+    )
+
+
+@router.post("/app/tools/telegram/link/start", response_model=AppTelegramLinkStartResponse)
+async def app_start_telegram_link(request: Request) -> dict[str, Any]:
+    user, _ = await _require_app_auth(request)
+    user_id = str(user["id"])
+    settings = _settings_from_request(request)
+    if not bool(getattr(settings, "telegram_bot_token", "")):
+        raise HTTPException(status_code=409, detail="Telegram provider is not configured.")
+    link_code = _new_telegram_link_code()
+    await _memory_repository_from_request(request).create_or_rotate_telegram_link_code(
+        user_id=user_id,
+        link_code=link_code,
+        issued_at=datetime.now(timezone.utc),
+    )
+    return {
+        "link_code": link_code,
+        "instruction_text": (
+            f"Send /link {link_code} to the configured AION Telegram bot from the chat you want to link."
+        ),
+        "link_state": "pending_confirmation",
+        "expires_in_seconds": TELEGRAM_LINK_CODE_TTL_SECONDS,
+    }
 
 
 @router.get("/internal/state/inspect")

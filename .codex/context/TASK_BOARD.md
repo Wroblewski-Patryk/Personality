@@ -11,9 +11,31 @@ Last updated: 2026-04-25
 - `PRJ-655..PRJ-666` are now complete:
   - repository truth, auth/session baseline, app-facing client APIs, web shell,
     and deploy-proof topology are aligned for the first `v2` browser release
-- `PRJ-667` is the next active slice:
-  - freeze the mobile client stack and shared contract baseline before mobile
-    implementation starts
+- `PRJ-669..PRJ-674` are now seeded as the next product-facing web lane:
+  - add one backend-owned tools and channels overview for the browser client
+  - keep provider secrets outside product UI
+  - add user-owned tool enablement where architecture already allows it
+  - plan Telegram as identity linking, not secret entry
+- `PRJ-669..PRJ-670` are complete:
+  - the app-facing tools and channels contract is frozen
+  - backend now exposes grouped tools and channels truth through
+    `/app/tools/overview`
+- `PRJ-671` is complete:
+  - web now renders the first tools screen directly from backend truth
+- `PRJ-672` is complete:
+  - allowed tool and channel preferences now persist through backend truth and
+    are editable from the web tools screen
+- `PRJ-673` is complete:
+  - backend auth identities can now generate a bounded Telegram link code
+  - Telegram `/link CODE` confirmation now binds the chat identity back to the
+    authenticated app user
+  - the web tools screen now exposes the link-code flow instead of pretending
+    Telegram is ready without user linking
+- `PRJ-674` is now the next `READY` slice:
+  - add durable proof and docs alignment so tools and channels UI remains
+    truthful against backend state over time
+- `PRJ-667` remains planned as the next mobile foundation slice after the tools
+  and channels lane is frozen
 
 ## Agent Workflow Refresh (2026-04-18)
 

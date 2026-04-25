@@ -59,6 +59,68 @@ export type AppChatMessageResponse = {
 
 export type AppPersonalityOverviewResponse = Record<string, unknown>;
 
+export type AppToolProvider = {
+  name: string;
+  ready: boolean;
+  configured: boolean;
+};
+
+export type AppToolUserControl = {
+  toggle_allowed: boolean;
+  preference_supported: boolean;
+  requested_enabled?: boolean | null;
+};
+
+export type AppToolItem = {
+  id: string;
+  label: string;
+  category: string;
+  kind: string;
+  description: string;
+  status: string;
+  status_reason: string;
+  enabled: boolean;
+  integral: boolean;
+  provider: AppToolProvider;
+  user_control: AppToolUserControl;
+  link_required: boolean;
+  link_state: string;
+  capabilities: string[];
+  next_actions: string[];
+  source_of_truth: string[];
+};
+
+export type AppToolGroup = {
+  id: string;
+  title: string;
+  description: string;
+  item_count: number;
+  items: AppToolItem[];
+};
+
+export type AppToolsOverviewResponse = {
+  policy_owner: string;
+  user_id: string;
+  group_order: string[];
+  groups: AppToolGroup[];
+  summary: {
+    total_groups: number;
+    total_items: number;
+    integral_enabled_count: number;
+    provider_ready_count: number;
+    provider_blocked_count: number;
+    link_required_count: number;
+    planned_placeholder_count: number;
+  };
+};
+
+export type AppTelegramLinkStartResponse = {
+  link_code: string;
+  instruction_text: string;
+  link_state: string;
+  expires_in_seconds: number;
+};
+
 type JsonBody = Record<string, unknown> | undefined;
 
 async function requestJson<T>(path: string, init: RequestInit = {}, body?: JsonBody): Promise<T> {
@@ -130,6 +192,30 @@ export const api = {
     return requestJson<AppPersonalityOverviewResponse>(
       "/app/personality/overview",
       { method: "GET" },
+    );
+  },
+  getToolsOverview(): Promise<AppToolsOverviewResponse> {
+    return requestJson<AppToolsOverviewResponse>(
+      "/app/tools/overview",
+      { method: "GET" },
+    );
+  },
+  patchToolsPreferences(body: {
+    telegram_enabled?: boolean | null;
+    clickup_enabled?: boolean | null;
+    google_calendar_enabled?: boolean | null;
+    google_drive_enabled?: boolean | null;
+  }): Promise<AppToolsOverviewResponse> {
+    return requestJson<AppToolsOverviewResponse>(
+      "/app/tools/preferences",
+      { method: "PATCH" },
+      body,
+    );
+  },
+  startTelegramLink(): Promise<AppTelegramLinkStartResponse> {
+    return requestJson<AppTelegramLinkStartResponse>(
+      "/app/tools/telegram/link/start",
+      { method: "POST" },
     );
   },
 };

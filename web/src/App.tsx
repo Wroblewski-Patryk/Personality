@@ -6,26 +6,32 @@ import {
   type AppMeResponse,
   type AppPersonalityOverviewResponse,
   type AppSettings,
+  type AppTelegramLinkStartResponse,
+  type AppToolsOverviewResponse,
 } from "./lib/api";
 
-type RoutePath = "/login" | "/chat" | "/settings" | "/personality";
+type RoutePath = "/login" | "/chat" | "/settings" | "/personality" | "/tools";
 type AuthMode = "login" | "register";
 type SessionMessage =
   | { id: string; role: "user"; text: string }
   | { id: string; role: "assistant"; text: string; meta?: string };
 
 const BUILD_REVISION = String(import.meta.env.VITE_APP_BUILD_REVISION ?? "dev");
-const ROUTES: RoutePath[] = ["/chat", "/settings", "/personality"];
+const ROUTES: RoutePath[] = ["/chat", "/settings", "/tools", "/personality"];
 const ROUTE_LABELS: Record<RoutePath, string> = {
   "/login": "Login",
   "/chat": "Chat",
   "/settings": "Settings",
+  "/tools": "Tools",
   "/personality": "Personality",
 };
 
 function normalizeRoute(pathname: string): RoutePath {
   if (pathname === "/settings") {
     return "/settings";
+  }
+  if (pathname === "/tools") {
+    return "/tools";
   }
   if (pathname === "/personality") {
     return "/personality";
@@ -79,10 +85,34 @@ function routeDescription(route: RoutePath) {
   if (route === "/settings") {
     return "User-owned preferences stored by backend truth, not browser-only drafts.";
   }
+  if (route === "/tools") {
+    return "Grouped tools and channels rendered from backend truth so the product shell never guesses integration state.";
+  }
   if (route === "/personality") {
     return "Structured insight into identity, learned knowledge, plans, capabilities, and continuity.";
   }
   return "Authenticate into the product shell.";
+}
+
+function titleCaseFromStatus(value: string) {
+  return value
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function toolStatusClass(status: string) {
+  if (status === "integral_active" || status === "provider_ready") {
+    return "badge-success";
+  }
+  if (status === "provider_ready_link_required") {
+    return "badge-warning";
+  }
+  if (status === "planned_placeholder") {
+    return "badge-ghost";
+  }
+  return "badge-outline";
 }
 
 export default function App() {
@@ -100,6 +130,11 @@ export default function App() {
   const [chatText, setChatText] = useState("");
   const [overview, setOverview] = useState<AppPersonalityOverviewResponse | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
+  const [toolsOverview, setToolsOverview] = useState<AppToolsOverviewResponse | null>(null);
+  const [toolsLoading, setToolsLoading] = useState(false);
+  const [savingToolId, setSavingToolId] = useState<string | null>(null);
+  const [telegramLinkStart, setTelegramLinkStart] = useState<AppTelegramLinkStartResponse | null>(null);
+  const [telegramLinkBusy, setTelegramLinkBusy] = useState(false);
   const [inspectorQuery, setInspectorQuery] = useState("");
   const deferredInspectorQuery = useDeferredValue(inspectorQuery);
   const [authForm, setAuthForm] = useState({
@@ -241,6 +276,36 @@ export default function App() {
     };
   }, [me, route, overview, overviewLoading]);
 
+  useEffect(() => {
+    if (!me || route !== "/tools" || toolsLoading || toolsOverview) {
+      return;
+    }
+
+    let cancelled = false;
+    setToolsLoading(true);
+    void api
+      .getToolsOverview()
+      .then((payload) => {
+        if (!cancelled) {
+          setToolsOverview(payload);
+        }
+      })
+      .catch((caught) => {
+        if (!cancelled) {
+          setError(caught instanceof Error ? caught.message : "Failed to load tools overview.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setToolsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [me, route, toolsLoading, toolsOverview]);
+
   const overviewSections = useMemo(() => {
     if (!overview) {
       return [];
@@ -356,6 +421,8 @@ export default function App() {
       await api.logout();
       setMe(null);
       setOverview(null);
+      setToolsOverview(null);
+      setTelegramLinkStart(null);
       setHistory([]);
       setSessionMessages([]);
       setToast("Signed out.");
@@ -439,6 +506,53 @@ export default function App() {
       setError(caught instanceof Error ? caught.message : "Message delivery failed.");
     } finally {
       setSendingMessage(false);
+    }
+  }
+
+  async function handleToolToggle(toolId: string, nextValue: boolean) {
+    const payloadByToolId: Record<string, Record<string, boolean>> = {
+      telegram: { telegram_enabled: nextValue },
+      clickup: { clickup_enabled: nextValue },
+      google_calendar: { google_calendar_enabled: nextValue },
+      google_drive: { google_drive_enabled: nextValue },
+    };
+
+    const payload = payloadByToolId[toolId];
+    if (!payload) {
+      return;
+    }
+
+    setSavingToolId(toolId);
+    setError(null);
+
+    try {
+      const nextOverview = await api.patchToolsPreferences(payload);
+      setToolsOverview(nextOverview);
+      if (toolId === "telegram" && !nextValue) {
+        setTelegramLinkStart(null);
+      }
+      setToast("Tool preferences saved to backend memory.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to save tool preference.");
+    } finally {
+      setSavingToolId(null);
+    }
+  }
+
+  async function handleStartTelegramLink() {
+    setTelegramLinkBusy(true);
+    setError(null);
+
+    try {
+      const linkStart = await api.startTelegramLink();
+      const nextOverview = await api.getToolsOverview();
+      setTelegramLinkStart(linkStart);
+      setToolsOverview(nextOverview);
+      setToast("Telegram link code generated.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to start Telegram linking.");
+    } finally {
+      setTelegramLinkBusy(false);
     }
   }
 
@@ -908,6 +1022,248 @@ export default function App() {
                   ))}
                 </div>
               </aside>
+            </div>
+          ) : null}
+
+          {route === "/tools" ? (
+            <div className="grid gap-6">
+              <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {[
+                  {
+                    title: "Tool groups",
+                    value: stringValue(toolsOverview?.summary.total_groups, "0"),
+                    note: "grouped backend-owned categories",
+                  },
+                  {
+                    title: "Integral",
+                    value: stringValue(toolsOverview?.summary.integral_enabled_count, "0"),
+                    note: "always-on product capabilities",
+                  },
+                  {
+                    title: "Provider ready",
+                    value: stringValue(toolsOverview?.summary.provider_ready_count, "0"),
+                    note: "tools with a live provider path today",
+                  },
+                  {
+                    title: "Link required",
+                    value: stringValue(toolsOverview?.summary.link_required_count, "0"),
+                    note: "channels awaiting user identity linking",
+                  },
+                ].map((card) => (
+                  <article key={card.title} className="rounded-[1.75rem] border border-base-300 bg-base-100 p-5 shadow-sm">
+                    <p className="text-sm uppercase tracking-[0.22em] text-base-800">{card.title}</p>
+                    <p className="mt-3 font-display text-4xl text-base-900">{card.value}</p>
+                    <p className="mt-2 text-sm text-base-800">{card.note}</p>
+                  </article>
+                ))}
+              </section>
+
+              <section className="rounded-[2rem] border border-base-300 bg-base-100 p-5 shadow-sm">
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.24em] text-base-800">Tools overview</p>
+                    <h2 className="font-display text-3xl text-base-900">Runtime-visible integrations and channels</h2>
+                  </div>
+                  <div className="badge badge-outline">
+                    {toolsOverview ? `${toolsOverview.summary.total_items} items` : "backend snapshot"}
+                  </div>
+                </div>
+
+                {toolsLoading ? (
+                  <div className="flex items-center gap-3 rounded-2xl bg-base-200 px-4 py-5 text-base-900">
+                    <span className="loading loading-spinner loading-sm text-primary" />
+                    Loading tools overview from backend.
+                  </div>
+                ) : null}
+
+                {!toolsLoading && !toolsOverview ? (
+                  <div className="rounded-2xl bg-base-200 px-4 py-5 text-sm text-base-800">
+                    No tools overview payload is loaded yet.
+                  </div>
+                ) : null}
+
+                <div className="grid gap-5">
+                  {toolsOverview?.groups.map((group) => (
+                    <article key={group.id} className="rounded-[1.6rem] border border-base-300 bg-base-200 p-4">
+                      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-display text-2xl text-base-900">{group.title}</h3>
+                          <p className="mt-1 max-w-3xl text-sm leading-7 text-base-800">{group.description}</p>
+                        </div>
+                        <span className="badge badge-outline">{group.item_count} items</span>
+                      </div>
+
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        {group.items.map((item) => (
+                          <section key={item.id} className="rounded-[1.4rem] border border-base-300 bg-base-100 p-4">
+                            <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h4 className="font-display text-xl text-base-900">{item.label}</h4>
+                                  {item.integral ? <span className="badge badge-primary">Integral</span> : null}
+                                </div>
+                                <p className="mt-2 text-sm leading-7 text-base-800">{item.description}</p>
+                              </div>
+                              <div className={`badge ${toolStatusClass(item.status)}`}>
+                                {titleCaseFromStatus(item.status)}
+                              </div>
+                            </div>
+
+                            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-2xl bg-base-200 p-3">
+                                <p className="text-xs uppercase tracking-[0.18em] text-base-800">Enabled</p>
+                                <p className="mt-2 text-base font-semibold text-base-900">{item.enabled ? "On" : "Off"}</p>
+                              </div>
+                              <div className="rounded-2xl bg-base-200 p-3">
+                                <p className="text-xs uppercase tracking-[0.18em] text-base-800">Provider</p>
+                                <p className="mt-2 text-base font-semibold text-base-900">
+                                  {item.provider.name.replaceAll("_", " ")}
+                                </p>
+                                <p className="mt-1 text-xs text-base-800">
+                                  {item.provider.ready
+                                    ? "ready"
+                                    : item.provider.configured
+                                      ? "configured"
+                                      : "not configured"}
+                                </p>
+                              </div>
+                              <div className="rounded-2xl bg-base-200 p-3">
+                                <p className="text-xs uppercase tracking-[0.18em] text-base-800">User control</p>
+                                {item.user_control.toggle_allowed ? (
+                                  <label className="mt-2 flex items-center gap-3">
+                                    <input
+                                      className="toggle toggle-primary"
+                                      type="checkbox"
+                                      checked={Boolean(item.user_control.requested_enabled)}
+                                      disabled={savingToolId === item.id}
+                                      onChange={(event) => {
+                                        void handleToolToggle(item.id, event.target.checked);
+                                      }}
+                                    />
+                                    <span className="text-base font-semibold text-base-900">
+                                      {savingToolId === item.id
+                                        ? "Saving..."
+                                        : item.user_control.requested_enabled
+                                          ? "Enabled by user"
+                                          : "Disabled by user"}
+                                    </span>
+                                  </label>
+                                ) : (
+                                  <p className="mt-2 text-base font-semibold text-base-900">Read only</p>
+                                )}
+                              </div>
+                              <div className="rounded-2xl bg-base-200 p-3">
+                                <p className="text-xs uppercase tracking-[0.18em] text-base-800">Link state</p>
+                                <p className="mt-2 text-base font-semibold text-base-900">
+                                  {titleCaseFromStatus(item.link_state)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div className="rounded-2xl border border-base-300 px-4 py-3">
+                                <p className="text-xs uppercase tracking-[0.18em] text-base-800">Current status</p>
+                                <p className="mt-2 text-sm leading-7 text-base-900">{item.status_reason}</p>
+                              </div>
+
+                              {item.id === "telegram" &&
+                              item.user_control.requested_enabled &&
+                              item.provider.ready &&
+                              item.link_state !== "linked" ? (
+                                <div className="rounded-2xl border border-base-300 px-4 py-4">
+                                  <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                      <p className="text-xs uppercase tracking-[0.18em] text-base-800">
+                                        Telegram linking
+                                      </p>
+                                      <p className="mt-2 max-w-2xl text-sm leading-7 text-base-900">
+                                        Generate a short code, then send it to the configured AION Telegram bot from
+                                        the chat you want to attach to this identity.
+                                      </p>
+                                    </div>
+                                    <button
+                                      className="btn btn-primary btn-sm"
+                                      disabled={telegramLinkBusy}
+                                      type="button"
+                                      onClick={() => {
+                                        void handleStartTelegramLink();
+                                      }}
+                                    >
+                                      {telegramLinkBusy
+                                        ? "Generating..."
+                                        : telegramLinkStart
+                                          ? "Rotate code"
+                                          : "Generate code"}
+                                    </button>
+                                  </div>
+
+                                  {telegramLinkStart ? (
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
+                                      <div className="rounded-2xl bg-base-200 p-3">
+                                        <p className="text-xs uppercase tracking-[0.18em] text-base-800">Link code</p>
+                                        <p className="mt-2 font-display text-3xl tracking-[0.18em] text-base-900">
+                                          {telegramLinkStart.link_code}
+                                        </p>
+                                        <p className="mt-2 text-xs text-base-800">
+                                          Expires in about {telegramLinkStart.expires_in_seconds} seconds.
+                                        </p>
+                                      </div>
+                                      <div className="rounded-2xl bg-base-200 p-3">
+                                        <p className="text-xs uppercase tracking-[0.18em] text-base-800">
+                                          Instruction
+                                        </p>
+                                        <p className="mt-2 text-sm leading-7 text-base-900">
+                                          {telegramLinkStart.instruction_text}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="mt-4 text-sm text-base-800">
+                                      No active link code yet. Generate one when you are ready to confirm the chat.
+                                    </p>
+                                  )}
+                                </div>
+                              ) : null}
+
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-2xl border border-base-300 px-4 py-3">
+                                  <p className="text-xs uppercase tracking-[0.18em] text-base-800">Capabilities</p>
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    {item.capabilities.length > 0 ? (
+                                      item.capabilities.map((capability) => (
+                                        <span key={capability} className="badge badge-outline">
+                                          {capability}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span className="text-sm text-base-800">No live capability ids yet.</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-base-300 px-4 py-3">
+                                  <p className="text-xs uppercase tracking-[0.18em] text-base-800">Next actions</p>
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    {item.next_actions.length > 0 ? (
+                                      item.next_actions.map((action) => (
+                                        <span key={action} className="badge badge-ghost">
+                                          {action.replaceAll("_", " ")}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span className="text-sm text-base-800">No action needed.</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </section>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
             </div>
           ) : null}
 
