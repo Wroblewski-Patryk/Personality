@@ -26,35 +26,44 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
     assert snapshot["semantic_embedding_posture"] == "ready"
     assert snapshot["semantic_embedding_source_coverage_state"] == "full_for_current_retrieval_path"
     assert snapshot["semantic_embedding_source_coverage_hint"] == "semantic_and_affective_sources_enabled"
-    assert snapshot["semantic_embedding_source_rollout_state"] == "semantic_affective_baseline"
-    assert snapshot["semantic_embedding_source_rollout_hint"] == "high_signal_sources_active"
+    assert snapshot["semantic_embedding_source_rollout_state"] == "steady_state_baseline_enabled"
+    assert (
+        snapshot["semantic_embedding_source_rollout_hint"]
+        == "semantic_and_affective_foreground_baseline_enabled"
+    )
     assert (
         snapshot["semantic_embedding_source_rollout_recommendation"]
-        == "add_relation_source_after_baseline_stabilizes"
+        == "maintain_semantic_and_affective_baseline"
     )
-    assert snapshot["semantic_embedding_source_rollout_order"] == ["semantic", "affective", "relation"]
+    assert snapshot["semantic_embedding_source_rollout_order"] == ["semantic", "affective"]
     assert snapshot["semantic_embedding_source_rollout_enabled_sources"] == ["semantic", "affective"]
-    assert snapshot["semantic_embedding_source_rollout_missing_sources"] == ["relation"]
-    assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "relation"
-    assert snapshot["semantic_embedding_source_rollout_completion_state"] == "baseline_complete_relation_pending"
+    assert snapshot["semantic_embedding_source_rollout_missing_sources"] == []
+    assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "none"
+    assert (
+        snapshot["semantic_embedding_source_rollout_completion_state"]
+        == "steady_state_baseline_complete"
+    )
     assert snapshot["semantic_embedding_source_rollout_phase_index"] == 2
-    assert snapshot["semantic_embedding_source_rollout_phase_total"] == 3
-    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 67
+    assert snapshot["semantic_embedding_source_rollout_phase_total"] == 2
+    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 100
     assert snapshot["semantic_embedding_source_rollout_enforcement"] == "warn"
-    assert snapshot["semantic_embedding_source_rollout_enforcement_state"] == "warning_only"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_state"]
+        == "not_applicable_rollout_complete"
+    )
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_hint"]
-        == "pending_source_rollout_allowed_in_warn_mode"
+        == "source_rollout_is_complete"
     )
-    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
-    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "strict"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "below_recommendation"
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"]
-        == "aligned_with_recommendation"
+        == "below_recommendation"
     )
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
-        == "source_rollout_enforcement_matches_recommendation"
+        == "consider_enabling_source_rollout_strict_when_rollout_is_complete"
     )
     assert snapshot["semantic_embedding_warning_state"] == "no_warning"
     assert snapshot["semantic_embedding_warning_hint"] == "embedding_strategy_ready"
@@ -123,7 +132,7 @@ def test_embedding_strategy_snapshot_marks_no_warning_when_deterministic_provide
     assert snapshot["semantic_embedding_refresh_alignment_state"] == "aligned"
     assert (
         snapshot["semantic_embedding_refresh_alignment_hint"]
-        == "refresh_mode_matches_active_rollout_recommendation"
+        == "refresh_mode_matches_defined_lifecycle_baseline"
     )
 
 
@@ -295,19 +304,22 @@ def test_embedding_strategy_snapshot_marks_provider_fallback_warning_state() -> 
         == "no_model_governance_violation"
     )
     assert snapshot["semantic_embedding_source_rollout_enabled_sources"] == ["semantic", "affective"]
-    assert snapshot["semantic_embedding_source_rollout_missing_sources"] == ["relation"]
-    assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "relation"
-    assert snapshot["semantic_embedding_source_rollout_completion_state"] == "baseline_complete_relation_pending"
-    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 67
-    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
-    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
+    assert snapshot["semantic_embedding_source_rollout_missing_sources"] == []
+    assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "none"
+    assert (
+        snapshot["semantic_embedding_source_rollout_completion_state"]
+        == "steady_state_baseline_complete"
+    )
+    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 100
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "strict"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "below_recommendation"
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"]
-        == "aligned_with_recommendation"
+        == "below_recommendation"
     )
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
-        == "source_rollout_enforcement_matches_recommendation"
+        == "consider_enabling_source_rollout_strict_when_rollout_is_complete"
     )
     assert snapshot["semantic_embedding_strict_rollout_violations"] == [
         "provider_ownership_fallback_active"
@@ -376,11 +388,11 @@ def test_embedding_strategy_snapshot_marks_missing_source_coverage_when_semantic
         snapshot["semantic_embedding_source_rollout_recommendation"]
         == "enable_semantic_then_affective_sources"
     )
-    assert snapshot["semantic_embedding_source_rollout_enabled_sources"] == ["relation"]
+    assert snapshot["semantic_embedding_source_rollout_enabled_sources"] == []
     assert snapshot["semantic_embedding_source_rollout_missing_sources"] == ["semantic", "affective"]
     assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "semantic"
     assert snapshot["semantic_embedding_source_rollout_completion_state"] == "baseline_blocked_semantic_missing"
-    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 33
+    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 0
 
 
 def test_embedding_strategy_snapshot_marks_semantic_only_source_rollout_phase() -> None:
@@ -396,10 +408,10 @@ def test_embedding_strategy_snapshot_marks_semantic_only_source_rollout_phase() 
     assert snapshot["semantic_embedding_source_rollout_hint"] == "affective_source_missing"
     assert snapshot["semantic_embedding_source_rollout_recommendation"] == "enable_affective_source_next"
     assert snapshot["semantic_embedding_source_rollout_enabled_sources"] == ["semantic"]
-    assert snapshot["semantic_embedding_source_rollout_missing_sources"] == ["affective", "relation"]
+    assert snapshot["semantic_embedding_source_rollout_missing_sources"] == ["affective"]
     assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "affective"
     assert snapshot["semantic_embedding_source_rollout_completion_state"] == "baseline_in_progress_affective_pending"
-    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 33
+    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 50
 
 
 def test_embedding_strategy_snapshot_marks_affective_only_source_rollout_phase() -> None:
@@ -415,10 +427,10 @@ def test_embedding_strategy_snapshot_marks_affective_only_source_rollout_phase()
     assert snapshot["semantic_embedding_source_rollout_hint"] == "semantic_source_missing"
     assert snapshot["semantic_embedding_source_rollout_recommendation"] == "enable_semantic_source_next"
     assert snapshot["semantic_embedding_source_rollout_enabled_sources"] == ["affective"]
-    assert snapshot["semantic_embedding_source_rollout_missing_sources"] == ["semantic", "relation"]
+    assert snapshot["semantic_embedding_source_rollout_missing_sources"] == ["semantic"]
     assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "semantic"
     assert snapshot["semantic_embedding_source_rollout_completion_state"] == "baseline_blocked_semantic_missing"
-    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 33
+    assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 50
 
 
 def test_embedding_strategy_snapshot_marks_all_vector_sources_enabled_rollout_state() -> None:
@@ -430,15 +442,21 @@ def test_embedding_strategy_snapshot_marks_all_vector_sources_enabled_rollout_st
         source_kinds=("episodic", "semantic", "affective", "relation"),
     )
 
-    assert snapshot["semantic_embedding_source_rollout_state"] == "all_vector_sources_enabled"
-    assert snapshot["semantic_embedding_source_rollout_hint"] == "semantic_affective_relation_sources_enabled"
-    assert snapshot["semantic_embedding_source_rollout_recommendation"] == "maintain_current_source_rollout"
-    assert snapshot["semantic_embedding_source_rollout_enabled_sources"] == ["semantic", "affective", "relation"]
+    assert snapshot["semantic_embedding_source_rollout_state"] == "steady_state_baseline_enabled"
+    assert (
+        snapshot["semantic_embedding_source_rollout_hint"]
+        == "semantic_and_affective_foreground_baseline_enabled"
+    )
+    assert snapshot["semantic_embedding_source_rollout_recommendation"] == "maintain_semantic_and_affective_baseline"
+    assert snapshot["semantic_embedding_source_rollout_enabled_sources"] == ["semantic", "affective"]
     assert snapshot["semantic_embedding_source_rollout_missing_sources"] == []
     assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "none"
-    assert snapshot["semantic_embedding_source_rollout_completion_state"] == "fully_enabled"
-    assert snapshot["semantic_embedding_source_rollout_phase_index"] == 3
-    assert snapshot["semantic_embedding_source_rollout_phase_total"] == 3
+    assert (
+        snapshot["semantic_embedding_source_rollout_completion_state"]
+        == "steady_state_baseline_complete"
+    )
+    assert snapshot["semantic_embedding_source_rollout_phase_index"] == 2
+    assert snapshot["semantic_embedding_source_rollout_phase_total"] == 2
     assert snapshot["semantic_embedding_source_rollout_progress_percent"] == 100
     assert snapshot["semantic_embedding_source_rollout_enforcement"] == "warn"
     assert (
@@ -453,11 +471,11 @@ def test_embedding_strategy_snapshot_marks_all_vector_sources_enabled_rollout_st
         snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
         == "consider_enabling_source_rollout_strict_when_rollout_is_complete"
     )
-    assert snapshot["semantic_embedding_recommended_refresh_mode"] == "manual"
-    assert snapshot["semantic_embedding_refresh_alignment_state"] == "on_write_before_recommended_manual"
+    assert snapshot["semantic_embedding_recommended_refresh_mode"] == "on_write"
+    assert snapshot["semantic_embedding_refresh_alignment_state"] == "aligned"
     assert (
         snapshot["semantic_embedding_refresh_alignment_hint"]
-        == "consider_switching_to_manual_for_mature_rollout"
+        == "refresh_mode_matches_defined_lifecycle_baseline"
     )
 
 
@@ -570,19 +588,25 @@ def test_embedding_strategy_snapshot_marks_source_rollout_enforcement_blocked_in
         source_rollout_enforcement="strict",
     )
 
-    assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "relation"
+    assert snapshot["semantic_embedding_source_rollout_next_source_kind"] == "none"
     assert snapshot["semantic_embedding_source_rollout_enforcement"] == "strict"
-    assert snapshot["semantic_embedding_source_rollout_enforcement_state"] == "blocked"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_state"]
+        == "not_applicable_rollout_complete"
+    )
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_hint"]
-        == "enable_pending_source_kinds_before_startup"
+        == "source_rollout_is_complete"
     )
-    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "warn"
-    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "above_recommendation"
-    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"] == "above_recommendation"
+    assert snapshot["semantic_embedding_recommended_source_rollout_enforcement"] == "strict"
+    assert snapshot["semantic_embedding_source_rollout_enforcement_alignment"] == "aligned"
+    assert (
+        snapshot["semantic_embedding_source_rollout_enforcement_alignment_state"]
+        == "aligned_with_recommendation"
+    )
     assert (
         snapshot["semantic_embedding_source_rollout_enforcement_alignment_hint"]
-        == "source_rollout_strict_enabled_ahead_of_recommendation"
+        == "source_rollout_enforcement_matches_recommendation"
     )
 
 

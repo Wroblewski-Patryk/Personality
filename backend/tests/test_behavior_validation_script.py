@@ -51,6 +51,8 @@ VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS = [
     "T17.2",
     "T18.1",
     "T18.2",
+    "T19.1",
+    "T19.2",
 ]
 VALID_V1_APPROVED_TOOL_SLICES = [
     "knowledge_search.search_web",
@@ -74,6 +76,21 @@ VALID_TOOL_GROUNDED_LEARNING_POLICY = {
     "execution_bypass_allowed": False,
     "self_modifying_skill_learning_allowed": False,
 }
+
+
+def _valid_v1_readiness_policy() -> dict[str, object]:
+    return {
+        "policy_owner": "v1_release_readiness_policy",
+        "product_stage": "v1_no_ui_life_assistant",
+        "conversation_gate_state": "conversation_surface_ready",
+        "learned_state_gate_state": "inspection_surface_ready",
+        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
+        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
+        "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
+        "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
+        "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
+        "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
+    }
 
 
 def test_ci_gate_fails_when_no_tests_collected_and_tests_are_required() -> None:
@@ -513,14 +530,7 @@ def test_main_records_incident_evidence_summary_when_valid_input_is_provided(
                         "internal_inspection_path": "/internal/state/inspect",
                         "tool_grounded_learning": dict(VALID_TOOL_GROUNDED_LEARNING_POLICY),
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "attention": {
                         "attention_policy_owner": "durable_attention_inbox_policy",
                         "coordination_mode": "durable_inbox",
@@ -695,14 +705,7 @@ def test_main_fails_when_incident_evidence_durable_attention_posture_is_missing(
                         "internal_inspection_path": "/internal/state/inspect",
                         "tool_grounded_learning": dict(VALID_TOOL_GROUNDED_LEARNING_POLICY),
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "proactive": {
                         "policy_owner": "proactive_runtime_policy",
                         "enabled": True,
@@ -795,14 +798,7 @@ def test_main_fails_when_incident_evidence_policy_surface_is_incomplete(
                         "internal_inspection_path": "/internal/state/inspect",
                         "tool_grounded_learning": dict(VALID_TOOL_GROUNDED_LEARNING_POLICY),
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "attention": {
                         "attention_policy_owner": "durable_attention_inbox_policy",
                         "coordination_mode": "durable_inbox",
@@ -908,14 +904,7 @@ def test_main_fails_when_incident_evidence_tool_grounded_learning_contract_is_mi
                         "policy_owner": "learned_state_inspection_policy",
                         "internal_inspection_path": "/internal/state/inspect",
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "attention": {
                         "attention_policy_owner": "durable_attention_inbox_policy",
                         "coordination_mode": "durable_inbox",
@@ -1022,14 +1011,7 @@ def test_main_fails_when_incident_evidence_debug_posture_does_not_match_dedicate
                         "internal_inspection_path": "/internal/state/inspect",
                         "tool_grounded_learning": dict(VALID_TOOL_GROUNDED_LEARNING_POLICY),
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "attention": {
                         "attention_policy_owner": "durable_attention_inbox_policy",
                         "coordination_mode": "durable_inbox",
@@ -1127,14 +1109,7 @@ def test_main_fails_when_incident_evidence_external_cadence_cutover_proof_is_mis
                         "internal_inspection_path": "/internal/state/inspect",
                         "tool_grounded_learning": dict(VALID_TOOL_GROUNDED_LEARNING_POLICY),
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "attention": {
                         "attention_policy_owner": "durable_attention_inbox_policy",
                         "coordination_mode": "durable_inbox",
@@ -1236,14 +1211,7 @@ def test_main_fails_when_incident_evidence_telegram_conversation_surface_is_miss
                         "internal_inspection_path": "/internal/state/inspect",
                         "tool_grounded_learning": dict(VALID_TOOL_GROUNDED_LEARNING_POLICY),
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "attention": {
                         "attention_policy_owner": "durable_attention_inbox_policy",
                         "coordination_mode": "durable_inbox",
@@ -1350,14 +1318,7 @@ def test_main_fails_when_incident_evidence_proactive_posture_is_missing(
                         "internal_inspection_path": "/internal/state/inspect",
                         "tool_grounded_learning": dict(VALID_TOOL_GROUNDED_LEARNING_POLICY),
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "attention": {
                         "attention_policy_owner": "durable_attention_inbox_policy",
                         "coordination_mode": "durable_inbox",
@@ -1465,14 +1426,7 @@ def test_main_fails_when_incident_evidence_retrieval_alignment_drifts(
                         "internal_inspection_path": "/internal/state/inspect",
                         "tool_grounded_learning": dict(VALID_TOOL_GROUNDED_LEARNING_POLICY),
                     },
-                    "v1_readiness": {
-                        "policy_owner": "v1_release_readiness_policy",
-                        "product_stage": "v1_no_ui_life_assistant",
-                        "conversation_gate_state": "conversation_surface_ready",
-                        "learned_state_gate_state": "inspection_surface_ready",
-                        "required_behavior_scenarios": VALID_V1_REQUIRED_BEHAVIOR_SCENARIOS,
-                        "approved_tool_slices": VALID_V1_APPROVED_TOOL_SLICES,
-                    },
+                    "v1_readiness": _valid_v1_readiness_policy(),
                     "attention": {
                         "attention_policy_owner": "durable_attention_inbox_policy",
                         "coordination_mode": "durable_inbox",

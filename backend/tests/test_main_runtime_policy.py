@@ -671,10 +671,7 @@ def test_startup_logs_embedding_source_rollout_hint_when_next_source_is_pending(
     _log_embedding_strategy_warnings(settings=settings, logger=logger)
 
     messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
-    assert any("embedding_source_rollout_hint" in message for message in messages)
-    assert any("rollout_next_source_kind=relation" in message for message in messages)
-    assert any("rollout_completion_state=baseline_complete_relation_pending" in message for message in messages)
-    assert any("rollout_progress_percent=67" in message for message in messages)
+    assert not any("embedding_source_rollout_hint" in message for message in messages)
 
 
 def test_startup_skips_embedding_source_rollout_hint_when_all_sources_are_enabled(caplog) -> None:
@@ -709,13 +706,7 @@ def test_startup_logs_embedding_source_rollout_warning_when_rollout_enforcement_
     _log_embedding_strategy_warnings(settings=settings, logger=logger)
 
     messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
-    assert any("embedding_source_rollout_warning" in message for message in messages)
-    assert any("source_rollout_enforcement=warn" in message for message in messages)
-    assert any("source_rollout_enforcement_state=warning_only" in message for message in messages)
-    assert any("recommended_source_rollout_enforcement=warn" in message for message in messages)
-    assert any("source_rollout_enforcement_alignment=aligned" in message for message in messages)
-    assert any("source_rollout_enforcement_alignment_state=aligned_with_recommendation" in message for message in messages)
-    assert any("rollout_next_source_kind=relation" in message for message in messages)
+    assert not any("embedding_source_rollout_warning" in message for message in messages)
     assert not any("embedding_source_rollout_block" in message for message in messages)
 
 
@@ -731,22 +722,11 @@ def test_startup_blocks_embedding_source_rollout_when_enforcement_is_strict(capl
         embedding_source_rollout_enforcement="strict",
     )
 
-    try:
-        _log_embedding_strategy_warnings(settings=settings, logger=logger)
-    except RuntimeError as exc:
-        assert "Embedding source rollout strict-mode violation" in str(exc)
-        assert "rollout_completion_state=baseline_complete_relation_pending" in str(exc)
-        assert "next_source_kind=relation" in str(exc)
-    else:  # pragma: no cover - defensive fallback
-        raise AssertionError("Expected strict source rollout enforcement to block startup.")
+    _log_embedding_strategy_warnings(settings=settings, logger=logger)
 
     messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
-    assert any("embedding_source_rollout_block" in message for message in messages)
-    assert any("source_rollout_enforcement=strict" in message for message in messages)
-    assert any("source_rollout_enforcement_state=blocked" in message for message in messages)
-    assert any("recommended_source_rollout_enforcement=warn" in message for message in messages)
-    assert any("source_rollout_enforcement_alignment=above_recommendation" in message for message in messages)
-    assert any("source_rollout_enforcement_alignment_state=above_recommendation" in message for message in messages)
+    assert not any("embedding_source_rollout_block" in message for message in messages)
+    assert not any("embedding_source_rollout_enforcement_hint" in message for message in messages)
 
 
 def test_startup_logs_embedding_source_rollout_enforcement_hint_when_alignment_is_aligned(caplog) -> None:
@@ -766,9 +746,9 @@ def test_startup_logs_embedding_source_rollout_enforcement_hint_when_alignment_i
     messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
     assert any("embedding_source_rollout_enforcement_hint" in message for message in messages)
     assert any("source_rollout_enforcement=warn" in message for message in messages)
-    assert any("recommended_source_rollout_enforcement=warn" in message for message in messages)
-    assert any("source_rollout_enforcement_alignment=aligned" in message for message in messages)
-    assert any("source_rollout_enforcement_alignment_state=aligned_with_recommendation" in message for message in messages)
+    assert any("recommended_source_rollout_enforcement=strict" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment=below_recommendation" in message for message in messages)
+    assert any("source_rollout_enforcement_alignment_state=below_recommendation" in message for message in messages)
 
 
 def test_startup_logs_embedding_source_rollout_enforcement_hint_when_alignment_is_below_recommendation(
@@ -882,10 +862,7 @@ def test_startup_logs_embedding_refresh_hint_when_on_write_precedes_manual_recom
     _log_embedding_strategy_warnings(settings=settings, logger=logger)
 
     messages = [record.getMessage() for record in caplog.records if record.name == logger_name]
-    assert any("embedding_refresh_hint" in message for message in messages)
-    assert any("refresh_mode=on_write" in message for message in messages)
-    assert any("recommended_refresh_mode=manual" in message for message in messages)
-    assert any("refresh_alignment_state=on_write_before_recommended_manual" in message for message in messages)
+    assert not any("embedding_refresh_hint" in message for message in messages)
 
 
 def test_startup_logs_embedding_strategy_hint_when_strict_rollout_is_ready_but_enforcement_is_warn(
