@@ -1274,6 +1274,11 @@ latest pushed commit but release smoke still shows an older
 Wait mode is operator opt-in. Default smoke remains immediate-fail on parity
 drift so final release proof does not silently absorb stale deployments.
 
+Release smoke now also keeps a small bounded retry budget for `/health`
+transport failures during deploy convergence. Treat repeated `503` after the
+retry budget as a real availability problem; treat one brief `503` followed by
+green smoke as normal transient convergence rather than as deploy failure.
+
 Optional debug payload with token:
 
 ```powershell

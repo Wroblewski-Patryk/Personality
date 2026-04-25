@@ -54,6 +54,32 @@ fixes for this repository.
   - `backend/tests/test_deployment_trigger_scripts.py`
   - live production smoke on 2026-04-25 against `https://personality.luckysparrow.ch`
 
+### 2026-04-25 - Deploy convergence can show one brief `/health` 503 before final parity turns green
+- Context:
+  - live release smoke against production briefly returned `503 Service
+    Unavailable` during deploy convergence and then passed on retry.
+- Symptom:
+  - an immediate smoke run can fail on `/health` transport before the deployed
+    runtime stabilizes, even though the same deployment passes moments later.
+- Root cause:
+  - Coolify deploy convergence can include a short unready window where the
+    domain is reachable but the app is not yet healthy enough to serve
+    `/health`.
+- Guardrail:
+  - keep release smoke strict, but allow a small bounded retry budget for
+    transient `/health` failures.
+- Preferred pattern:
+  - retry `/health` a few times with a short delay
+  - keep deploy parity and deeper health assertions unchanged once `/health`
+    responds successfully
+  - treat exhausted retry budget as a real incident signal
+- Avoid:
+  - masking sustained outages behind long generic retry loops
+  - treating every single transient `503` as proof that the deploy failed
+- Evidence:
+  - `backend/scripts/run_release_smoke.ps1`
+  - `backend/tests/test_deployment_trigger_scripts.py`
+
 ### 2026-04-25 - Coolify repo-driven deploys need one compose-owned migration step before long-lived services
 - Context:
   - a new Alembic revision landed during the product-facing web UX/UI lane,

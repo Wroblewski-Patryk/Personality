@@ -338,6 +338,9 @@ Implementation status on 2026-04-25:
     `b514a01c3b68d55edecfa247429e5db29867effe`
   - next deployment-trigger investigation should therefore distinguish
     temporary propagation lag from a true missing deploy
+- `PRJ-694` is now complete in the repo baseline
+- release smoke now also retries transient `/health` failures with a small
+  bounded budget before failing the deployment check
 
 ## Planned On 2026-04-24 For Core V1 Time-Aware Planning
 

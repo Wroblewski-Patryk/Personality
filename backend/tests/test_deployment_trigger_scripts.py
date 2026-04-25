@@ -531,6 +531,8 @@ class _StubAionHandler(BaseHTTPRequestHandler):
     web_build_revision: str = LOCAL_REPO_HEAD_SHA
     web_routes_missing_revision: set[str] = set()
     health_payload_sequence: list[dict[str, object]] = []
+    health_status_code: int = 200
+    health_status_code_sequence: list[int] = []
     health_request_count: int = 0
     sync_web_build_revision_from_health: bool = False
 
@@ -569,12 +571,19 @@ class _StubAionHandler(BaseHTTPRequestHandler):
         if self.path == "/health":
             handler_type = type(self)
             payload = handler_type.health_payload
+            status_code = handler_type.health_status_code
             if handler_type.health_payload_sequence:
                 index = min(
                     handler_type.health_request_count,
                     len(handler_type.health_payload_sequence) - 1,
                 )
                 payload = handler_type.health_payload_sequence[index]
+            if handler_type.health_status_code_sequence:
+                status_index = min(
+                    handler_type.health_request_count,
+                    len(handler_type.health_status_code_sequence) - 1,
+                )
+                status_code = handler_type.health_status_code_sequence[status_index]
             handler_type.health_request_count += 1
 
             deployment = payload.get("deployment") if isinstance(payload, dict) else None
@@ -583,7 +592,7 @@ class _StubAionHandler(BaseHTTPRequestHandler):
                 if isinstance(runtime_build_revision, str) and runtime_build_revision:
                     handler_type.web_build_revision = runtime_build_revision
 
-            self._write_json(payload)
+            self._write_json(payload, status=status_code)
             return
         self._write_json({"detail": "not found"}, status=404)
 
@@ -629,6 +638,8 @@ def stub_aion_server() -> _StubAionServer:
     _StubAionHandler.web_build_revision = LOCAL_REPO_HEAD_SHA
     _StubAionHandler.web_routes_missing_revision = set()
     _StubAionHandler.health_payload_sequence = []
+    _StubAionHandler.health_status_code = 200
+    _StubAionHandler.health_status_code_sequence = []
     _StubAionHandler.health_request_count = 0
     _StubAionHandler.sync_web_build_revision_from_health = False
     _StubAionHandler.health_payload = {
@@ -2591,6 +2602,58 @@ def test_release_smoke_wait_for_deploy_parity_times_out_when_runtime_revision_st
     assert result.returncode != 0
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "did not match local repo HEAD" in combined_output
+
+
+def test_release_smoke_retries_transient_health_503_before_succeeding(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    _StubAionHandler.health_status_code_sequence = [503, 200]
+    _StubAionHandler.health_request_count = 0
+
+    try:
+        result = _run_release_smoke(
+            "-BaseUrl",
+            stub_aion_server.base_url,
+            "-HealthRetryMaxAttempts",
+            "2",
+            "-HealthRetryDelaySeconds",
+            "1",
+            cwd=ROOT,
+        )
+    finally:
+        _StubAionHandler.health_status_code_sequence = []
+        _StubAionHandler.health_status_code = 200
+        _StubAionHandler.health_request_count = 0
+
+    assert result.returncode == 0
+    summary = json.loads(result.stdout)
+    assert summary["health_status"] == "ok"
+
+
+def test_release_smoke_fails_when_transient_health_503_exceeds_retry_budget(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    _StubAionHandler.health_status_code_sequence = [503, 503, 503]
+    _StubAionHandler.health_request_count = 0
+
+    try:
+        result = _run_release_smoke(
+            "-BaseUrl",
+            stub_aion_server.base_url,
+            "-HealthRetryMaxAttempts",
+            "2",
+            "-HealthRetryDelaySeconds",
+            "1",
+            cwd=ROOT,
+        )
+    finally:
+        _StubAionHandler.health_status_code_sequence = []
+        _StubAionHandler.health_status_code = 200
+        _StubAionHandler.health_request_count = 0
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "Health check failed after 2 attempts" in combined_output
 
 
 def test_release_smoke_fails_when_web_shell_build_revision_meta_tag_is_missing(

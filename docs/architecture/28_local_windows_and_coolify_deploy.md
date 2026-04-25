@@ -174,6 +174,17 @@ After a deploy, run:
 .\scripts\run_release_smoke.ps1 -BaseUrl "https://YOUR_DOMAIN"
 ```
 
+Release smoke now includes a small bounded `/health` retry budget for transient
+deploy-time `503` responses. Keep the defaults unless you are diagnosing a
+slower-than-normal edge case:
+
+```powershell
+.\scripts\run_release_smoke.ps1 `
+  -BaseUrl "https://YOUR_DOMAIN" `
+  -HealthRetryMaxAttempts 3 `
+  -HealthRetryDelaySeconds 5
+```
+
 If Coolify source automation has started but deploy parity has not yet reached
 the latest pushed commit, use the same smoke script in bounded wait mode:
 

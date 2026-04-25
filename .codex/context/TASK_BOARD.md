@@ -200,6 +200,11 @@ Last updated: 2026-04-25
       strict parity check
     - targeted script tests and live production smoke now prove both the new
       wait mode and the current post-push convergence posture
+  - `PRJ-694` is now complete:
+    - release smoke now retries transient `/health` failures with a bounded
+      attempt budget before failing the deploy check
+    - script regressions now distinguish one brief `503` from a real sustained
+      outage
 - planned execution order for this lane:
   - `PRJ-685` Mobile-First App Shell Baseline
   - `PRJ-686` UI Language Boundary And Locale Switcher Plan

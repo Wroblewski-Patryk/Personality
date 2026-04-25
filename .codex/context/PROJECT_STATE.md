@@ -279,6 +279,12 @@ Last updated: 2026-04-25
   - the deploy-proof baseline now distinguishes temporary Coolify propagation
     lag from a real deployment-trigger miss without weakening strict final
     parity checks
+- 2026-04-25: `PRJ-694` is complete:
+  - release smoke now retries transient `/health` failures with bounded
+    `HealthRetryMaxAttempts` and `HealthRetryDelaySeconds`
+  - live production on 2026-04-25 briefly returned `503 Service Unavailable`
+    during deploy convergence and then recovered, so the deploy-proof baseline
+    now distinguishes short availability blips from sustained failure
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work

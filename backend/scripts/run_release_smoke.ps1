@@ -8,7 +8,9 @@ param(
     [string]$IncidentEvidenceBundlePath = "",
     [switch]$WaitForDeployParity,
     [int]$DeployParityMaxWaitSeconds = 300,
-    [int]$DeployParityPollSeconds = 15
+    [int]$DeployParityPollSeconds = 15,
+    [int]$HealthRetryMaxAttempts = 3,
+    [int]$HealthRetryDelaySeconds = 5
 )
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -281,7 +283,10 @@ function Wait-ForDeploymentParity {
     $deadline = [datetimeoffset]::UtcNow.AddSeconds($TimeoutSeconds)
 
     while ($true) {
-        $health = Invoke-JsonUtf8 -Method GET -Uri "$BaseUrl/health"
+        $health = Invoke-HealthJsonWithRetry `
+            -Uri "$BaseUrl/health" `
+            -MaxAttempts $HealthRetryMaxAttempts `
+            -DelaySeconds $HealthRetryDelaySeconds
         $observedRevision = Get-DeploymentRuntimeBuildRevision -Health $health
         if ($observedRevision -eq $ExpectedRevision) {
             return $health
@@ -293,6 +298,33 @@ function Wait-ForDeploymentParity {
 
         Start-Sleep -Seconds $PollSeconds
     }
+}
+
+function Invoke-HealthJsonWithRetry {
+    param(
+        [Parameter(Mandatory = $true)][string]$Uri,
+        [Parameter(Mandatory = $true)][int]$MaxAttempts,
+        [Parameter(Mandatory = $true)][int]$DelaySeconds
+    )
+
+    $attempt = 0
+    $lastErrorMessage = ""
+
+    while ($attempt -lt $MaxAttempts) {
+        $attempt += 1
+        try {
+            return Invoke-JsonUtf8 -Method GET -Uri $Uri
+        }
+        catch {
+            $lastErrorMessage = $_.Exception.Message
+            if ($attempt -ge $MaxAttempts) {
+                throw "Health check failed after $MaxAttempts attempts: $lastErrorMessage"
+            }
+            Start-Sleep -Seconds $DelaySeconds
+        }
+    }
+
+    throw "Health check failed after $MaxAttempts attempts: $lastErrorMessage"
 }
 
 function Validate-IncidentEvidenceBundle {
@@ -1366,6 +1398,12 @@ if ($DeployParityMaxWaitSeconds -lt 1) {
 if ($DeployParityPollSeconds -lt 1) {
     throw "Health check failed: DeployParityPollSeconds must be at least 1."
 }
+if ($HealthRetryMaxAttempts -lt 1) {
+    throw "Health check failed: HealthRetryMaxAttempts must be at least 1."
+}
+if ($HealthRetryDelaySeconds -lt 0) {
+    throw "Health check failed: HealthRetryDelaySeconds must be greater than or equal to 0."
+}
 $traceId = [guid]::NewGuid().ToString()
 $eventUrl = "$trimmedBaseUrl/event"
 if ($IncludeDebug) {
@@ -1395,7 +1433,10 @@ $health = if ($WaitForDeployParity) {
         -PollSeconds $DeployParityPollSeconds
 }
 else {
-    Invoke-JsonUtf8 -Method GET -Uri "$trimmedBaseUrl/health"
+    Invoke-HealthJsonWithRetry `
+        -Uri "$trimmedBaseUrl/health" `
+        -MaxAttempts $HealthRetryMaxAttempts `
+        -DelaySeconds $HealthRetryDelaySeconds
 }
 if ($health.status -ne "ok") {
     throw "Health check failed: unexpected status '$($health.status)'."
