@@ -152,9 +152,18 @@ Last updated: 2026-04-25
       bottom navigation better aligned with later app transfer
     - account access and sign-out now live behind one dedicated account panel
       instead of a permanently expanded summary card
-  - `PRJ-686` is now the first `READY` slice:
-    - freeze the explicit GUI-language versus conversation-language boundary
-      before changing the settings route
+  - `PRJ-686` is complete:
+    - `preferred_language` is now explicitly frozen as profile-owned
+      conversation continuity in canonical architecture docs
+    - the planned first-party shell locale field is now explicitly named
+      `ui_language`
+    - the future selector contract is frozen around `system`, `en`, `pl`,
+      and `de` plus a `flag + label` UI pattern
+    - `response_style` and `collaboration_preference` remain runtime-shaped
+      and should leave the product-facing settings form
+  - `PRJ-687` is now the first `READY` slice:
+    - redesign chat so the new mobile-first shell immediately leads into a
+      conversation-first route
 - planned execution order for this lane:
   - `PRJ-685` Mobile-First App Shell Baseline
   - `PRJ-686` UI Language Boundary And Locale Switcher Plan

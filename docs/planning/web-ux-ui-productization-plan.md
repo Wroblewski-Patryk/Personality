@@ -186,7 +186,7 @@ This slice intentionally leaves route-level redesign to later tasks.
 ## Header
 - ID: PRJ-686
 - Title: Freeze the UI-language boundary and localization switcher plan
-- Status: BACKLOG
+- Status: DONE
 - Owner: Planning Agent
 - Depends on: PRJ-685
 - Priority: P0
@@ -218,9 +218,9 @@ Freeze one product-safe localization plan:
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] One explicit UI-language contract is chosen for web/mobile product surfaces.
-- [ ] The plan states that conversation language remains runtime-owned and live.
-- [ ] The locale-switcher posture is described for settings UX, including flag icon treatment.
+- [x] One explicit UI-language contract is chosen for web/mobile product surfaces.
+- [x] The plan states that conversation language remains runtime-owned and live.
+- [x] The locale-switcher posture is described for settings UX, including flag icon treatment.
 
 ## Forbidden
 - new systems without approval
@@ -229,9 +229,9 @@ Freeze one product-safe localization plan:
 - architecture changes without explicit approval
 
 ## Validation Evidence
-- Tests: n/a planning slice
-- Manual checks: settings audit screenshots and current field review
-- Screenshots/logs: `.codex/artifacts/ux-audit-2026-04-25/`
+- Tests: n/a planning and contract-freeze slice
+- Manual checks: current `/app/me` and `/app/me/settings` contract reviewed against `preferred_language` ownership in backend and architecture docs
+- Screenshots/logs: `.codex/artifacts/ux-audit-2026-04-25/`; contract review in `docs/architecture/16_agent_contracts.md`, `docs/planning/open-decisions.md`
 - High-risk checks: confirm no plan reuses conversation-language continuity as UI locale storage
 
 ## Architecture Evidence (required for architecture-impacting tasks)
@@ -244,18 +244,26 @@ Freeze one product-safe localization plan:
 - Follow-up architecture doc updates: none expected
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
+- [x] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
-The implementation slice should introduce an explicit UI-locale field instead
-of overloading the current conversation-language preference.
+Chosen implementation contract:
+
+- keep `preferred_language` as profile-owned conversation continuity
+- add separate app-facing shell field named `ui_language` if persisted locale
+  is implemented
+- keep `GET /app/me` and `PATCH /app/me/settings` as the first-party settings
+  source of truth
+- support `system`, `en`, `pl`, and `de` in the first selector iteration
+- render the selector as `flag + language label`
+- explain in helper copy that the selector changes interface language only
 
 ### Task
 

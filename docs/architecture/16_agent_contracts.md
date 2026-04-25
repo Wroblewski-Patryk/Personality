@@ -213,17 +213,26 @@ continuity and learned runtime preferences.
 
 1. `preferred_language` remains profile-owned continuity state and is loaded
    from `aion_profile`
-2. `response_style`, `collaboration_preference`, and `preferred_role` remain
+2. first-party client localization must not reuse `preferred_language` as a
+   GUI-locale override because conversation language remains runtime-owned
+   continuity
+3. if a first-party web or mobile client needs a persisted interface locale,
+   it must use a separate backend-owned app-facing setting such as
+   `ui_language`
+4. a future `ui_language` field may shape only first-party shell copy,
+   navigation labels, and client chrome; it must not directly override
+   expression language, perception language, or memory-language continuity
+5. `response_style`, `collaboration_preference`, and `preferred_role` remain
    conclusion-owned learned preferences and must not be copied into profile
    storage as identity fields
-3. relation fallback cues may influence stage-level tie-break behavior, but
+6. relation fallback cues may influence stage-level tie-break behavior, but
    they must not rewrite identity-owned profile continuity
-4. runtime visibility should expose the shared policy owner through
+7. runtime visibility should expose the shared policy owner through
    `/health.identity` and `system_debug.adaptive_state.identity_policy`
-5. language continuity should also expose one explicit posture snapshot with
+8. language continuity should also expose one explicit posture snapshot with
    precedence order, supported language codes, and current event-level
    continuity diagnostics through runtime debug
-6. multilingual posture remains explicit and bounded to currently supported
+9. multilingual posture remains explicit and bounded to currently supported
    runtime language codes until a broader language model is intentionally added
 
 ---

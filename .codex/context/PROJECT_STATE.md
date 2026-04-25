@@ -226,8 +226,17 @@ Last updated: 2026-04-25
     fixed bottom navigation suitable for a later app-shell transfer
   - account access and sign-out now live in one toggleable account panel
     rather than a permanently expanded summary card
-  - the next `READY` slice is `PRJ-686`, which freezes the GUI-language versus
-    conversation-language boundary before the settings redesign starts
+  - the next slice `PRJ-686` is now also complete:
+    - canonical architecture now freezes `preferred_language` as
+      conversation continuity only
+    - the future first-party shell locale field is explicitly planned as
+      `ui_language`
+    - the planned first selector iteration is bounded to `system`, `en`,
+      `pl`, and `de`, rendered as `flag + language label`
+    - `response_style` and `collaboration_preference` remain runtime-shaped
+      and should not return as manual product-facing settings controls
+  - the next `READY` slice is now `PRJ-687`, focused on chat-first mobile
+    route priority inside the new shell
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work

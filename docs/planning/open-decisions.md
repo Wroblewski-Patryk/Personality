@@ -75,12 +75,23 @@ first-party web and future mobile clients.
      new GUI language field
    - if implementation needs a persisted UI locale, it should use a separate
      backend-owned app-facing setting
+   - the selected field name for planning and future implementation is
+     `ui_language`
 4. approved settings cleanup direction
    - `response_style` and `collaboration_preference` should leave the
      product-facing settings form
    - those behaviors remain runtime-shaped from history, time, and interaction
      context rather than user-managed static controls
-5. current execution direction
+5. approved first implementation contract
+   - `GET /app/me` and `PATCH /app/me/settings` should remain the app-facing
+     source of truth for shell settings
+   - if persisted localization is added, the app-facing payload should expose
+     `ui_language` separately from `preferred_language`
+   - `preferred_language` keeps its current meaning as conversation continuity
+   - the initial UI posture should support `system`, `en`, `pl`, and `de`
+   - the selector should render as `flag + language label`, with helper copy
+     that explicitly says this controls only the interface
+6. current execution direction
    - the next UX/UI planning lane should freeze this split before route-level
      settings redesign
 
