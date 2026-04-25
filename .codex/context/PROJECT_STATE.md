@@ -140,8 +140,14 @@ Last updated: 2026-04-25
     web build revision instead of proving only the root route
   - targeted backend route tests, web route tests, release-smoke regressions,
     and a production web build now pass locally
-  - deployment and live production verification remain pending because the
-    repaired code is not deployed yet
+  - first live smoke against deployed commit `7ff715e` proved the backend
+    runtime revision had updated, but also exposed one remaining parity gap:
+    the served web-shell HTML still reported `aion-web-build-revision=unknown`
+  - a follow-up local repair now makes FastAPI inject the runtime
+    `APP_BUILD_REVISION` into served SPA HTML so deploy parity no longer
+    depends on the frontend bundler receiving the same variable at build time
+  - final live production verification remains pending until that follow-up
+    repair is deployed
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work

@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -10,7 +11,7 @@ def _write_web_dist(tmp_path: Path) -> Path:
     dist_dir = tmp_path / "web" / "dist"
     dist_dir.mkdir(parents=True)
     (dist_dir / "index.html").write_text(
-        "<!doctype html><html><body><div id='root'>AION Web</div></body></html>",
+        """<!doctype html><html><head><meta name="aion-web-build-revision" content="unknown" /></head><body><div id='root'>AION Web</div></body></html>""",
         encoding="utf-8",
     )
     return dist_dir
@@ -26,6 +27,7 @@ def _client() -> TestClient:
 def test_root_serves_web_index_when_dist_is_ready(tmp_path, monkeypatch) -> None:
     dist_dir = _write_web_dist(tmp_path)
     monkeypatch.setattr(app_main, "_WEB_DIST_DIR", dist_dir)
+    monkeypatch.setattr(app_main, "get_settings", lambda: SimpleNamespace(app_build_revision="test-web-build"))
 
     client = _client()
     response = client.get("/")
@@ -33,11 +35,13 @@ def test_root_serves_web_index_when_dist_is_ready(tmp_path, monkeypatch) -> None
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert "AION Web" in response.text
+    assert 'content="test-web-build"' in response.text
 
 
 def test_frontend_route_falls_back_to_web_index(tmp_path, monkeypatch) -> None:
     dist_dir = _write_web_dist(tmp_path)
     monkeypatch.setattr(app_main, "_WEB_DIST_DIR", dist_dir)
+    monkeypatch.setattr(app_main, "get_settings", lambda: SimpleNamespace(app_build_revision="test-web-build"))
 
     client = _client()
     response = client.get("/chat")
@@ -45,6 +49,24 @@ def test_frontend_route_falls_back_to_web_index(tmp_path, monkeypatch) -> None:
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert "AION Web" in response.text
+    assert 'content="test-web-build"' in response.text
+
+
+def test_root_overrides_stale_web_build_revision_with_runtime_revision(tmp_path, monkeypatch) -> None:
+    dist_dir = _write_web_dist(tmp_path)
+    monkeypatch.setattr(app_main, "_WEB_DIST_DIR", dist_dir)
+    monkeypatch.setattr(
+        app_main,
+        "get_settings",
+        lambda: SimpleNamespace(app_build_revision="runtime-build-revision"),
+    )
+
+    client = _client()
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert 'content="runtime-build-revision"' in response.text
+    assert 'content="unknown"' not in response.text
 
 
 def test_blocklisted_route_is_not_served_as_spa(tmp_path, monkeypatch) -> None:

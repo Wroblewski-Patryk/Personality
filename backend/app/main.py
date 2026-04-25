@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
+import re
 
 from app.affective.assessor import AffectiveAssessor
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from app.agents.context import ContextAgent
@@ -52,6 +53,10 @@ from app.workers.scheduler import SchedulerWorker
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _WEB_DIST_DIR = _REPO_ROOT / "web" / "dist"
+_WEB_BUILD_REVISION_META_PATTERN = re.compile(
+    r'(<meta\s+name="aion-web-build-revision"\s+content=")([^"]*)("\s*/?>)',
+    re.IGNORECASE,
+)
 _WEB_ROUTE_BLOCKLIST = (
     "app",
     "assets",
@@ -71,6 +76,21 @@ def _web_index_path() -> Path:
 
 def _web_dist_ready() -> bool:
     return _web_index_path().is_file()
+
+
+def _web_runtime_build_revision() -> str:
+    settings = get_settings()
+    return str(getattr(settings, "app_build_revision", "unknown") or "unknown")
+
+
+def _web_html_response(path: Path) -> HTMLResponse:
+    html = path.read_text(encoding="utf-8")
+    html = _WEB_BUILD_REVISION_META_PATTERN.sub(
+        rf"\g<1>{_web_runtime_build_revision()}\g<3>",
+        html,
+        count=1,
+    )
+    return HTMLResponse(content=html)
 
 
 def _should_serve_web_path(frontend_path: str) -> bool:
@@ -736,14 +756,14 @@ if (_WEB_DIST_DIR / "assets").is_dir():
 
 
 @app.get("/", include_in_schema=False)
-async def web_index() -> FileResponse:
+async def web_index() -> HTMLResponse:
     if not _web_dist_ready():
         raise HTTPException(status_code=404, detail="Web client build is not available.")
-    return FileResponse(_web_index_path())
+    return _web_html_response(_web_index_path())
 
 
 @app.get("/{frontend_path:path}", include_in_schema=False)
-async def web_spa(frontend_path: str) -> FileResponse:
+async def web_spa(frontend_path: str) -> Response:
     if not _should_serve_web_path(frontend_path):
         raise HTTPException(status_code=404, detail="Not found.")
     if not _web_dist_ready():
@@ -751,6 +771,8 @@ async def web_spa(frontend_path: str) -> FileResponse:
 
     requested = (_WEB_DIST_DIR / frontend_path).resolve()
     if requested.is_file() and requested.parent == _WEB_DIST_DIR.resolve():
+        if requested.suffix.lower() == ".html":
+            return _web_html_response(requested)
         return FileResponse(requested)
 
-    return FileResponse(_web_index_path())
+    return _web_html_response(_web_index_path())

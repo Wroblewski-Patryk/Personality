@@ -176,6 +176,37 @@ fixes for this repository.
   - production `/health.deployment.runtime_build_revision`
   - `.\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'`
 
+### 2026-04-25 - Frontend build revision parity should not depend on Coolify passing runtime variables into the web bundler
+- Context:
+  - the first `v2` browser stabilization lane added release-smoke proof that
+    `/`, `/chat`, `/settings`, `/tools`, and `/personality` all expose the
+    same deployed web-shell revision as the backend runtime.
+- Symptom:
+  - production `/health` reported the correct `runtime_build_revision`, but
+    the served SPA HTML still exposed `aion-web-build-revision=unknown`, so
+    release smoke failed even after the new backend commit was live.
+- Root cause:
+  - Coolify runtime environment mapping kept `APP_BUILD_REVISION` correct for
+    the Python service, but the frontend bundler artifact could still be built
+    with the fallback value, leaving the revision meta stale inside static
+    `web/dist/index.html`.
+- Guardrail:
+  - when FastAPI is the owner serving the SPA shell, inject the runtime
+    `APP_BUILD_REVISION` into the served HTML response instead of trusting the
+    static build artifact to carry the final deploy revision.
+- Preferred pattern:
+  - keep the web-shell revision meta tag in `web/index.html`
+  - preserve the Docker build arg for local and image-level parity
+  - have backend-owned SPA serving rewrite the meta tag to the runtime
+    revision before responding
+- Avoid:
+  - treating a static `unknown` web revision as acceptable once backend
+    runtime parity is already machine-visible
+- Evidence:
+  - `PRJ-679`
+  - `backend/tests/test_web_routes.py`
+  - `.\backend\scripts\run_release_smoke.ps1 -BaseUrl 'https://personality.luckysparrow.ch'`
+
 ### 2026-04-24 - Coolify source drift can silently break repo-driven deploy after a repository rename
 - Context:
   - the final operational `v1` closure lane required proving that `push main`

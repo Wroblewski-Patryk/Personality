@@ -77,7 +77,11 @@ Last updated: 2026-04-25
   - `PRJ-679` is in progress:
     - local regression and release-smoke coverage now include the first-party
       web shell routes `/`, `/chat`, `/settings`, `/tools`, and `/personality`
-    - live production smoke for the repaired shell remains pending until deploy
+    - first live smoke on deployed commit `7ff715e` exposed one remaining
+      parity gap: the web shell HTML still emitted `aion-web-build-revision`
+      as `unknown` even though backend runtime build truth was correct
+    - a backend-owned HTML revision injection fix is now prepared locally and
+      awaiting deploy before final production smoke closure
 
 ## Agent Workflow Refresh (2026-04-18)
 
