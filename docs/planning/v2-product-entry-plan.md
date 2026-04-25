@@ -76,10 +76,16 @@ Completed on 2026-04-25:
     gating, and bounded link-code lifecycle behavior
   - testing, ops, overview, and env/config docs now describe one shared
     backend-owned tools/channels boundary for the first-party web client
+- `PRJ-667`
+  - the mobile stack is now frozen as Expo-managed React Native with
+    TypeScript and Expo Router
+  - the shared client-contract baseline for `mobile` now explicitly reuses the
+    backend-owned `/app/*` resource model while keeping native auth transport
+    details as a bounded follow-up instead of hidden assumption
 
 Next active lane:
 
-- `PRJ-667..PRJ-668` mobile foundation
+- `PRJ-668` mobile foundation
 
 ## Target Repository Topology
 

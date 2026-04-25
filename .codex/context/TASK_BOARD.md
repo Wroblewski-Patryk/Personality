@@ -37,8 +37,14 @@ Last updated: 2026-04-25
   - testing, overview, ops, and env/config docs now describe the same
     backend-owned product boundary
 - the tools-and-channels web lane is now complete through `PRJ-674`
-- `PRJ-667` remains planned as the next mobile foundation slice after the tools
-  and channels lane is frozen
+- `PRJ-667` is complete:
+  - the initial mobile stack is now frozen as Expo-managed React Native with
+    TypeScript and Expo Router
+  - the shared backend-owned client-contract baseline for `web` and `mobile`
+    is now explicit
+- `PRJ-668` is now the next `READY` slice:
+  - build the first real mobile workspace foundation on the frozen stack and
+    shared backend-owned contract boundary
 
 ## Agent Workflow Refresh (2026-04-18)
 

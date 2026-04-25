@@ -27,11 +27,28 @@ Fresh user approval now resolves the top-level `v2` product topology.
    - product clients should not rely on raw `user_id` headers or internal
      debug surfaces as their trust boundary
 5. still-open bounded follow-ups
-   - the exact mobile stack remains intentionally deferred to a later bounded
-     decision inside the approved `mobile/` folder
    - the exact production serving topology for `web` versus `backend` routes
      should be frozen together with the deploy task, not guessed ad hoc during
      the initial folder move
+
+## Mobile Stack Baseline (2026-04-25)
+
+The previously deferred mobile-stack choice is now resolved for the first
+mobile foundation lane.
+
+1. approved stack
+   - Expo-managed React Native
+   - TypeScript
+   - Expo Router
+2. approved client-contract posture
+   - `mobile/` must remain a thin client over backend-owned `/app/*`
+     resources
+   - `mobile/` must not consume internal debug or admin endpoints
+   - `mobile/` must not become a provider-secret entry surface
+3. still-open bounded follow-up
+   - the exact native auth transport adapter remains an explicit follow-up
+     after the shared resource baseline, not a hidden assumption inside the
+     stack choice
 
 ## Multimodal Telegram And App Boundary (2026-04-25)
 

@@ -79,6 +79,7 @@ near-term coordination direction without rewriting the canonical architecture.
 - `planning/open-decisions.md`
 - `planning/next-iteration-plan.md`
 - `planning/v2-product-entry-plan.md`
+- `planning/mobile-client-baseline.md`
 
 ## Product Workspaces
 

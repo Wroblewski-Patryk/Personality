@@ -93,6 +93,16 @@ Last updated: 2026-04-25
   - overview, ops, and env/config docs now describe the same backend-owned
     tools boundary where provider secrets stay outside product UI and the web
     client remains a thin consumer of backend truth
+- 2026-04-25: `PRJ-667` is complete:
+  - the initial mobile stack is now frozen as Expo-managed React Native with
+    TypeScript and Expo Router
+  - the repository now records one shared first-party client-contract baseline
+    where `mobile` reuses backend-owned `/app/*` resources instead of creating
+    a second mobile-only domain model
+  - the mobile baseline explicitly keeps provider-secret handling and internal
+    debug surfaces out of the future app workspace
+  - native auth transport details remain an explicit bounded follow-up instead
+    of being falsely implied as already solved by the stack freeze
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work

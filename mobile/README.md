@@ -1,7 +1,21 @@
 # AION Mobile
 
-`mobile/` is reserved for the future native client workspace.
+`mobile/` is the approved workspace for the future native client.
 
-The mobile stack is intentionally not frozen yet. We know this repository now
-has a product-level place for it, but the implementation technology should be
-chosen explicitly before bootstrapping the app workspace.
+The initial stack is now frozen as:
+
+- Expo-managed React Native
+- TypeScript
+- Expo Router
+
+This workspace must remain a thin client over backend-owned `/app/*`
+contracts.
+
+It must not:
+
+- implement runtime cognition or planning logic
+- consume internal debug endpoints
+- manage provider secrets in UI
+
+See [docs/planning/mobile-client-baseline.md](/C:/Personal/Projekty/Aplikacje/Personality/docs/planning/mobile-client-baseline.md)
+for the shared client-contract baseline that `mobile/` must follow.
