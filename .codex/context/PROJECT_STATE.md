@@ -185,6 +185,11 @@ Last updated: 2026-04-25
     leaving multiple profiles attached to the same Telegram identity
   - targeted route, event-normalization, and repository regressions now prove
     the repaired linked-identity continuity contract
+  - follow-up hardening on the same lane now also merges pre-link legacy raw
+    Telegram memory state into the authenticated account during linking, so
+    older Telegram-only recall survives the move to shared app+Telegram
+    identity continuity instead of staying stranded under the old numeric
+    sender bucket
 - 2026-04-25: fresh browser UX/UI audit of the current first-party web shell
   now seeds the next product-facing lane through `PRJ-691`:
   - login is visually coherent, but the authenticated shell still repeats too

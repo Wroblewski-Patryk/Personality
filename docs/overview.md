@@ -86,6 +86,9 @@ Important current-runtime notes:
   - once linked, normal Telegram ingress now resolves to the same backend auth
     identity owner as first-party `/app/*` traffic, so memory continuity no
     longer splits between linked web and Telegram conversations
+  - when a Telegram chat carried older pre-link memory under the legacy raw
+    Telegram sender id, linking now merges that legacy memory bucket into the
+    authenticated backend account so old recall follows the linked identity too
 
 ## Runtime Stage Ownership
 

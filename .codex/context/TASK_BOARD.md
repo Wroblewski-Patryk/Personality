@@ -125,6 +125,14 @@ Last updated: 2026-04-25
   - `PRJ-684` is complete:
     - task board, project state, overview, next-iteration plan, and learning
       journal now describe the same linked-identity continuity repair
+  - follow-up continuity hardening on 2026-04-25 is now complete:
+    - manual repo repro confirmed one remaining gap after the first fix:
+      pre-link Telegram memories persisted under the legacy raw Telegram
+      `user_id`, so linking future ingress alone did not make old Telegram
+      recall visible from the authenticated app account
+    - Telegram linking now merges that legacy raw Telegram memory bucket into
+      the authenticated backend user during `set_user_telegram_link(...)`,
+      preserving old episodic and conclusion continuity instead of orphaning it
   - the linked UI-Telegram identity continuity lane seeded through `PRJ-684`
     is now complete
 - fresh browser UX/UI analysis on 2026-04-25 now seeds the next

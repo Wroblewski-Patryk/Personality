@@ -107,6 +107,8 @@ fixes for this repository.
 - Preferred pattern:
   - keep linking truth in the existing profile-owned fields
   - resolve linked backend identity before foreground runtime state load
+  - merge pre-link legacy channel memory into the durable backend identity at
+    link time when older runtime turns were persisted under a raw transport id
   - preserve explicit fallback for unlinked traffic
   - prove the outcome with cross-channel continuity tests, not only link-state
     tests
@@ -115,10 +117,15 @@ fixes for this repository.
     are merged
   - validating only code-generation, confirmation, or tools-overview status
     without a later ordinary channel turn
+  - assuming old channel memory will become visible automatically once new
+    ingress resolves to the linked auth user
 - Evidence:
   - 2026-04-25 repo analysis across `backend/app/api/routes.py`,
     `backend/app/core/events.py`, `backend/app/memory/repository.py`, and
     `backend/tests/test_api_routes.py`
+  - 2026-04-25 local continuity repro showing legacy raw Telegram conclusions
+    and episodes remained under numeric sender `user_id` after link until
+    merge-on-link moved them
 
 ### 2026-04-25 - App-facing web clients must not assume every backend error is JSON
 - Context:

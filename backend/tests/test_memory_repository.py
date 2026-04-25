@@ -274,6 +274,59 @@ async def test_memory_repository_reassigns_telegram_link_ownership_to_latest_use
     await engine.dispose()
 
 
+
+async def test_memory_repository_merges_legacy_telegram_state_into_linked_auth_user(tmp_path) -> None:
+    database_path = tmp_path / "memory-telegram-link-merge.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.create_auth_user(
+        user_id="usr_ui",
+        email="ui@example.com",
+        password_hash="hash",
+    )
+    await repository.upsert_conclusion(
+        user_id="123456789",
+        kind="user_name",
+        content="Patryk",
+        confidence=1.0,
+        source="telegram_runtime",
+    )
+    await repository.write_episode(
+        event_id="evt-legacy-telegram",
+        trace_id="trace-legacy-telegram",
+        source="telegram",
+        user_id="123456789",
+        event_timestamp=datetime.now(timezone.utc),
+        summary="User said their name is Patryk.",
+        payload={"text": "Mam na imiê Patryk"},
+        importance=0.9,
+    )
+
+    await repository.set_user_telegram_link(
+        user_id="usr_ui",
+        chat_id="555",
+        telegram_user_id="123456789",
+        linked_at=datetime.now(timezone.utc),
+    )
+
+    legacy_conclusions = await repository.get_user_conclusions("123456789")
+    linked_conclusions = await repository.get_user_conclusions("usr_ui")
+    legacy_recent = await repository.get_recent_for_user("123456789", limit=5)
+    linked_recent = await repository.get_recent_for_user("usr_ui", limit=5)
+
+    assert legacy_conclusions == []
+    assert len(linked_conclusions) == 1
+    assert linked_conclusions[0]["kind"] == "user_name"
+    assert linked_conclusions[0]["content"] == "Patryk"
+    assert legacy_recent == []
+    assert len(linked_recent) == 1
+    assert linked_recent[0]["summary"] == "User said their name is Patryk."
+
+    await engine.dispose()
+
 async def test_memory_repository_persists_scheduler_cadence_evidence_contract_store(tmp_path) -> None:
     database_path = tmp_path / "memory-scheduler-cadence-evidence.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")

@@ -145,6 +145,309 @@ class MemoryRepository:
             return self.MEMORY_LAYER_OPERATIONAL
         return self.MEMORY_LAYER_SEMANTIC
 
+    @staticmethod
+    def _merge_unique_values(
+        primary_values: list[str] | None,
+        secondary_values: list[str] | None,
+    ) -> list[str]:
+        merged: list[str] = []
+        seen: set[str] = set()
+        for values in (primary_values or [], secondary_values or []):
+            for value in values:
+                normalized = str(value or "").strip()
+                if not normalized or normalized in seen:
+                    continue
+                seen.add(normalized)
+                merged.append(normalized)
+        return merged
+
+    async def _reassign_user_rows(
+        self,
+        session: AsyncSession,
+        *,
+        model: type,
+        source_user_id: str,
+        target_user_id: str,
+    ) -> None:
+        statement = select(model).where(model.user_id == source_user_id)
+        result = await session.execute(statement)
+        for row in result.scalars().all():
+            row.user_id = target_user_id
+
+    async def _merge_profile_identity_state(
+        self,
+        session: AsyncSession,
+        *,
+        source_user_id: str,
+        target_user_id: str,
+    ) -> None:
+        source_row = await session.get(AionProfile, source_user_id)
+        if source_row is None:
+            return
+        target_row = await session.get(AionProfile, target_user_id)
+        if target_row is None:
+            target_row = AionProfile(
+                user_id=target_user_id,
+                preferred_language="en",
+                language_confidence=0.0,
+                language_source="default",
+            )
+            session.add(target_row)
+            await session.flush()
+
+        if (
+            float(source_row.language_confidence or 0.0) > float(target_row.language_confidence or 0.0)
+            or str(target_row.language_source or "default").strip() == "default"
+        ):
+            target_row.preferred_language = source_row.preferred_language
+            target_row.language_confidence = source_row.language_confidence
+            target_row.language_source = source_row.language_source
+        await session.delete(source_row)
+
+    async def _merge_theta_state(
+        self,
+        session: AsyncSession,
+        *,
+        source_user_id: str,
+        target_user_id: str,
+    ) -> None:
+        source_row = await session.get(AionTheta, source_user_id)
+        if source_row is None:
+            return
+        target_row = await session.get(AionTheta, target_user_id)
+        if target_row is None:
+            source_row.user_id = target_user_id
+            return
+        for field_name in ("support_bias", "analysis_bias", "execution_bias"):
+            source_value = float(getattr(source_row, field_name, 0.0) or 0.0)
+            target_value = float(getattr(target_row, field_name, 0.0) or 0.0)
+            if abs(source_value) > abs(target_value):
+                setattr(target_row, field_name, source_value)
+        await session.delete(source_row)
+
+    async def _merge_conclusion_rows(
+        self,
+        session: AsyncSession,
+        *,
+        source_user_id: str,
+        target_user_id: str,
+    ) -> None:
+        statement = select(AionConclusion).where(AionConclusion.user_id == source_user_id)
+        result = await session.execute(statement)
+        for source_row in result.scalars().all():
+            target_statement = (
+                select(AionConclusion)
+                .where(
+                    AionConclusion.user_id == target_user_id,
+                    AionConclusion.kind == source_row.kind,
+                    AionConclusion.scope_type == source_row.scope_type,
+                    AionConclusion.scope_key == source_row.scope_key,
+                )
+                .limit(1)
+            )
+            target_result = await session.execute(target_statement)
+            target_row = target_result.scalar_one_or_none()
+            if target_row is None:
+                source_row.user_id = target_user_id
+                continue
+            current_content = target_row.content
+            current_confidence = float(target_row.confidence or 0.0)
+            if self._should_update_conclusion(
+                kind=source_row.kind,
+                current_content=current_content,
+                current_confidence=current_confidence,
+                next_content=source_row.content,
+                next_confidence=source_row.confidence,
+                source=source_row.source,
+            ):
+                target_row.content = source_row.content
+                target_row.confidence = self._next_conclusion_confidence(
+                    current_content=current_content,
+                    current_confidence=current_confidence,
+                    next_content=source_row.content,
+                    next_confidence=source_row.confidence,
+                )
+                target_row.source = source_row.source
+                target_row.supporting_event_id = source_row.supporting_event_id
+            await session.delete(source_row)
+
+    async def _merge_relation_rows(
+        self,
+        session: AsyncSession,
+        *,
+        source_user_id: str,
+        target_user_id: str,
+    ) -> None:
+        statement = select(AionRelation).where(AionRelation.user_id == source_user_id)
+        result = await session.execute(statement)
+        for source_row in result.scalars().all():
+            target_statement = (
+                select(AionRelation)
+                .where(
+                    AionRelation.user_id == target_user_id,
+                    AionRelation.relation_type == source_row.relation_type,
+                    AionRelation.scope_type == source_row.scope_type,
+                    AionRelation.scope_key == source_row.scope_key,
+                )
+                .limit(1)
+            )
+            target_result = await session.execute(target_statement)
+            target_row = target_result.scalar_one_or_none()
+            if target_row is None:
+                source_row.user_id = target_user_id
+                continue
+            if float(source_row.confidence or 0.0) >= float(target_row.confidence or 0.0):
+                target_row.relation_value = source_row.relation_value
+                target_row.source = source_row.source
+                target_row.supporting_event_id = source_row.supporting_event_id
+            target_row.confidence = max(float(target_row.confidence or 0.0), float(source_row.confidence or 0.0))
+            target_row.evidence_count = int(target_row.evidence_count or 0) + int(source_row.evidence_count or 0)
+            target_row.decay_rate = min(float(target_row.decay_rate or 0.02), float(source_row.decay_rate or 0.02))
+            target_row.last_observed_at = max(target_row.last_observed_at, source_row.last_observed_at)
+            await session.delete(source_row)
+
+    async def _merge_embedding_rows(
+        self,
+        session: AsyncSession,
+        *,
+        source_user_id: str,
+        target_user_id: str,
+    ) -> None:
+        statement = select(AionSemanticEmbedding).where(AionSemanticEmbedding.user_id == source_user_id)
+        result = await session.execute(statement)
+        for source_row in result.scalars().all():
+            target_statement = (
+                select(AionSemanticEmbedding)
+                .where(
+                    AionSemanticEmbedding.user_id == target_user_id,
+                    AionSemanticEmbedding.source_kind == source_row.source_kind,
+                    AionSemanticEmbedding.source_id == source_row.source_id,
+                )
+                .limit(1)
+            )
+            target_result = await session.execute(target_statement)
+            target_row = target_result.scalar_one_or_none()
+            if target_row is None:
+                source_row.user_id = target_user_id
+                continue
+            if source_row.updated_at >= target_row.updated_at:
+                target_row.source_event_id = source_row.source_event_id
+                target_row.scope_type = source_row.scope_type
+                target_row.scope_key = source_row.scope_key
+                target_row.content = source_row.content
+                target_row.embedding = source_row.embedding
+                target_row.embedding_model = source_row.embedding_model
+                target_row.embedding_dimensions = source_row.embedding_dimensions
+                target_row.metadata_json = source_row.metadata_json
+            await session.delete(source_row)
+
+    async def _merge_attention_turn_rows(
+        self,
+        session: AsyncSession,
+        *,
+        source_user_id: str,
+        target_user_id: str,
+    ) -> None:
+        statement = select(AionAttentionTurn).where(AionAttentionTurn.user_id == source_user_id)
+        result = await session.execute(statement)
+        for source_row in result.scalars().all():
+            target_statement = (
+                select(AionAttentionTurn)
+                .where(
+                    AionAttentionTurn.user_id == target_user_id,
+                    AionAttentionTurn.conversation_key == source_row.conversation_key,
+                )
+                .limit(1)
+            )
+            target_result = await session.execute(target_statement)
+            target_row = target_result.scalar_one_or_none()
+            if target_row is None:
+                source_row.user_id = target_user_id
+                continue
+            target_row.messages_json = self._merge_unique_values(target_row.messages_json, source_row.messages_json)
+            target_row.event_ids_json = self._merge_unique_values(target_row.event_ids_json, source_row.event_ids_json)
+            target_row.update_keys_json = self._merge_unique_values(target_row.update_keys_json, source_row.update_keys_json)
+            target_row.source_count = max(
+                int(target_row.source_count or 0),
+                int(source_row.source_count or 0),
+                len(target_row.messages_json or []),
+            )
+            if source_row.updated_at >= target_row.updated_at:
+                target_row.turn_id = source_row.turn_id
+                target_row.status = source_row.status
+                target_row.owner_mode = source_row.owner_mode
+                if source_row.assembled_text:
+                    target_row.assembled_text = source_row.assembled_text
+            elif not target_row.assembled_text and source_row.assembled_text:
+                target_row.assembled_text = source_row.assembled_text
+            await session.delete(source_row)
+
+    async def _merge_legacy_telegram_user_state(
+        self,
+        session: AsyncSession,
+        *,
+        source_user_id: str,
+        target_user_id: str,
+    ) -> None:
+        normalized_source_user_id = str(source_user_id or "").strip()
+        normalized_target_user_id = str(target_user_id or "").strip()
+        if (
+            not normalized_source_user_id
+            or not normalized_target_user_id
+            or normalized_source_user_id == normalized_target_user_id
+            or not normalized_source_user_id.isdigit()
+        ):
+            return
+        if await session.get(AionAuthUser, normalized_source_user_id) is not None:
+            return
+
+        await self._merge_profile_identity_state(
+            session,
+            source_user_id=normalized_source_user_id,
+            target_user_id=normalized_target_user_id,
+        )
+        await self._merge_theta_state(
+            session,
+            source_user_id=normalized_source_user_id,
+            target_user_id=normalized_target_user_id,
+        )
+        await self._merge_conclusion_rows(
+            session,
+            source_user_id=normalized_source_user_id,
+            target_user_id=normalized_target_user_id,
+        )
+        await self._merge_relation_rows(
+            session,
+            source_user_id=normalized_source_user_id,
+            target_user_id=normalized_target_user_id,
+        )
+        await self._merge_embedding_rows(
+            session,
+            source_user_id=normalized_source_user_id,
+            target_user_id=normalized_target_user_id,
+        )
+        await self._merge_attention_turn_rows(
+            session,
+            source_user_id=normalized_source_user_id,
+            target_user_id=normalized_target_user_id,
+        )
+        for model in (
+            AionMemory,
+            AionGoal,
+            AionTask,
+            AionPlannedWorkItem,
+            AionGoalProgress,
+            AionGoalMilestone,
+            AionGoalMilestoneHistory,
+            AionReflectionTask,
+            AionSubconsciousProposal,
+        ):
+            await self._reassign_user_rows(
+                session,
+                model=model,
+                source_user_id=normalized_source_user_id,
+                target_user_id=normalized_target_user_id,
+            )
     async def get_recent_episodic_memory(self, user_id: str, limit: int = 5) -> list[dict]:
         return await self.get_recent_for_user(user_id=user_id, limit=limit)
 
@@ -2175,6 +2478,12 @@ class MemoryRepository:
         normalized_chat_id = str(chat_id or "").strip()
         normalized_telegram_user_id = str(telegram_user_id or "").strip() or None
         async with self.session_factory() as session:
+            if normalized_telegram_user_id:
+                await self._merge_legacy_telegram_user_state(
+                    session,
+                    source_user_id=normalized_telegram_user_id,
+                    target_user_id=user_id,
+                )
             conflict_conditions = []
             if normalized_chat_id:
                 conflict_conditions.append(AionProfile.telegram_chat_id == normalized_chat_id)
