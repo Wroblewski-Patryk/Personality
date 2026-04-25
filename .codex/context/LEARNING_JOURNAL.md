@@ -56,7 +56,7 @@ fixes for this repository.
     contract already exists
 - Evidence:
   - `docs/planning/shared-chat-transcript-and-telegram-continuity-plan.md`
-  - `.codex/tasks/PRJ-703-plan-shared-chat-transcript-and-cross-channel-continuity.md`
+  - `.codex/tasks/PRJ-711-plan-shared-chat-transcript-and-cross-channel-continuity.md`
 
 ### 2026-04-25 - Coolify source automation can lag after push even when deploy parity eventually converges
 - Context:

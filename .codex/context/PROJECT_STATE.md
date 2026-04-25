@@ -338,7 +338,7 @@ Last updated: 2026-04-25
   - it should freeze one explicit foreground-awareness contract before any code
     change expands prompts, runtime payloads, or planner heuristics
 - 2026-04-25: fresh product analysis now seeds the next linked-channel chat UX
-  lane through `PRJ-709`:
+  lane through `PRJ-717`:
   - linked Telegram identity continuity is already repaired at the backend
     `user_id` owner level, so the next gap is no longer identity split
   - the remaining product gap is that `/app/chat/history` still exposes

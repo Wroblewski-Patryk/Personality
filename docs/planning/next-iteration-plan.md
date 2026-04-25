@@ -522,9 +522,9 @@ Observed from the current backend and first-party web shell:
 
 ### New Queue
 
-The next linked-channel chat transcript lane is now seeded through `PRJ-709`.
+The next linked-channel chat transcript lane is now seeded through `PRJ-717`.
 
-- `PRJ-703` Plan the shared chat transcript and linked Telegram continuity
+- `PRJ-711` Plan the shared chat transcript and linked Telegram continuity
   lane. (complete)
   - Result:
     - the repo now contains one execution-ready plan in
@@ -534,7 +534,7 @@ The next linked-channel chat transcript lane is now seeded through `PRJ-709`.
   - Validation:
     - planning and source-of-truth cross-review
 
-- `PRJ-704` Shared Chat Transcript Contract Freeze
+- `PRJ-712` Shared Chat Transcript Contract Freeze
   - Result:
     - one explicit contract freezes `/app/chat/history` as a message
       transcript surface instead of a memory-entry surface
@@ -543,7 +543,7 @@ The next linked-channel chat transcript lane is now seeded through `PRJ-709`.
   - Validation:
     - architecture and app-facing contract cross-review
 
-- `PRJ-705` Backend Transcript Projection And Chat History API Update
+- `PRJ-713` Backend Transcript Projection And Chat History API Update
   - Result:
     - backend projects existing episodic turn memory into transcript-safe
       message items for linked Telegram and app chat
@@ -552,7 +552,7 @@ The next linked-channel chat transcript lane is now seeded through `PRJ-709`.
   - Validation:
     - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_memory_repository.py; Pop-Location`
 
-- `PRJ-706` Web Chat Thread Unification And Scroll Behavior
+- `PRJ-714` Web Chat Thread Unification And Scroll Behavior
   - Result:
     - the web chat route renders one backend-owned transcript thread instead of
       split local session messages plus a memory sidebar
@@ -562,7 +562,7 @@ The next linked-channel chat transcript lane is now seeded through `PRJ-709`.
     - `Push-Location .\web; npm test -- --runInBand; Pop-Location`
     - `Push-Location .\web; npm run build; Pop-Location`
 
-- `PRJ-707` Cross-Channel Regression Proof For Linked Telegram And App Chat
+- `PRJ-715` Cross-Channel Regression Proof For Linked Telegram And App Chat
   - Result:
     - tests prove that linked Telegram and first-party app turns appear in the
       same shared transcript continuity
@@ -571,14 +571,14 @@ The next linked-channel chat transcript lane is now seeded through `PRJ-709`.
   - Validation:
     - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py; Pop-Location`
 
-- `PRJ-708` Shared Client Baseline And Product Docs Sync
+- `PRJ-716` Shared Client Baseline And Product Docs Sync
   - Result:
     - mobile baseline and product docs now point at the shared transcript
       contract instead of a memory-list interpretation
   - Validation:
     - doc-and-context sync
 
-- `PRJ-709` Final validation, context sync, and learning closure
+- `PRJ-717` Final validation, context sync, and learning closure
   - Result:
     - full lane validation, context sync, and learning closure are attached to
       the final transcript implementation

@@ -239,27 +239,27 @@ Last updated: 2026-04-25
   - `PRJ-701` Canonical Docs And Testing Guidance Sync
   - `PRJ-702` Final Validation, Context Sync, And Learning Closure
 - fresh product analysis on 2026-04-25 now also seeds the next linked-channel
-  chat transcript lane through `PRJ-709`:
+  chat transcript lane through `PRJ-717`:
   - linked Telegram identity continuity is already repaired, so the next
     product blocker is not identity ownership
   - `/app/chat/history` still returns memory entries and the web shell still
     splits local `sessionMessages` from backend continuity, which prevents the
     product from feeling like one continuous chat across Telegram and app
     surfaces
-- `PRJ-703` is complete:
+- `PRJ-711` is complete:
   - the repo now contains one execution-ready plan for shared chat transcript
     continuity in
     `docs/planning/shared-chat-transcript-and-telegram-continuity-plan.md`
-- `PRJ-704` is now the first `READY` slice:
+- `PRJ-712` is now the first `READY` slice:
   - freeze the shared `/app/chat/history` transcript contract before backend
     and web implementation changes widen the product-facing chat model
 - planned execution order for this lane:
-  - `PRJ-704` Shared Chat Transcript Contract Freeze
-  - `PRJ-705` Backend Transcript Projection And Chat History API Update
-  - `PRJ-706` Web Chat Thread Unification And Scroll Behavior
-  - `PRJ-707` Cross-Channel Regression Proof For Linked Telegram And App Chat
-  - `PRJ-708` Shared Client Baseline And Product Docs Sync
-  - `PRJ-709` Final Validation, Context Sync, And Learning Closure
+  - `PRJ-712` Shared Chat Transcript Contract Freeze
+  - `PRJ-713` Backend Transcript Projection And Chat History API Update
+  - `PRJ-714` Web Chat Thread Unification And Scroll Behavior
+  - `PRJ-715` Cross-Channel Regression Proof For Linked Telegram And App Chat
+  - `PRJ-716` Shared Client Baseline And Product Docs Sync
+  - `PRJ-717` Final Validation, Context Sync, And Learning Closure
 - planned execution order for the completed UX/UI lane was:
   - `PRJ-685` Mobile-First App Shell Baseline
   - `PRJ-686` UI Language Boundary And Locale Switcher Plan

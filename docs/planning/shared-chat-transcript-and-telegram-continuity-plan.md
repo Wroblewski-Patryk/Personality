@@ -63,7 +63,7 @@ This lane must not:
 
 ## Implementation Order
 
-### PRJ-704 Shared Chat Transcript Contract Freeze
+### PRJ-712 Shared Chat Transcript Contract Freeze
 
 Result:
 
@@ -85,7 +85,7 @@ Validation:
 
 - architecture and app-facing contract cross-review
 
-### PRJ-705 Backend Transcript Projection And Chat History API Update
+### PRJ-713 Backend Transcript Projection And Chat History API Update
 
 Result:
 
@@ -102,7 +102,7 @@ Validation:
 
 - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_memory_repository.py; Pop-Location`
 
-### PRJ-706 Web Chat Thread Unification And Scroll Behavior
+### PRJ-714 Web Chat Thread Unification And Scroll Behavior
 
 Result:
 
@@ -120,7 +120,7 @@ Validation:
 - `Push-Location .\web; npm test -- --runInBand; Pop-Location`
 - `Push-Location .\web; npm run build; Pop-Location`
 
-### PRJ-707 Cross-Channel Regression Proof For Linked Telegram And App Chat
+### PRJ-715 Cross-Channel Regression Proof For Linked Telegram And App Chat
 
 Result:
 
@@ -135,7 +135,7 @@ Validation:
 
 - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py; Pop-Location`
 
-### PRJ-708 Shared Client Baseline And Product Docs Sync
+### PRJ-716 Shared Client Baseline And Product Docs Sync
 
 Result:
 
@@ -150,7 +150,7 @@ Validation:
 
 - doc-and-context cross-review
 
-### PRJ-709 Final Validation, Context Sync, And Learning Closure
+### PRJ-717 Final Validation, Context Sync, And Learning Closure
 
 Result:
 
@@ -180,9 +180,9 @@ Validation:
 
 ## Recommended Execution Order
 
-1. `PRJ-704` Shared Chat Transcript Contract Freeze
-2. `PRJ-705` Backend Transcript Projection And Chat History API Update
-3. `PRJ-706` Web Chat Thread Unification And Scroll Behavior
-4. `PRJ-707` Cross-Channel Regression Proof For Linked Telegram And App Chat
-5. `PRJ-708` Shared Client Baseline And Product Docs Sync
-6. `PRJ-709` Final Validation, Context Sync, And Learning Closure
+1. `PRJ-712` Shared Chat Transcript Contract Freeze
+2. `PRJ-713` Backend Transcript Projection And Chat History API Update
+3. `PRJ-714` Web Chat Thread Unification And Scroll Behavior
+4. `PRJ-715` Cross-Channel Regression Proof For Linked Telegram And App Chat
+5. `PRJ-716` Shared Client Baseline And Product Docs Sync
+6. `PRJ-717` Final Validation, Context Sync, And Learning Closure

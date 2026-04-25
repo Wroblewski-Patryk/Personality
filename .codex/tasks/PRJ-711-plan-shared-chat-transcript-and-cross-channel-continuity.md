@@ -1,7 +1,7 @@
 # Task
 
 ## Header
-- ID: PRJ-703
+- ID: PRJ-711
 - Title: Plan the shared chat transcript and linked Telegram continuity lane
 - Status: DONE
 - Owner: Planning Agent
@@ -101,9 +101,9 @@ The detailed execution plan lives in
 
 The seeded implementation lane is:
 
-- `PRJ-704` Shared Chat Transcript Contract Freeze
-- `PRJ-705` Backend Transcript Projection And Chat History API Update
-- `PRJ-706` Web Chat Thread Unification And Scroll Behavior
-- `PRJ-707` Cross-Channel Regression Proof For Linked Telegram And App Chat
-- `PRJ-708` Shared Client Baseline And Product Docs Sync
-- `PRJ-709` Final Validation, Context Sync, And Learning Closure
+- `PRJ-712` Shared Chat Transcript Contract Freeze
+- `PRJ-713` Backend Transcript Projection And Chat History API Update
+- `PRJ-714` Web Chat Thread Unification And Scroll Behavior
+- `PRJ-715` Cross-Channel Regression Proof For Linked Telegram And App Chat
+- `PRJ-716` Shared Client Baseline And Product Docs Sync
+- `PRJ-717` Final Validation, Context Sync, And Learning Closure
