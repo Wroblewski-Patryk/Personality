@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.memory.models import (
     AionAttentionTurn,
+    AionAuthUser,
     AionConclusion,
     AionGoal,
     AionGoalMilestone,
@@ -12,6 +13,7 @@ from app.memory.models import (
     AionGoalProgress,
     AionMemory,
     AionPlannedWorkItem,
+    AionProfile,
     AionRelation,
     AionReflectionTask,
     AionSchedulerCadenceEvidence,
@@ -181,6 +183,93 @@ async def test_memory_repository_persists_attention_turn_contract_store_and_clea
     assert stale_stats["answered_cleanup_candidates"] == 1
     assert cleanup == {"deleted_answered": 1, "deleted_stale": 0}
     assert after_cleanup is None
+
+    await engine.dispose()
+
+
+async def test_memory_repository_resolves_user_profile_by_linked_telegram_identity(tmp_path) -> None:
+    database_path = tmp_path / "memory-telegram-linked-identity.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.create_auth_user(
+        user_id="usr_linked",
+        email="linked@example.com",
+        password_hash="hash",
+    )
+    await repository.set_user_telegram_link(
+        user_id="usr_linked",
+        chat_id="123",
+        telegram_user_id="999",
+        linked_at=datetime.now(timezone.utc),
+    )
+
+    by_chat = await repository.get_user_profile_by_telegram_chat_id("123")
+    by_user = await repository.get_user_profile_by_telegram_user_id("999")
+
+    assert by_chat is not None
+    assert by_chat["user_id"] == "usr_linked"
+    assert by_user is not None
+    assert by_user["user_id"] == "usr_linked"
+
+    await engine.dispose()
+
+
+async def test_memory_repository_reassigns_telegram_link_ownership_to_latest_user(tmp_path) -> None:
+    database_path = tmp_path / "memory-telegram-link-reassign.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    await repository.create_auth_user(
+        user_id="usr_old",
+        email="old@example.com",
+        password_hash="hash",
+    )
+    await repository.create_auth_user(
+        user_id="usr_new",
+        email="new@example.com",
+        password_hash="hash",
+    )
+
+    first_linked_at = datetime.now(timezone.utc) - timedelta(minutes=5)
+    second_linked_at = datetime.now(timezone.utc)
+    await repository.set_user_telegram_link(
+        user_id="usr_old",
+        chat_id="123",
+        telegram_user_id="999",
+        linked_at=first_linked_at,
+    )
+    await repository.set_user_telegram_link(
+        user_id="usr_new",
+        chat_id="123",
+        telegram_user_id="999",
+        linked_at=second_linked_at,
+    )
+
+    old_profile = await repository.get_user_profile("usr_old")
+    new_profile = await repository.get_user_profile("usr_new")
+    resolved_profile = await repository.get_user_profile_by_telegram_chat_id("123")
+
+    assert old_profile is not None
+    assert old_profile["telegram_chat_id"] is None
+    assert old_profile["telegram_user_id"] is None
+    assert old_profile["telegram_linked_at"] is None
+    assert new_profile is not None
+    assert new_profile["telegram_chat_id"] == "123"
+    assert new_profile["telegram_user_id"] == "999"
+    assert resolved_profile is not None
+    assert resolved_profile["user_id"] == "usr_new"
+
+    async with session_factory() as session:
+        auth_users = (await session.execute(select(AionAuthUser))).scalars().all()
+        profiles = (await session.execute(select(AionProfile).order_by(AionProfile.user_id.asc()))).scalars().all()
+
+    assert len(auth_users) == 2
+    assert [row.user_id for row in profiles] == ["usr_new", "usr_old"]
 
     await engine.dispose()
 

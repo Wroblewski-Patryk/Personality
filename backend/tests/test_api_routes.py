@@ -449,6 +449,26 @@ class FakeMemoryRepository:
     async def get_user_profile(self, user_id: str) -> dict | None:
         return dict(self.user_profile)
 
+    async def get_user_profile_by_telegram_chat_id(self, chat_id: str) -> dict | None:
+        candidate = str(self.user_profile.get("telegram_chat_id", "") or "").strip()
+        if candidate and candidate == str(chat_id or "").strip():
+            return {
+                "user_id": self.auth_users_by_email.get("user@example.com")
+                or next(iter(self.auth_users.keys()), "unknown-user"),
+                **dict(self.user_profile),
+            }
+        return None
+
+    async def get_user_profile_by_telegram_user_id(self, telegram_user_id: str) -> dict | None:
+        candidate = str(self.user_profile.get("telegram_user_id", "") or "").strip()
+        if candidate and candidate == str(telegram_user_id or "").strip():
+            return {
+                "user_id": self.auth_users_by_email.get("user@example.com")
+                or next(iter(self.auth_users.keys()), "unknown-user"),
+                **dict(self.user_profile),
+            }
+        return None
+
     async def get_recent_for_user(self, user_id: str, limit: int = 5) -> list[dict]:
         return [dict(item) for item in self.recent_memory[:limit]]
 
@@ -4592,6 +4612,16 @@ def test_event_endpoint_records_processed_telegram_ingress_telemetry() -> None:
     assert telegram["last_ingress"]["reflection_triggered"] is False
 
 
+def test_event_endpoint_uses_raw_telegram_user_id_when_chat_is_not_linked() -> None:
+    client, runtime, _ = _client()
+
+    response = client.post("/event", json=_telegram_update(11, "unlinked telegram identity"))
+
+    assert response.status_code == 200
+    assert runtime.last_event is not None
+    assert runtime.last_event.meta.user_id == "999"
+
+
 def test_set_webhook_uses_request_secret_or_settings_default() -> None:
     client, _, telegram_client = _client(secret="fallback-secret")
 
@@ -5079,6 +5109,40 @@ def test_event_endpoint_confirms_telegram_link_code_and_updates_tools_overview()
     assert telegram["status"] == "provider_ready"
     assert telegram["enabled"] is True
     assert telegram["link_required"] is False
+
+
+def test_event_endpoint_uses_linked_auth_user_id_for_telegram_events_after_linking() -> None:
+    client, runtime, _ = _client(secret="expected-secret")
+    register_response = client.post(
+        "/app/auth/register",
+        json={
+            "email": "user@example.com",
+            "password": "super-secret-123",
+        },
+    )
+    user_id = register_response.json()["user"]["id"]
+    link_start = client.post("/app/tools/telegram/link/start")
+    link_code = link_start.json()["link_code"]
+
+    confirm_response = client.post(
+        "/event",
+        json=_telegram_update(35, f"/link {link_code}"),
+        headers={"X-Telegram-Bot-Api-Secret-Token": "expected-secret"},
+    )
+
+    assert confirm_response.status_code == 200
+
+    response = client.post(
+        "/event",
+        json=_telegram_update(36, "hello after linking"),
+        headers={"X-Telegram-Bot-Api-Secret-Token": "expected-secret"},
+    )
+
+    assert response.status_code == 200
+    assert runtime.last_event is not None
+    assert runtime.last_event.meta.user_id == user_id
+    assert runtime.last_event.source == "telegram"
+    assert runtime.last_event.payload["chat_id"] == 123
 
 
 def test_event_endpoint_rejects_expired_telegram_link_code() -> None:

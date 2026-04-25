@@ -83,6 +83,9 @@ Important current-runtime notes:
   - user-owned toggles exist only where backend contracts support them
   - Telegram linking uses a backend-issued short code and Telegram-side
     confirmation instead of browser-managed provider secrets
+  - once linked, normal Telegram ingress now resolves to the same backend auth
+    identity owner as first-party `/app/*` traffic, so memory continuity no
+    longer splits between linked web and Telegram conversations
 
 ## Runtime Stage Ownership
 

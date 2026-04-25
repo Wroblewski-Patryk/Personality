@@ -173,6 +173,18 @@ Last updated: 2026-04-25
     - add end-to-end regression coverage for shared UI+Telegram memory
       continuity
     - sync task/context truth and record the pitfall in the learning journal
+- 2026-04-25: `PRJ-681..PRJ-684` are complete:
+  - linked Telegram ingress now resolves to the same backend auth `user_id`
+    that first-party `/app/*` traffic uses after the user completes the
+    linking flow
+  - the runtime keeps the existing raw Telegram sender fallback only for
+    unlinked traffic, preserving backward-compatible behavior for chats that
+    were never linked
+  - Telegram relinking now transfers `telegram_chat_id` and
+    `telegram_user_id` ownership to the latest authenticated user instead of
+    leaving multiple profiles attached to the same Telegram identity
+  - targeted route, event-normalization, and repository regressions now prove
+    the repaired linked-identity continuity contract
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work

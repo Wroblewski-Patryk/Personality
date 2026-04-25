@@ -198,6 +198,23 @@ Why this order:
   - Validation:
     - doc-and-context sync
 
+Queue update (2026-04-25):
+
+- `PRJ-681..PRJ-684` are now complete.
+- linked Telegram ingress now resolves to the linked backend auth `user_id`
+  before foreground runtime execution instead of staying on raw Telegram
+  sender identity after the user-visible link flow.
+- unlinked Telegram ingress keeps the existing raw Telegram fallback.
+- relinking now transfers Telegram identity ownership to the latest
+  authenticated user so the profile-owned link model remains one-to-one at
+  runtime.
+- targeted route, repository, and event-normalization regressions now pin the
+  same continuity contract.
+- the queue seeded through `PRJ-684` is now complete:
+  - no seeded `READY` slice remains in this lane
+  - any further Telegram or account-linking work should come from fresh
+    analysis rather than from this repair backlog
+
 ## Planned On 2026-04-24 For Core V1 Time-Aware Planning
 
 The previous final no-UI `v1` closure lane assumed that organizer-tool

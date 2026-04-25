@@ -776,21 +776,7 @@ class MemoryRepository:
         async with self.session_factory() as session:
             row = await session.get(AionProfile, user_id)
 
-        if row is None:
-            return None
-
-        return {
-            "user_id": row.user_id,
-            "preferred_language": row.preferred_language,
-            "language_confidence": row.language_confidence,
-            "language_source": row.language_source,
-            "telegram_chat_id": row.telegram_chat_id,
-            "telegram_user_id": row.telegram_user_id,
-            "telegram_link_code": row.telegram_link_code,
-            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
-            "telegram_linked_at": row.telegram_linked_at,
-            "updated_at": row.updated_at,
-        }
+        return self._serialize_profile(row)
 
     async def get_user_profile_by_telegram_link_code(self, link_code: str) -> dict | None:
         normalized_code = str(link_code or "").strip().upper()
@@ -804,20 +790,37 @@ class MemoryRepository:
             )
             result = await session.execute(statement)
             row = result.scalar_one_or_none()
-        if row is None:
+        return self._serialize_profile(row)
+
+    async def get_user_profile_by_telegram_chat_id(self, chat_id: str) -> dict | None:
+        normalized_chat_id = str(chat_id or "").strip()
+        if not normalized_chat_id:
             return None
-        return {
-            "user_id": row.user_id,
-            "preferred_language": row.preferred_language,
-            "language_confidence": row.language_confidence,
-            "language_source": row.language_source,
-            "telegram_chat_id": row.telegram_chat_id,
-            "telegram_user_id": row.telegram_user_id,
-            "telegram_link_code": row.telegram_link_code,
-            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
-            "telegram_linked_at": row.telegram_linked_at,
-            "updated_at": row.updated_at,
-        }
+        async with self.session_factory() as session:
+            statement = (
+                select(AionProfile)
+                .where(AionProfile.telegram_chat_id == normalized_chat_id)
+                .order_by(AionProfile.updated_at.desc())
+                .limit(1)
+            )
+            result = await session.execute(statement)
+            row = result.scalar_one_or_none()
+        return self._serialize_profile(row)
+
+    async def get_user_profile_by_telegram_user_id(self, telegram_user_id: str) -> dict | None:
+        normalized_telegram_user_id = str(telegram_user_id or "").strip()
+        if not normalized_telegram_user_id:
+            return None
+        async with self.session_factory() as session:
+            statement = (
+                select(AionProfile)
+                .where(AionProfile.telegram_user_id == normalized_telegram_user_id)
+                .order_by(AionProfile.updated_at.desc())
+                .limit(1)
+            )
+            result = await session.execute(statement)
+            row = result.scalar_one_or_none()
+        return self._serialize_profile(row)
 
     async def get_auth_user_by_id(self, user_id: str) -> dict | None:
         async with self.session_factory() as session:
@@ -2172,6 +2175,23 @@ class MemoryRepository:
         normalized_chat_id = str(chat_id or "").strip()
         normalized_telegram_user_id = str(telegram_user_id or "").strip() or None
         async with self.session_factory() as session:
+            conflict_conditions = []
+            if normalized_chat_id:
+                conflict_conditions.append(AionProfile.telegram_chat_id == normalized_chat_id)
+            if normalized_telegram_user_id:
+                conflict_conditions.append(AionProfile.telegram_user_id == normalized_telegram_user_id)
+            if conflict_conditions:
+                statement = select(AionProfile).where(
+                    AionProfile.user_id != user_id,
+                    or_(*conflict_conditions),
+                )
+                result = await session.execute(statement)
+                for conflicting_row in result.scalars().all():
+                    conflicting_row.telegram_chat_id = None
+                    conflicting_row.telegram_user_id = None
+                    conflicting_row.telegram_linked_at = None
+                    conflicting_row.telegram_link_code = None
+                    conflicting_row.telegram_link_code_issued_at = None
             row = await session.get(AionProfile, user_id)
             if row is None:
                 row = AionProfile(
@@ -2188,18 +2208,7 @@ class MemoryRepository:
             row.telegram_link_code_issued_at = None
             await session.commit()
             await session.refresh(row)
-        return {
-            "user_id": row.user_id,
-            "preferred_language": row.preferred_language,
-            "language_confidence": row.language_confidence,
-            "language_source": row.language_source,
-            "telegram_chat_id": row.telegram_chat_id,
-            "telegram_user_id": row.telegram_user_id,
-            "telegram_link_code": row.telegram_link_code,
-            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
-            "telegram_linked_at": row.telegram_linked_at,
-            "updated_at": row.updated_at,
-        }
+        return self._serialize_profile(row) or {}
 
     async def upsert_conclusion(
         self,
@@ -3228,6 +3237,22 @@ class MemoryRepository:
             "last_login_at": row.last_login_at,
             "updated_at": row.updated_at,
             "created_at": row.created_at,
+        }
+
+    def _serialize_profile(self, row: AionProfile | None) -> dict | None:
+        if row is None:
+            return None
+        return {
+            "user_id": row.user_id,
+            "preferred_language": row.preferred_language,
+            "language_confidence": row.language_confidence,
+            "language_source": row.language_source,
+            "telegram_chat_id": row.telegram_chat_id,
+            "telegram_user_id": row.telegram_user_id,
+            "telegram_link_code": row.telegram_link_code,
+            "telegram_link_code_issued_at": row.telegram_link_code_issued_at,
+            "telegram_linked_at": row.telegram_linked_at,
+            "updated_at": row.updated_at,
         }
 
     def _serialize_auth_session(self, row: AionAuthSession | None) -> dict | None:

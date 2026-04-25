@@ -106,6 +106,27 @@ Last updated: 2026-04-25
   - `PRJ-682` Runtime Identity Resolution Implementation
   - `PRJ-683` Shared Memory Continuity Regression Proof
   - `PRJ-684` Context, Docs, And Learning Sync
+- implementation progress on 2026-04-25:
+  - `PRJ-681` is complete:
+    - the linked Telegram identity-resolution contract is now frozen around
+      the existing profile-owned link fields, and relinking now transfers chat
+      ownership to the latest authenticated user instead of leaving ambiguous
+      multi-owner linkage
+  - `PRJ-682` is complete:
+    - normal Telegram ingress now resolves linked backend auth identity before
+      event normalization, so the foreground runtime uses the same memory owner
+      as `/app/chat/message` after linking
+    - unlinked Telegram traffic keeps the raw Telegram identity fallback
+  - `PRJ-683` is complete:
+    - backend regressions now pin linked Telegram-to-auth identity reuse,
+      raw-user fallback for unlinked Telegram ingress, Telegram identity lookup
+      by linked profile fields, and relink ownership transfer in the memory
+      repository
+  - `PRJ-684` is complete:
+    - task board, project state, overview, next-iteration plan, and learning
+      journal now describe the same linked-identity continuity repair
+  - the linked UI-Telegram identity continuity lane seeded through `PRJ-684`
+    is now complete
 
 ## Agent Workflow Refresh (2026-04-18)
 

@@ -44,7 +44,7 @@ def normalize_event(
             timestamp=datetime.now(timezone.utc),
             payload=payload,
             meta=EventMeta(
-                user_id=_normalize_user_id(user.get("id")),
+                user_id=_normalize_user_id(default_user_id or user.get("id")),
                 trace_id=str(uuid4()),
             ),
         )

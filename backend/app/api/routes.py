@@ -270,6 +270,35 @@ def _memory_repository_from_request(request: Request) -> MemoryRepository:
     return request.app.state.memory_repository  # type: ignore[return-value]
 
 
+async def _resolve_linked_telegram_user_id(
+    *,
+    payload: dict[str, Any],
+    request: Request,
+) -> str | None:
+    message = payload.get("message") if isinstance(payload.get("message"), dict) else {}
+    chat = message.get("chat") if isinstance(message.get("chat"), dict) else {}
+    sender = message.get("from") if isinstance(message.get("from"), dict) else {}
+    memory_repository = _memory_repository_from_request(request)
+
+    chat_id = str(chat.get("id", "") or "").strip()
+    if chat_id:
+        profile = await memory_repository.get_user_profile_by_telegram_chat_id(chat_id)
+        if isinstance(profile, dict):
+            linked_user_id = str(profile.get("user_id", "") or "").strip()
+            if linked_user_id:
+                return linked_user_id
+
+    telegram_user_id = str(sender.get("id", "") or "").strip()
+    if telegram_user_id:
+        profile = await memory_repository.get_user_profile_by_telegram_user_id(telegram_user_id)
+        if isinstance(profile, dict):
+            linked_user_id = str(profile.get("user_id", "") or "").strip()
+            if linked_user_id:
+                return linked_user_id
+
+    return None
+
+
 def _reflection_worker_from_request(request: Request) -> ReflectionWorker:
     return request.app.state.reflection_worker  # type: ignore[return-value]
 
@@ -854,9 +883,13 @@ async def _handle_event_request(
     if include_debug:
         _enforce_debug_access(request=request, settings=settings)
 
+    default_user_id = request.headers.get("X-AION-User-Id")
+    if looks_like_telegram:
+        default_user_id = await _resolve_linked_telegram_user_id(payload=payload, request=request)
+
     event = normalize_event(
         payload,
-        default_user_id=request.headers.get("X-AION-User-Id"),
+        default_user_id=default_user_id,
     )
     attention_coordinator = _attention_coordinator_from_request(request)
     turn_decision = await attention_coordinator.prepare_event(event)
