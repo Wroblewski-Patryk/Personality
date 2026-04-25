@@ -55,6 +55,35 @@ mobile foundation lane.
    - near-term implementation should stay on `web + backend`
    - the mobile scaffold should restart later using this frozen baseline
 
+## First-Party UI Language Boundary (2026-04-25)
+
+Fresh product direction now resolves one UX-sensitive language split for the
+first-party web and future mobile clients.
+
+1. approved UI-language direction
+   - the product may expose one explicit GUI language selector for the
+     first-party shell
+   - that selector controls interface copy only
+   - the selector should use language label plus flag icon in the user-facing
+     UI pattern
+2. approved conversation-language direction
+   - the language used when talking with the personality remains runtime-owned
+   - it continues to be chosen live from current interaction, continuity, and
+     learned signals instead of a manual UI setting
+3. required architecture constraint
+   - do not overload the current conversation-language continuity field as the
+     new GUI language field
+   - if implementation needs a persisted UI locale, it should use a separate
+     backend-owned app-facing setting
+4. approved settings cleanup direction
+   - `response_style` and `collaboration_preference` should leave the
+     product-facing settings form
+   - those behaviors remain runtime-shaped from history, time, and interaction
+     context rather than user-managed static controls
+5. current execution direction
+   - the next UX/UI planning lane should freeze this split before route-level
+     settings redesign
+
 ## Multimodal Telegram And App Boundary (2026-04-25)
 
 Fresh user-driven analysis now highlights a real product gap just below the

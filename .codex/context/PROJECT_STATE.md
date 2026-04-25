@@ -186,7 +186,7 @@ Last updated: 2026-04-25
   - targeted route, event-normalization, and repository regressions now prove
     the repaired linked-identity continuity contract
 - 2026-04-25: fresh browser UX/UI audit of the current first-party web shell
-  now seeds the next product-facing lane through `PRJ-690`:
+  now seeds the next product-facing lane through `PRJ-691`:
   - login is visually coherent, but the authenticated shell still repeats too
     much hero and account chrome above the real task area
   - `Chat` is the clearest product route, yet still does not prioritize the
@@ -199,13 +199,24 @@ Last updated: 2026-04-25
     and raw JSON payloads share one product-facing route
   - `Tools` and `Personality` therefore are not yet ready to act as the
     interaction baseline for a later Expo mobile client
+  - product direction now also freezes one explicit language split for this
+    lane:
+    - GUI language must become its own first-party shell setting
+    - conversation language remains runtime-owned and selected live from
+      interaction and continuity
+    - the current conversation-language field must not be silently repurposed
+      as UI locale
+  - product-facing settings should also stop exposing `response style` and
+    `collaboration preference` as manual user controls because those behaviors
+    should remain runtime-shaped
   - the next queue is intentionally ordered as:
     - `PRJ-685` Mobile-First App Shell Baseline
-    - `PRJ-686` Chat Experience And Composer Priority
-    - `PRJ-687` Settings Simplification And Preference UX
-    - `PRJ-688` Tools Information Architecture And Actionability
-    - `PRJ-689` Personality Productization And Inspector Split
-    - `PRJ-690` Visual System Hardening, Responsive Proof, And Context Sync
+    - `PRJ-686` UI Language Boundary And Locale Switcher Plan
+    - `PRJ-687` Chat Experience And Composer Priority
+    - `PRJ-688` Settings Simplification And Runtime-Shaped Preference Cleanup
+    - `PRJ-689` Tools Information Architecture And Actionability
+    - `PRJ-690` Personality Productization And Inspector Split
+    - `PRJ-691` Visual System Hardening, Responsive Proof, And Context Sync
   - the canonical execution plan for this lane now lives in
     `docs/planning/web-ux-ui-productization-plan.md`
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one

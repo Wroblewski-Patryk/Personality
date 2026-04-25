@@ -56,6 +56,37 @@ fixes for this repository.
   - `.codex/artifacts/ux-audit-2026-04-25/`
   - `web/src/App.tsx`
 
+### 2026-04-25 - UI locale must stay separate from conversation language continuity
+- Context:
+  - fresh UX/UI planning for the first-party web shell added a GUI-language
+    selector requirement while the runtime already has explicit language
+    continuity ownership for live conversation behavior.
+- Symptom:
+  - product planning can drift toward reusing one existing language field for
+    both shell localization and conversation language, which would blur two
+    different responsibilities.
+- Root cause:
+  - the current settings flow already contains a language selector, so it is
+    tempting to repurpose that field without preserving the runtime-owned
+    language-continuity boundary.
+- Guardrail:
+  - first-party UI localization must use its own backend-owned setting and
+    must never silently replace or redefine the runtime-owned conversation
+    language path.
+- Preferred pattern:
+  - keep GUI language as interface-only state
+  - keep conversation language live and runtime-shaped from interaction,
+    memory, and current context
+  - explain the difference explicitly in product copy
+- Avoid:
+  - overloading one language field with both UI-locale and conversation
+    semantics
+  - exposing manual response-style or collaboration-style controls when the
+    intended product behavior is runtime-shaped
+- Evidence:
+  - `docs/planning/web-ux-ui-productization-plan.md`
+  - `docs/planning/open-decisions.md`
+
 ### 2026-04-25 - Linked channels must change runtime identity resolution, not only profile status
 - Context:
   - fresh analysis of the first Telegram linking lane showed a user-visible

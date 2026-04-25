@@ -128,12 +128,17 @@ Last updated: 2026-04-25
   - the linked UI-Telegram identity continuity lane seeded through `PRJ-684`
     is now complete
 - fresh browser UX/UI analysis on 2026-04-25 now seeds the next
-  product-facing web lane through `PRJ-690`:
+  product-facing web lane through `PRJ-691`:
   - freeze one mobile-first authenticated app-shell baseline before route
     redesign splits the layout in different directions
+  - freeze the UI-language boundary before changing settings UX:
+    - GUI language is interface-only
+    - conversation language remains runtime-owned and live
+    - the current conversation-language setting must not be overloaded as UI locale
   - make `Chat` the first product-quality route with conversation and composer
     priority
-  - simplify `Settings` into a shorter preference flow
+  - simplify `Settings` into a shorter preference flow while removing manual
+    `response style` and `collaboration preference` controls
   - turn `Tools` from inspection-heavy backend truth into status-plus-action
     product cards
   - split `Personality` product insight from raw inspector posture
@@ -145,11 +150,12 @@ Last updated: 2026-04-25
     pattern
 - planned execution order for this lane:
   - `PRJ-685` Mobile-First App Shell Baseline
-  - `PRJ-686` Chat Experience And Composer Priority
-  - `PRJ-687` Settings Simplification And Preference UX
-  - `PRJ-688` Tools Information Architecture And Actionability
-  - `PRJ-689` Personality Productization And Inspector Split
-  - `PRJ-690` Visual System Hardening, Responsive Proof, And Context Sync
+  - `PRJ-686` UI Language Boundary And Locale Switcher Plan
+  - `PRJ-687` Chat Experience And Composer Priority
+  - `PRJ-688` Settings Simplification And Runtime-Shaped Preference Cleanup
+  - `PRJ-689` Tools Information Architecture And Actionability
+  - `PRJ-690` Personality Productization And Inspector Split
+  - `PRJ-691` Visual System Hardening, Responsive Proof, And Context Sync
 
 ## Agent Workflow Refresh (2026-04-18)
 

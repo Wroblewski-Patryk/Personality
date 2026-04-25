@@ -239,6 +239,12 @@ Observed from browser review across `login`, `chat`, `settings`, `tools`, and
   backend-facing status wording as primary content
 - `Personality` still behaves like a raw inspector because summary cards and
   raw JSON payloads share the same primary route
+- the product also needs one explicit split between:
+  - UI language for the shell
+  - live conversation language owned by runtime continuity and current-turn context
+- the current product-facing settings flow should stop exposing
+  `response style` and `collaboration preference` as manual controls because
+  those behaviors should remain runtime-shaped
 - `Tools` and `Personality` are not yet mobile-ready enough to act as the
   future mobile interaction baseline
 - the current shell copy still leans too heavily on backend and contract
@@ -246,25 +252,28 @@ Observed from browser review across `login`, `chat`, `settings`, `tools`, and
 
 ### New Queue
 
-The next UX/UI queue is now seeded through `PRJ-690`.
+The next UX/UI queue is now seeded through `PRJ-691`.
 
 New groups:
 
 - `PRJ-685` Mobile-First App Shell Baseline
-- `PRJ-686` Chat Experience And Composer Priority
-- `PRJ-687` Settings Simplification And Preference UX
-- `PRJ-688` Tools Information Architecture And Actionability
-- `PRJ-689` Personality Productization And Inspector Split
-- `PRJ-690` Visual System Hardening, Responsive Proof, And Context Sync
+- `PRJ-686` UI Language Boundary And Locale Switcher Plan
+- `PRJ-687` Chat Experience And Composer Priority
+- `PRJ-688` Settings Simplification And Runtime-Shaped Preference Cleanup
+- `PRJ-689` Tools Information Architecture And Actionability
+- `PRJ-690` Personality Productization And Inspector Split
+- `PRJ-691` Visual System Hardening, Responsive Proof, And Context Sync
 
 Why this order:
 
 - the authenticated app shell must be frozen first so route redesign does not
   pull navigation and account chrome in different directions
+- the product must freeze the UI-language boundary before changing settings UX,
+  because conversation language already belongs to the runtime cognition path
 - `Chat` should become the first product-quality route because it is the core
   user value and the clearest mobile baseline
-- `Settings` should become shorter and more task-focused before broader visual
-  hardening
+- `Settings` should then become shorter and more task-focused, removing manual
+  style-preference fields and adding interface-only language selection posture
 - `Tools` and `Personality` need a second-stage redesign because both still
   expose too much backend-inspector posture to the user
 - final visual and copy hardening should happen only after the route-level

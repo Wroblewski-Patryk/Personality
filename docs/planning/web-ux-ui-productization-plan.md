@@ -17,6 +17,10 @@ The target posture is:
 This plan does not approve architecture drift.
 It keeps the current backend-owned `/app/*` contract boundary and focuses on
 product-facing layout, information architecture, responsive behavior, and copy.
+It also freezes one explicit split between:
+
+- UI language for the web shell
+- conversation language chosen live by the personality
 
 ## Audit Evidence
 
@@ -64,6 +68,13 @@ product-facing layout, information architecture, responsive behavior, and copy.
    - contract-oriented labels
 9. The current shell lacks a dedicated mobile navigation model suitable for a
    future mobile app baseline.
+10. `Settings` currently exposes fields that should not stay user-facing
+    product controls:
+   - `response style`
+   - `collaboration preference`
+11. The current language selector is not yet safe as a product-localization
+    control because the product needs one explicit split between UI locale and
+    conversation language continuity.
 
 ## Product Direction Guardrails
 
@@ -74,19 +85,23 @@ product-facing layout, information architecture, responsive behavior, and copy.
 - prefer progressive disclosure over always-visible technical detail
 - treat `mobile -> tablet -> desktop` as the primary responsive sequence
 - keep every slice testable and visually auditable with screenshots
+- never overload conversation-language state as UI locale state
+- keep response style and collaboration preference as runtime-shaped behavior,
+  not manual settings inputs
 
 ## Execution Queue
 
-The next web UX/UI queue is seeded through `PRJ-690`.
+The next web UX/UI queue is seeded through `PRJ-691`.
 
 Execution order:
 
 1. `PRJ-685` Mobile-First App Shell Baseline
-2. `PRJ-686` Chat Experience And Composer Priority
-3. `PRJ-687` Settings Simplification And Preference UX
-4. `PRJ-688` Tools Information Architecture And Actionability
-5. `PRJ-689` Personality Productization And Inspector Split
-6. `PRJ-690` Visual System Hardening, Responsive Proof, And Context Sync
+2. `PRJ-686` UI Language Boundary And Locale Switcher Plan
+3. `PRJ-687` Chat Experience And Composer Priority
+4. `PRJ-688` Settings Simplification And Runtime-Shaped Preference Cleanup
+5. `PRJ-689` Tools Information Architecture And Actionability
+6. `PRJ-690` Personality Productization And Inspector Split
+7. `PRJ-691` Visual System Hardening, Responsive Proof, And Context Sync
 
 ## Tasks
 
@@ -163,10 +178,86 @@ This slice should define the shell before deeper route-specific redesign starts.
 
 ## Header
 - ID: PRJ-686
+- Title: Freeze the UI-language boundary and localization switcher plan
+- Status: BACKLOG
+- Owner: Planning Agent
+- Depends on: PRJ-685
+- Priority: P0
+
+## Context
+The current `Settings` route exposes a language selector through the current
+user settings posture, but the product now needs one explicit distinction:
+
+- GUI language for the web shell
+- conversation language chosen live by the personality from context, memory,
+  and current interaction
+
+The current runtime architecture already gives language-continuity ownership to
+the conversational path, so the web client must not silently repurpose that
+field into UI locale.
+
+## Goal
+Freeze one product-safe localization plan:
+
+- one explicit UI-language field for the first-party shell
+- no semantic overlap with conversation language
+- select control with flag icon plus language label
+- copy that explains the selector controls only the interface
+
+## Constraints
+- use existing systems and approved mechanisms
+- do not introduce new structures without approval
+- do not implement workarounds
+- do not duplicate logic
+
+## Definition of Done
+- [ ] One explicit UI-language contract is chosen for web/mobile product surfaces.
+- [ ] The plan states that conversation language remains runtime-owned and live.
+- [ ] The locale-switcher posture is described for settings UX, including flag icon treatment.
+
+## Forbidden
+- new systems without approval
+- duplicated logic or parallel implementations of the same contract
+- temporary bypasses, hacks, or workaround-only paths
+- architecture changes without explicit approval
+
+## Validation Evidence
+- Tests: n/a planning slice
+- Manual checks: settings audit screenshots and current field review
+- Screenshots/logs: `.codex/artifacts/ux-audit-2026-04-25/`
+- High-risk checks: confirm no plan reuses conversation-language continuity as UI locale storage
+
+## Architecture Evidence (required for architecture-impacting tasks)
+- Architecture source reviewed: `docs/architecture/02_architecture.md`,
+  `docs/architecture/16_agent_contracts.md`
+- Fits approved architecture: yes
+- Mismatch discovered: no
+- Decision required from user: no
+- Approval reference if architecture changed: n/a
+- Follow-up architecture doc updates: none expected
+
+## Review Checklist (mandatory)
+- [ ] Architecture alignment confirmed.
+- [ ] Existing systems were reused where applicable.
+- [ ] No workaround paths were introduced.
+- [ ] No logic duplication was introduced.
+- [ ] Definition of Done evidence is attached.
+- [ ] Relevant validations were run.
+- [ ] Docs or context were updated if repository truth changed.
+- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+
+## Notes
+The implementation slice should introduce an explicit UI-locale field instead
+of overloading the current conversation-language preference.
+
+### Task
+
+## Header
+- ID: PRJ-687
 - Title: Redesign chat for mobile-first conversation priority
 - Status: BACKLOG
 - Owner: Frontend Builder
-- Depends on: PRJ-685
+- Depends on: PRJ-685, PRJ-686
 - Priority: P0
 
 ## Context
@@ -228,11 +319,11 @@ Treat this route as the design reference for the later mobile client.
 ### Task
 
 ## Header
-- ID: PRJ-687
-- Title: Simplify settings into an editable preference experience
+- ID: PRJ-688
+- Title: Simplify settings and remove manual runtime-style controls
 - Status: BACKLOG
 - Owner: Frontend Builder
-- Depends on: PRJ-685
+- Depends on: PRJ-685, PRJ-686
 - Priority: P1
 
 ## Context
@@ -240,9 +331,19 @@ Treat this route as the design reference for the later mobile client.
 separate backend snapshot cards, which increases page length and duplicates
 information.
 
+The route also still exposes controls that should not remain user-facing:
+
+- `response style`
+- `collaboration preference`
+
+Those behaviors should be shaped by runtime inference, history, time,
+interaction patterns, and later adaptive outputs rather than by static
+settings form fields.
+
 ## Goal
 Turn `Settings` into a short, task-oriented preference flow with clear sections,
-clear save behavior, and no repeated backend-inspector posture.
+clear save behavior, no repeated backend-inspector posture, and one explicit
+UI-language selector that does not control conversation language.
 
 ## Constraints
 - use existing systems and approved mechanisms
@@ -253,6 +354,8 @@ clear save behavior, and no repeated backend-inspector posture.
 ## Definition of Done
 - [ ] The editable preference form is primary.
 - [ ] Repeated backend snapshot duplication is reduced or removed from the main flow.
+- [ ] `response style` and `collaboration preference` are removed from the product-facing settings form.
+- [ ] UI-language selection is described as interface-only and uses a flag icon plus label pattern.
 - [ ] Save-state, dirty-state, and completion feedback are visually clear.
 
 ## Forbidden
@@ -265,7 +368,7 @@ clear save behavior, and no repeated backend-inspector posture.
 - Tests: targeted web route coverage if interaction states change
 - Manual checks: mobile, tablet, desktop route screenshots plus save-state check
 - Screenshots/logs: updated route captures for `/settings`
-- High-risk checks: keep `/app/me` and `PATCH /app/me/settings` as the only source of truth
+- High-risk checks: keep `/app/me` and `PATCH /app/me/settings` as the only source of truth until an explicit UI-locale contract lands
 
 ## Architecture Evidence (required for architecture-impacting tasks)
 - Architecture source reviewed: `docs/architecture/16_agent_contracts.md`
@@ -292,11 +395,11 @@ admin form.
 ### Task
 
 ## Header
-- ID: PRJ-688
+- ID: PRJ-689
 - Title: Reframe tools into status-plus-action product cards
 - Status: BACKLOG
 - Owner: Frontend Builder
-- Depends on: PRJ-685
+- Depends on: PRJ-685, PRJ-686
 - Priority: P0
 
 ## Context
@@ -359,11 +462,11 @@ inspection-heavy dashboard.
 ### Task
 
 ## Header
-- ID: PRJ-689
+- ID: PRJ-690
 - Title: Split personality insights from raw inspector payloads
 - Status: BACKLOG
 - Owner: Frontend Builder
-- Depends on: PRJ-685
+- Depends on: PRJ-685, PRJ-686
 - Priority: P0
 
 ## Context
@@ -424,11 +527,11 @@ inspection.
 ### Task
 
 ## Header
-- ID: PRJ-690
+- ID: PRJ-691
 - Title: Harden the visual system and prove responsive product quality
 - Status: BACKLOG
 - Owner: Product Docs Agent
-- Depends on: PRJ-686, PRJ-687, PRJ-688, PRJ-689
+- Depends on: PRJ-687, PRJ-688, PRJ-689, PRJ-690
 - Priority: P1
 
 ## Context
