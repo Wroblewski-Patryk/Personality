@@ -20,31 +20,41 @@ continuity, or decision integrity across time.
 Primary command:
 
 ```powershell
-.\.venv\Scripts\python -m pytest -q
+Push-Location .\backend
+..\.venv\Scripts\python -m pytest -q
+Pop-Location
+```
+
+Web build command:
+
+```powershell
+Push-Location .\web
+npm run build
+Pop-Location
 ```
 
 Behavior-validation command (system-debug + scenario harness baseline):
 
 ```powershell
-.\scripts\run_behavior_validation.ps1 -GateMode operator
+.\backend\scripts\run_behavior_validation.ps1 -GateMode operator
 ```
 
 CI gate behavior-validation command (artifact + fail-fast gate posture):
 
 ```powershell
-.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json
+.\backend\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json
 ```
 
 Artifact-input gate evaluation command (CI split-stage, no pytest rerun):
 
 ```powershell
-.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactInputPath artifacts/behavior_validation/report.json -ArtifactPath artifacts/behavior_validation/report.gate.json
+.\backend\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactInputPath artifacts/behavior_validation/report.json -ArtifactPath artifacts/behavior_validation/report.gate.json
 ```
 
 Incident-evidence bundle export helper:
 
 ```powershell
-.\.venv\Scripts\python .\scripts\export_incident_evidence_bundle.py --base-url http://localhost:8000
+.\.venv\Scripts\python .\backend\scripts\export_incident_evidence_bundle.py --base-url http://localhost:8000
 ```
 
 ## Testing Layers For This Repo
@@ -80,6 +90,10 @@ Incident-evidence bundle export helper:
 - API contract changes:
   - add endpoint-level coverage
   - confirm the returned serialized shape still matches expectations
+- Web client shell changes:
+  - keep `web/` as a thin client over backend-owned contracts
+  - require at least one successful production build
+  - when deploy parity is affected, extend release smoke or deployment-script coverage
 - Memory or database changes:
   - add repository or integration coverage
   - verify startup table creation or migration behavior
@@ -126,6 +140,7 @@ For meaningful repo changes, leave behind:
 - for deployment-trigger or release-smoke changes, script regression evidence
   from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py`
+  - `.\web\npm run build`
 - for observability-export and incident-evidence slices, regression and gate
   evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_observability_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`

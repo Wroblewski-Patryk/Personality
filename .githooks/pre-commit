@@ -18,10 +18,13 @@ fi
 
 echo "[pre-commit] running Personality quality gates"
 
-if [ -n "$PYTHON_BIN" ] && [ -f "pyproject.toml" ]; then
-  "$PYTHON_BIN" -m pytest -q
+if [ -n "$PYTHON_BIN" ] && [ -f "backend/pyproject.toml" ]; then
+  (
+    cd backend
+    "$PYTHON_BIN" -m pytest -q
+  )
 else
-  echo "[pre-commit] python or pyproject.toml not found, skipping pytest gate"
+  echo "[pre-commit] python or backend/pyproject.toml not found, skipping pytest gate"
 fi
 
 echo "[pre-commit] quality gates passed"

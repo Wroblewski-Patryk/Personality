@@ -12,6 +12,7 @@ This repository uses a two-layer documentation model:
 - `architecture/02_architecture.md` - canonical cognitive architecture
 - `architecture/15_runtime_flow.md` - canonical runtime order
 - `architecture/16_agent_contracts.md` - canonical stage contracts
+- `../backend/README.md` - backend workspace entrypoint for runtime commands
 
 If an older numbered architecture doc ever reads differently from `02`, `15`,
 and `16`, treat `02/15/16` as canonical and update the older file instead of
@@ -78,6 +79,12 @@ near-term coordination direction without rewriting the canonical architecture.
 - `planning/open-decisions.md`
 - `planning/next-iteration-plan.md`
 - `planning/v2-product-entry-plan.md`
+
+## Product Workspaces
+
+- `../backend/` - current production runtime
+- `../web/` - browser client workspace
+- `../mobile/` - future mobile client placeholder
 
 Use these files for explicit follow-up on dual-loop coordination, attention
 gating, batched conversation handling, and future external productivity

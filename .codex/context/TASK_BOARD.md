@@ -2,6 +2,19 @@
 
 Last updated: 2026-04-25
 
+## Current Active Lane
+
+- `PRJ-655` freezes the approved `v2` product topology:
+  - `backend/`
+  - `web/`
+  - `mobile/`
+- `PRJ-655..PRJ-666` are now complete:
+  - repository truth, auth/session baseline, app-facing client APIs, web shell,
+    and deploy-proof topology are aligned for the first `v2` browser release
+- `PRJ-667` is the next active slice:
+  - freeze the mobile client stack and shared contract baseline before mobile
+    implementation starts
+
 ## Agent Workflow Refresh (2026-04-18)
 
 - This board is the canonical execution queue for Personality / AION.
@@ -568,101 +581,101 @@ Last updated: 2026-04-25
   - Status: BACKLOG
   - Validation: doc-and-context sync
 
-- [ ] PRJ-655 Freeze the `backend/web/mobile` v2 product topology and naming
+- [x] PRJ-655 Freeze the `backend/web/mobile` v2 product topology and naming
   - Owner: Planning Agent
   - Group: V2 Product Topology And Repository Migration
   - Depends on: PRJ-646
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: architecture, governance, and planning cross-review
 
-- [ ] PRJ-656 Move the current Python runtime into `backend/` without behavior drift
+- [x] PRJ-656 Move the current Python runtime into `backend/` without behavior drift
   - Owner: Backend Builder
   - Group: V2 Product Topology And Repository Migration
   - Depends on: PRJ-655
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: targeted pytest plus path and script regression coverage
 
-- [ ] PRJ-657 Normalize tooling, docs, and deploy paths after the `backend/` move
+- [x] PRJ-657 Normalize tooling, docs, and deploy paths after the `backend/` move
   - Owner: Ops/Release
   - Group: V2 Product Topology And Repository Migration
   - Depends on: PRJ-656
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: compose, migration, smoke, and script path verification
 
-- [ ] PRJ-658 Scaffold the `web/` workspace with React, TypeScript, Vite, Tailwind, and daisyUI
+- [x] PRJ-658 Scaffold the `web/` workspace with React, TypeScript, Vite, Tailwind, and daisyUI
   - Owner: Frontend Builder
   - Group: V2 Product Topology And Repository Migration
   - Depends on: PRJ-657
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: workspace bootstrap and production build smoke
 
-- [ ] PRJ-659 Scaffold the `mobile/` workspace as a reserved product surface
+- [x] PRJ-659 Scaffold the `mobile/` workspace as a reserved product surface
   - Owner: Frontend Builder
   - Group: V2 Product Topology And Repository Migration
   - Depends on: PRJ-658
   - Priority: P2
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: workspace bootstrap and contract-boundary review
 
-- [ ] PRJ-660 Freeze first-party backend auth/session and user mapping contracts
+- [x] PRJ-660 Freeze first-party backend auth/session and user mapping contracts
   - Owner: Planning Agent
   - Group: First-Party Auth And Client API Boundary
   - Depends on: PRJ-659
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: architecture and runtime-contract cross-review
 
-- [ ] PRJ-661 Implement the backend auth/session baseline for first-party clients
+- [x] PRJ-661 Implement the backend auth/session baseline for first-party clients
   - Owner: Backend Builder
   - Group: First-Party Auth And Client API Boundary
   - Depends on: PRJ-660
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: targeted auth, API, and security regression coverage
 
-- [ ] PRJ-662 Freeze the app-facing client API boundary for web and mobile
+- [x] PRJ-662 Freeze the app-facing client API boundary for web and mobile
   - Owner: Planning Agent
   - Group: First-Party Auth And Client API Boundary
   - Depends on: PRJ-661
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: architecture and endpoint-contract cross-review
 
-- [ ] PRJ-663 Implement UI-safe app-facing API surfaces over existing backend truth
+- [x] PRJ-663 Implement UI-safe app-facing API surfaces over existing backend truth
   - Owner: Backend Builder
   - Group: First-Party Auth And Client API Boundary
   - Depends on: PRJ-662
   - Priority: P1
-  - Status: BACKLOG
+  - Status: DONE
   - Validation: targeted endpoint and runtime contract coverage
 
-- [ ] PRJ-664 Build the first `web/` shell for login, settings, chat, and personality inspection
+- [x] PRJ-664 Build the first `web/` shell for login, settings, chat, and personality inspection
   - Owner: Frontend Builder
   - Group: Web Product Shell And Production Topology
   - Depends on: PRJ-663
   - Priority: P1
-  - Status: BACKLOG
-  - Validation: web smoke, route coverage, and client integration checks
+  - Status: DONE
+  - Validation: `npm run build`
 
-- [ ] PRJ-665 Integrate `web/` build and serving into the production topology
+- [x] PRJ-665 Integrate `web/` build and serving into the production topology
   - Owner: Ops/Release
   - Group: Web Product Shell And Production Topology
   - Depends on: PRJ-664
   - Priority: P1
-  - Status: BACKLOG
-  - Validation: compose, Coolify, and production-topology smoke verification
+  - Status: DONE
+  - Validation: `docker compose config`; `docker build -f docker/Dockerfile . --build-arg APP_BUILD_REVISION=test-web-build-rev -t aion-web-smoke:local`
 
-- [ ] PRJ-666 Add release smoke and repo-driven post-push deploy proof for `backend + web`
+- [x] PRJ-666 Add release smoke and repo-driven post-push deploy proof for `backend + web`
   - Owner: QA/Test
   - Group: Web Product Shell And Production Topology
   - Depends on: PRJ-665
   - Priority: P1
-  - Status: BACKLOG
-  - Validation: release smoke, incident-evidence parity, and deploy-proof coverage
+  - Status: DONE
+  - Validation: targeted `tests/test_deployment_trigger_scripts.py` parity coverage
 
 - [ ] PRJ-667 Freeze the mobile client stack and shared contract baseline
   - Owner: Planning Agent

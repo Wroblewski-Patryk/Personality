@@ -7,6 +7,11 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
+web/node_modules/
+web/dist/
+mobile/node_modules/
+mobile/dist/
+mobile/.expo/
 *.egg-info/
 pytest-cache-files-*/
 .playwright-cli/

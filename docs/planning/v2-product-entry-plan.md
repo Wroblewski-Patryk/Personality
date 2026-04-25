@@ -30,6 +30,28 @@ Approved on 2026-04-25 through user decision:
 - expose UI-safe app-facing API surfaces instead of reusing internal debug
   inspection endpoints directly
 
+## Current Progress
+
+Completed on 2026-04-25:
+
+- `PRJ-655..PRJ-659`
+  - repository now matches `backend/`, `web/`, and `mobile/` topology
+  - root Docker and compose flows resolve the moved backend
+  - `web/` has a working React + TypeScript + Vite + Tailwind + daisyUI build
+  - `mobile/` is reserved without prematurely freezing a mobile stack
+- `PRJ-660..PRJ-663`
+  - backend now owns first-party auth/session state
+  - backend now exposes initial app-facing endpoints for user session,
+    settings, chat, and personality overview
+- `PRJ-664..PRJ-666`
+  - `web/` now provides the first product shell for auth, chat, settings, and personality inspection
+  - the production image now builds `web/` and serves the built SPA from backend-owned topology
+  - release smoke now proves backend runtime revision and served web revision move together after push
+
+Next active lane:
+
+- `PRJ-667..PRJ-668` mobile foundation
+
 ## Target Repository Topology
 
 Target root:

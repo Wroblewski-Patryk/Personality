@@ -21,6 +21,14 @@ Last updated: 2026-04-25
   - first-party auth/session should be backend-owned
   - repo-driven production deploy after push must remain truthful through the
     topology change instead of becoming a manual or undocumented side path
+- 2026-04-25: `PRJ-664..PRJ-666` are complete:
+  - `web/` now contains the first functional product shell for login/register,
+    user settings, chat, and personality inspection
+  - the browser client remains a thin consumer of backend-owned `/app/*`
+    contracts instead of recreating domain logic in the client
+  - the production image now builds `web/`, FastAPI serves the built SPA, and
+    release smoke validates that the served web revision matches backend
+    runtime build truth after push
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work
@@ -2964,3 +2972,11 @@ Last updated: 2026-04-25
 - Add only if the repository truly needs them.
 - Record their canonical paths here once they exist.
 - `docs/implementation/runtime-reality.md`
+
+## Current Repo Topology
+
+- `backend/` is now the canonical home of the Python runtime, tests, scripts,
+  Alembic config, and package metadata.
+- `web/` is reserved for the browser client workspace.
+- `mobile/` is reserved for the mobile client workspace.
+- root-level files remain shared repo, deployment, and discovery surfaces.

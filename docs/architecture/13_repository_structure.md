@@ -6,9 +6,9 @@ This document defines the recommended project structure for AION.
 
 The goal is:
 
-- clarity  
-- scalability  
-- separation of responsibilities  
+- clarity
+- scalability
+- separation of responsibilities
 
 A good structure prevents chaos as the system grows.
 
@@ -27,12 +27,14 @@ aion/
 - docker-compose.yml
 - .env.example
 
-Current transition note:
+Current repository reality:
 
-- today the runtime still lives in the repository root
-- approved `v2` direction moves that runtime into `backend/`
-- `web/` and `mobile/` become explicit product surfaces instead of being
-  implied future additions
+- the Python runtime now lives in `backend/`
+- `web/` and `mobile/` are explicit product surfaces at the repository root
+- the production image now builds `web/` and serves the built SPA from the
+  backend runtime image
+- root-level files stay limited to shared repo, deployment, and discovery
+  concerns
 
 ---
 
@@ -57,18 +59,18 @@ backend/app/
 
 ### api/
 
-- FastAPI endpoints  
-- webhook handlers  
-- external interfaces  
+- FastAPI endpoints
+- webhook handlers
+- external interfaces
 
 ---
 
 ### agents/
 
-- perception agent  
-- context agent  
-- planning agent  
-- reflection agent  
+- perception agent
+- context agent
+- planning agent
+- reflection agent
 
 Each agent should be isolated and reusable.
 
@@ -76,49 +78,49 @@ Each agent should be isolated and reusable.
 
 ### core/
 
-- main logic  
-- orchestration  
-- LangGraph pipelines  
-- system flow  
+- main logic
+- orchestration
+- LangGraph pipelines
+- system flow
 
 ---
 
 ### memory/
 
-- memory models  
-- retrieval logic  
-- storage interface  
+- memory models
+- retrieval logic
+- storage interface
 
 ---
 
 ### motivation/
 
-- scoring system  
-- decision logic  
-- priority evaluation  
+- scoring system
+- decision logic
+- priority evaluation
 
 ---
 
 ### identity/
 
-- identity definition  
-- theta system  
-- role logic  
+- identity definition
+- theta system
+- role logic
 
 ---
 
 ### expression/
 
-- response formatting  
-- output generation  
-- channel adaptation  
+- response formatting
+- output generation
+- channel adaptation
 
 ---
 
 ### integrations/
 
 - telegram/
-- future integrations  
+- future integrations
 
 External systems live here.
 
@@ -126,17 +128,17 @@ External systems live here.
 
 ### workers/
 
-- subconscious loop  
-- scheduled jobs  
-- background processing  
+- subconscious loop
+- scheduled jobs
+- background processing
 
 ---
 
 ### utils/
 
-- helper functions  
-- shared utilities  
-- common logic  
+- helper functions
+- shared utilities
+- common logic
 
 ---
 
@@ -144,9 +146,9 @@ External systems live here.
 
 backend/tests/
 
-- unit tests  
-- integration tests  
-- system tests  
+- unit tests
+- integration tests
+- system tests
 
 Testing ensures system stability.
 
@@ -156,9 +158,9 @@ Testing ensures system stability.
 
 docs/
 
-- architecture  
-- system design  
-- specifications  
+- architecture
+- system design
+- specifications
 
 Documentation is part of the system.
 
@@ -168,25 +170,27 @@ Documentation is part of the system.
 
 docker/
 
-- Dockerfiles  
-- service configs  
+- Dockerfiles
+- service configs
 
 ---
 
 ## Configuration Files
 
-- pyproject.toml → dependencies  
-- docker-compose.yml → services  
-- .env → environment variables  
+- `backend/pyproject.toml` -> backend dependencies
+- `web/package.json` -> browser-client dependencies and build scripts
+- `docker-compose.yml` -> local services
+- `docker/Dockerfile` -> shared multi-stage backend + web production image
+- `.env` -> shared environment variables
 
 ---
 
 ## Principles
 
-1. Separate concerns  
-2. Keep modules small  
-3. Avoid tight coupling  
-4. Prefer clarity over cleverness  
+1. Separate concerns
+2. Keep modules small
+3. Avoid tight coupling
+4. Prefer clarity over cleverness
 
 ---
 
@@ -194,9 +198,9 @@ docker/
 
 As system grows:
 
-- add modules, not chaos  
-- extend existing structure  
-- keep architecture consistent  
+- add modules, not chaos
+- extend existing structure
+- keep architecture consistent
 
 ---
 

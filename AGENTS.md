@@ -120,12 +120,12 @@ If any check fails, fix before closure.
 
 Primary automated gate for this repo:
 
-- `.\.venv\Scripts\python -m pytest -q`
+- `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q; Pop-Location`
 
 Add narrower commands when useful, for example:
 
-- `.\.venv\Scripts\python -m pytest -q tests/test_api_routes.py`
-- `.\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py`
+- `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py; Pop-Location`
+- `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_reflection_worker.py; Pop-Location`
 
 Use Docker and HTTP smoke when deployment, runtime wiring, or integrations
 change:

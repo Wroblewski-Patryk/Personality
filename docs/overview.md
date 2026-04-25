@@ -4,11 +4,28 @@
 
 Personality is a backend-first AION runtime implemented as a FastAPI service with PostgreSQL-backed state, an optional OpenAI reply layer, and Telegram integration.
 
+The repository now also carries the first `v2` product baseline:
+
+- the runtime lives under `backend/`
+- `web/` exists as a real React + TypeScript + daisyUI workspace
+- the backend runtime image now builds and serves the browser client for production parity
+- `mobile/` exists as a reserved product surface
+- backend now exposes first-party auth/session and app-facing endpoints for
+  `me`, settings, chat, and personality overview
+
 The repository already ships a real multi-stage runtime, not just a skeleton:
 
 - `POST /event`
 - `GET /health`
 - `POST /telegram/set-webhook`
+- `POST /app/auth/register`
+- `POST /app/auth/login`
+- `POST /app/auth/logout`
+- `GET /app/me`
+- `PATCH /app/me/settings`
+- `GET /app/chat/history`
+- `POST /app/chat/message`
+- `GET /app/personality/overview`
 - event normalization for API and Telegram payloads
 - conscious-loop orchestration with structured stage outputs
 - episodic memory persistence plus lightweight semantic conclusions
@@ -55,6 +72,8 @@ Important current-runtime notes:
   `POST /internal/event/debug` is the primary internal debug ingress, while
   `POST /event/debug` and compatibility `POST /event?debug=true` remain
   policy-gated transitional surfaces
+- first-party product clients now authenticate through backend-owned sessions
+  instead of relying on `X-AION-User-Id` as their primary identity boundary
 
 ## Runtime Stage Ownership
 

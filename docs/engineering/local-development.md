@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - Python 3.11+
+- Node.js 22+ with npm
 - Docker Desktop or another local Docker environment
 - PowerShell on Windows for the provided helper scripts
 
@@ -11,7 +12,7 @@
 1. Create the virtual environment and install dependencies:
 
 ```powershell
-.\scripts\setup_windows.ps1
+.\backend\scripts\setup_windows.ps1
 ```
 
 2. Fill required values in `.env`:
@@ -65,7 +66,9 @@
 3. Run tests:
 
 ```powershell
-.\.venv\Scripts\python -m pytest -q
+Push-Location .\backend
+..\.venv\Scripts\python -m pytest -q
+Pop-Location
 ```
 
 4. Start the local stack:
@@ -74,6 +77,22 @@
 docker compose up --build
 ```
 
+5. Start the browser client in dev mode when working on `web/`:
+
+```powershell
+Push-Location .\web
+npm install
+npm run dev
+Pop-Location
+```
+
+Notes for local product development:
+
+- Vite proxies `/app`, `/health`, `/event`, and `/internal` to
+  `http://127.0.0.1:8000`
+- the backend can therefore keep same-origin-style API calls in `web/`
+- production serving comes from the backend image after `web/dist` is built
+
 ## Database Migrations
 
 The repo now has an Alembic baseline for the current schema.
@@ -81,13 +100,13 @@ The repo now has an Alembic baseline for the current schema.
 Recommended local command:
 
 ```powershell
-.\scripts\run_db_migrations.ps1
+.\backend\scripts\run_db_migrations.ps1
 ```
 
 Equivalent direct command:
 
 ```powershell
-.\.venv\Scripts\python -m alembic upgrade head
+.\.venv\Scripts\python -m alembic -c .\backend\alembic.ini upgrade head
 ```
 
 Important current behavior:
@@ -107,19 +126,29 @@ docker compose up --build
 Run tests inside the virtual environment:
 
 ```powershell
-.\.venv\Scripts\python -m pytest -q
+Push-Location .\backend
+..\.venv\Scripts\python -m pytest -q
+Pop-Location
+```
+
+Build the web workspace:
+
+```powershell
+Push-Location .\web
+npm run build
+Pop-Location
 ```
 
 Generate a Telegram webhook secret and optionally update `.env`:
 
 ```powershell
-.\scripts\generate_telegram_webhook_secret.ps1 -UpdateEnv
+.\backend\scripts\generate_telegram_webhook_secret.ps1 -UpdateEnv
 ```
 
 Set the Telegram webhook:
 
 ```powershell
-.\scripts\set_telegram_webhook.ps1 -WebhookUrl https://your-host.example/event
+.\backend\scripts\set_telegram_webhook.ps1 -WebhookUrl https://your-host.example/event
 ```
 
 ## Local Verification

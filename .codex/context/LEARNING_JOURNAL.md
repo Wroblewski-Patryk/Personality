@@ -25,6 +25,35 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-25 - Vite HTML revision placeholders should have a repo default even when Docker injects the real value
+- Context:
+  - `web/` now injects the deployed build revision into the browser shell so
+    release smoke can prove backend and web ship from the same repository
+    commit.
+- Symptom:
+  - local `npm run build` can stay green but still emit noisy warnings when an
+    HTML `%VITE_*%` placeholder is only defined by the Docker build
+    environment.
+- Root cause:
+  - Vite replaces HTML placeholders during build time, so relying only on
+    Docker-provided environment values leaves plain local builds without a
+    default.
+- Guardrail:
+  - whenever a Vite HTML placeholder becomes part of release proof, commit a
+    safe local default in `web/.env` and let Docker override it with the real
+    revision.
+- Preferred pattern:
+  - use a committed non-secret default such as `dev-local`
+  - override it in Docker with the production build arg
+  - keep release smoke validating the final deployed value
+- Avoid:
+  - adding build-proof placeholders to `index.html` without a local fallback
+- Evidence:
+  - `PRJ-665..PRJ-666`
+  - `web/index.html`
+  - `web/.env`
+  - `docker/Dockerfile`
+
 ### 2026-04-25 - Implemented capabilities stay underused when runtime awareness is implicit
 - Context:
   - fresh code-level analysis after the core no-UI `v1` planning lane showed

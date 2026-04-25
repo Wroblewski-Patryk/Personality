@@ -1,92 +1,53 @@
-# AION - MVP Iteration 1
+# AION / Personality
 
-This repository contains the first working implementation of the AION runtime loop.
+This repository follows the approved `v2` product topology:
 
-Implemented scope:
-- FastAPI API with `POST /event`
-- Event normalization (`event_id`, `trace_id`, timestamp)
-- Minimal runtime pipeline
-- Telegram webhook compatibility
-- PostgreSQL memory write and retrieval
-- Dockerized app + database
+- `backend/` for the Python runtime, API, memory, workers, tests, and scripts
+- `web/` for the browser client workspace
+- `mobile/` for the mobile client workspace
+- `docs/` for canonical architecture, engineering, planning, and ops truth
+
+The current production runtime still lives entirely in `backend/`. `web/` and
+`mobile/` are the next product layers that will consume stable backend-facing
+contracts.
 
 ## Quick Start
 
-1. Copy env template:
+1. Copy the root env template:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Fill required variables in `.env`:
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL` (optional, defaults to `gpt-4o-mini`)
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_WEBHOOK_SECRET` (recommended)
-- `DATABASE_URL`
-
-Generate webhook secret automatically:
-
-```powershell
-.\scripts\generate_telegram_webhook_secret.ps1 -UpdateEnv
-```
-
-3. Start with Docker:
+2. Start the local stack:
 
 ```bash
 docker compose up --build
 ```
 
-4. Health check:
+3. Start the browser client when working on the product shell:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+4. Check health:
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-5. Send test event:
+## Working Areas
 
-```bash
-curl -X POST http://localhost:8000/event ^
-  -H "Content-Type: application/json" ^
-  -d "{\"text\":\"hello AION\"}"
-```
+- backend runtime and developer workflow:
+  [backend/README.md](/C:/Personal/Projekty/Aplikacje/Personality/backend/README.md)
+- canonical docs index:
+  [docs/README.md](/C:/Personal/Projekty/Aplikacje/Personality/docs/README.md)
 
-## API Endpoints
+## Deployment
 
-- `GET /health`
-- `POST /event`
-  - default response: stable public reply payload
-  - optional debug payload: `POST /event?debug=true`
-- `POST /telegram/set-webhook`
-
-Manual smoke helper:
-
-```powershell
-.\scripts\run_release_smoke.ps1 -BaseUrl "http://localhost:8000"
-```
-
-## Local Windows Environment
-
-```powershell
-.\scripts\setup_windows.ps1
-.\.venv\Scripts\python -m pytest -q
-```
-
-Apply the current schema baseline explicitly:
-
-```powershell
-.\scripts\run_db_migrations.ps1
-```
-
-Optional pip upgrade:
-
-```powershell
-.\scripts\setup_windows.ps1 -UpgradePip
-```
-
-## Coolify Deployment
-
-Use `docker-compose.coolify.yml` in Coolify and configure env vars in the Coolify UI.
-
-Full guide:
-- `docs/28_local_windows_and_coolify_deploy.md`
+- local Docker uses [docker-compose.yml](/C:/Personal/Projekty/Aplikacje/Personality/docker-compose.yml)
+- Coolify uses [docker-compose.coolify.yml](/C:/Personal/Projekty/Aplikacje/Personality/docker-compose.coolify.yml)
+- the runtime image is built from [docker/Dockerfile](/C:/Personal/Projekty/Aplikacje/Personality/docker/Dockerfile)
