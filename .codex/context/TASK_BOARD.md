@@ -184,6 +184,14 @@ Last updated: 2026-04-25
     - shared copy and mobile/tablet/desktop class posture now align across the
       authenticated shell
   - the product-facing UX/UI lane seeded through `PRJ-691` is now complete
+  - `PRJ-692` is now complete:
+    - repository-driven Coolify deploys now include one one-shot `migrate`
+      service that runs `python -m alembic -c /app/backend/alembic.ini upgrade head`
+      after database health
+    - `app`, `maintenance_cadence`, and `proactive_cadence` now wait for that
+      migration owner to complete successfully before startup
+    - deployment guidance and the runtime ops runbook now describe the same
+      migration-first startup order and operator verification path
 - planned execution order for this lane:
   - `PRJ-685` Mobile-First App Shell Baseline
   - `PRJ-686` UI Language Boundary And Locale Switcher Plan

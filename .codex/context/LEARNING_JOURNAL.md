@@ -25,6 +25,39 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-25 - Coolify repo-driven deploys need one compose-owned migration step before long-lived services
+- Context:
+  - a new Alembic revision landed during the product-facing web UX/UI lane,
+    and deployment review showed that the repository-driven Coolify compose
+    graph still started the app and cadence services without any repo-owned
+    migration owner.
+- Symptom:
+  - a commit can auto-deploy from GitHub to Coolify while the runtime still
+    expects pending Alembic migrations to have been applied out of band.
+- Root cause:
+  - `docker-compose.coolify.yml` booted long-lived services directly after
+    database health, while the runtime startup path deliberately logs
+    `expect_migrations` instead of applying schema changes during app boot.
+- Guardrail:
+  - repository-driven Coolify deploys must keep one explicit one-shot
+    migration owner in the compose graph, and long-lived runtime services must
+    wait for that owner to finish successfully before startup.
+- Preferred pattern:
+  - add a dedicated `migrate` service that runs
+    `python -m alembic -c /app/backend/alembic.ini upgrade head`
+  - gate `app` and externalized cadence services with
+    `depends_on: condition: service_completed_successfully`
+  - verify `migrate` before investigating app-health failures
+- Avoid:
+  - relying on manual post-deploy migration commands as the normal production
+    path
+  - duplicating `alembic upgrade head` inside multiple long-lived service
+    commands
+- Evidence:
+  - `docker-compose.coolify.yml`
+  - `docs/architecture/28_local_windows_and_coolify_deploy.md`
+  - `docs/operations/runtime-ops-runbook.md`
+
 ### 2026-04-25 - Product-facing web shells need mobile-first screenshot proof, not only desktop coherence
 - Context:
   - fresh browser audit of the first-party `web/` shell reviewed `login`,

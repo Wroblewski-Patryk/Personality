@@ -106,8 +106,21 @@ Then send a message to your bot in Telegram.
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_WEBHOOK_SECRET`
    - `DATABASE_URL` (optional if using bundled db service)
+   - keep `STARTUP_SCHEMA_MODE=migrate` unless a later approved exception is
+     explicitly documented
 4. Expose application port `8000` through Coolify domain.
 5. Deploy.
+
+Repository-driven Coolify deploys now include a one-shot `migrate` service in
+`docker-compose.coolify.yml`. On each deploy, Coolify should:
+
+1. wait for PostgreSQL health
+2. run `python -m alembic -c /app/backend/alembic.ini upgrade head`
+3. start `app`, `maintenance_cadence`, and `proactive_cadence` only after the
+   migration container exits successfully
+
+If a deploy fails before the app becomes healthy, inspect the `migrate`
+service logs first because schema drift now blocks the runtime by design.
 
 ### C) Set production Telegram webhook
 
@@ -160,6 +173,13 @@ After a deploy, run:
 ```powershell
 .\scripts\run_release_smoke.ps1 -BaseUrl "https://YOUR_DOMAIN"
 ```
+
+Operator verification order for the repo-driven Coolify baseline:
+
+1. confirm the `migrate` service finished successfully in Coolify
+2. confirm the `app` service turns healthy
+3. run release smoke against the public domain
+4. only then investigate route-level regressions
 
 Optional UTF-8 verification:
 

@@ -4,6 +4,8 @@ x-aion-runtime-env: &aion-runtime-env
   DEPLOYMENT_TRIGGER_MODE: ${DEPLOYMENT_TRIGGER_MODE:-source_automation}
   APP_PORT: 8000
   LOG_LEVEL: INFO
+  STARTUP_SCHEMA_MODE: ${STARTUP_SCHEMA_MODE:-migrate}
+  PRODUCTION_POLICY_ENFORCEMENT: ${PRODUCTION_POLICY_ENFORCEMENT:-strict}
   OPENAI_API_KEY: ${OPENAI_API_KEY}
   OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
   EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-openai}
@@ -21,6 +23,24 @@ x-aion-runtime-env: &aion-runtime-env
   CADENCE_FAILURE_RETRY_SECONDS: ${CADENCE_FAILURE_RETRY_SECONDS:-30}
 
 services:
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        APP_BUILD_REVISION: ${APP_BUILD_REVISION:-unknown}
+    environment: *aion-runtime-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    command:
+      [
+        "sh",
+        "-lc",
+        "python -m alembic -c /app/backend/alembic.ini upgrade head",
+      ]
+
   app:
     build:
       context: .
@@ -31,6 +51,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test:
         [
@@ -54,6 +76,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     command:
       [
         "sh",
@@ -71,6 +95,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     command:
       [
         "sh",

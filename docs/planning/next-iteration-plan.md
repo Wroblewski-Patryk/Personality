@@ -291,6 +291,44 @@ Implementation status on 2026-04-25:
 - any next UX/UI work should derive from a fresh browser pass instead of this
   original queue
 
+## Planned On 2026-04-25 For Coolify Migration-First Deploy Automation
+
+Fresh deployment review after the `ui_language` migration showed that the
+repository-driven Coolify baseline still expected migrations to have happened
+outside the compose startup graph.
+
+### Fresh Gap Snapshot
+
+Observed from the current Coolify compose and runtime startup posture:
+
+- `docker-compose.coolify.yml` started `app` and externalized cadence services
+  directly after database health
+- the runtime itself already assumes `STARTUP_SCHEMA_MODE=migrate` and logs
+  `expect_migrations` instead of applying schema changes during app startup
+- a new Alembic revision can therefore reach `main` and auto-deploy while the
+  repo-owned Coolify graph still lacks one explicit migration owner
+
+### New Queue
+
+The next deploy-hardening slice is seeded as `PRJ-692`.
+
+- `PRJ-692` Coolify Auto-Migration Owner
+  - Result:
+    - repository-driven Coolify deploys now run a one-shot `migrate` service
+      before starting long-lived runtime services
+    - `app`, `maintenance_cadence`, and `proactive_cadence` now wait for
+      successful Alembic completion
+    - deployment docs and runbook now describe the same operator verification
+      order
+  - Validation:
+    - `docker compose -f docker-compose.coolify.yml config`
+
+Implementation status on 2026-04-25:
+
+- `PRJ-692` is now complete in the repo baseline
+- repo-driven Coolify deploys now own `alembic upgrade head` directly in the
+  compose graph instead of relying on an out-of-band manual hook
+
 ## Planned On 2026-04-24 For Core V1 Time-Aware Planning
 
 The previous final no-UI `v1` closure lane assumed that organizer-tool

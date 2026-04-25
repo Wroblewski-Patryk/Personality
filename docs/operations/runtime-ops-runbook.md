@@ -22,6 +22,14 @@ This runbook covers the currently implemented AION MVP service, not the full lon
   pgvector-capable PostgreSQL image once semantic-vector migrations are part of
   Alembic `head`; a plain `postgres` image can boot but will fail migration and
   foreground turn handling later.
+- Repository-driven Coolify production deploys now also keep one explicit
+  migration owner in `docker-compose.coolify.yml`:
+  - service: `migrate`
+  - command:
+    `python -m alembic -c /app/backend/alembic.ini upgrade head`
+  - long-lived services (`app`, `maintenance_cadence`, `proactive_cadence`)
+    must wait for that one-shot service to complete successfully before
+    startup.
 
 `GET /health` now includes a `runtime_policy` object with non-secret active
 runtime flags (for example `startup_schema_mode`, `event_debug_enabled`, and
@@ -1317,6 +1325,18 @@ Shared debug retirement gate baseline:
 ```powershell
 curl http://localhost:8000/health
 ```
+
+For repo-driven Coolify deploys, use this startup-order checklist before
+treating a failed release as an app bug:
+
+1. verify `db` is healthy
+2. verify the one-shot `migrate` service exited successfully
+3. verify `app` becomes healthy on `/health`
+4. verify `maintenance_cadence` and `proactive_cadence` started only after the
+   migration owner succeeded
+
+If `migrate` fails, treat the deploy as a schema-ownership failure first, not
+as a foreground-runtime regression.
 
 Important health surfaces for current release checks:
 

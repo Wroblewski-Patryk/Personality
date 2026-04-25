@@ -254,6 +254,18 @@ Last updated: 2026-04-25
       posture across login, chat, settings, tools, and personality
   - the UX/UI lane seeded through `PRJ-691` is now complete; next work should
     come from fresh browser feedback or a new product direction
+- 2026-04-25: `PRJ-692` is complete:
+  - repository-driven Coolify deploys now include a one-shot `migrate`
+    service in `docker-compose.coolify.yml`
+  - the deployment graph now runs
+    `python -m alembic -c /app/backend/alembic.ini upgrade head` after
+    PostgreSQL health and before the long-lived runtime services start
+  - `app`, `maintenance_cadence`, and `proactive_cadence` now wait on
+    migration success instead of assuming schema changes were applied through
+    an out-of-band hook
+  - Coolify deployment guidance and the runtime ops runbook now describe the
+    same migration-first operator path, which keeps push-driven deploys
+    self-contained without paid GitHub automation
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work
