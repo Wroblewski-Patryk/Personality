@@ -185,6 +185,29 @@ Last updated: 2026-04-25
     leaving multiple profiles attached to the same Telegram identity
   - targeted route, event-normalization, and repository regressions now prove
     the repaired linked-identity continuity contract
+- 2026-04-25: fresh browser UX/UI audit of the current first-party web shell
+  now seeds the next product-facing lane through `PRJ-690`:
+  - login is visually coherent, but the authenticated shell still repeats too
+    much hero and account chrome above the real task area
+  - `Chat` is the clearest product route, yet still does not prioritize the
+    conversation and composer enough for mobile-first use
+  - `Settings` duplicates editable preferences and backend snapshot detail
+    instead of behaving like a concise task-focused preference flow
+  - `Tools` remains truthful but too inspection-heavy, surfacing capability
+    ids, provider posture, and status detail as primary user content
+  - `Personality` currently behaves like a raw inspector because summary cards
+    and raw JSON payloads share one product-facing route
+  - `Tools` and `Personality` therefore are not yet ready to act as the
+    interaction baseline for a later Expo mobile client
+  - the next queue is intentionally ordered as:
+    - `PRJ-685` Mobile-First App Shell Baseline
+    - `PRJ-686` Chat Experience And Composer Priority
+    - `PRJ-687` Settings Simplification And Preference UX
+    - `PRJ-688` Tools Information Architecture And Actionability
+    - `PRJ-689` Personality Productization And Inspector Split
+    - `PRJ-690` Visual System Hardening, Responsive Proof, And Context Sync
+  - the canonical execution plan for this lane now lives in
+    `docs/planning/web-ux-ui-productization-plan.md`
 - 2026-04-24: `PRJ-635` is complete: canonical architecture now freezes one
   explicit core-`v1` time-aware planned-work baseline. Reminders, check-ins,
   routines, and future follow-ups are variants of one internal planned-work

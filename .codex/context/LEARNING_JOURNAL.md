@@ -25,6 +25,37 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-25 - Product-facing web shells need mobile-first screenshot proof, not only desktop coherence
+- Context:
+  - fresh browser audit of the first-party `web/` shell reviewed `login`,
+    `chat`, `settings`, `tools`, and `personality` across mobile, tablet, and
+    desktop before seeding the next UX/UI implementation lane.
+- Symptom:
+  - a route can look visually coherent on desktop while still behaving like a
+    compressed inspector on mobile, with route chrome, technical wording, raw
+    payload detail, or wide content dominating the screen.
+- Root cause:
+  - the current web shell is still implemented as one large inspection-oriented
+    surface in `web/src/App.tsx`, so desktop-shaped cards and backend-truth
+    language leak directly into product-facing mobile screens.
+- Guardrail:
+  - before calling any first-party web surface product-ready, capture
+    mobile, tablet, and desktop screenshots for every main route and verify
+    that the route is product-first rather than inspector-first.
+- Preferred pattern:
+  - freeze one mobile-first authenticated shell baseline first
+  - prioritize the primary route action above account or hero chrome
+  - hide raw payload detail behind an explicit inspect action or separate admin
+    posture
+  - translate backend truth into simple user-facing states and next actions
+- Avoid:
+  - treating desktop visual coherence as sufficient proof of mobile quality
+  - exposing raw JSON, capability ids, or backend status phrasing as the main
+    content of product routes
+- Evidence:
+  - `.codex/artifacts/ux-audit-2026-04-25/`
+  - `web/src/App.tsx`
+
 ### 2026-04-25 - Linked channels must change runtime identity resolution, not only profile status
 - Context:
   - fresh analysis of the first Telegram linking lane showed a user-visible

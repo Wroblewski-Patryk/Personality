@@ -215,6 +215,62 @@ Queue update (2026-04-25):
   - any further Telegram or account-linking work should come from fresh
     analysis rather than from this repair backlog
 
+## Planned On 2026-04-25 For Web UX/UI Productization
+
+Fresh browser audit of the current `web/` shell shows that the first-party
+client is functionally coherent, but not yet product-ready as a mobile-first
+experience or as the design baseline for a later Expo client.
+
+Reference plan:
+
+- `docs/planning/web-ux-ui-productization-plan.md`
+
+### Fresh Gap Snapshot
+
+Observed from browser review across `login`, `chat`, `settings`, `tools`, and
+`personality` in mobile, tablet, and desktop viewports:
+
+- the authenticated shell still repeats too much hero and account chrome above
+  the main task content
+- `Chat` does not yet prioritize the conversation and composer as the primary
+  product action on mobile
+- `Settings` duplicates editable state and backend snapshot detail
+- `Tools` is truthful but too inspection-heavy, exposing capability ids and
+  backend-facing status wording as primary content
+- `Personality` still behaves like a raw inspector because summary cards and
+  raw JSON payloads share the same primary route
+- `Tools` and `Personality` are not yet mobile-ready enough to act as the
+  future mobile interaction baseline
+- the current shell copy still leans too heavily on backend and contract
+  language instead of user-facing product wording
+
+### New Queue
+
+The next UX/UI queue is now seeded through `PRJ-690`.
+
+New groups:
+
+- `PRJ-685` Mobile-First App Shell Baseline
+- `PRJ-686` Chat Experience And Composer Priority
+- `PRJ-687` Settings Simplification And Preference UX
+- `PRJ-688` Tools Information Architecture And Actionability
+- `PRJ-689` Personality Productization And Inspector Split
+- `PRJ-690` Visual System Hardening, Responsive Proof, And Context Sync
+
+Why this order:
+
+- the authenticated app shell must be frozen first so route redesign does not
+  pull navigation and account chrome in different directions
+- `Chat` should become the first product-quality route because it is the core
+  user value and the clearest mobile baseline
+- `Settings` should become shorter and more task-focused before broader visual
+  hardening
+- `Tools` and `Personality` need a second-stage redesign because both still
+  expose too much backend-inspector posture to the user
+- final visual and copy hardening should happen only after the route-level
+  product changes are stable enough to prove across mobile, tablet, and
+  desktop screenshots
+
 ## Planned On 2026-04-24 For Core V1 Time-Aware Planning
 
 The previous final no-UI `v1` closure lane assumed that organizer-tool

@@ -127,6 +127,29 @@ Last updated: 2026-04-25
       journal now describe the same linked-identity continuity repair
   - the linked UI-Telegram identity continuity lane seeded through `PRJ-684`
     is now complete
+- fresh browser UX/UI analysis on 2026-04-25 now seeds the next
+  product-facing web lane through `PRJ-690`:
+  - freeze one mobile-first authenticated app-shell baseline before route
+    redesign splits the layout in different directions
+  - make `Chat` the first product-quality route with conversation and composer
+    priority
+  - simplify `Settings` into a shorter preference flow
+  - turn `Tools` from inspection-heavy backend truth into status-plus-action
+    product cards
+  - split `Personality` product insight from raw inspector posture
+  - finish with one visual-system and responsive-proof pass across mobile,
+    tablet, and desktop
+- `PRJ-685` is now the first `READY` slice:
+  - freeze the mobile-first authenticated shell baseline for the current web
+    client so later route work can align around one navigation and chrome
+    pattern
+- planned execution order for this lane:
+  - `PRJ-685` Mobile-First App Shell Baseline
+  - `PRJ-686` Chat Experience And Composer Priority
+  - `PRJ-687` Settings Simplification And Preference UX
+  - `PRJ-688` Tools Information Architecture And Actionability
+  - `PRJ-689` Personality Productization And Inspector Split
+  - `PRJ-690` Visual System Hardening, Responsive Proof, And Context Sync
 
 ## Agent Workflow Refresh (2026-04-18)
 
