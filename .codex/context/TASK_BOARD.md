@@ -136,6 +136,15 @@ Last updated: 2026-04-26
       - `tools` desktop
       - `settings` desktop
     - evidence currently lives in `.codex/artifacts/`
+    - the chat route has now moved into a stronger reference-aligned shell:
+      - desktop left rail
+      - chat-specific top control bar
+      - transcript + cognitive flow + portrait composition
+      - bottom feature strip tied to continuity, channels, memory, reflection,
+        and privacy
+    - refreshed chat evidence now includes:
+      - `chat-reference-pass-desktop.png`
+      - `chat-reference-pass-mobile-v2.png`
     - before closure, the slice still needs:
       - tablet capture
       - live backend state coverage for loading, empty, error, and success

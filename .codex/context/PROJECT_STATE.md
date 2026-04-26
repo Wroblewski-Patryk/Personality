@@ -63,6 +63,28 @@ Last updated: 2026-04-26
     - tablet capture
     - real loading/empty/error/success proof on live backend data
     - explicit accessibility and reduced-motion review notes
+- 2026-04-26: chat shell reference pass is now complete locally:
+  - `web/src/App.tsx` now turns `/chat` into a dedicated workspace closer to the
+    approved visual target:
+    - desktop left rail for module navigation and account posture
+    - chat-specific top control bar with memory/language/channel/account pills
+    - three-part workspace with transcript, cognitive flow rail, and embodied
+      portrait panel
+    - bottom feature strip mirroring the continuity / channels / memory /
+      reflection / privacy framing from the approved mockup
+  - `web/src/index.css` now carries the route-specific primitives needed for
+    that workspace:
+    - app rail
+    - chat transcript cards
+    - control pills
+    - flow stages
+    - portrait panel
+    - feature strip
+  - refreshed mocked proof now exists in:
+    - `.codex/artifacts/chat-reference-pass-desktop.png`
+    - `.codex/artifacts/chat-reference-pass-mobile-v2.png`
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
 - 2026-04-25: `PRJ-707` is now complete:
   - the GUI-language selector now rests on one shared locale metadata model
     carrying value, native label, localized label, icon token, and explicit

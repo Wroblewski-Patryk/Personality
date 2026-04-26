@@ -1088,6 +1088,76 @@ function PersonalityLayerCard({
   );
 }
 
+function ShellNavButton({
+  label,
+  description,
+  active,
+  token,
+  onClick,
+}: {
+  label: string;
+  description: string;
+  active: boolean;
+  token: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={`aion-nav-button ${active ? "aion-nav-button-active" : ""}`}
+      onClick={onClick}
+      type="button"
+    >
+      <span className={`aion-nav-token ${active ? "aion-nav-token-active" : ""}`}>{token}</span>
+      <span className="min-w-0 flex-1 text-left">
+        <span className="block text-sm font-semibold text-base-900">{label}</span>
+        <span className="mt-0.5 block truncate text-xs text-base-800">{description}</span>
+      </span>
+    </button>
+  );
+}
+
+function ChatFlowStage({
+  label,
+  title,
+  detail,
+  active = false,
+}: {
+  label: string;
+  title: string;
+  detail: string;
+  active?: boolean;
+}) {
+  return (
+    <article className={`aion-chat-flow-stage ${active ? "aion-chat-flow-stage-active" : ""}`}>
+      <span className={`aion-chat-flow-icon ${active ? "aion-chat-flow-icon-active" : ""}`}>{label}</span>
+      <div>
+        <p className="text-base font-semibold text-base-900">{title}</p>
+        <p className="mt-1 text-sm leading-6 text-base-800">{detail}</p>
+      </div>
+    </article>
+  );
+}
+
+function ChatFeatureCard({
+  token,
+  title,
+  body,
+}: {
+  token: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <article className="aion-feature-card">
+      <span className="aion-feature-token">{token}</span>
+      <div>
+        <p className="text-base font-semibold text-base-900">{title}</p>
+        <p className="mt-1 text-sm leading-6 text-base-800">{body}</p>
+      </div>
+    </article>
+  );
+}
+
 export default function App() {
   const [route, setRoute] = useState<RoutePath>(() => normalizeRoute(window.location.pathname));
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -1558,6 +1628,69 @@ export default function App() {
     selectedUtcOffsetMetadata.value,
     Boolean(me?.settings.proactive_opt_in) ? copy.common.on : copy.common.off,
   ];
+  const shellNavItems = [
+    {
+      route: "/chat" as const,
+      label: routeLabel("/chat", resolvedUiLanguage),
+      description: "Active conversation",
+      token: "C",
+    },
+    {
+      route: "/personality" as const,
+      label: routeLabel("/personality", resolvedUiLanguage),
+      description: "Identity map",
+      token: "P",
+    },
+    {
+      route: "/tools" as const,
+      label: routeLabel("/tools", resolvedUiLanguage),
+      description: "Connected capabilities",
+      token: "T",
+    },
+    {
+      route: "/settings" as const,
+      label: routeLabel("/settings", resolvedUiLanguage),
+      description: "Profile and shell",
+      token: "S",
+    },
+  ];
+  const chatTopControls = [
+    {
+      label: "Memory continuity",
+      value: Boolean(preferenceSummary?.learned_preference_count) ? copy.common.on : copy.common.off,
+    },
+    {
+      label: "Language",
+      value: stringValue(me?.settings.preferred_language, copy.common.system).toUpperCase(),
+    },
+    {
+      label: "Linked channels",
+      value: recentChannelsLabel,
+    },
+  ];
+  const chatFlowStages = [
+    { label: "E", title: "Event", detail: "You said something" },
+    { label: "P", title: "Perception", detail: "Understanding intent" },
+    { label: "C", title: "Context", detail: "Gathering relevant info" },
+    { label: "M", title: "Motivation", detail: "Aligning with goals" },
+    { label: "R", title: "Role", detail: "Planner and advisor" },
+    { label: "P", title: "Planning", detail: "Building best approach", active: true },
+    { label: "X", title: "Expression", detail: "Formulating response" },
+    { label: "A", title: "Action", detail: "Delivering to you" },
+    { label: "Y", title: "Memory", detail: "Storing key insights" },
+    { label: "F", title: "Reflection", detail: "Learning and improving" },
+  ];
+  const chatQuickActions = ["Plan my day", "Summarize yesterday", "What did I learn?", "Check my goals"];
+  const chatCurrentFocus =
+    stringValue(planningSummary?.active_goal_count, "0") !== "0" ? "Project planning" : "Conversation continuity";
+  const chatFeatures = [
+    { token: "8", title: "Continuity", body: "Remembers what matters across sessions." },
+    { token: ">", title: "Linked channels", body: "Seamless context from connected conversations." },
+    { token: "M", title: "Memory", body: "Key insights stored for you, by you." },
+    { token: "R", title: "Reflection", body: "Learns and improves over time." },
+    { token: "P", title: "Privacy first", body: "Your data stays yours. Always." },
+  ];
+  const chatActiveSummary = `${routeLabel("/chat", resolvedUiLanguage)} · Active conversation`;
 
   function changeRoute(nextRoute: RoutePath) {
     startTransition(() => {
@@ -1962,180 +2095,171 @@ export default function App() {
 
   return (
     <div className="aion-shell min-h-screen text-base-content">
-      <div className="mx-auto flex min-h-screen max-w-[88rem] flex-col px-4 pb-24 pt-4 sm:px-5 md:px-6 md:pb-8 md:pt-5 xl:px-10">
-        <header className="aion-panel sticky top-3 z-20 mb-4 rounded-[2rem]">
-          <div className="flex flex-wrap items-center gap-3 px-4 py-4 sm:px-5">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="rounded-full bg-base-900 px-4 py-2 font-display text-sm text-signal-gold shadow-sm">AION Web</div>
-                <p className="hidden text-xs uppercase tracking-[0.18em] text-base-800 sm:block">
-                  {copy.common.build} {BUILD_REVISION.slice(0, 12)}
-                </p>
-              </div>
-              <div className="mt-3">
-                <p className="text-xs uppercase tracking-[0.24em] text-base-800">{copy.common.workspace}</p>
-                <h1 className="font-display text-2xl text-base-900 sm:text-3xl">{routeLabel(route, resolvedUiLanguage)}</h1>
-              </div>
+      <div className="mx-auto max-w-[112rem] px-4 pb-24 pt-4 sm:px-5 md:px-6 md:pb-8 md:pt-5 xl:px-8">
+        <div className="grid gap-4 xl:grid-cols-[14rem_minmax(0,1fr)]">
+          <aside className="aion-app-rail hidden xl:flex xl:min-h-[calc(100vh-3rem)] xl:flex-col">
+            <div>
+              <div className="font-display text-[2rem] uppercase tracking-[0.42em] text-base-900">AION</div>
+              <p className="mt-2 text-sm text-base-800">Your conscious companion</p>
             </div>
 
-            <div className="hidden md:flex md:flex-wrap md:gap-2">
-              {ROUTES.map((entry) => (
-                <button
-                  key={entry}
-                  className={`btn btn-sm ${route === entry ? "btn-primary" : "btn-ghost border border-base-300"}`}
-                  onClick={() => changeRoute(entry)}
-                  type="button"
-                >
-                  {routeLabel(entry, resolvedUiLanguage)}
-                </button>
+            <nav className="mt-8 grid gap-2">
+              {shellNavItems.map((item) => (
+                <ShellNavButton
+                  key={item.route}
+                  label={item.label}
+                  description={item.description}
+                  active={route === item.route}
+                  token={item.token}
+                  onClick={() => changeRoute(item.route)}
+                />
               ))}
-            </div>
+            </nav>
 
-            <div className="flex items-center gap-2">
-              <button
-                className={`btn btn-sm ${accountPanelOpen ? "btn-primary" : "btn-outline"}`}
-                onClick={() => setAccountPanelOpen((value) => !value)}
-                type="button"
-              >
-                {copy.common.account}
-              </button>
-            </div>
-          </div>
+            <div className="mt-auto grid gap-4">
+              <section className="aion-panel-soft rounded-[1.8rem] p-4">
+                <p className="text-sm font-semibold text-base-900">All systems aligned</p>
+                <p className="mt-2 text-sm leading-7 text-base-800">AION is ready.</p>
+              </section>
 
-          <div className="border-t border-base-300/70 px-4 py-3 md:hidden sm:px-5">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {ROUTES.map((entry) => (
-                <button
-                  key={entry}
-                  className={`btn btn-sm whitespace-nowrap ${route === entry ? "btn-primary" : "btn-ghost border border-base-300"}`}
-                  onClick={() => changeRoute(entry)}
-                  type="button"
-                >
-                  {routeLabel(entry, resolvedUiLanguage)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {accountPanelOpen ? (
-            <div className="border-t border-base-300/80 px-4 py-4 sm:px-5">
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-                <div className="aion-panel-soft rounded-[1.4rem] p-4">
-                  <p className="text-sm uppercase tracking-[0.24em] text-base-800">{copy.common.signedInAs}</p>
-                  <p className="mt-2 font-display text-2xl text-base-900">{currentUserLabel}</p>
-                  <p className="mt-1 text-sm text-base-800">{me.user.email}</p>
+              <section className="aion-panel-soft rounded-[1.8rem] p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-base-800">{copy.common.signedInAs}</p>
+                <p className="mt-3 font-display text-xl text-base-900">{currentUserLabel}</p>
+                <p className="mt-1 text-sm text-base-800">{me.user.email}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {accountSummaryItems.slice(0, 2).map((item) => (
+                    <span key={item.label} className="aion-chip-ghost rounded-full px-3 py-1 text-xs font-medium">
+                      {item.value}
+                    </span>
+                  ))}
                 </div>
-                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto]">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {accountSummaryItems.map((item) => (
-                      <div key={item.label} className="aion-panel-soft rounded-[1.4rem] p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-base-800">{item.label}</p>
-                        <p className="mt-2 text-base font-semibold text-base-900">{item.value}</p>
+                <button className="btn btn-outline mt-4 w-full" onClick={() => void handleLogout()} type="button">
+                  {copy.common.signOut}
+                </button>
+              </section>
+            </div>
+          </aside>
+
+          <div className="grid gap-4">
+            <header className="aion-panel rounded-[2rem] xl:hidden">
+              <div className="flex flex-wrap items-center gap-3 px-4 py-4 sm:px-5">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="rounded-full bg-base-900 px-4 py-2 font-display text-sm text-signal-gold shadow-sm">AION</div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-base-800">
+                      {copy.common.build} {BUILD_REVISION.slice(0, 12)}
+                    </p>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-xs uppercase tracking-[0.24em] text-base-800">{copy.common.workspace}</p>
+                    <h1 className="font-display text-2xl text-base-900 sm:text-3xl">{routeLabel(route, resolvedUiLanguage)}</h1>
+                  </div>
+                </div>
+
+                <button
+                  className={`btn btn-sm ${accountPanelOpen ? "btn-primary" : "btn-outline"}`}
+                  onClick={() => setAccountPanelOpen((value) => !value)}
+                  type="button"
+                >
+                  {copy.common.account}
+                </button>
+              </div>
+
+              <div className="border-t border-base-300/70 px-4 py-3 sm:px-5">
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {ROUTES.map((entry) => (
+                    <button
+                      key={entry}
+                      className={`btn btn-sm whitespace-nowrap ${route === entry ? "btn-primary" : "btn-ghost border border-base-300"}`}
+                      onClick={() => changeRoute(entry)}
+                      type="button"
+                    >
+                      {routeLabel(entry, resolvedUiLanguage)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </header>
+
+            {accountPanelOpen ? (
+              <section className="aion-panel-soft rounded-[1.8rem] p-4 xl:hidden">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                  <div className="aion-panel-soft rounded-[1.4rem] p-4">
+                    <p className="text-sm uppercase tracking-[0.24em] text-base-800">{copy.common.signedInAs}</p>
+                    <p className="mt-2 font-display text-2xl text-base-900">{currentUserLabel}</p>
+                    <p className="mt-1 text-sm text-base-800">{me.user.email}</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {accountSummaryItems.map((item) => (
+                        <div key={item.label} className="aion-panel-soft rounded-[1.4rem] p-4">
+                          <p className="text-xs uppercase tracking-[0.18em] text-base-800">{item.label}</p>
+                          <p className="mt-2 text-base font-semibold text-base-900">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <button className="btn btn-outline sm:self-end" onClick={() => void handleLogout()} type="button">
+                      {copy.common.signOut}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
+            {successBody ? (
+              <FeedbackBanner
+                tone="success"
+                title={copy.common.stateSuccessTitle}
+                body={successBody}
+                detailLabel={copy.common.stateDetailLabel}
+              />
+            ) : null}
+
+            {errorBody ? (
+              <FeedbackBanner
+                tone="error"
+                title={copy.common.stateErrorTitle}
+                body={errorBody}
+                detail={errorDetail}
+                detailLabel={copy.common.stateDetailLabel}
+              />
+            ) : null}
+
+            <main className="flex-1">
+          {route === "/chat" ? (
+            <section className="grid gap-4">
+              <section className="aion-chat-workspace">
+                <div className="aion-chat-topbar">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h2 className="font-display text-3xl text-base-900">{routeLabel("/chat", resolvedUiLanguage)}</h2>
+                      <span className="text-sm text-[#5f8f93]">{chatActiveSummary}</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-7 text-base-800">{routeDescription("/chat", resolvedUiLanguage)}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {chatTopControls.map((item) => (
+                      <div key={item.label} className="aion-chat-control-pill">
+                        <span className="text-sm text-base-800">{item.label}</span>
+                        <span className="aion-chat-control-badge">{item.value}</span>
                       </div>
                     ))}
+                    <button
+                      className={`aion-chat-control-pill ${accountPanelOpen ? "border-[#7ea79f]/45" : ""}`}
+                      onClick={() => setAccountPanelOpen((value) => !value)}
+                      type="button"
+                    >
+                      <span className="text-sm text-base-800">{copy.common.account}</span>
+                      <span className="aion-chat-control-badge">{currentUserLabel}</span>
+                    </button>
                   </div>
-                  <button className="btn btn-outline sm:self-end xl:self-center" onClick={() => void handleLogout()} type="button">
-                    {copy.common.signOut}
-                  </button>
                 </div>
-              </div>
-            </div>
-          ) : null}
-        </header>
 
-        <section className="aion-panel-soft mb-5 rounded-[1.75rem] px-4 py-4 sm:px-5 md:px-6">
-          <div className="flex flex-wrap items-start justify-between gap-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-            <div className="max-w-3xl">
-              <p className="text-xs uppercase tracking-[0.24em] text-base-800">{copy.common.currentSurface}</p>
-              <p className="mt-2 text-sm leading-7 text-base-800 sm:text-base">
-                {routeDescription(route, resolvedUiLanguage)}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {accountSummaryItems.map((item) => (
-                  <span key={item.label} className="aion-chip-ghost rounded-full px-3 py-1 text-xs font-medium">
-                    {item.label}: {item.value}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="aion-chip rounded-[1rem] px-3 py-2">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-base-800">{copy.common.currentSurface}</p>
-                <p className="mt-1 text-sm font-semibold text-base-900">{routeLabel(route, resolvedUiLanguage)}</p>
-              </div>
-              <div className="hidden md:grid md:min-w-[10rem] md:grid-cols-2 md:gap-2 xl:hidden">
-                {accountSummaryItems.slice(0, 2).map((item) => (
-                  <div key={item.label} className="aion-chip rounded-[1rem] px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-base-800">{item.label}</p>
-                    <p className="mt-1 text-sm font-semibold text-base-900">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {successBody ? (
-          <FeedbackBanner
-            tone="success"
-            title={copy.common.stateSuccessTitle}
-            body={successBody}
-            detailLabel={copy.common.stateDetailLabel}
-          />
-        ) : null}
-
-        {errorBody ? (
-          <FeedbackBanner
-            tone="error"
-            title={copy.common.stateErrorTitle}
-            body={errorBody}
-            detail={errorDetail}
-            detailLabel={copy.common.stateDetailLabel}
-          />
-        ) : null}
-
-        <main className="flex-1">
-          {route === "/chat" ? (
-            <section className="grid gap-6">
-              <MotifFigurePanel title={copy.chat.title} body={copy.chat.subtitle} highlights={motifHighlights} />
-
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(22rem,0.9fr)]">
-                <div className="grid gap-6">
-                  <section className="aion-panel rounded-[2rem] p-5">
-                    <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-                      <div className="max-w-2xl">
-                        <p className="text-sm uppercase tracking-[0.24em] text-base-800">{copy.chat.thread}</p>
-                        <h2 className="font-display text-3xl text-base-900">{copy.chat.latestMessages}</h2>
-                        <p className="mt-3 text-sm leading-7 text-base-800">
-                          {latestAssistantMessage}
-                        </p>
-                      </div>
-                      {historyLoading ? <span className="loading loading-dots loading-sm text-primary" /> : null}
-                    </div>
-
-                    <div className="mb-4 grid gap-3 md:grid-cols-3">
-                      <MetricCard
-                        eyebrow={copy.chat.transcriptCount}
-                        value={String(transcriptItems.length)}
-                        detail="One shared transcript across the app and linked channels."
-                        accent="gold"
-                      />
-                      <MetricCard
-                        eyebrow={copy.chat.activeChannel}
-                        value={recentChannelsLabel}
-                        detail="Continuity stays visible even when recent turns arrived elsewhere."
-                        accent="teal"
-                      />
-                      <MetricCard
-                        eyebrow={copy.chat.latestLanguage}
-                        value={stringValue(me.settings.preferred_language, copy.common.system)}
-                        detail="The shell keeps the latest visible posture while runtime adapts live."
-                      />
-                    </div>
-
+                <div className="aion-chat-stage">
+                  <div className="grid gap-4">
                     <div
                       ref={transcriptContainerRef}
-                      className="aion-metadata-grid flex max-h-[34rem] min-h-[22rem] flex-col gap-4 overflow-y-auto rounded-[1.6rem] border border-base-300/70 bg-white/70 p-4 md:min-h-[28rem]"
+                      className="aion-chat-transcript"
                     >
                       {historyLoading && transcriptItems.length === 0 ? (
                         <StatePanel
@@ -2154,142 +2278,111 @@ export default function App() {
                         const isPending = pendingChatMessage?.message_id === message.message_id;
 
                         return (
-                          <article
+                          <div
                             key={message.message_id}
                             ref={(node) => {
                               transcriptMessageRefs.current[message.message_id] = node;
                             }}
-                            className={`max-w-[94%] rounded-[1.6rem] px-4 py-4 text-sm leading-7 shadow-sm sm:max-w-[86%] ${
-                              isUser
-                                ? "ml-auto bg-base-900 text-base-100"
-                                : "border border-base-300/80 bg-white/88 text-base-900"
-                            }`}
+                            className={`aion-chat-message-row ${isUser ? "justify-end" : "justify-start"}`}
                           >
-                            <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] opacity-75">
-                              <span>{transcriptRoleLabel(message.role, copy)}</span>
-                              <span className={`rounded-full px-2.5 py-1 ${isUser ? "bg-base-100/12" : "bg-base-200"}`}>
-                                {copy.chat.channel}: {transcriptChannelLabel(message.channel)}
-                              </span>
-                              {isPending ? (
-                                <span className={`rounded-full px-2.5 py-1 ${isUser ? "bg-base-100/12" : "bg-warning/15"}`}>
-                                  {copy.chat.pending}
-                                </span>
+                            {!isUser ? <span className="aion-chat-avatar">A</span> : null}
+                            <article className={`aion-chat-message ${isUser ? "aion-chat-message-user" : "aion-chat-message-assistant"}`}>
+                              <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-base-800/80">
+                                <span>{transcriptRoleLabel(message.role, copy)}</span>
+                                <span>{transcriptChannelLabel(message.channel)}</span>
+                                <span>{formatTimestamp(message.timestamp, resolvedUiLanguage)}</span>
+                                {isPending ? <span>{copy.chat.pending}</span> : null}
+                              </div>
+                              <p className="text-sm leading-7">{message.text}</p>
+                              {metadataSummary ? <p className="mt-2 text-xs text-base-800/75">{metadataSummary}</p> : null}
+                              {message.metadata ? (
+                                <details className="mt-3 rounded-[1.1rem] border border-base-300/70 bg-white/60">
+                                  <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-base-900">
+                                    {copy.chat.messageDetails}
+                                  </summary>
+                                  <div className="px-4 pb-4">
+                                    <pre className="overflow-x-auto rounded-xl bg-base-100/80 p-3 text-xs leading-6 text-base-900">
+                                      {prettyJson(message.metadata)}
+                                    </pre>
+                                  </div>
+                                </details>
                               ) : null}
-                              <span>{formatTimestamp(message.timestamp, resolvedUiLanguage)}</span>
-                            </div>
-                            <p>{message.text}</p>
-                            {metadataSummary ? (
-                              <p className={`mt-2 text-xs ${isUser ? "text-base-100/70" : "text-base-800"}`}>
-                                {metadataSummary}
-                              </p>
-                            ) : null}
-                            {message.metadata ? (
-                              <details className={`collapse collapse-arrow mt-3 rounded-box border ${isUser ? "border-base-100/15 bg-base-100/10" : "border-base-300 bg-base-100"}`}>
-                                <summary className="collapse-title min-h-0 px-4 py-3 text-sm font-medium">
-                                  {copy.chat.messageDetails}
-                                </summary>
-                                <div className="collapse-content px-4 pb-4">
-                                  <pre className={`overflow-x-auto rounded-xl p-3 text-xs leading-6 ${isUser ? "bg-base-100/10 text-base-100" : "bg-base-200 text-base-900"}`}>
-                                    {prettyJson(message.metadata)}
-                                  </pre>
-                                </div>
-                              </details>
-                            ) : null}
-                          </article>
+                            </article>
+                          </div>
                         );
                       })}
                     </div>
-                  </section>
 
-                  <form className="aion-panel rounded-[2rem] p-4" onSubmit={(event) => void handleSendMessage(event)}>
-                    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm uppercase tracking-[0.24em] text-base-800">Composer</p>
-                        <h3 className="font-display text-2xl text-base-900">{copy.chat.send}</h3>
-                      </div>
-                      <span className="aion-chip rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-base-900">
-                        Safe first action
-                      </span>
+                    <div className="flex flex-wrap gap-2">
+                      {chatQuickActions.map((action) => (
+                        <button
+                          key={action}
+                          className="aion-chip-ghost rounded-full px-4 py-2 text-sm font-medium"
+                          type="button"
+                          onClick={() => setChatText(action)}
+                        >
+                          {action}
+                        </button>
+                      ))}
                     </div>
-                    <textarea
-                      className="textarea textarea-bordered h-28 w-full bg-white/85"
-                      placeholder={copy.chat.placeholder}
-                      value={chatText}
-                      onChange={(event) => setChatText(event.target.value)}
-                    />
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                      <p className="max-w-2xl text-sm text-base-800">{copy.chat.composerHint}</p>
-                      <button className="btn btn-primary" disabled={sendingMessage} type="submit">
-                        {sendingMessage ? copy.chat.sending : copy.chat.send}
+
+                    <form className="aion-chat-composer" onSubmit={(event) => void handleSendMessage(event)}>
+                      <button className="aion-chat-icon-button" type="button" aria-label="Add context">
+                        +
                       </button>
-                    </div>
-                    {!historyLoading && history.length === 0 ? (
-                      <p className="mt-3 text-sm text-base-800">{copy.chat.noHistory}</p>
-                    ) : null}
-                  </form>
-                </div>
-
-                <aside className="grid gap-6">
-                  <section className="aion-panel-soft rounded-[2rem] p-5">
-                    <div className="mb-4">
-                      <p className="text-sm uppercase tracking-[0.24em] text-base-800">Cognitive flow</p>
-                      <h3 className="font-display text-2xl text-base-900">One readable runtime story</h3>
-                      <p className="mt-3 text-sm leading-7 text-base-800">
-                        The dashboard shows the foreground path as a calm orientation rail, not as a debug screen.
-                      </p>
-                    </div>
-                    <FlowRail items={dashboardFlowItems} />
-                  </section>
-
-                  <section className="aion-panel-soft rounded-[2rem] p-5">
-                    <div className="mb-4">
-                      <p className="text-sm uppercase tracking-[0.24em] text-base-800">Continuity pulse</p>
-                      <h3 className="font-display text-2xl text-base-900">What AION is carrying forward</h3>
-                    </div>
-                    <div className="grid gap-3">
-                      <MetricCard
-                        eyebrow="Goals"
-                        value={stringValue(planningSummary?.active_goal_count, "0")}
-                        detail="Tracked priorities stay visible before you dive deeper into planning detail."
-                        accent="gold"
+                      <textarea
+                        className="aion-chat-input"
+                        placeholder={copy.chat.placeholder}
+                        value={chatText}
+                        onChange={(event) => setChatText(event.target.value)}
                       />
-                      <MetricCard
-                        eyebrow="Knowledge"
-                        value={stringValue(knowledgeSummary?.semantic_conclusion_count, "0")}
-                        detail="Learned patterns remain present as supportive context rather than noise."
-                        accent="teal"
-                      />
-                      <MetricCard
-                        eyebrow="Preferences"
-                        value={stringValue(preferenceSummary?.learned_preference_count, "0")}
-                        detail="Personal preferences shape tone and continuity without needing manual micromanagement."
-                      />
-                    </div>
-                  </section>
+                      <button className="aion-chat-icon-button hidden sm:inline-flex" type="button" aria-label="Voice input">
+                        M
+                      </button>
+                      <button className="aion-chat-send" disabled={sendingMessage} type="submit">
+                        {sendingMessage ? "..." : ">"}
+                      </button>
+                    </form>
+                    <p className="px-2 text-sm text-base-800">{copy.chat.composerHint}</p>
+                  </div>
 
-                  <section className="aion-panel-soft rounded-[2rem] p-5">
-                    <div className="mb-4">
-                      <p className="text-sm uppercase tracking-[0.24em] text-base-800">Next spaces</p>
-                      <h3 className="font-display text-2xl text-base-900">Build from one shell</h3>
-                      <p className="mt-3 text-sm leading-7 text-base-800">
-                        These modules now inherit the same visual language instead of branching into separate mini apps.
-                      </p>
+                  <aside className="aion-chat-flow-panel">
+                    <div className="mb-5 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-base-900">Cognitive flow</p>
+                        <p className="mt-1 text-sm text-[#5f8f93]">Live</p>
+                      </div>
+                      <span className="aion-chat-live-dot" />
                     </div>
-                    <div className="grid gap-3">
-                      {dashboardModuleCards.map((card) => (
-                        <ModuleEntryCard
-                          key={card.route}
-                          label={card.label}
-                          title={card.title}
-                          body={card.body}
-                          meta={card.meta}
-                          onClick={() => changeRoute(card.route)}
+                    <div className="grid gap-2">
+                      {chatFlowStages.map((stage) => (
+                        <ChatFlowStage
+                          key={stage.title}
+                          label={stage.label}
+                          title={stage.title}
+                          detail={stage.detail}
+                          active={stage.active}
                         />
                       ))}
                     </div>
-                  </section>
-                </aside>
-              </div>
+
+                    <div className="aion-panel-soft mt-6 rounded-[1.4rem] p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-base-800">Current focus</p>
+                      <p className="mt-3 font-display text-2xl text-base-900">{chatCurrentFocus}</p>
+                      <p className="mt-2 text-sm text-base-800">Priority: high</p>
+                    </div>
+                  </aside>
+
+                  <aside className="aion-chat-portrait-panel">
+                    <div className="aion-chat-hologram" />
+                    <div className="aion-chat-portrait-figure" />
+                    <div className="aion-chat-portrait-glow" />
+                    <div className="aion-chat-quote">
+                      Understanding leads to clarity. Clarity leads to action.
+                    </div>
+                  </aside>
+                </div>
+              </section>
             </section>
           ) : null}
 
@@ -2917,26 +3010,38 @@ export default function App() {
               </section>
             </div>
           ) : null}
-        </main>
+            </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-base-300 bg-base-100/95 px-3 py-3 backdrop-blur md:hidden">
-          <div className="mx-auto grid max-w-lg grid-cols-4 gap-2">
-            {ROUTES.map((entry) => (
-              <button
-                key={entry}
-                className={`rounded-[1.2rem] px-3 py-3 text-sm font-medium transition ${
-                  route === entry
-                    ? "bg-base-900 text-base-100 shadow-sm"
-                    : "border border-base-300 bg-base-200 text-base-900"
-                }`}
-                onClick={() => changeRoute(entry)}
-                type="button"
-              >
-                {routeLabel(entry, resolvedUiLanguage)}
-              </button>
-            ))}
+            {route === "/chat" ? (
+              <section className="aion-panel aion-chat-feature-strip">
+                {chatFeatures.map((feature) => (
+                  <ChatFeatureCard key={feature.title} token={feature.token} title={feature.title} body={feature.body} />
+                ))}
+              </section>
+            ) : null}
           </div>
-        </nav>
+        </div>
+
+        {route !== "/chat" ? (
+          <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-base-300 bg-base-100/95 px-3 py-3 backdrop-blur md:hidden">
+            <div className="mx-auto grid max-w-lg grid-cols-4 gap-2">
+              {ROUTES.map((entry) => (
+                <button
+                  key={entry}
+                  className={`rounded-[1.2rem] px-3 py-3 text-sm font-medium transition ${
+                    route === entry
+                      ? "bg-base-900 text-base-100 shadow-sm"
+                      : "border border-base-300 bg-base-200 text-base-900"
+                  }`}
+                  onClick={() => changeRoute(entry)}
+                  type="button"
+                >
+                  {routeLabel(entry, resolvedUiLanguage)}
+                </button>
+              ))}
+            </div>
+          </nav>
+        ) : null}
       </div>
     </div>
   );
