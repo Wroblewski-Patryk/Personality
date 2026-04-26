@@ -1768,6 +1768,10 @@ export default function App() {
     { title: "Values realignment", tag: "Alignment" },
     { title: "Letting go of distractions", tag: "Awareness" },
   ];
+  const dashboardCurrentPhase = {
+    title: "Reflect",
+    body: "Generating insight from recent experiences, active goals, and the latest conversation context.",
+  };
   const dashboardBottomStats = [
     { label: "System harmony", value: "92%", detail: "Optimal" },
     { label: "Conscious", value: "High", detail: "Balance across layers" },
@@ -2473,10 +2477,13 @@ export default function App() {
             </nav>
 
             <div className="mt-auto grid gap-3">
-              <section className="aion-panel-soft aion-rail-story rounded-[1.8rem] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-base-800">Current posture</p>
-                <p className="mt-2 text-base font-semibold text-base-900">Clarity is the lamp that makes the path.</p>
-                <p className="mt-3 text-sm leading-6 text-base-800">AION is ready for a calm, continuous conversation.</p>
+              <section className="aion-panel-soft aion-rail-health rounded-[1.8rem] p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-base-800">System health</p>
+                <div className="aion-rail-health-orb" aria-hidden="true">
+                  <span>92%</span>
+                </div>
+                <p className="text-base font-semibold text-base-900">Optimal</p>
+                <p className="mt-2 text-sm leading-6 text-base-800">All systems aligned and ready for thoughtful work.</p>
               </section>
 
               <section className="aion-panel-soft rounded-[1.8rem] p-4">
@@ -2493,6 +2500,11 @@ export default function App() {
                 <button className="btn btn-outline mt-4 w-full" onClick={() => void handleLogout()} type="button">
                   {copy.common.signOut}
                 </button>
+              </section>
+
+              <section className="aion-panel-soft aion-rail-story rounded-[1.8rem] p-4">
+                <p className="text-base font-semibold leading-7 text-base-900">“Clarity is the lamp that makes the path.”</p>
+                <p className="mt-4 text-xs uppercase tracking-[0.2em] text-base-800">AION</p>
               </section>
             </div>
           </aside>
@@ -2677,6 +2689,29 @@ export default function App() {
                     ))}
                   </div>
 
+                  <section className="aion-dashboard-recent-panel">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm uppercase tracking-[0.22em] text-base-800">Recent activity</p>
+                        <h4 className="mt-2 font-display text-xl text-base-900">What just changed</h4>
+                      </div>
+                      <button className="aion-dashboard-link" type="button">
+                        View all
+                      </button>
+                    </div>
+                    <div className="grid gap-3">
+                      {personalityRecentActivity.map((item) => (
+                        <article key={item.title} className="aion-dashboard-recent-row">
+                          <div>
+                            <p className="text-sm font-semibold text-base-900">{item.title}</p>
+                            <p className="mt-1 text-sm text-base-800">Captured in the living continuity layer.</p>
+                          </div>
+                          <span className="text-xs uppercase tracking-[0.18em] text-base-800">{item.when}</span>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+
                   <section className="aion-dashboard-side-story">
                     <p className="text-sm uppercase tracking-[0.22em] text-base-800">Today's intention</p>
                     <p className="mt-4 font-display text-2xl leading-tight text-base-900">
@@ -2698,17 +2733,27 @@ export default function App() {
                     Current phase: Reflect
                   </div>
                 </div>
-                <div className="aion-dashboard-flow-track">
-                  {dashboardCognitiveSteps.map((step) => (
-                    <article
-                      key={step.title}
-                      className={`aion-dashboard-flow-step ${step.active ? "aion-dashboard-flow-step-active" : ""}`}
-                    >
-                      <span className="aion-dashboard-flow-icon">{step.token}</span>
-                      <p className="mt-3 text-base font-semibold text-base-900">{step.title}</p>
-                      <p className="mt-1 text-sm text-base-800">{step.detail}</p>
-                    </article>
-                  ))}
+                <div className="aion-dashboard-flow-layout">
+                  <div className="aion-dashboard-flow-track">
+                    {dashboardCognitiveSteps.map((step) => (
+                      <article
+                        key={step.title}
+                        className={`aion-dashboard-flow-step ${step.active ? "aion-dashboard-flow-step-active" : ""}`}
+                      >
+                        <span className="aion-dashboard-flow-icon">{step.token}</span>
+                        <p className="mt-3 text-base font-semibold text-base-900">{step.title}</p>
+                        <p className="mt-1 text-sm text-base-800">{step.detail}</p>
+                      </article>
+                    ))}
+                  </div>
+                  <aside className="aion-dashboard-flow-sidecard">
+                    <p className="text-sm uppercase tracking-[0.2em] text-base-800">Current phase</p>
+                    <p className="mt-3 font-display text-3xl text-base-900">{dashboardCurrentPhase.title}</p>
+                    <p className="mt-3 text-sm leading-7 text-base-800">{dashboardCurrentPhase.body}</p>
+                    <button className="aion-dashboard-action-button mt-5" type="button">
+                      View full flow
+                    </button>
+                  </aside>
                 </div>
                 <div className="aion-dashboard-flow-notes">
                   {dashboardFlowItems.map((item) => (

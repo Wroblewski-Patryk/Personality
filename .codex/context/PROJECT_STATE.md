@@ -28,6 +28,18 @@ Last updated: 2026-04-26
     - flagship overview stage
   - focused validation passed:
     - `Push-Location .\web; npm run build; Pop-Location`
+- 2026-04-26: the first dashboard-specific convergence loop is now explicit:
+  - production health and root HTML both confirm deploy parity on runtime build
+    revision:
+    - `ffd9401766e5219366feeed65804ce8585ed0aed`
+  - one dashboard-only compare loop plan now lives in:
+    - `docs/planning/dashboard-canonical-convergence-loop-plan.md`
+  - the current remaining dashboard drift is explicitly frozen as:
+    - hero-stage atmosphere and connective detail
+    - stronger guidance-column hierarchy
+    - more integrated cognitive-flow band
+    - selective need for bespoke artwork where CSS-only treatment flattens the
+      route
 - 2026-04-26: `PRJ-733` is now complete:
   - the approved canonical web-screen set is now stored in:
     - `docs/ux/assets/aion-landing-canonical-reference-v1.png`

@@ -27,6 +27,15 @@ Last updated: 2026-04-26
   - route-family material polish across `dashboard`, `chat`, and `personality`
   - responsive and accessibility proof
   - local and deployed screenshot parity against the canonical route assets
+- dashboard-specific compare-loop planning is now explicit in:
+  - `docs/planning/dashboard-canonical-convergence-loop-plan.md`
+  - the main currently recorded dashboard drift is no longer route absence
+  - it is now:
+    - hero-stage atmospheric depth
+    - stronger connective detail around the figure
+    - guidance-column tiering
+    - cognitive-flow integration
+    - bespoke art need for some dashboard surfaces
 
 ## Fresh Canonical Screen-Set Freeze (2026-04-26)
 

@@ -4,8 +4,8 @@
 - ID: PRJ-743
 - Title: Dashboard Chat Personality Canonical Polish And Proof
 - Task Type: design
-- Current Stage: planning
-- Status: READY
+- Current Stage: implementation
+- Status: IN_PROGRESS
 - Owner: Frontend Builder
 - Depends on: PRJ-742
 - Priority: P0
@@ -34,10 +34,10 @@ comparison.
 - stay within the declared current stage unless explicit approval changes it
 
 ## Definition of Done
-- [ ] The next parity slice is concretely bounded.
-- [ ] Remaining drift to the canonical dashboard, chat, and personality assets
+- [x] The next parity slice is concretely bounded.
+- [x] Remaining drift to the canonical dashboard, chat, and personality assets
       is described in implementation terms.
-- [ ] Validation expectations are explicit for local and deployed proof.
+- [x] Validation expectations are explicit for local and deployed proof.
 
 ## Stage Exit Criteria
 - [ ] The output matches the declared `Current Stage`.
@@ -53,9 +53,18 @@ comparison.
 
 ## Validation Evidence
 - Tests:
+  - `Push-Location .\web; npm run build; Pop-Location`
 - Manual checks:
+  - reviewed canonical dashboard, chat, and personality references
+  - confirmed public production runtime build revision parity through:
+    - `GET /health`
+    - root HTML build meta tag
 - Screenshots/logs:
+  - authenticated deployed screenshot proof still pending because a safe
+    browser-auth path was not available in this turn
 - High-risk checks:
+  - no new backend contract added
+  - no parallel dashboard system introduced
 
 ## Architecture Evidence (required for architecture-impacting tasks)
 - Architecture source reviewed:
@@ -121,5 +130,14 @@ comparison.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
-The new dashboard closes the missing-route gap. The remaining work is visual
-convergence quality, not architecture or backend contract shape.
+This task is now active. The first execution pass added:
+
+- a dashboard-specific convergence loop plan:
+  - `docs/planning/dashboard-canonical-convergence-loop-plan.md`
+- another dashboard polish slice:
+  - stronger rail support surfaces
+  - recent-activity tier inside guidance
+  - a more integrated flow-band layout
+
+Remaining work is still mainly visual parity quality, not architecture or
+backend contract shape.
