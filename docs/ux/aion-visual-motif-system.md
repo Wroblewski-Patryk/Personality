@@ -14,6 +14,8 @@ existing calm product posture.
 
 - Primary approved snapshot:
   - `docs/ux/assets/aion-visual-motif-reference.png`
+- Current canonical route screen-set:
+  - `docs/ux/canonical-web-screen-reference-set.md`
 
 ![AION visual motif reference](./assets/aion-visual-motif-reference.png)
 
@@ -126,6 +128,10 @@ toward:
 
 Use the approved motif as a trust and identity anchor.
 
+Canonical implementation target:
+
+- `docs/ux/assets/aion-landing-canonical-reference-v1.png`
+
 - left or top: distilled figure fragment or scene crop
 - right or below: session entry
 - keep the first action visible in the first viewport
@@ -136,6 +142,10 @@ Use the approved motif as a trust and identity anchor.
 Chat remains conversation-first.
 The motif should support the route through framing, not dominate it.
 
+Canonical implementation target:
+
+- `docs/ux/assets/aion-chat-canonical-reference-v2.png`
+
 - timeline rails can echo transcript continuity
 - the main figure should appear as a background anchor or side illustration
 - composer and latest messages remain the primary focus
@@ -145,6 +155,10 @@ The motif should support the route through framing, not dominate it.
 This route should carry the richest form of the motif.
 It is the natural home for the full body map, pins, labels, and cognitive
 layer timelines.
+
+Canonical implementation target:
+
+- `docs/ux/assets/aion-personality-canonical-reference-v1.png`
 
 - identity, role, knowledge, skills, and planning can all map visibly here
 - expandable metadata can live beside the illustration
@@ -169,6 +183,20 @@ lighter illustration density.
 - use smaller figure fragments or motif crops
 - preserve strong focus on controls and confirmation states
 - destructive actions must remain visually clear and sober
+
+### Dashboard
+
+Dashboard should feel like the flagship embodied cockpit.
+It can be more ceremonial and emotionally striking than the other product
+routes as long as primary actions remain easy to scan.
+
+Canonical implementation target:
+
+- `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
+
+- keep one central embodied presence or cognition anchor
+- surround it with usable cards, goals, reflection, memory, and guidance
+- use the motif to explain AION state rather than to decorate empty space
 
 ## Responsive Interpretation
 
@@ -244,6 +272,21 @@ The next visual lane should be split into small web-first slices:
 5. redesign `tools` around capability artifacts and linked modules
 6. refine `chat` and `settings` with lighter motif reuse
 7. create responsive proof and state proof across all major routes
+
+## Screenshot-Parity Workflow
+
+When a later web task changes one of the motif-led routes, the acceptance
+workflow should include:
+
+1. implement the route update against the current canonical screen-set
+2. deploy or run the local equivalent proof target
+3. capture fresh screenshots for the touched route and breakpoint
+4. compare the result against the canonical reference image for that route
+5. record the remaining visual gaps before declaring parity
+
+The current canonical route targets and parity expectations are defined in:
+
+- `docs/ux/canonical-web-screen-reference-set.md`
 
 ## Approved Boundaries
 

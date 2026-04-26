@@ -88,6 +88,12 @@ near-term coordination direction without rewriting the canonical architecture.
 - `../web/` - browser client workspace
 - `../mobile/` - future mobile client placeholder
 
+## UX Sources Of Truth
+
+- `ux/aion-visual-motif-system.md`
+- `ux/canonical-web-screen-reference-set.md`
+- `ux/design-memory.md`
+
 Use these files for explicit follow-up on dual-loop coordination, attention
 gating, batched conversation handling, and future external productivity
 connector boundaries before those decisions become live runtime behavior.

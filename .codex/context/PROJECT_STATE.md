@@ -10,6 +10,19 @@ Last updated: 2026-04-26
   user preferences over time
 - Commercial model: TBD
 - Current phase: no-UI V1 baseline achieved in repo; core-V1 time-aware planning revision now active before later organizer-tool onboarding
+- 2026-04-26: `PRJ-733` is now complete:
+  - the approved canonical web-screen set is now stored in:
+    - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
+    - `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
+    - `docs/ux/assets/aion-personality-canonical-reference-v1.png`
+    - `docs/ux/assets/aion-chat-canonical-reference-v2.png`
+  - route-level UX truth and the screenshot-parity workflow now live in:
+    - `docs/ux/canonical-web-screen-reference-set.md`
+    - `docs/ux/aion-visual-motif-system.md`
+    - `docs/ux/design-memory.md`
+  - future motif-led web changes should now capture post-deploy screenshot
+    proof against these canonical route targets instead of relying on prompt
+    history alone
 - 2026-04-26: `PRJ-732` is now complete:
   - `aion_profile` now carries one profile-owned `utc_offset` setting for
     explicit local-time continuity
@@ -3654,6 +3667,7 @@ Last updated: 2026-04-26
 - `docs/planning/next-iteration-plan.md`
 - `docs/planning/open-decisions.md`
 - `docs/operations/runtime-ops-runbook.md`
+- `docs/ux/canonical-web-screen-reference-set.md`
 
 ## Optional Project Docs
 

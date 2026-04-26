@@ -2,6 +2,26 @@
 
 Last updated: 2026-04-26
 
+## Fresh Canonical Screen-Set Freeze (2026-04-26)
+
+- fresh user direction now freezes four route-level web references as the
+  canonical UX target for convergence work:
+  - landing
+  - dashboard
+  - personality
+  - chat
+- `PRJ-733` is now complete:
+  - the approved route assets are now stored in:
+    - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
+    - `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
+    - `docs/ux/assets/aion-personality-canonical-reference-v1.png`
+    - `docs/ux/assets/aion-chat-canonical-reference-v2.png`
+  - the canonical route-screen set and parity workflow now live in:
+    - `docs/ux/canonical-web-screen-reference-set.md`
+  - future implementation and polish slices touching these routes must capture
+    post-deploy screenshot proof and compare it directly against the matching
+    canonical asset before claiming visual convergence
+
 ## Fresh Profile Local-Time Fix (2026-04-26)
 
 - fresh user-reported local-time drift now seeds one bounded continuity fix
@@ -156,6 +176,8 @@ Last updated: 2026-04-26
       - tablet capture
       - live backend state coverage for loading, empty, error, and success
       - keyboard, touch, pointer, contrast, and reduced-motion review
+      - post-deploy screenshot comparison against
+        `docs/ux/canonical-web-screen-reference-set.md` for motif-led routes
 
 ## Current Active Lane
 

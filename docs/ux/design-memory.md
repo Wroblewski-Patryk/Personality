@@ -30,3 +30,8 @@
   `docs/ux/aion-visual-motif-system.md`.
 - The current approved chat art direction reference now also includes
   `docs/ux/assets/aion-chat-background-reference-v1.png`.
+- The current approved canonical web screen-set now lives in
+  `docs/ux/canonical-web-screen-reference-set.md`.
+- Future web UX tasks should capture post-deploy screenshots and compare them
+  directly against the canonical screen-set instead of relying only on memory
+  or prompt descriptions.
