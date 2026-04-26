@@ -50,6 +50,13 @@ Last updated: 2026-04-26
   - `PRJ-739` Shared Route Art, Material, And Typography Polish
   - `PRJ-740` Responsive, State, And Accessibility Proof
   - `PRJ-741` Production Screenshot Parity And Baseline Freeze
+  - a later detailed parity pass now tightens that execution into the current
+    flagship route family:
+    - shared dashboard-first shell framing
+    - `chat`
+    - `personality` preview
+  - execution-ready detailed plan:
+    - `docs/planning/dashboard-chat-personality-canonical-parity-plan.md`
 - implementation progress on 2026-04-26:
   - `PRJ-735` is now complete locally:
     - the authenticated shell rail is lighter, narrower, and less visually dominant
@@ -75,6 +82,22 @@ Last updated: 2026-04-26
     - final cross-route premium polish
     - `personality` convergence onto the refined shell
     - responsive and post-deploy screenshot parity proof
+  - `PRJ-737..PRJ-739` are now complete locally:
+    - the authenticated shell now has a richer dashboard-first utility bar and
+      stronger flagship framing
+    - `personality` now uses a route-specific embodied figure asset:
+      - `docs/ux/assets/aion-personality-figure-reference-v1.png`
+      - `web/public/aion-personality-figure-reference-v1.png`
+    - the `personality` top preview now includes:
+      - anchored identity/knowledge/planning/skills/role callouts
+      - a mind-layers timeline panel
+      - stronger conscious/subconscious/recent-activity side panels
+    - focused validation passed:
+      - `Push-Location .\web; npm run build; Pop-Location`
+  - the next remaining parity gap is now narrower and more explicit:
+    - final shared premium polish across `dashboard-first shell + chat + personality`
+    - responsive desktop/tablet/mobile proof
+    - post-deploy screenshot comparison against the canonical assets
 
 ## Fresh Profile Local-Time Fix (2026-04-26)
 

@@ -79,6 +79,8 @@ The same visual grammar must be reused across:
 - public entry surfaces
 
 The routes may vary in density, but not in visual language.
+Shared shell chrome such as the premium utility top bar should be reused
+across flagship authenticated routes instead of being redesigned per screen.
 
 ### 5. Illustration Must Support Product UX
 
@@ -195,6 +197,7 @@ Canonical implementation target:
 - `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
 
 - keep one central embodied presence or cognition anchor
+- use one calm premium utility bar to frame the workspace before route content
 - surround it with usable cards, goals, reflection, memory, and guidance
 - use the motif to explain AION state rather than to decorate empty space
 
@@ -252,7 +255,10 @@ V1 asset family for web:
 4. chat route soft continuity backdrop
    - current approved reference:
      `docs/ux/assets/aion-chat-background-reference-v1.png`
-5. settings route light trust illustration
+5. personality route embodied figure preview
+   - current approved reference:
+     `docs/ux/assets/aion-personality-figure-reference-v1.png`
+6. settings route light trust illustration
 
 V2 concept direction:
 

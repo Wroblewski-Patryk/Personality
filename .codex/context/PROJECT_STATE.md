@@ -155,6 +155,26 @@ Last updated: 2026-04-26
     - final premium polish across route family consistency
     - `personality` convergence on the refined shell
     - explicit responsive and post-deploy screenshot parity proof
+- 2026-04-26: flagship dashboard/chat/personality parity planning is now expanded:
+  - one more detailed route-family convergence plan now lives in:
+    - `docs/planning/dashboard-chat-personality-canonical-parity-plan.md`
+  - the new plan narrows the remaining route-family work to:
+    - dashboard-first shell framing
+    - `chat`
+    - `personality` preview
+- 2026-04-26: the next flagship convergence implementation slices are now complete locally:
+  - the shared authenticated shell now carries a richer dashboard-first utility bar
+  - `personality` now uses one route-specific embodied figure asset stored in:
+    - `docs/ux/assets/aion-personality-figure-reference-v1.png`
+    - `web/public/aion-personality-figure-reference-v1.png`
+  - the top `personality` preview now behaves much closer to the canonical route:
+    - anchored callouts
+    - mind-layer timeline
+    - stronger conscious/subconscious/recent-activity side panels
+  - the remaining route-family gap is now primarily:
+    - cross-route premium polish
+    - responsive proof
+    - post-deploy screenshot parity
 - 2026-04-25: `PRJ-707` is now complete:
   - the GUI-language selector now rests on one shared locale metadata model
     carrying value, native label, localized label, icon token, and explicit

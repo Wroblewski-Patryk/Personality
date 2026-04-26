@@ -1167,6 +1167,70 @@ function ChatFeatureCard({
   );
 }
 
+function ShellUtilityBar({
+  currentUserLabel,
+  accountPanelOpen,
+  onAccountClick,
+}: {
+  currentUserLabel: string;
+  accountPanelOpen: boolean;
+  onAccountClick: () => void;
+}) {
+  return (
+    <header className="aion-utility-bar hidden xl:flex">
+      <div className="aion-utility-search">
+        <span className="aion-utility-search-icon">⌕</span>
+        <span className="aion-utility-search-copy">Search AION or ask anything...</span>
+        <span className="aion-utility-search-shortcut">⌘K</span>
+      </div>
+      <div className="aion-utility-actions">
+        <button className="aion-utility-pill" type="button">
+          <span className="aion-utility-pill-dot" />
+          Focus mode
+        </button>
+        <button className="aion-utility-pill" type="button">
+          ✧
+          Quick capture
+        </button>
+        <button
+          className={`aion-utility-account ${accountPanelOpen ? "aion-utility-account-active" : ""}`}
+          onClick={onAccountClick}
+          type="button"
+        >
+          <span className="aion-utility-account-avatar">{currentUserLabel.slice(0, 1).toUpperCase()}</span>
+          <span className="aion-utility-account-copy">{currentUserLabel}</span>
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function PersonalityTimelineRow({
+  token,
+  title,
+  detail,
+  value,
+}: {
+  token: string;
+  title: string;
+  detail: string;
+  value: string;
+}) {
+  return (
+    <article className="aion-personality-timeline-row">
+      <span className="aion-personality-timeline-token">{token}</span>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-base-900">{title}</p>
+        <p className="mt-1 text-xs leading-6 text-base-800">{detail}</p>
+      </div>
+      <div className="aion-personality-timeline-track" aria-hidden="true">
+        <span />
+      </div>
+      <span className="aion-personality-timeline-value">{value}</span>
+    </article>
+  );
+}
+
 export default function App() {
   const [route, setRoute] = useState<RoutePath>(() => normalizeRoute(window.location.pathname));
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -1743,6 +1807,98 @@ export default function App() {
     },
   ];
   const chatActiveSummary = `${routeLabel("/chat", resolvedUiLanguage)} · Active conversation`;
+  const personalityPreviewCallouts = [
+    {
+      key: "identity",
+      className: "aion-personality-callout aion-personality-callout-identity",
+      eyebrow: "Identity",
+      title: "Stable",
+      body: currentUserLabel,
+    },
+    {
+      key: "knowledge",
+      className: "aion-personality-callout aion-personality-callout-knowledge",
+      eyebrow: "Learned knowledge",
+      title: `${stringValue(knowledgeSummary?.semantic_conclusion_count, "0")} patterns`,
+      body: "Books, concepts, and reusable insights.",
+    },
+    {
+      key: "planning",
+      className: "aion-personality-callout aion-personality-callout-planning",
+      eyebrow: "Planning",
+      title: `${stringValue(planningSummary?.active_goal_count, "0")} active goals`,
+      body: "Current focus and next milestones.",
+    },
+    {
+      key: "skills",
+      className: "aion-personality-callout aion-personality-callout-skills",
+      eyebrow: "Skills",
+      title: stringValue((overview?.role_skill_state as Record<string, unknown> | undefined)?.skill_count, "18"),
+      body: "Visible capabilities and tools.",
+    },
+    {
+      key: "role",
+      className: "aion-personality-role-card",
+      eyebrow: "Role",
+      title: "Advisor & creator",
+      body: "Strategic, thoughtful, supportive.",
+    },
+  ];
+  const personalityTimelineRows = [
+    {
+      token: "M",
+      title: "Memory",
+      detail: "Experiences and stored recall",
+      value: `${stringValue(knowledgeSummary?.semantic_conclusion_count, "0")} notes`,
+    },
+    {
+      token: "R",
+      title: "Reflection",
+      detail: "Insights and slower learning",
+      value: `${stringValue(knowledgeSummary?.affective_conclusion_count, "0")} insights`,
+    },
+    {
+      token: "C",
+      title: "Context",
+      detail: "Environment and active inputs",
+      value: recentChannelsLabel,
+    },
+    {
+      token: "M",
+      title: "Motivation",
+      detail: "Drivers, values, and current goals",
+      value: `${stringValue(planningSummary?.active_goal_count, "0")} aligned`,
+    },
+    {
+      token: "A",
+      title: "Action",
+      detail: "Tasks and execution posture",
+      value: `${stringValue(planningSummary?.active_task_count, "0")} active`,
+    },
+    {
+      token: "E",
+      title: "Expression",
+      detail: "Communication style and language",
+      value: stringValue(me?.settings.preferred_language, "adaptive"),
+    },
+  ];
+  const personalityConsciousSignals = [
+    { label: "Focus", value: stringValue(planningSummary?.active_goal_count, "0") !== "0" ? "High" : "Steady" },
+    { label: "Clarity", value: "87%" },
+    { label: "Energy", value: "Steady" },
+    { label: "Load", value: stringValue(planningSummary?.active_task_count, "0") === "0" ? "Light" : "Moderate" },
+  ];
+  const personalitySubconsciousSignals = [
+    { label: "Patterns", value: `${stringValue(knowledgeSummary?.semantic_conclusion_count, "0")}` },
+    { label: "Associations", value: `${stringValue(knowledgeSummary?.affective_conclusion_count, "0")}` },
+    { label: "Preferences", value: `${stringValue(preferenceSummary?.learned_preference_count, "0")}` },
+    { label: "Intuition", value: "Strong" },
+  ];
+  const personalityRecentActivity = [
+    { title: "Updated project plan", when: "2h ago" },
+    { title: "Completed reflection cycle", when: "5h ago" },
+    { title: "Learned preference captured", when: "Yesterday" },
+  ];
 
   function changeRoute(nextRoute: RoutePath) {
     startTransition(() => {
@@ -2194,6 +2350,12 @@ export default function App() {
           </aside>
 
           <div className="grid gap-4">
+            <ShellUtilityBar
+              currentUserLabel={currentUserLabel}
+              accountPanelOpen={accountPanelOpen}
+              onAccountClick={() => setAccountPanelOpen((value) => !value)}
+            />
+
             <header className="aion-panel rounded-[2rem] xl:hidden">
               <div className="flex flex-wrap items-center gap-3 px-4 py-4 sm:px-5">
                 <div className="min-w-0 flex-1">
@@ -2944,18 +3106,39 @@ export default function App() {
                 ]}
               />
 
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,0.8fr)]">
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(22rem,0.74fr)]">
                 <div className="grid gap-6">
-                  <MotifFigurePanel
-                    title="Architecture made tangible"
-                    body="This route turns the AION runtime into one readable embodied map: identity near the head, planning close to the cognitive surface, knowledge and skills as held capabilities, and memory plus reflection as deeper continuity layers."
-                    highlights={[
-                      "identity near the head",
-                      "planning as the active board",
-                      "knowledge and skills as visible tools",
-                      "memory and reflection as slower layers",
-                    ]}
-                  />
+                  <section className="aion-panel aion-personality-hero">
+                    <div className="aion-personality-hero-stage">
+                      <div className="aion-personality-hero-figure">
+                        {personalityPreviewCallouts.map((callout) => (
+                          <article key={callout.key} className={callout.className}>
+                            <p className="text-[10px] uppercase tracking-[0.18em] text-base-800">{callout.eyebrow}</p>
+                            <p className="mt-2 font-display text-xl text-base-900">{callout.title}</p>
+                            <p className="mt-2 text-sm leading-6 text-base-800">{callout.body}</p>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="aion-personality-timeline-panel">
+                      <div className="mb-4">
+                        <p className="text-sm uppercase tracking-[0.24em] text-base-800">Mind layers timeline</p>
+                        <h3 className="mt-2 font-display text-2xl text-base-900">Embodied personality layers in motion</h3>
+                      </div>
+                      <div className="grid gap-3">
+                        {personalityTimelineRows.map((row) => (
+                          <PersonalityTimelineRow
+                            key={row.title}
+                            token={row.token}
+                            title={row.title}
+                            detail={row.detail}
+                            value={row.value}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </section>
 
                   <InsightPanel
                     eyebrow="Layer map"
@@ -2979,11 +3162,51 @@ export default function App() {
 
                 <div className="grid gap-6">
                   <InsightPanel
-                    eyebrow="Pipeline"
-                    title="Conscious and subconscious view"
-                    body="Foreground stages stay visible as one coherent route, while background reflection stays present as a slower support layer."
+                    eyebrow="Conscious layer"
+                    title="Active awareness and current cognition"
+                    body="The foreground loop stays visible through focus, clarity, active load, and the present task horizon."
                   >
-                    <FlowRail items={personalityFlowItems} />
+                    <div className="grid gap-3">
+                      {personalityConsciousSignals.map((item) => (
+                        <div key={item.label} className="aion-personality-signal-row">
+                          <span className="aion-personality-signal-label">{item.label}</span>
+                          <span className="aion-personality-signal-value">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </InsightPanel>
+
+                  <InsightPanel
+                    eyebrow="Subconscious layer"
+                    title="Background patterns and latent knowledge"
+                    body="Longer memory, associations, and learned preferences stay active without crowding the live route."
+                  >
+                    <div className="grid gap-3">
+                      {personalitySubconsciousSignals.map((item) => (
+                        <div key={item.label} className="aion-personality-signal-row">
+                          <span className="aion-personality-signal-label">{item.label}</span>
+                          <span className="aion-personality-signal-value">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </InsightPanel>
+
+                  <InsightPanel
+                    eyebrow="Recent activity"
+                    title="Latest internal movement"
+                    body="Recent changes stay readable before the user opens the deeper sections."
+                  >
+                    <div className="grid gap-3">
+                      {personalityRecentActivity.map((item) => (
+                        <div key={item.title} className="aion-personality-activity-row">
+                          <div>
+                            <p className="text-sm font-semibold text-base-900">{item.title}</p>
+                            <p className="mt-1 text-sm text-base-800">{item.when}</p>
+                          </div>
+                          <span className="aion-chip-ghost rounded-full px-3 py-1 text-xs font-medium">View</span>
+                        </div>
+                      ))}
+                    </div>
                   </InsightPanel>
 
                   <InsightPanel

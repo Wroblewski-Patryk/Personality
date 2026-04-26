@@ -21,6 +21,14 @@
   Use one route-specific right-weighted illustration with strong negative space
   on the left for transcript readability, instead of trying to fake the full
   premium effect from gradients alone.
+- Personality figure artwork:
+  Use one route-specific embodied figure asset with enough negative space for
+  anchored callouts and side panels, instead of relying on generic CSS-only
+  humanoid placeholders.
+- Flagship utility bar:
+  Use one calm top utility band with search, compact actions, and account
+  posture to give authenticated routes dashboard-grade framing without
+  inventing route-local chrome.
 
 ## Reuse Notes
 
@@ -30,6 +38,10 @@
   `docs/ux/aion-visual-motif-system.md`.
 - The current approved chat art direction reference now also includes
   `docs/ux/assets/aion-chat-background-reference-v1.png`.
+- The current approved personality route preview now also includes
+  `docs/ux/assets/aion-personality-figure-reference-v1.png`.
+- The current approved flagship-shell pattern now includes a shared utility
+  top bar reused across premium authenticated routes.
 - The current approved canonical web screen-set now lives in
   `docs/ux/canonical-web-screen-reference-set.md`.
 - Future web UX tasks should capture post-deploy screenshots and compare them
