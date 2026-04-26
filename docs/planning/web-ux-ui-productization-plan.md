@@ -194,6 +194,64 @@ Why this order:
 - final route sweep and screenshot proof should validate the refined system as
   one product surface, not as disconnected tweaks
 
+Accepted closure on 2026-04-26:
+
+- the second-pass lane is now complete through `PRJ-710`
+- the accepted baseline includes:
+  - trust-first public login posture
+  - product-facing copy across the shell
+  - explicit mobile, tablet, and desktop shell behavior
+  - one shared loading/empty/success/error posture
+  - token-based locale metadata for GUI language
+  - calmer visual hierarchy with status chips reserved for true status meaning
+  - authenticated route proof across `chat`, `settings`, `tools`, and
+    `personality`
+- accepted screenshot evidence lives in:
+  - `.codex/artifacts/prj705-responsive-proof/`
+  - `.codex/artifacts/prj708-visual-hierarchy-proof/`
+  - `.codex/artifacts/prj709-authenticated-route-sweep/`
+- remaining follow-up after this lane is polish-level only; the next product
+  queue returns to shared chat transcript continuity work
+
+## Visual Motif Refresh On 2026-04-26
+
+Fresh user-approved design direction now seeds the next explicit visual lane
+for the web shell.
+
+Reference source:
+
+- approved snapshot:
+  - `docs/ux/assets/aion-visual-motif-reference.png`
+- design system freeze:
+  - `docs/ux/aion-visual-motif-system.md`
+
+This lane does not change backend ownership or route topology.
+It changes visual language, route composition, shared styling primitives, and
+illustration usage so the shell can become more distinctive and emotionally
+coherent.
+
+### New Queue
+
+The next web visual lane is now seeded through `PRJ-728`.
+
+Execution order:
+
+1. `PRJ-723` Freeze AION Visual Motif And V1 Web UX Direction
+2. `PRJ-724` Shared Visual Tokens And Shell Background System
+3. `PRJ-725` Public Entry And Authenticated Shell Motif Integration
+4. `PRJ-726` Personality And Tools Route Motif Implementation
+5. `PRJ-727` Chat And Settings Lightweight Motif Integration
+6. `PRJ-728` Responsive Proof, Accessibility Review, And Context Sync
+
+Why this order:
+
+- freeze the motif first so later implementation reuses one shared direction
+- move shared tokens and surfaces before route-specific polish
+- update the shell framing before deep route compositions
+- let `personality` and `tools` carry the richest expression of the motif
+- keep `chat` and `settings` calmer and more supportive
+- finish with proof across states, breakpoints, and accessibility posture
+
 ## Tasks
 
 ### Task
@@ -353,8 +411,28 @@ Chosen implementation contract:
 - keep `GET /app/me` and `PATCH /app/me/settings` as the first-party settings
   source of truth
 - support `system`, `en`, `pl`, and `de` in the first selector iteration
-- render the selector as `flag + language label`
+- render the selector from explicit locale metadata with locale token/icon plus
+  native and localized labels
 - explain in helper copy that the selector changes interface language only
+
+Locale metadata follow-up for later client reuse:
+
+- one locale option record should carry:
+  - `value`
+  - `native_label`
+  - localized label map for supported GUI locales
+  - explicit locale-icon token or later asset reference
+  - fallback semantics for `system`
+- locale-icon rendering must not depend on implicit emoji support
+- the first shared fallback posture is text-token based:
+  - `AUTO`
+  - `EN`
+  - `PL`
+  - `DE`
+- web may render those tokens immediately, and later mobile may replace the
+  token with an approved asset while preserving the same metadata contract
+- this metadata remains interface-only and must not change conversation
+  language ownership
 
 ### Task
 

@@ -1,6 +1,6 @@
 # TASK_BOARD
 
-Last updated: 2026-04-25
+Last updated: 2026-04-26
 
 ## Fresh Data Reset Analysis (2026-04-25)
 
@@ -66,6 +66,31 @@ Last updated: 2026-04-25
     - bounded operator cleanup commands
     - destructive guardrails
   - the destructive-data lane seeded through `PRJ-722` is now complete
+
+## Fresh Visual Motif Planning (2026-04-26)
+
+- fresh user-approved design direction now seeds one bounded UX/UI lane through
+  `PRJ-728`
+- the approved direction keeps the current product and architecture boundaries:
+  - backend-owned `/app/*` contracts stay unchanged
+  - route topology stays intact unless a later task explicitly changes it
+  - the new work is visual-system, layout, illustration, and responsive-proof
+    scope
+- the new design source is now frozen in:
+  - `docs/ux/assets/aion-visual-motif-reference.png`
+  - `docs/ux/aion-visual-motif-system.md`
+- planned execution order for this lane:
+  - `PRJ-723` Freeze AION Visual Motif And V1 Web UX Direction
+  - `PRJ-724` Shared Visual Tokens And Shell Background System
+  - `PRJ-725` Public Entry And Authenticated Shell Motif Integration
+  - `PRJ-726` Personality And Tools Route Motif Implementation
+  - `PRJ-727` Chat And Settings Lightweight Motif Integration
+  - `PRJ-728` Responsive Proof, Accessibility Review, And Context Sync
+- `PRJ-723` is now complete:
+  - the concept image is stored in the repository as the approved UX snapshot
+  - the motif, constraints, route translation rules, and future asset family
+    are now documented in `docs/ux/aion-visual-motif-system.md`
+  - the next web visual lane is now explicit and execution-ready
 
 ## Current Active Lane
 
@@ -339,9 +364,65 @@ Last updated: 2026-04-25
   - the repo now contains one execution-ready plan for shared chat transcript
     continuity in
     `docs/planning/shared-chat-transcript-and-telegram-continuity-plan.md`
-- `PRJ-712` is now the first `READY` slice:
-  - freeze the shared `/app/chat/history` transcript contract before backend
-    and web implementation changes widen the product-facing chat model
+- `PRJ-712` is now complete:
+  - `/app/chat/history` is now frozen as a shared transcript contract instead
+    of a memory-entry surface
+  - the contract now fixes one backend-owned continuity owner, a default
+    latest-`10` window, chronological ordering, and one bounded message item
+    shape for web and later mobile
+- `PRJ-713` is now complete:
+  - backend now projects existing episodic turn memory into transcript items
+    for `/app/chat/history` instead of raw memory entries
+  - the endpoint now defaults to the latest `10` transcript items and returns
+    them in chronological oldest-to-newest order
+  - focused backend regressions passed for route shape and transcript ordering
+- `PRJ-714` is now complete:
+  - the web client now consumes the backend transcript item shape instead of
+    the previous memory-entry interpretation
+  - `/chat` now renders one merged conversation stream instead of split
+    `sessionMessages` plus a continuity sidebar
+  - the initial transcript load scrolls to the bottom, and new assistant
+    replies are revealed from the top edge after send
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+- `PRJ-715` is now the first `READY` slice:
+  - prove that linked Telegram and first-party app turns appear in the same
+    shared transcript continuity
+- `PRJ-715` is now complete:
+  - route regressions now prove linked Telegram and app turns appear in the
+    same authenticated `/app/chat/history` transcript
+  - optional-channel posture is now pinned so unlinked Telegram traffic stays
+    outside app-auth transcript continuity
+  - runtime regression now proves one shared continuity owner can project both
+    `api` and `telegram` turns into the same transcript
+  - focused validation passed:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py tests/test_runtime_pipeline.py; Pop-Location`
+      -> `218 passed`
+- `PRJ-716` is now the first `READY` slice:
+  - sync shared client baseline and product docs with the now-proven
+    transcript-safe contract
+- `PRJ-716` is now complete:
+  - `docs/planning/mobile-client-baseline.md` now defines
+    `/app/chat/history` as a shared message transcript with latest-`10`
+    posture and oldest-to-newest ordering
+  - `mobile/README.md` and `docs/overview.md` now point at the same
+    transcript-safe first-party client contract
+  - doc-and-context cross-review passed for the shared client baseline
+- `PRJ-717` is now the first `READY` slice:
+  - attach final lane validation, context sync, and learning closure for the
+    shared transcript continuity work
+- `PRJ-717` is now complete:
+  - final validation passed:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q; Pop-Location`
+      -> `942 passed`
+    - `Push-Location .\web; npm run build; Pop-Location`
+      -> build passed
+  - source-of-truth files now reflect the shared transcript lane as complete
+    through `PRJ-717`
+  - learning journal now records the scheduler quiet-hours test guardrail
+    confirmed during full-suite validation
+- the shared transcript continuity lane seeded through `PRJ-717` is now
+  complete
 - planned execution order for this lane:
   - `PRJ-712` Shared Chat Transcript Contract Freeze
   - `PRJ-713` Backend Transcript Projection And Chat History API Update
@@ -376,9 +457,68 @@ Last updated: 2026-04-25
   the foreground-awareness queue through `PRJ-702`:
   - that defer note is now superseded by later explicit user reprioritization:
     `PRJ-696..PRJ-702` were executed and completed on 2026-04-25
-- `PRJ-703` is now the first `READY` slice:
-  - reframe `/login` around product value, trust, and fast session entry while
-    removing user-facing build chrome from the primary public experience
+- `PRJ-703` is now complete:
+  - `/login` now leads with product-value and trust framing instead of
+    architecture-heavy badges and contract language
+  - the public build revision badge is no longer shown on the unauthenticated
+    session-entry surface
+  - supporting cards now reinforce return-to-chat value, preference control,
+    and runtime-reset ownership instead of endpoint or contract wording
+- `PRJ-704` is now complete:
+  - shared shell copy no longer leaks backend, contract, endpoint, or payload
+    wording into primary product surfaces
+  - route descriptions, settings language, loading states, and personality
+    highlights now read as product copy across `en`, `pl`, and `de`
+  - remaining technical detail is now framed as secondary details rather than
+    front-and-center value language
+- `PRJ-705` is now complete:
+  - tablet now has a distinct shell posture with top navigation, summary-strip
+    quick stats, and responsive sticky behavior instead of behaving like a
+    scaled mobile screen
+  - chat, settings, tools, and personality now shift into earlier tablet and
+    desktop multi-column layouts without forking the shared shell
+  - screenshot proof now lives in `.codex/artifacts/prj705-responsive-proof/`
+- `PRJ-706` is now complete:
+  - loading, empty, success, and error states now share one product-facing
+    posture across login, bootstrap, chat continuity, tools, and personality
+  - short recovery-first messaging now leads, while truthful error detail
+    remains available through expandable details
+- `PRJ-707` is now complete:
+  - the GUI-language selector now uses one shared locale metadata model with
+    value, native label, localized label, icon token, and system fallback
+    posture
+  - locale icon rendering is now explicitly token-based instead of depending
+    on implicit emoji behavior
+- `PRJ-708` is now complete:
+  - decorative badges were reduced across login, shell summary, settings,
+    tools, and personality so chips mostly return to state-bearing roles
+  - hierarchy now leans on overlines, headings, stat tiles, and grouped detail
+    cards instead of repeating bordered badge affordances
+  - refreshed screenshot proof now lives in
+    `.codex/artifacts/prj708-visual-hierarchy-proof/`
+- `PRJ-709` is now complete:
+  - authenticated `chat`, `settings`, `tools`, and `personality` were reviewed
+    after the second UX/UI lane with mobile, tablet, and desktop proof
+  - the accepted baseline now shows only polish-level follow-up, not
+    product-structure gaps
+  - evidence lives in `.codex/artifacts/prj709-authenticated-route-sweep/`
+- `PRJ-710` is now complete:
+  - planning docs, board state, project state, and learning references now
+    describe one accepted second-pass UX/UI baseline
+  - accepted evidence now points to the responsive proof, hierarchy proof, and
+    authenticated route sweep artifacts without overstating mobile readiness
+  - the second UX/UI lane is now explicitly closed
+- `PRJ-712` is now complete:
+  - `/app/chat/history` is now frozen as a shared transcript contract instead
+    of a memory-entry surface
+  - the contract now fixes one backend-owned continuity owner, a default
+    latest-`10` window, chronological ordering, and one bounded message item
+    shape for web and later mobile
+- `PRJ-713` is now complete:
+  - backend now projects existing episodic turn memory into transcript items
+    for `/app/chat/history` instead of raw memory entries
+  - the endpoint now defaults to the latest `10` transcript items and returns
+    them in chronological oldest-to-newest order
 - planned execution order for this lane:
   - `PRJ-703` Login Value Framing And Trust Cleanup
   - `PRJ-704` Product Copy And Terminology Cleanup Across The Shell
@@ -775,13 +915,93 @@ Last updated: 2026-04-25
 
 ## READY
 
-- [ ] PRJ-648 Implement truthful v1-readiness gate evaluation
+- [x] PRJ-648 Implement truthful v1-readiness gate evaluation
   - Owner: Backend Builder
   - Group: V1 Readiness Truth And Acceptance Boundary
   - Depends on: PRJ-647
   - Priority: P0
-  - Status: READY
-  - Validation: targeted `/health` and runtime-policy coverage
+  - Status: DONE
+  - Validation: `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py -k "v1_readiness or telegram_round_trip_readiness_state or deploy_parity_manual_fallback"; Pop-Location`
+
+- [x] PRJ-649 Add proof for v1-readiness truthfulness
+  - Owner: QA/Test
+  - Group: V1 Readiness Truth And Acceptance Boundary
+  - Depends on: PRJ-648
+  - Priority: P0
+  - Status: DONE
+  - Validation: `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py -k "v1_readiness"; Pop-Location`
+
+- [x] PRJ-650 Sync docs and context for truthful v1-readiness
+  - Owner: Product Docs Agent
+  - Group: V1 Readiness Truth And Acceptance Boundary
+  - Depends on: PRJ-649
+  - Priority: P1
+  - Status: DONE
+  - Validation: doc-and-context sync
+
+- [x] PRJ-651 Freeze the foreground capability-and-time awareness contract
+  - Owner: Planning Agent
+  - Group: Foreground Capability And Time Awareness
+  - Depends on: PRJ-650
+  - Priority: P0
+  - Status: DONE
+  - Validation: architecture and runtime-contract cross-review
+
+- [x] PRJ-652 Implement explicit foreground awareness for time and approved tools
+  - Owner: Backend Builder
+  - Group: Foreground Capability And Time Awareness
+  - Depends on: PRJ-651
+  - Priority: P0
+  - Status: DONE
+  - Validation: targeted runtime, planning, and prompt-path coverage
+
+- [x] PRJ-653 Add proof for indirect capability use and temporal reasoning
+  - Owner: QA/Test
+  - Group: Foreground Capability And Time Awareness
+  - Depends on: PRJ-652
+  - Priority: P0
+  - Status: DONE
+  - Validation: targeted pytest plus behavior scenarios
+
+- [x] PRJ-654 Sync docs and context for foreground capability awareness
+  - Owner: Product Docs Agent
+  - Group: Foreground Capability And Time Awareness
+  - Depends on: PRJ-653
+  - Priority: P1
+  - Status: DONE
+  - Validation: doc-and-context sync
+
+- [x] PRJ-643 Freeze the channel-aware delivery constraint baseline
+  - Owner: Planning Agent
+  - Group: Channel-Aware Delivery Baseline
+  - Depends on: PRJ-654
+  - Priority: P1
+  - Status: DONE
+  - Validation: architecture and delivery-contract cross-review
+
+- [x] PRJ-644 Implement channel-aware Telegram segmentation and formatting
+  - Owner: Backend Builder
+  - Group: Channel-Aware Delivery Baseline
+  - Depends on: PRJ-643
+  - Priority: P1
+  - Status: DONE
+  - Validation: `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_delivery_router.py tests/test_telegram_client.py tests/test_action_executor.py -k "telegram or delivery_router" tests/test_api_routes.py -k "telegram_link or telegram_webhook or telegram" tests/test_runtime_pipeline.py -k "telegram"; Pop-Location`
+
+- [x] PRJ-645 Add proof for long-message and markdown delivery
+  - Owner: QA/Test
+  - Group: Channel-Aware Delivery Baseline
+  - Depends on: PRJ-644
+  - Priority: P1
+  - Status: DONE
+  - Validation: `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_delivery_router.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_observability_policy.py; Pop-Location`
+
+- [x] PRJ-646 Sync docs for channel-aware delivery
+  - Owner: Product Docs Agent
+  - Group: Channel-Aware Delivery Baseline
+  - Depends on: PRJ-645
+  - Priority: P2
+  - Status: DONE
+  - Validation: doc-and-context sync
 
 - [x] PRJ-636 Add the durable planned-work contract and storage shape
   - Owner: Backend Builder
