@@ -172,6 +172,11 @@ Last updated: 2026-04-26
     - refreshed chat evidence now includes:
       - `chat-reference-pass-desktop.png`
       - `chat-reference-pass-mobile-v2.png`
+    - a further premium-polish pass is now complete locally:
+      - stronger live-state cue in the header
+      - planning overlay inside the portrait zone
+      - more editorial bottom feature strip treatment
+      - proof: `chat-premium-polish-pass-desktop.png`
     - before closure, the slice still needs:
       - tablet capture
       - live backend state coverage for loading, empty, error, and success

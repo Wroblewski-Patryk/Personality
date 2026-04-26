@@ -492,6 +492,23 @@ body {
   max-width: 14rem;
 }
 
+.aion-chat-portrait-overlay {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  z-index: 1;
+  width: min(15rem, calc(100% - 2.5rem));
+  padding: 1rem 1rem 1.1rem;
+  border: 1px solid rgba(126, 167, 159, 0.2);
+  border-radius: 1.35rem;
+  background:
+    linear-gradient(180deg, rgba(228, 245, 241, 0.38), rgba(255, 251, 245, 0.9));
+  box-shadow:
+    0 14px 28px rgba(81, 119, 118, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+}
+
 .aion-chat-feature-strip {
   display: grid;
   gap: 1rem;
@@ -503,6 +520,13 @@ body {
   display: flex;
   gap: 0.875rem;
   align-items: start;
+  padding-right: 0.75rem;
+  border-right: 1px solid rgba(88, 67, 52, 0.08);
+}
+
+.aion-feature-card:last-child {
+  border-right: none;
+  padding-right: 0;
 }
 
 .aion-feature-token {
@@ -557,5 +581,19 @@ body {
     right: 1rem;
     bottom: 1rem;
     max-width: 10rem;
+  }
+
+  .aion-chat-portrait-overlay {
+    top: auto;
+    bottom: 6.75rem;
+    left: 1rem;
+    width: calc(100% - 2rem);
+    max-width: 11rem;
+    padding: 0.8rem 0.85rem;
+  }
+
+  .aion-feature-card {
+    border-right: none;
+    padding-right: 0;
   }
 }

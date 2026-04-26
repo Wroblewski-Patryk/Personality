@@ -2233,7 +2233,10 @@ export default function App() {
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
                       <h2 className="font-display text-3xl text-base-900">{routeLabel("/chat", resolvedUiLanguage)}</h2>
-                      <span className="text-sm text-[#5f8f93]">{chatActiveSummary}</span>
+                      <span className="inline-flex items-center gap-2 text-sm text-[#5f8f93]">
+                        <span className="h-2 w-2 rounded-full bg-[#79b7b9]" />
+                        {chatActiveSummary}
+                      </span>
                     </div>
                     <p className="mt-2 text-sm leading-7 text-base-800">{routeDescription("/chat", resolvedUiLanguage)}</p>
                   </div>
@@ -2374,6 +2377,20 @@ export default function App() {
                   </aside>
 
                   <aside className="aion-chat-portrait-panel">
+                    <div className="aion-chat-portrait-overlay">
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-[#5f8f93]">Planning</p>
+                      <p className="mt-2 font-display text-2xl text-base-900">{chatCurrentFocus}</p>
+                      <div className="mt-4 space-y-2 text-sm text-base-800">
+                        <div className="flex items-center justify-between gap-3">
+                          <span>Current focus</span>
+                          <span className="font-semibold text-base-900">High</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span>Knowledge bridge</span>
+                          <span className="font-semibold text-[#5f8f93]">72%</span>
+                        </div>
+                      </div>
+                    </div>
                     <div className="aion-chat-portrait-copy">
                       <span className="aion-chip rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-base-900">
                         Embodied cognition

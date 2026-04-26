@@ -112,6 +112,14 @@ Last updated: 2026-04-26
     - `docs/ux/aion-visual-motif-system.md`
   - focused validation passed:
     - `Push-Location .\web; npm run build; Pop-Location`
+- 2026-04-26: chat premium polish pass is now complete locally:
+  - the chat header now carries a clearer live-conversation accent state
+  - the portrait zone now includes a planning overlay card, bringing the route
+    closer to the approved premium-chat composition
+  - the bottom feature strip now reads more like one editorial information band
+    than a row of generic utility cards
+  - refreshed proof now exists in:
+    - `.codex/artifacts/chat-premium-polish-pass-desktop.png`
 - 2026-04-25: `PRJ-707` is now complete:
   - the GUI-language selector now rests on one shared locale metadata model
     carrying value, native label, localized label, icon token, and explicit
