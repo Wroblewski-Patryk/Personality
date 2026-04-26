@@ -676,15 +676,42 @@ def stub_aion_server() -> _StubAionServer:
             "product_stage": "v1_no_ui_life_assistant",
             "conversation_gate_state": "conversation_surface_ready",
             "learned_state_gate_state": "inspection_surface_ready",
+            "website_reading_workflow_state": "ready_for_direct_and_search_first_review",
+            "tool_grounded_learning_state": "tool_grounded_learning_surface_ready",
             "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
             "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
             "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
             "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
+            "deploy_parity_state": "deploy_parity_surface_ready",
             "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+            "organizer_daily_use_classification": "extension_readiness_non_blocking_for_core_v1",
             "organizer_daily_use_total_workflow_count": 3,
             "organizer_daily_use_ready_workflow_count": 1,
             "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
             "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
+            "final_acceptance_state": "core_v1_bundle_ready",
+            "final_acceptance_gate_states": {
+                "conversation_reliability": "conversation_surface_ready",
+                "learned_state_inspection": "inspection_surface_ready",
+                "website_reading": "ready_for_direct_and_search_first_review",
+                "tool_grounded_learning": "tool_grounded_learning_surface_ready",
+                "time_aware_planned_work": "foreground_due_delivery_and_recurring_reevaluation_ready",
+                "deploy_parity": "deploy_parity_surface_ready",
+            },
+            "final_acceptance_surfaces": {
+                "conversation_reliability": "/health.conversation_channels.telegram",
+                "learned_state_inspection": "/health.learned_state",
+                "website_reading": "/health.connectors.web_knowledge_tools.website_reading_workflow",
+                "tool_grounded_learning": "/health.learned_state.tool_grounded_learning",
+                "time_aware_planned_work": "/health.v1_readiness",
+                "deploy_parity": "/health.deployment",
+            },
+            "extension_gate_states": {
+                "organizer_daily_use": "daily_use_workflows_blocked_by_provider_activation",
+            },
+            "extension_gate_surfaces": {
+                "organizer_daily_use": "/health.connectors.organizer_tool_stack",
+            },
             "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
             "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
         },
@@ -862,8 +889,12 @@ def stub_aion_server() -> _StubAionServer:
         "conversation_channels": {
             "telegram": {
                 "policy_owner": "telegram_conversation_reliability_telemetry",
+                "round_trip_ready": True,
                 "round_trip_state": "provider_backed_ready",
                 "bot_token_configured": True,
+                "delivery_adaptation_policy_owner": "telegram_delivery_channel_adaptation",
+                "delivery_segmentation_state": "bounded_transport_segmentation",
+                "delivery_formatting_state": "supported_markdown_to_html_with_plain_text_fallback",
                 "delivery_attempts": 2,
                 "delivery_failures": 0,
             },
@@ -1001,15 +1032,42 @@ def stub_aion_server() -> _StubAionServer:
                     "product_stage": "v1_no_ui_life_assistant",
                     "conversation_gate_state": "conversation_surface_ready",
                     "learned_state_gate_state": "inspection_surface_ready",
+                    "website_reading_workflow_state": "ready_for_direct_and_search_first_review",
+                    "tool_grounded_learning_state": "tool_grounded_learning_surface_ready",
                     "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
                     "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
                     "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
                     "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
+                    "deploy_parity_state": "deploy_parity_surface_ready",
                     "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                    "organizer_daily_use_classification": "extension_readiness_non_blocking_for_core_v1",
                     "organizer_daily_use_ready_workflow_count": 1,
                     "organizer_daily_use_total_workflow_count": 3,
                     "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
                     "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
+                    "final_acceptance_state": "core_v1_bundle_ready",
+                    "final_acceptance_gate_states": {
+                        "conversation_reliability": "conversation_surface_ready",
+                        "learned_state_inspection": "inspection_surface_ready",
+                        "website_reading": "ready_for_direct_and_search_first_review",
+                        "tool_grounded_learning": "tool_grounded_learning_surface_ready",
+                        "time_aware_planned_work": "foreground_due_delivery_and_recurring_reevaluation_ready",
+                        "deploy_parity": "deploy_parity_surface_ready",
+                    },
+                    "final_acceptance_surfaces": {
+                        "conversation_reliability": "/health.conversation_channels.telegram",
+                        "learned_state_inspection": "/health.learned_state",
+                        "website_reading": "/health.connectors.web_knowledge_tools.website_reading_workflow",
+                        "tool_grounded_learning": "/health.learned_state.tool_grounded_learning",
+                        "time_aware_planned_work": "/health.v1_readiness",
+                        "deploy_parity": "/health.deployment",
+                    },
+                    "extension_gate_states": {
+                        "organizer_daily_use": "daily_use_workflows_blocked_by_provider_activation",
+                    },
+                    "extension_gate_surfaces": {
+                        "organizer_daily_use": "/health.connectors.organizer_tool_stack",
+                    },
                     "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
                     "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
                 },
@@ -1160,8 +1218,12 @@ def stub_aion_server() -> _StubAionServer:
                 },
                 "conversation_channels.telegram": {
                     "policy_owner": "telegram_conversation_reliability_telemetry",
+                    "round_trip_ready": True,
                     "round_trip_state": "provider_backed_ready",
                     "bot_token_configured": True,
+                    "delivery_adaptation_policy_owner": "telegram_delivery_channel_adaptation",
+                    "delivery_segmentation_state": "bounded_transport_segmentation",
+                    "delivery_formatting_state": "supported_markdown_to_html_with_plain_text_fallback",
                 },
             },
         },
@@ -1320,15 +1382,42 @@ def _write_incident_bundle(
                 "product_stage": "v1_no_ui_life_assistant",
                 "conversation_gate_state": "conversation_surface_ready",
                 "learned_state_gate_state": "inspection_surface_ready",
+                "website_reading_workflow_state": "ready_for_direct_and_search_first_review",
+                "tool_grounded_learning_state": "tool_grounded_learning_surface_ready",
                 "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
                 "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
                 "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
                 "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
+                "deploy_parity_state": "deploy_parity_surface_ready",
                 "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                "organizer_daily_use_classification": "extension_readiness_non_blocking_for_core_v1",
                 "organizer_daily_use_ready_workflow_count": 1,
                 "organizer_daily_use_total_workflow_count": 3,
                 "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
                 "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
+                "final_acceptance_state": "core_v1_bundle_ready",
+                "final_acceptance_gate_states": {
+                    "conversation_reliability": "conversation_surface_ready",
+                    "learned_state_inspection": "inspection_surface_ready",
+                    "website_reading": "ready_for_direct_and_search_first_review",
+                    "tool_grounded_learning": "tool_grounded_learning_surface_ready",
+                    "time_aware_planned_work": "foreground_due_delivery_and_recurring_reevaluation_ready",
+                    "deploy_parity": "deploy_parity_surface_ready",
+                },
+                "final_acceptance_surfaces": {
+                    "conversation_reliability": "/health.conversation_channels.telegram",
+                    "learned_state_inspection": "/health.learned_state",
+                    "website_reading": "/health.connectors.web_knowledge_tools.website_reading_workflow",
+                    "tool_grounded_learning": "/health.learned_state.tool_grounded_learning",
+                    "time_aware_planned_work": "/health.v1_readiness",
+                    "deploy_parity": "/health.deployment",
+                },
+                "extension_gate_states": {
+                    "organizer_daily_use": "daily_use_workflows_blocked_by_provider_activation",
+                },
+                "extension_gate_surfaces": {
+                    "organizer_daily_use": "/health.connectors.organizer_tool_stack",
+                },
                 "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
                 "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
             },
@@ -1479,8 +1568,12 @@ def _write_incident_bundle(
             },
             "conversation_channels.telegram": {
                 "policy_owner": "telegram_conversation_reliability_telemetry",
+                "round_trip_ready": True,
                 "round_trip_state": "provider_backed_ready",
                 "bot_token_configured": True,
+                "delivery_adaptation_policy_owner": "telegram_delivery_channel_adaptation",
+                "delivery_segmentation_state": "bounded_transport_segmentation",
+                "delivery_formatting_state": "supported_markdown_to_html_with_plain_text_fallback",
             },
         },
     }
@@ -1501,23 +1594,50 @@ def _write_incident_bundle(
             "tool_grounded_learning": TOOL_GROUNDED_LEARNING_CONTRACT,
         },
         "capability_catalog": _capability_catalog_snapshot(),
-        "v1_readiness": {
-            "policy_owner": "v1_release_readiness_policy",
-            "product_stage": "v1_no_ui_life_assistant",
-            "conversation_gate_state": "conversation_surface_ready",
-            "learned_state_gate_state": "inspection_surface_ready",
-            "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
-            "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
-            "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
-            "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
-            "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
-            "organizer_daily_use_ready_workflow_count": 1,
-            "organizer_daily_use_total_workflow_count": 3,
-            "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
-            "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
-            "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
-            "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
-        },
+            "v1_readiness": {
+                "policy_owner": "v1_release_readiness_policy",
+                "product_stage": "v1_no_ui_life_assistant",
+                "conversation_gate_state": "conversation_surface_ready",
+                "learned_state_gate_state": "inspection_surface_ready",
+                "website_reading_workflow_state": "ready_for_direct_and_search_first_review",
+                "tool_grounded_learning_state": "tool_grounded_learning_surface_ready",
+                "time_aware_planned_work_policy_owner": "internal_time_aware_planned_work_policy",
+                "time_aware_planned_work_delivery_path": "attention_to_planning_to_expression_to_action",
+                "time_aware_planned_work_recurrence_owner": "scheduler_reevaluation_with_foreground_handoff",
+                "time_aware_planned_work_gate_state": "foreground_due_delivery_and_recurring_reevaluation_ready",
+                "deploy_parity_state": "deploy_parity_surface_ready",
+                "organizer_daily_use_state": "daily_use_workflows_blocked_by_provider_activation",
+                "organizer_daily_use_classification": "extension_readiness_non_blocking_for_core_v1",
+                "organizer_daily_use_ready_workflow_count": 1,
+                "organizer_daily_use_total_workflow_count": 3,
+                "organizer_daily_use_ready_workflows": ORGANIZER_DAILY_USE_READY_WORKFLOWS,
+                "organizer_daily_use_blocked_workflows": ORGANIZER_DAILY_USE_BLOCKED_WORKFLOWS,
+                "final_acceptance_state": "core_v1_bundle_ready",
+                "final_acceptance_gate_states": {
+                    "conversation_reliability": "conversation_surface_ready",
+                    "learned_state_inspection": "inspection_surface_ready",
+                    "website_reading": "ready_for_direct_and_search_first_review",
+                    "tool_grounded_learning": "tool_grounded_learning_surface_ready",
+                    "time_aware_planned_work": "foreground_due_delivery_and_recurring_reevaluation_ready",
+                    "deploy_parity": "deploy_parity_surface_ready",
+                },
+                "final_acceptance_surfaces": {
+                    "conversation_reliability": "/health.conversation_channels.telegram",
+                    "learned_state_inspection": "/health.learned_state",
+                    "website_reading": "/health.connectors.web_knowledge_tools.website_reading_workflow",
+                    "tool_grounded_learning": "/health.learned_state.tool_grounded_learning",
+                    "time_aware_planned_work": "/health.v1_readiness",
+                    "deploy_parity": "/health.deployment",
+                },
+                "extension_gate_states": {
+                    "organizer_daily_use": "daily_use_workflows_blocked_by_provider_activation",
+                },
+                "extension_gate_surfaces": {
+                    "organizer_daily_use": "/health.connectors.organizer_tool_stack",
+                },
+                "required_behavior_scenarios": V1_REQUIRED_BEHAVIOR_SCENARIOS,
+                "approved_tool_slices": V1_APPROVED_TOOL_SLICES,
+            },
         "connectors": {
             "organizer_tool_stack": {
                 "policy_owner": "production_organizer_tool_stack",
@@ -1786,6 +1906,11 @@ def test_release_smoke_allows_optional_deployment_evidence_to_be_omitted(
     assert summary["telegram_conversation_policy_owner"] == "telegram_conversation_reliability_telemetry"
     assert summary["telegram_conversation_round_trip_state"] == "provider_backed_ready"
     assert summary["telegram_conversation_bot_token_configured"] is True
+    assert summary["telegram_conversation_delivery_adaptation_policy_owner"] == "telegram_delivery_channel_adaptation"
+    assert summary["telegram_conversation_delivery_segmentation_state"] == "bounded_transport_segmentation"
+    assert summary["telegram_conversation_delivery_formatting_state"] == (
+        "supported_markdown_to_html_with_plain_text_fallback"
+    )
     assert summary["capability_catalog_policy_owner"] == "backend_capability_catalog_policy"
     assert summary["capability_catalog_approved_tool_families"] == CAPABILITY_CATALOG_APPROVED_TOOL_FAMILIES
     assert summary["capability_catalog_skill_execution_boundary"] == "metadata_only_capability_hints"
@@ -1851,6 +1976,27 @@ def test_release_smoke_fails_when_telegram_conversation_health_surface_is_missin
     assert result.returncode != 0
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "conversation_channels" in combined_output
+
+
+def test_release_smoke_fails_when_telegram_delivery_adaptation_posture_is_missing(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original = dict(_StubAionHandler.health_payload)
+    broken = dict(original)
+    broken_conversation_channels = dict(original["conversation_channels"])
+    broken_telegram = dict(broken_conversation_channels["telegram"])
+    broken_telegram.pop("delivery_adaptation_policy_owner", None)
+    broken_conversation_channels["telegram"] = broken_telegram
+    broken["conversation_channels"] = broken_conversation_channels
+    _StubAionHandler.health_payload = broken
+    try:
+        result = _run_release_smoke("-BaseUrl", stub_aion_server.base_url, cwd=ROOT)
+    finally:
+        _StubAionHandler.health_payload = original
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "delivery_adaptation_policy_owner" in combined_output
 
 
 def test_release_smoke_fails_when_attention_health_surface_is_missing(
@@ -1959,6 +2105,15 @@ def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_r
         "telegram_conversation_reliability_telemetry"
     )
     assert summary["incident_evidence_telegram_conversation_round_trip_state"] == "provider_backed_ready"
+    assert summary["incident_evidence_telegram_conversation_delivery_adaptation_policy_owner"] == (
+        "telegram_delivery_channel_adaptation"
+    )
+    assert summary["incident_evidence_telegram_conversation_delivery_segmentation_state"] == (
+        "bounded_transport_segmentation"
+    )
+    assert summary["incident_evidence_telegram_conversation_delivery_formatting_state"] == (
+        "supported_markdown_to_html_with_plain_text_fallback"
+    )
     assert summary["incident_evidence_attention_policy_owner"] == "durable_attention_inbox_policy"
     assert summary["incident_evidence_attention_coordination_mode"] == "durable_inbox"
     assert summary["incident_evidence_attention_contract_store_state"] == (
@@ -2065,6 +2220,15 @@ def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_pro
     assert summary["incident_bundle_debug_posture_state"] == "dedicated_admin_only"
     assert summary["incident_bundle_debug_exception_state"] == "shared_debug_break_glass_only"
     assert summary["incident_bundle_telegram_round_trip_state"] == "provider_backed_ready"
+    assert summary["incident_bundle_telegram_delivery_adaptation_policy_owner"] == (
+        "telegram_delivery_channel_adaptation"
+    )
+    assert summary["incident_bundle_telegram_delivery_segmentation_state"] == (
+        "bounded_transport_segmentation"
+    )
+    assert summary["incident_bundle_telegram_delivery_formatting_state"] == (
+        "supported_markdown_to_html_with_plain_text_fallback"
+    )
     assert summary["incident_bundle_attention_coordination_mode"] == "durable_inbox"
     assert summary["incident_bundle_attention_contract_store_state"] == "repository_backed_contract_store_active"
     assert summary["incident_bundle_attention_runtime_topology_selected_mode"] == "durable_inbox"
@@ -2367,6 +2531,85 @@ def test_release_smoke_fails_when_incident_evidence_v1_time_aware_planned_work_c
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "Smoke request failed" in combined_output
     assert "time_aware_planned_work_gate_state" in combined_output
+
+
+def test_release_smoke_fails_when_v1_readiness_treats_extension_posture_as_core_bundle_blocker(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original = dict(_StubAionHandler.health_payload["v1_readiness"])
+    broken = dict(original)
+    broken["final_acceptance_state"] = "core_v1_bundle_incomplete"
+    broken["final_acceptance_gate_states"] = {
+        **dict(original["final_acceptance_gate_states"]),
+        "organizer_daily_use": "daily_use_workflows_blocked_by_provider_activation",
+    }
+    _StubAionHandler.health_payload["v1_readiness"] = broken
+
+    try:
+        result = _run_release_smoke("-BaseUrl", stub_aion_server.base_url, cwd=ROOT)
+    finally:
+        _StubAionHandler.health_payload["v1_readiness"] = original
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "final_acceptance_gate_states" in combined_output or "final_acceptance_state" in combined_output
+
+
+def test_release_smoke_fails_when_incident_evidence_v1_readiness_treats_extension_posture_as_core_bundle_blocker(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    incident_evidence = _StubAionHandler.event_payload["incident_evidence"]
+    assert isinstance(incident_evidence, dict)
+    original_payload = incident_evidence
+    policy_posture = dict(incident_evidence["policy_posture"])
+    v1_readiness = dict(policy_posture["v1_readiness"])
+    v1_readiness["final_acceptance_state"] = "core_v1_bundle_incomplete"
+    v1_readiness["final_acceptance_gate_states"] = {
+        **dict(v1_readiness["final_acceptance_gate_states"]),
+        "organizer_daily_use": "daily_use_workflows_blocked_by_provider_activation",
+    }
+    policy_posture["v1_readiness"] = v1_readiness
+    _StubAionHandler.event_payload["incident_evidence"] = {
+        **incident_evidence,
+        "policy_posture": policy_posture,
+    }
+
+    try:
+        result = _run_release_smoke(
+            "-BaseUrl",
+            stub_aion_server.base_url,
+            "-IncludeDebug",
+            cwd=ROOT,
+        )
+    finally:
+        _StubAionHandler.event_payload["incident_evidence"] = original_payload
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "Smoke request failed" in combined_output
+    assert "final_acceptance_gate_states" in combined_output or "final_acceptance_state" in combined_output
+
+
+def test_release_smoke_fails_when_v1_readiness_deploy_gate_drifts_from_deployment_surface(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original_health = dict(_StubAionHandler.health_payload)
+    broken_health = dict(original_health)
+    deployment = dict(broken_health["deployment"])
+    deployment["runtime_trigger_mode"] = "ui_manual_fallback"
+    deployment["runtime_trigger_class"] = "manual_fallback"
+    deployment["runtime_provenance_state"] = "fallback_runtime_provenance_declared"
+    broken_health["deployment"] = deployment
+    _StubAionHandler.health_payload = broken_health
+
+    try:
+        result = _run_release_smoke("-BaseUrl", stub_aion_server.base_url, cwd=ROOT)
+    finally:
+        _StubAionHandler.health_payload = original_health
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "deploy_parity_state drifted from deployment" in combined_output
 
 
 def test_release_smoke_fails_when_learned_state_tool_grounded_contract_is_missing(

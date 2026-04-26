@@ -163,10 +163,16 @@ class FakeMemoryRepository:
 class FakeTelegramClient:
     def __init__(self, *, error: Exception | None = None):
         self.error = error
-        self.calls: list[dict[str, int | str]] = []
+        self.calls: list[dict[str, int | str | None]] = []
 
-    async def send_message(self, chat_id: int | str, text: str) -> dict:
-        self.calls.append({"chat_id": chat_id, "text": text})
+    async def send_message(
+        self,
+        chat_id: int | str,
+        text: str,
+        *,
+        parse_mode: str | None = None,
+    ) -> dict:
+        self.calls.append({"chat_id": chat_id, "text": text, "parse_mode": parse_mode})
         if self.error is not None:
             raise self.error
         return {"ok": True}
@@ -443,7 +449,7 @@ async def test_execute_uses_telegram_delivery_contract_for_telegram_responses() 
 
     assert result.status == "success"
     assert result.actions == ["send_telegram_message"]
-    assert telegram_client.calls == [{"chat_id": 123456, "text": "hello"}]
+    assert telegram_client.calls == [{"chat_id": 123456, "text": "hello", "parse_mode": None}]
 
 
 async def test_execute_appends_bounded_web_results_to_delivery_message() -> None:
@@ -506,7 +512,7 @@ async def test_execute_handles_telegram_delivery_exception_as_fail_result() -> N
     assert result.actions == ["send_telegram_message"]
     assert "TimeoutError" in result.notes
     assert "upstream timeout" in result.notes
-    assert telegram_client.calls == [{"chat_id": 123456, "text": "hello"}]
+    assert telegram_client.calls == [{"chat_id": 123456, "text": "hello", "parse_mode": None}]
 
 
 async def test_execute_runs_provider_backed_clickup_task_creation_before_delivery() -> None:

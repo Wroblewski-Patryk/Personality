@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-648
 - Title: Implement truthful v1-readiness gate evaluation
-- Status: BACKLOG
+- Status: DONE
 - Owner: Backend Builder
 - Depends on: PRJ-647
 - Priority: P0
@@ -24,9 +24,9 @@ Make `v1_readiness` a truthful runtime summary derived from the approved core
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] Core no-UI `v1` gate fields are derived from live source surfaces instead of hardcoded ready states.
-- [ ] Extension posture such as organizer daily use is either separated from core gates or explicitly marked as non-blocking extension readiness.
-- [ ] Conversation and deploy-parity semantics no longer overstate readiness when only a weaker posture is present.
+- [x] Core no-UI `v1` gate fields are derived from live source surfaces instead of hardcoded ready states.
+- [x] Extension posture such as organizer daily use is either separated from core gates or explicitly marked as non-blocking extension readiness.
+- [x] Conversation and deploy-parity semantics no longer overstate readiness when only a weaker posture is present.
 
 ## Forbidden
 - new systems without approval
@@ -36,7 +36,7 @@ Make `v1_readiness` a truthful runtime summary derived from the approved core
 
 ## Validation Evidence
 - Tests: targeted `/health` and runtime-policy coverage
-- Manual checks: inspect `/health.v1_readiness` against underlying `/health.*` source sections
+- Manual checks: inspected `/health.v1_readiness` against underlying `/health.*` source sections and confirmed organizer posture is mirrored outside the core final gate bundle
 - Screenshots/logs:
 - High-risk checks: avoid creating a second acceptance engine outside existing health and policy owners
 
@@ -49,14 +49,30 @@ Make `v1_readiness` a truthful runtime summary derived from the approved core
 - Follow-up architecture doc updates: runtime reality, testing, ops guidance
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 The intent is to tighten truthfulness, not to widen the product scope.
+
+Completed on 2026-04-26.
+
+Result:
+
+- `backend/app/core/v1_readiness_policy.py` now derives conversation,
+  learned-state, tool-grounded-learning, and deploy-parity gates from live
+  owner surfaces instead of treating weaker posture as green by default
+- core `final_acceptance_gate_states` now excludes organizer daily use, while
+  organizer posture remains mirrored through explicit extension-only fields
+- `final_acceptance_state` now reports whether the clarified core no-UI `v1`
+  bundle is actually green
+
+Validation:
+
+- `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py -k "v1_readiness or telegram_round_trip_readiness_state or deploy_parity_manual_fallback"; Pop-Location`

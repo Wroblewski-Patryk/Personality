@@ -1490,9 +1490,27 @@ Important health surfaces for current release checks:
   - `readiness_state`
   Treat this snapshot as the acceptance source of truth instead of inferring
   readiness from individual provider blocks.
- - `/health.v1_readiness.organizer_daily_use_*` must stay in parity with the
-   same organizer-tool stack snapshot; treat drift between those two surfaces
-   as a release-blocking regression rather than as a docs-only mismatch.
+- `/health.v1_readiness.organizer_daily_use_*` and
+  `/health.v1_readiness.extension_gate_states.organizer_daily_use` must stay
+  in parity with the same organizer-tool stack snapshot; treat drift between
+  those surfaces as a release-blocking regression rather than as a docs-only
+  mismatch.
+- `/health.v1_readiness.final_acceptance_gate_states` must stay limited to the
+  approved core no-UI `v1` bundle and must not silently pull organizer
+  extension posture back into the final blocker set.
+- `/health.conversation_channels.telegram` is also the canonical operator
+  surface for Telegram delivery adaptation:
+  - `delivery_adaptation_policy_owner` should remain
+    `telegram_delivery_channel_adaptation`
+  - `delivery_segmentation_state` should remain
+    `bounded_transport_segmentation`
+  - `delivery_formatting_state` should remain
+    `supported_markdown_to_html_with_plain_text_fallback`
+  - `last_delivery.segment_count` and `last_delivery.formatting_state` are the
+    fast operator clues for whether the latest outbound Telegram reply stayed
+    plain text, used HTML normalization, or was split into multiple parts
+  Treat drift between `/health`, release smoke, and exported incident evidence
+  for these fields as a release-blocking regression.
 - `/health.v1_readiness.time_aware_planned_work_*` is the compact operator
   surface for core no-UI `v1` planned-work posture:
   - `time_aware_planned_work_policy_owner`

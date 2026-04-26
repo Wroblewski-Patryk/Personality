@@ -337,6 +337,7 @@ async def test_scheduler_worker_maintenance_tick_uses_reflection_worker_guardrai
 async def test_scheduler_worker_maintenance_tick_hands_due_planned_work_to_proposal_boundary() -> None:
     reflection_worker = FakeReflectionWorker(running=False)
     repository = FakeMemoryRepository()
+    fixed_now = datetime(2026, 4, 26, 14, 0, tzinfo=timezone.utc)
     repository.due_planned_work = [
         {
             "id": 9,
@@ -345,7 +346,7 @@ async def test_scheduler_worker_maintenance_tick_hands_due_planned_work_to_propo
             "summary": "send the release summary",
             "status": "pending",
             "delivery_channel": "telegram",
-            "preferred_at": datetime.now(timezone.utc) - timedelta(minutes=5),
+            "preferred_at": fixed_now - timedelta(minutes=5),
             "source_event_id": "evt-reminder-1",
         }
     ]
@@ -357,6 +358,7 @@ async def test_scheduler_worker_maintenance_tick_hands_due_planned_work_to_propo
         reflection_interval_seconds=900,
         maintenance_interval_seconds=3600,
     )
+    scheduler._utcnow = lambda: fixed_now
 
     summary = await scheduler.run_maintenance_tick_once(reason="planned_work_due_check")
 
@@ -376,6 +378,7 @@ async def test_scheduler_worker_maintenance_tick_hands_due_planned_work_to_propo
 async def test_scheduler_worker_maintenance_tick_dispatches_due_planned_work_via_runtime_foreground() -> None:
     reflection_worker = FakeReflectionWorker(running=False)
     repository = FakeMemoryRepository()
+    fixed_now = datetime(2026, 4, 26, 14, 0, tzinfo=timezone.utc)
     repository.due_planned_work = [
         {
             "id": 11,
@@ -385,7 +388,7 @@ async def test_scheduler_worker_maintenance_tick_dispatches_due_planned_work_via
             "status": "pending",
             "delivery_channel": "telegram",
             "requires_foreground_execution": True,
-            "preferred_at": datetime.now(timezone.utc) - timedelta(minutes=3),
+            "preferred_at": fixed_now - timedelta(minutes=3),
             "source_event_id": "evt-follow-up-11",
         }
     ]
@@ -399,6 +402,7 @@ async def test_scheduler_worker_maintenance_tick_dispatches_due_planned_work_via
         maintenance_interval_seconds=3600,
     )
     scheduler.set_runtime(runtime)
+    scheduler._utcnow = lambda: fixed_now
 
     summary = await scheduler.run_maintenance_tick_once(reason="planned_work_foreground_delivery")
 
@@ -466,6 +470,7 @@ async def test_scheduler_worker_delays_due_planned_work_during_quiet_hours() -> 
 async def test_scheduler_worker_advances_recurring_due_planned_work_after_successful_delivery() -> None:
     reflection_worker = FakeReflectionWorker(running=False)
     repository = FakeMemoryRepository()
+    fixed_now = datetime(2026, 4, 26, 14, 0, tzinfo=timezone.utc)
     repository.due_planned_work = [
         {
             "id": 13,
@@ -477,7 +482,7 @@ async def test_scheduler_worker_advances_recurring_due_planned_work_after_succes
             "recurrence_mode": "daily",
             "recurrence_rule": "",
             "requires_foreground_execution": True,
-            "preferred_at": datetime.now(timezone.utc) - timedelta(minutes=5),
+            "preferred_at": fixed_now - timedelta(minutes=5),
             "source_event_id": "evt-routine-13",
         }
     ]
@@ -491,6 +496,7 @@ async def test_scheduler_worker_advances_recurring_due_planned_work_after_succes
         maintenance_interval_seconds=3600,
     )
     scheduler.set_runtime(runtime)
+    scheduler._utcnow = lambda: fixed_now
 
     summary = await scheduler.run_maintenance_tick_once(reason="recurring_due_delivery")
 

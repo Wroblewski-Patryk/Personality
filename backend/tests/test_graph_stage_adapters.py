@@ -54,7 +54,13 @@ class _NoopMemoryRepository:
 
 
 class _FakeTelegramClient:
-    async def send_message(self, chat_id: int | str, text: str) -> dict:
+    async def send_message(
+        self,
+        chat_id: int | str,
+        text: str,
+        *,
+        parse_mode: str | None = None,
+    ) -> dict:
         return {"ok": True}
 
 

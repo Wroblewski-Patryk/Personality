@@ -4,6 +4,17 @@ from datetime import datetime, timezone
 from threading import Lock
 from typing import Any
 
+TELEGRAM_DELIVERY_ADAPTATION_POLICY_OWNER = "telegram_delivery_channel_adaptation"
+TELEGRAM_DELIVERY_SEGMENTATION_STATE = "bounded_transport_segmentation"
+TELEGRAM_DELIVERY_FORMATTING_STATE = "supported_markdown_to_html_with_plain_text_fallback"
+TELEGRAM_DELIVERY_MESSAGE_LIMIT = 4096
+TELEGRAM_DELIVERY_SEGMENT_TARGET = 3500
+TELEGRAM_DELIVERY_SUPPORTED_MARKDOWN = [
+    "bold",
+    "inline_code",
+    "fenced_code",
+]
+
 
 class TelegramChannelTelemetry:
     def __init__(self) -> None:
@@ -109,6 +120,8 @@ class TelegramChannelTelemetry:
         self,
         *,
         chat_id: int | str | None,
+        segment_count: int | None = None,
+        formatting_state: str | None = None,
     ) -> None:
         with self._lock:
             self._delivery_attempts += 1
@@ -116,12 +129,16 @@ class TelegramChannelTelemetry:
                 state="attempted",
                 note="telegram_delivery_attempted",
                 chat_id=chat_id,
+                segment_count=segment_count,
+                formatting_state=formatting_state,
             )
 
     def record_delivery_success(
         self,
         *,
         chat_id: int | str | None,
+        segment_count: int | None = None,
+        formatting_state: str | None = None,
     ) -> None:
         with self._lock:
             self._delivery_successes += 1
@@ -129,6 +146,8 @@ class TelegramChannelTelemetry:
                 state="sent",
                 note="telegram_message_sent",
                 chat_id=chat_id,
+                segment_count=segment_count,
+                formatting_state=formatting_state,
             )
 
     def record_delivery_failure(
@@ -137,6 +156,8 @@ class TelegramChannelTelemetry:
         state: str,
         note: str,
         chat_id: int | str | None,
+        segment_count: int | None = None,
+        formatting_state: str | None = None,
     ) -> None:
         with self._lock:
             self._delivery_failures += 1
@@ -144,6 +165,8 @@ class TelegramChannelTelemetry:
                 state=state,
                 note=note,
                 chat_id=chat_id,
+                segment_count=segment_count,
+                formatting_state=formatting_state,
             )
 
     def snapshot(
@@ -168,6 +191,12 @@ class TelegramChannelTelemetry:
                     if delivery_ready
                     else "configure_telegram_bot_token_for_v1_round_trip"
                 ),
+                "delivery_adaptation_policy_owner": TELEGRAM_DELIVERY_ADAPTATION_POLICY_OWNER,
+                "delivery_segmentation_state": TELEGRAM_DELIVERY_SEGMENTATION_STATE,
+                "delivery_formatting_state": TELEGRAM_DELIVERY_FORMATTING_STATE,
+                "delivery_message_limit": TELEGRAM_DELIVERY_MESSAGE_LIMIT,
+                "delivery_segment_target": TELEGRAM_DELIVERY_SEGMENT_TARGET,
+                "delivery_supported_markdown": list(TELEGRAM_DELIVERY_SUPPORTED_MARKDOWN),
                 "ingress_attempts": self._ingress_attempts,
                 "ingress_rejections": self._ingress_rejections,
                 "ingress_queued": self._ingress_queued,
@@ -202,13 +231,20 @@ class TelegramChannelTelemetry:
         state: str,
         note: str,
         chat_id: int | str | None,
+        segment_count: int | None = None,
+        formatting_state: str | None = None,
     ) -> dict[str, Any]:
-        return {
+        payload = {
             "at": self._timestamp(),
             "state": state,
             "note": note,
             "chat_id": chat_id,
         }
+        if segment_count is not None:
+            payload["segment_count"] = int(segment_count)
+        if formatting_state:
+            payload["formatting_state"] = formatting_state
+        return payload
 
     def _timestamp(self) -> str:
         return datetime.now(timezone.utc).isoformat()

@@ -1235,9 +1235,23 @@ Current limitation:
   conversation-reliability telemetry owner with:
   - `round_trip_ready`
   - `round_trip_state`
+  - delivery-adaptation posture:
+    - `delivery_adaptation_policy_owner`
+    - `delivery_segmentation_state`
+    - `delivery_formatting_state`
+    - `delivery_message_limit`
+    - `delivery_segment_target`
+    - `delivery_supported_markdown`
   - token/secret configuration posture
   - ingress counters and last-ingress evidence
   - delivery counters and last-delivery evidence
+- Telegram-specific delivery shaping stays below expression:
+  - long outbound replies are segmented inside delivery routing according to
+    transport-owned limits
+  - supported markdown is normalized into Telegram HTML parse mode
+  - structurally unsafe markdown falls back to plain text
+  - this does not imply the same limits or formatting posture for API or later
+    first-party UI channels
 - debug-mode `incident_evidence.policy_posture` now also includes
   `conversation_channels.telegram`, so release smoke and behavior-validation
   gates can verify Telegram conversation posture from exported evidence rather
@@ -1311,10 +1325,21 @@ Current limitation:
 - release smoke and incident-evidence bundles now validate the same organizer
   daily-use contract instead of relying only on direct `/health` inspection
 - `/health.v1_readiness` now mirrors that organizer proof with
-  `organizer_daily_use_state`, workflow counts, and ready/blocked workflow ids
+  `organizer_daily_use_state`, workflow counts, ready/blocked workflow ids,
+  and explicit extension-only fields
 - after the core-v1 boundary revision, that organizer posture should be treated
   as mirrored extension readiness rather than as a hidden core no-UI `v1`
   blocker
+- `/health.v1_readiness.final_acceptance_gate_states` now stays limited to the
+  core no-UI `v1` bundle:
+  - conversation reliability
+  - learned-state inspection
+  - website reading
+  - tool-grounded learning
+  - time-aware planned work
+  - deploy parity
+- `/health.v1_readiness.extension_gate_states.organizer_daily_use` keeps the
+  organizer daily-use mirror visible without redefining core `v1` closure
 
 ---
 

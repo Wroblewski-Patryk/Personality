@@ -467,6 +467,15 @@ function Validate-IncidentEvidenceBundle {
     if ($validTelegramRoundTripStates -notcontains [string]$telegramConversation.round_trip_state) {
         throw "Incident evidence bundle verification failed: unexpected conversation_channels.telegram round_trip_state '$($telegramConversation.round_trip_state)'."
     }
+    if ([string]$telegramConversation.delivery_adaptation_policy_owner -ne "telegram_delivery_channel_adaptation") {
+        throw "Incident evidence bundle verification failed: unexpected conversation_channels.telegram delivery_adaptation_policy_owner '$($telegramConversation.delivery_adaptation_policy_owner)'."
+    }
+    if ([string]$telegramConversation.delivery_segmentation_state -ne "bounded_transport_segmentation") {
+        throw "Incident evidence bundle verification failed: unexpected conversation_channels.telegram delivery_segmentation_state '$($telegramConversation.delivery_segmentation_state)'."
+    }
+    if ([string]$telegramConversation.delivery_formatting_state -ne "supported_markdown_to_html_with_plain_text_fallback") {
+        throw "Incident evidence bundle verification failed: unexpected conversation_channels.telegram delivery_formatting_state '$($telegramConversation.delivery_formatting_state)'."
+    }
     $attention = $incidentEvidence.policy_posture.attention
     if ($null -eq $attention) {
         throw "Incident evidence bundle verification failed: attention posture is missing."
@@ -625,6 +634,9 @@ function Validate-IncidentEvidenceBundle {
         debug_posture_state      = [string]$debugPosture.debug_posture_state
         debug_exception_state    = [string]$debugPosture.debug_exception_state
         telegram_round_trip_state = [string]$telegramConversation.round_trip_state
+        telegram_delivery_adaptation_policy_owner = [string]$telegramConversation.delivery_adaptation_policy_owner
+        telegram_delivery_segmentation_state = [string]$telegramConversation.delivery_segmentation_state
+        telegram_delivery_formatting_state = [string]$telegramConversation.delivery_formatting_state
         attention_coordination_mode = [string]$attention.coordination_mode
         attention_contract_store_state = [string]$attention.deployment_readiness.contract_store_state
         attention_runtime_topology_selected_mode = [string]$runtimeTopologyAttention.selected_mode
@@ -1387,6 +1399,235 @@ function Assert-OrganizerToolStackContract {
     }
 }
 
+function Assert-V1ReadinessTruthContract {
+    param(
+        [object]$V1Readiness,
+        [object]$TelegramConversation,
+        [object]$LearnedState,
+        [hashtable]$WebKnowledgeWorkflowContract,
+        [hashtable]$OrganizerToolStackContract,
+        [object]$Deployment,
+        [Parameter(Mandatory = $true)][string]$FailurePrefix
+    )
+
+    if ($null -eq $V1Readiness) {
+        throw "${FailurePrefix}: v1_readiness posture is missing."
+    }
+    foreach ($propertyName in @(
+        "policy_owner",
+        "product_stage",
+        "conversation_gate_state",
+        "learned_state_gate_state",
+        "website_reading_workflow_state",
+        "tool_grounded_learning_state",
+        "time_aware_planned_work_policy_owner",
+        "time_aware_planned_work_delivery_path",
+        "time_aware_planned_work_recurrence_owner",
+        "time_aware_planned_work_gate_state",
+        "deploy_parity_state",
+        "organizer_daily_use_state",
+        "organizer_daily_use_classification",
+        "final_acceptance_state",
+        "final_acceptance_gate_states",
+        "final_acceptance_surfaces",
+        "extension_gate_states",
+        "extension_gate_surfaces"
+    )) {
+        if (-not (Has-Property -Object $V1Readiness -Name $propertyName)) {
+            throw "${FailurePrefix}: v1_readiness is missing $propertyName."
+        }
+    }
+
+    if ([string]$V1Readiness.policy_owner -ne "v1_release_readiness_policy") {
+        throw "${FailurePrefix}: unexpected v1_readiness policy_owner '$($V1Readiness.policy_owner)'."
+    }
+    if ([string]$V1Readiness.product_stage -ne "v1_no_ui_life_assistant") {
+        throw "${FailurePrefix}: unexpected v1_readiness product_stage '$($V1Readiness.product_stage)'."
+    }
+    if ([string]$V1Readiness.organizer_daily_use_classification -ne "extension_readiness_non_blocking_for_core_v1") {
+        throw "${FailurePrefix}: unexpected v1_readiness organizer_daily_use_classification '$($V1Readiness.organizer_daily_use_classification)'."
+    }
+    if ([string]$V1Readiness.time_aware_planned_work_policy_owner -ne "internal_time_aware_planned_work_policy") {
+        throw "${FailurePrefix}: unexpected v1_readiness time_aware_planned_work_policy_owner '$($V1Readiness.time_aware_planned_work_policy_owner)'."
+    }
+    if ([string]$V1Readiness.time_aware_planned_work_delivery_path -ne "attention_to_planning_to_expression_to_action") {
+        throw "${FailurePrefix}: unexpected v1_readiness time_aware_planned_work_delivery_path '$($V1Readiness.time_aware_planned_work_delivery_path)'."
+    }
+    if ([string]$V1Readiness.time_aware_planned_work_recurrence_owner -ne "scheduler_reevaluation_with_foreground_handoff") {
+        throw "${FailurePrefix}: unexpected v1_readiness time_aware_planned_work_recurrence_owner '$($V1Readiness.time_aware_planned_work_recurrence_owner)'."
+    }
+    if ([string]$V1Readiness.time_aware_planned_work_gate_state -ne "foreground_due_delivery_and_recurring_reevaluation_ready") {
+        throw "${FailurePrefix}: unexpected v1_readiness time_aware_planned_work_gate_state '$($V1Readiness.time_aware_planned_work_gate_state)'."
+    }
+
+    $telegramRoundTripState = [string]$TelegramConversation.round_trip_state
+    $expectedConversationGateState = if ([bool]$TelegramConversation.round_trip_ready -and $telegramRoundTripState -eq "provider_backed_ready") {
+        "conversation_surface_ready"
+    }
+    elseif ($telegramRoundTripState -eq "missing_bot_token") {
+        "conversation_surface_provider_missing"
+    }
+    else {
+        "conversation_surface_invalid"
+    }
+    if ([string]$V1Readiness.conversation_gate_state -ne $expectedConversationGateState) {
+        throw "${FailurePrefix}: v1_readiness conversation_gate_state drifted from conversation_channels.telegram."
+    }
+
+    $expectedLearnedStateGateState = if ([string]$LearnedState.internal_inspection_path -eq "/internal/state/inspect") {
+        "inspection_surface_ready"
+    }
+    else {
+        "inspection_surface_invalid"
+    }
+    if ([string]$V1Readiness.learned_state_gate_state -ne $expectedLearnedStateGateState) {
+        throw "${FailurePrefix}: v1_readiness learned_state_gate_state drifted from learned_state."
+    }
+
+    $toolGroundedLearning = $LearnedState.tool_grounded_learning
+    $expectedToolGroundedLearningState = if (
+        $null -ne $toolGroundedLearning `
+        -and [string]$toolGroundedLearning.policy_owner -eq "tool_grounded_learning_policy" `
+        -and [string]$toolGroundedLearning.capture_owner -eq "action_owned_external_read_summaries_only" `
+        -and [string]$toolGroundedLearning.persistence_owner -eq "memory_conclusion_write_after_action" `
+        -and -not [bool]$toolGroundedLearning.execution_bypass_allowed `
+        -and -not [bool]$toolGroundedLearning.self_modifying_skill_learning_allowed
+    ) {
+        "tool_grounded_learning_surface_ready"
+    }
+    else {
+        "tool_grounded_learning_surface_invalid"
+    }
+    if ([string]$V1Readiness.tool_grounded_learning_state -ne $expectedToolGroundedLearningState) {
+        throw "${FailurePrefix}: v1_readiness tool_grounded_learning_state drifted from learned_state.tool_grounded_learning."
+    }
+
+    $expectedWebsiteReadingState = [string]$WebKnowledgeWorkflowContract.workflow_state
+    if ([string]$V1Readiness.website_reading_workflow_state -ne $expectedWebsiteReadingState) {
+        throw "${FailurePrefix}: v1_readiness website_reading_workflow_state drifted from connectors.web_knowledge_tools."
+    }
+
+    $expectedDeployParityState = if (
+        [string]$Deployment.deployment_automation_policy_owner -eq "coolify_repo_deploy_automation" `
+        -and [string]$Deployment.runtime_build_revision_state -eq "runtime_build_revision_declared" `
+        -and [string]$Deployment.runtime_trigger_class -eq "primary_automation" `
+        -and [string]$Deployment.runtime_provenance_state -eq "primary_runtime_provenance_declared"
+    ) {
+        "deploy_parity_surface_ready"
+    }
+    elseif (
+        [string]$Deployment.deployment_automation_policy_owner -eq "coolify_repo_deploy_automation" `
+        -and [string]$Deployment.runtime_build_revision_state -eq "runtime_build_revision_declared" `
+        -and [string]$Deployment.runtime_trigger_mode -in @("webhook_manual_fallback", "ui_manual_fallback") `
+        -and [string]$Deployment.runtime_provenance_state -eq "fallback_runtime_provenance_declared"
+    ) {
+        "deploy_parity_surface_manual_fallback"
+    }
+    else {
+        "deploy_parity_surface_invalid"
+    }
+    if ([string]$V1Readiness.deploy_parity_state -ne $expectedDeployParityState) {
+        throw "${FailurePrefix}: v1_readiness deploy_parity_state drifted from deployment."
+    }
+
+    if ([string]$V1Readiness.organizer_daily_use_state -ne [string]$OrganizerToolStackContract.daily_use_state) {
+        throw "${FailurePrefix}: v1_readiness organizer_daily_use_state drifted from connectors.organizer_tool_stack."
+    }
+
+    $finalAcceptanceGateStates = $V1Readiness.final_acceptance_gate_states
+    if ($null -eq $finalAcceptanceGateStates) {
+        throw "${FailurePrefix}: v1_readiness final_acceptance_gate_states is missing."
+    }
+    if ($finalAcceptanceGateStates.PSObject.Properties.Name -contains "organizer_daily_use") {
+        throw "${FailurePrefix}: v1_readiness final_acceptance_gate_states must not include organizer_daily_use."
+    }
+    $expectedFinalGateKeys = @(
+        "conversation_reliability",
+        "learned_state_inspection",
+        "website_reading",
+        "tool_grounded_learning",
+        "time_aware_planned_work",
+        "deploy_parity"
+    )
+    $actualFinalGateKeys = @($finalAcceptanceGateStates.PSObject.Properties.Name)
+    if (@(Compare-Object -ReferenceObject $expectedFinalGateKeys -DifferenceObject $actualFinalGateKeys -SyncWindow 0).Count -gt 0) {
+        throw "${FailurePrefix}: v1_readiness final_acceptance_gate_states drifted from the approved core-v1 boundary."
+    }
+    $expectedFinalGateStates = @{
+        conversation_reliability = $expectedConversationGateState
+        learned_state_inspection = $expectedLearnedStateGateState
+        website_reading = $expectedWebsiteReadingState
+        tool_grounded_learning = $expectedToolGroundedLearningState
+        time_aware_planned_work = "foreground_due_delivery_and_recurring_reevaluation_ready"
+        deploy_parity = $expectedDeployParityState
+    }
+    foreach ($gateName in $expectedFinalGateKeys) {
+        if ([string]$finalAcceptanceGateStates.$gateName -ne [string]$expectedFinalGateStates[$gateName]) {
+            throw "${FailurePrefix}: v1_readiness final_acceptance_gate_states.$gateName drifted from its owner surface."
+        }
+    }
+
+    $expectedFinalAcceptanceState = if (
+        $expectedConversationGateState -eq "conversation_surface_ready" `
+        -and $expectedLearnedStateGateState -eq "inspection_surface_ready" `
+        -and $expectedWebsiteReadingState -eq "ready_for_direct_and_search_first_review" `
+        -and $expectedToolGroundedLearningState -eq "tool_grounded_learning_surface_ready" `
+        -and $expectedDeployParityState -eq "deploy_parity_surface_ready"
+    ) {
+        "core_v1_bundle_ready"
+    }
+    else {
+        "core_v1_bundle_incomplete"
+    }
+    if ([string]$V1Readiness.final_acceptance_state -ne $expectedFinalAcceptanceState) {
+        throw "${FailurePrefix}: v1_readiness final_acceptance_state drifted from the approved core gate bundle."
+    }
+
+    $finalAcceptanceSurfaces = $V1Readiness.final_acceptance_surfaces
+    $expectedFinalAcceptanceSurfaces = @{
+        conversation_reliability = "/health.conversation_channels.telegram"
+        learned_state_inspection = "/health.learned_state"
+        website_reading = "/health.connectors.web_knowledge_tools.website_reading_workflow"
+        tool_grounded_learning = "/health.learned_state.tool_grounded_learning"
+        time_aware_planned_work = "/health.v1_readiness"
+        deploy_parity = "/health.deployment"
+    }
+    $actualFinalSurfaceKeys = @($finalAcceptanceSurfaces.PSObject.Properties.Name)
+    if (@(Compare-Object -ReferenceObject $expectedFinalGateKeys -DifferenceObject $actualFinalSurfaceKeys -SyncWindow 0).Count -gt 0) {
+        throw "${FailurePrefix}: v1_readiness final_acceptance_surfaces drifted from the approved core-v1 boundary."
+    }
+    foreach ($surfaceName in $expectedFinalGateKeys) {
+        if ([string]$finalAcceptanceSurfaces.$surfaceName -ne [string]$expectedFinalAcceptanceSurfaces[$surfaceName]) {
+            throw "${FailurePrefix}: v1_readiness final_acceptance_surfaces.$surfaceName drifted."
+        }
+    }
+
+    $extensionGateStates = $V1Readiness.extension_gate_states
+    $extensionGateSurfaces = $V1Readiness.extension_gate_surfaces
+    if ($null -eq $extensionGateStates -or $null -eq $extensionGateSurfaces) {
+        throw "${FailurePrefix}: v1_readiness extension gate posture is missing."
+    }
+    if (@($extensionGateStates.PSObject.Properties.Name) -notcontains "organizer_daily_use") {
+        throw "${FailurePrefix}: v1_readiness extension_gate_states is missing organizer_daily_use."
+    }
+    if ([string]$extensionGateStates.organizer_daily_use -ne [string]$OrganizerToolStackContract.daily_use_state) {
+        throw "${FailurePrefix}: v1_readiness extension_gate_states.organizer_daily_use drifted from organizer_tool_stack."
+    }
+    if ([string]$extensionGateSurfaces.organizer_daily_use -ne "/health.connectors.organizer_tool_stack") {
+        throw "${FailurePrefix}: v1_readiness extension_gate_surfaces.organizer_daily_use drifted."
+    }
+
+    return @{
+        conversation_gate_state = $expectedConversationGateState
+        learned_state_gate_state = $expectedLearnedStateGateState
+        website_reading_workflow_state = $expectedWebsiteReadingState
+        tool_grounded_learning_state = $expectedToolGroundedLearningState
+        deploy_parity_state = $expectedDeployParityState
+        final_acceptance_state = $expectedFinalAcceptanceState
+        organizer_daily_use_state = [string]$OrganizerToolStackContract.daily_use_state
+    }
+}
+
 $trimmedBaseUrl = $BaseUrl.TrimEnd("/")
 $localRepoHeadSha = Resolve-LocalRepoHeadSha
 if (-not $localRepoHeadSha) {
@@ -2106,6 +2347,24 @@ if ($validTelegramRoundTripStates -notcontains [string]$telegramConversation.rou
 if (-not (Has-Property -Object $telegramConversation -Name "bot_token_configured")) {
     throw "Health check failed: conversation_channels.telegram is missing bot_token_configured."
 }
+if (-not (Has-Property -Object $telegramConversation -Name "delivery_adaptation_policy_owner")) {
+    throw "Health check failed: conversation_channels.telegram is missing delivery_adaptation_policy_owner."
+}
+if ([string]$telegramConversation.delivery_adaptation_policy_owner -ne "telegram_delivery_channel_adaptation") {
+    throw "Health check failed: unexpected conversation_channels.telegram delivery_adaptation_policy_owner '$($telegramConversation.delivery_adaptation_policy_owner)'."
+}
+if (-not (Has-Property -Object $telegramConversation -Name "delivery_segmentation_state")) {
+    throw "Health check failed: conversation_channels.telegram is missing delivery_segmentation_state."
+}
+if ([string]$telegramConversation.delivery_segmentation_state -ne "bounded_transport_segmentation") {
+    throw "Health check failed: unexpected conversation_channels.telegram delivery_segmentation_state '$($telegramConversation.delivery_segmentation_state)'."
+}
+if (-not (Has-Property -Object $telegramConversation -Name "delivery_formatting_state")) {
+    throw "Health check failed: conversation_channels.telegram is missing delivery_formatting_state."
+}
+if ([string]$telegramConversation.delivery_formatting_state -ne "supported_markdown_to_html_with_plain_text_fallback") {
+    throw "Health check failed: unexpected conversation_channels.telegram delivery_formatting_state '$($telegramConversation.delivery_formatting_state)'."
+}
 if (-not (Has-Property -Object $telegramConversation -Name "delivery_attempts")) {
     throw "Health check failed: conversation_channels.telegram is missing delivery_attempts."
 }
@@ -2129,24 +2388,6 @@ if ([string]$v1Readiness.policy_owner -ne "v1_release_readiness_policy") {
 }
 if ([string]$v1Readiness.product_stage -ne "v1_no_ui_life_assistant") {
     throw "Health check failed: unexpected v1_readiness.product_stage '$($v1Readiness.product_stage)'."
-}
-if ([string]$v1Readiness.conversation_gate_state -ne "conversation_surface_ready") {
-    throw "Health check failed: unexpected v1_readiness.conversation_gate_state '$($v1Readiness.conversation_gate_state)'."
-}
-if ([string]$v1Readiness.learned_state_gate_state -ne "inspection_surface_ready") {
-    throw "Health check failed: unexpected v1_readiness.learned_state_gate_state '$($v1Readiness.learned_state_gate_state)'."
-}
-if ([string]$v1Readiness.time_aware_planned_work_policy_owner -ne "internal_time_aware_planned_work_policy") {
-    throw "Health check failed: unexpected v1_readiness.time_aware_planned_work_policy_owner '$($v1Readiness.time_aware_planned_work_policy_owner)'."
-}
-if ([string]$v1Readiness.time_aware_planned_work_delivery_path -ne "attention_to_planning_to_expression_to_action") {
-    throw "Health check failed: unexpected v1_readiness.time_aware_planned_work_delivery_path '$($v1Readiness.time_aware_planned_work_delivery_path)'."
-}
-if ([string]$v1Readiness.time_aware_planned_work_recurrence_owner -ne "scheduler_reevaluation_with_foreground_handoff") {
-    throw "Health check failed: unexpected v1_readiness.time_aware_planned_work_recurrence_owner '$($v1Readiness.time_aware_planned_work_recurrence_owner)'."
-}
-if ([string]$v1Readiness.time_aware_planned_work_gate_state -ne "foreground_due_delivery_and_recurring_reevaluation_ready") {
-    throw "Health check failed: unexpected v1_readiness.time_aware_planned_work_gate_state '$($v1Readiness.time_aware_planned_work_gate_state)'."
 }
 $validV1OrganizerDailyUseStates = @("all_daily_use_workflows_ready", "daily_use_workflows_blocked_by_provider_activation")
 if ($validV1OrganizerDailyUseStates -notcontains [string]$v1Readiness.organizer_daily_use_state) {
@@ -2205,6 +2446,14 @@ $organizerToolStackContract = Assert-OrganizerToolStackContract `
     -FailurePrefix "Health check failed"
 $webKnowledgeWorkflowContract = Assert-WebKnowledgeWorkflowContract `
     -WebKnowledgeTools $connectors.web_knowledge_tools `
+    -FailurePrefix "Health check failed"
+$v1ReadinessTruthContract = Assert-V1ReadinessTruthContract `
+    -V1Readiness $v1Readiness `
+    -TelegramConversation $telegramConversation `
+    -LearnedState $learnedState `
+    -WebKnowledgeWorkflowContract $webKnowledgeWorkflowContract `
+    -OrganizerToolStackContract $organizerToolStackContract `
+    -Deployment $deployment `
     -FailurePrefix "Health check failed"
 
 $response = Invoke-JsonUtf8 -Method POST -Uri $eventUrl -BodyBytes $bodyBytes
@@ -2277,6 +2526,15 @@ if ($IncludeDebug) {
     if ($validTelegramRoundTripStates -notcontains [string]$incidentTelegramConversation.round_trip_state) {
         throw "Smoke request failed: unexpected incident_evidence conversation_channels.telegram round_trip_state '$($incidentTelegramConversation.round_trip_state)'."
     }
+    if ([string]$incidentTelegramConversation.delivery_adaptation_policy_owner -ne "telegram_delivery_channel_adaptation") {
+        throw "Smoke request failed: unexpected incident_evidence conversation_channels.telegram delivery_adaptation_policy_owner '$($incidentTelegramConversation.delivery_adaptation_policy_owner)'."
+    }
+    if ([string]$incidentTelegramConversation.delivery_segmentation_state -ne "bounded_transport_segmentation") {
+        throw "Smoke request failed: unexpected incident_evidence conversation_channels.telegram delivery_segmentation_state '$($incidentTelegramConversation.delivery_segmentation_state)'."
+    }
+    if ([string]$incidentTelegramConversation.delivery_formatting_state -ne "supported_markdown_to_html_with_plain_text_fallback") {
+        throw "Smoke request failed: unexpected incident_evidence conversation_channels.telegram delivery_formatting_state '$($incidentTelegramConversation.delivery_formatting_state)'."
+    }
     $incidentAttention = $incidentEvidence.policy_posture.attention
     if ($null -eq $incidentAttention) {
         throw "Smoke request failed: incident_evidence is missing attention posture."
@@ -2333,6 +2591,14 @@ if ($IncludeDebug) {
     $incidentLearnedStateContract = Assert-LearnedStateContract `
         -LearnedState $incidentLearnedState `
         -FailurePrefix "Smoke request failed"
+    $incidentOrganizerToolStack = $incidentEvidence.policy_posture."connectors.organizer_tool_stack"
+    $incidentOrganizerToolStackContract = Assert-OrganizerToolStackContract `
+        -OrganizerToolStack $incidentOrganizerToolStack `
+        -FailurePrefix "Smoke request failed"
+    $incidentWebKnowledgeTools = $incidentEvidence.policy_posture."connectors.web_knowledge_tools"
+    $incidentWebKnowledgeWorkflowContract = Assert-WebKnowledgeWorkflowContract `
+        -WebKnowledgeTools $incidentWebKnowledgeTools `
+        -FailurePrefix "Smoke request failed"
     $incidentV1Readiness = $incidentEvidence.policy_posture.v1_readiness
     if ($null -eq $incidentV1Readiness) {
         throw "Smoke request failed: incident_evidence is missing v1_readiness posture."
@@ -2342,24 +2608,6 @@ if ($IncludeDebug) {
     }
     if ([string]$incidentV1Readiness.product_stage -ne "v1_no_ui_life_assistant") {
         throw "Smoke request failed: unexpected incident_evidence v1_readiness product_stage '$($incidentV1Readiness.product_stage)'."
-    }
-    if ([string]$incidentV1Readiness.conversation_gate_state -ne "conversation_surface_ready") {
-        throw "Smoke request failed: unexpected incident_evidence v1_readiness conversation_gate_state '$($incidentV1Readiness.conversation_gate_state)'."
-    }
-    if ([string]$incidentV1Readiness.learned_state_gate_state -ne "inspection_surface_ready") {
-        throw "Smoke request failed: unexpected incident_evidence v1_readiness learned_state_gate_state '$($incidentV1Readiness.learned_state_gate_state)'."
-    }
-    if ([string]$incidentV1Readiness.time_aware_planned_work_policy_owner -ne "internal_time_aware_planned_work_policy") {
-        throw "Smoke request failed: unexpected incident_evidence v1_readiness time_aware_planned_work_policy_owner '$($incidentV1Readiness.time_aware_planned_work_policy_owner)'."
-    }
-    if ([string]$incidentV1Readiness.time_aware_planned_work_delivery_path -ne "attention_to_planning_to_expression_to_action") {
-        throw "Smoke request failed: unexpected incident_evidence v1_readiness time_aware_planned_work_delivery_path '$($incidentV1Readiness.time_aware_planned_work_delivery_path)'."
-    }
-    if ([string]$incidentV1Readiness.time_aware_planned_work_recurrence_owner -ne "scheduler_reevaluation_with_foreground_handoff") {
-        throw "Smoke request failed: unexpected incident_evidence v1_readiness time_aware_planned_work_recurrence_owner '$($incidentV1Readiness.time_aware_planned_work_recurrence_owner)'."
-    }
-    if ([string]$incidentV1Readiness.time_aware_planned_work_gate_state -ne "foreground_due_delivery_and_recurring_reevaluation_ready") {
-        throw "Smoke request failed: unexpected incident_evidence v1_readiness time_aware_planned_work_gate_state '$($incidentV1Readiness.time_aware_planned_work_gate_state)'."
     }
     if ($validV1OrganizerDailyUseStates -notcontains [string]$incidentV1Readiness.organizer_daily_use_state) {
         throw "Smoke request failed: unexpected incident_evidence v1_readiness organizer_daily_use_state '$($incidentV1Readiness.organizer_daily_use_state)'."
@@ -2383,6 +2631,14 @@ if ($IncludeDebug) {
             throw "Smoke request failed: incident_evidence deployment is missing fallback trigger mode '$requiredFallbackMode'."
         }
     }
+    $incidentV1ReadinessTruthContract = Assert-V1ReadinessTruthContract `
+        -V1Readiness $incidentV1Readiness `
+        -TelegramConversation $incidentTelegramConversation `
+        -LearnedState $incidentLearnedState `
+        -WebKnowledgeWorkflowContract $incidentWebKnowledgeWorkflowContract `
+        -OrganizerToolStackContract $incidentOrganizerToolStackContract `
+        -Deployment $incidentDeployment `
+        -FailurePrefix "Smoke request failed"
     $incidentRequiredV1Scenarios = @("T13.1", "T14.1", "T14.2", "T14.3", "T15.1", "T15.2", "T16.1", "T16.2", "T16.3", "T17.1", "T17.2", "T18.1", "T18.2", "T19.1", "T19.2")
     $incidentActualV1Scenarios = @()
     if ($incidentV1Readiness.PSObject.Properties.Name -contains "required_behavior_scenarios" -and $null -ne $incidentV1Readiness.required_behavior_scenarios) {
@@ -2514,6 +2770,9 @@ $summary = @{
     telegram_conversation_policy_owner = [string]$telegramConversation.policy_owner
     telegram_conversation_round_trip_state = [string]$telegramConversation.round_trip_state
     telegram_conversation_bot_token_configured = [bool]$telegramConversation.bot_token_configured
+    telegram_conversation_delivery_adaptation_policy_owner = [string]$telegramConversation.delivery_adaptation_policy_owner
+    telegram_conversation_delivery_segmentation_state = [string]$telegramConversation.delivery_segmentation_state
+    telegram_conversation_delivery_formatting_state = [string]$telegramConversation.delivery_formatting_state
     telegram_conversation_delivery_attempts = [int]$telegramConversation.delivery_attempts
     telegram_conversation_delivery_failures = [int]$telegramConversation.delivery_failures
     debug_included       = [bool]$response.debug
@@ -2526,6 +2785,9 @@ $summary = @{
     incident_evidence_debug_exception_state = if ($null -ne $incidentDebugPosture) { [string]$incidentDebugPosture.debug_exception_state } else { $null }
     incident_evidence_telegram_conversation_policy_owner = if ($null -ne $incidentTelegramConversation) { [string]$incidentTelegramConversation.policy_owner } else { $null }
     incident_evidence_telegram_conversation_round_trip_state = if ($null -ne $incidentTelegramConversation) { [string]$incidentTelegramConversation.round_trip_state } else { $null }
+    incident_evidence_telegram_conversation_delivery_adaptation_policy_owner = if ($null -ne $incidentTelegramConversation) { [string]$incidentTelegramConversation.delivery_adaptation_policy_owner } else { $null }
+    incident_evidence_telegram_conversation_delivery_segmentation_state = if ($null -ne $incidentTelegramConversation) { [string]$incidentTelegramConversation.delivery_segmentation_state } else { $null }
+    incident_evidence_telegram_conversation_delivery_formatting_state = if ($null -ne $incidentTelegramConversation) { [string]$incidentTelegramConversation.delivery_formatting_state } else { $null }
     incident_evidence_attention_policy_owner = if ($null -ne $incidentAttention) { [string]$incidentAttention.attention_policy_owner } else { $null }
     incident_evidence_attention_coordination_mode = if ($null -ne $incidentAttention) { [string]$incidentAttention.coordination_mode } else { $null }
     incident_evidence_attention_contract_store_state = if ($null -ne $incidentAttention) { [string]$incidentAttention.deployment_readiness.contract_store_state } else { $null }
@@ -2603,6 +2865,9 @@ $summary = @{
     incident_bundle_debug_posture_state = $incidentEvidenceBundleCheck.debug_posture_state
     incident_bundle_debug_exception_state = $incidentEvidenceBundleCheck.debug_exception_state
     incident_bundle_telegram_round_trip_state = $incidentEvidenceBundleCheck.telegram_round_trip_state
+    incident_bundle_telegram_delivery_adaptation_policy_owner = $incidentEvidenceBundleCheck.telegram_delivery_adaptation_policy_owner
+    incident_bundle_telegram_delivery_segmentation_state = $incidentEvidenceBundleCheck.telegram_delivery_segmentation_state
+    incident_bundle_telegram_delivery_formatting_state = $incidentEvidenceBundleCheck.telegram_delivery_formatting_state
     incident_bundle_attention_coordination_mode = $incidentEvidenceBundleCheck.attention_coordination_mode
     incident_bundle_attention_contract_store_state = $incidentEvidenceBundleCheck.attention_contract_store_state
     incident_bundle_attention_runtime_topology_selected_mode = $incidentEvidenceBundleCheck.attention_runtime_topology_selected_mode

@@ -6,12 +6,21 @@ class TelegramClient:
         self.token = token
         self._client = httpx.AsyncClient(timeout=10.0)
 
-    async def send_message(self, chat_id: int | str, text: str) -> dict:
+    async def send_message(
+        self,
+        chat_id: int | str,
+        text: str,
+        *,
+        parse_mode: str | None = None,
+    ) -> dict:
         if not self.token:
             return {"ok": False, "description": "missing TELEGRAM_BOT_TOKEN"}
 
         url = f"https://api.telegram.org/bot{self.token}/sendMessage"
-        response = await self._client.post(url, json={"chat_id": chat_id, "text": text})
+        payload = {"chat_id": chat_id, "text": text}
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
+        response = await self._client.post(url, json=payload)
         response.raise_for_status()
         return response.json()
 

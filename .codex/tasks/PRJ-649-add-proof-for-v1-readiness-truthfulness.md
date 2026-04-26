@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-649
 - Title: Add proof for v1-readiness truthfulness
-- Status: BACKLOG
+- Status: DONE
 - Owner: QA/Test
 - Depends on: PRJ-648
 - Priority: P0
@@ -24,9 +24,9 @@ approved boundary and live source surfaces.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] API tests fail when core gate states drift from their underlying health-policy owners.
-- [ ] Release-smoke or incident-evidence checks fail when extension posture is incorrectly treated as a core-`v1` blocker.
-- [ ] Proof covers the approved no-UI `v1` boundary after the post-`PRJ-642` architecture revision.
+- [x] API tests fail when core gate states drift from their underlying health-policy owners.
+- [x] Release-smoke or incident-evidence checks fail when extension posture is incorrectly treated as a core-`v1` blocker.
+- [x] Proof covers the approved no-UI `v1` boundary after the post-`PRJ-642` architecture revision.
 
 ## Forbidden
 - new systems without approval
@@ -49,14 +49,31 @@ approved boundary and live source surfaces.
 - Follow-up architecture doc updates: testing and ops notes
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 This slice should prove semantics, not only serialization.
+
+Completed on 2026-04-26.
+
+Result:
+
+- `backend/scripts/run_release_smoke.ps1` now verifies that `v1_readiness`
+  stays semantically aligned with its owner surfaces instead of only checking
+  field presence
+- release smoke now fails if organizer extension posture leaks into the core
+  final acceptance bundle or if deploy-parity semantics drift from deployment
+  truth
+- deployment-trigger regressions now pin those semantic failures directly
+
+Validation:
+
+- `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py -k "v1_readiness"; Pop-Location`
+- `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py -k "v1_readiness or telegram_round_trip_readiness_state or deploy_parity_manual_fallback"; Pop-Location`

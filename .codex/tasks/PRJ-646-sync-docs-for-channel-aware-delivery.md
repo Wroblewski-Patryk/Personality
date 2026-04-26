@@ -3,7 +3,7 @@
 ## Header
 - ID: PRJ-646
 - Title: Sync docs for channel-aware delivery
-- Status: BACKLOG
+- Status: DONE
 - Owner: Product Docs Agent
 - Depends on: PRJ-645
 - Priority: P2
@@ -22,9 +22,9 @@ Synchronize docs/context for channel-aware delivery limits and formatting.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] Canonical docs describe delivery adaptation as channel-owned behavior under action/delivery.
-- [ ] Telegram-specific length and formatting rules are documented without implying the same limit for UI or API.
-- [ ] Planning/context truth records this fix as part of the post-core-v1 queue.
+- [x] Canonical docs describe delivery adaptation as channel-owned behavior under action/delivery.
+- [x] Telegram-specific length and formatting rules are documented without implying the same limit for UI or API.
+- [x] Planning/context truth records this fix as part of the post-core-v1 queue.
 
 ## Forbidden
 - new systems without approval
@@ -34,7 +34,7 @@ Synchronize docs/context for channel-aware delivery limits and formatting.
 
 ## Validation Evidence
 - Tests: doc-and-context sync
-- Manual checks: cross-review against implementation and proof
+- Manual checks: cross-review against `DeliveryRouter`, Telegram telemetry, and release-smoke proof
 - Screenshots/logs:
 - High-risk checks: avoid docs that suggest expression should self-truncate to Telegram
 
@@ -47,15 +47,21 @@ Synchronize docs/context for channel-aware delivery limits and formatting.
 - Follow-up architecture doc updates: runtime reality, testing, runbook, planning/context
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 The long-term target is channel-aware delivery, not Telegram-first formatting
 logic leaking upward.
+
+Synced docs:
+
+- `docs/implementation/runtime-reality.md`
+- `docs/engineering/testing.md`
+- `docs/operations/runtime-ops-runbook.md`

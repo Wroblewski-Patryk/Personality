@@ -308,6 +308,7 @@ For meaningful repo changes, leave behind:
   - `daily_use_ready_workflows`
   - `daily_use_blocked_workflows`
   - parity with `/health.v1_readiness.organizer_daily_use_*`
+  - parity with `/health.v1_readiness.extension_gate_states.organizer_daily_use`
 - organizer-tool activation coverage should also pin
   `organizer_tool_stack.activation_snapshot`, including:
   - activation-state transitions
@@ -318,9 +319,25 @@ For meaningful repo changes, leave behind:
     evidence from:
     - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py tests/test_behavior_validation_script.py`
     - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
-  - coverage should pin:
-    - approved external reads persist only bounded tool-grounded conclusion
-      kinds through action-owned capture and memory-owned conclusion writes
+- coverage should pin:
+  - `/health.conversation_channels.telegram` and matching incident evidence
+    include channel-aware delivery posture for Telegram:
+    - `delivery_adaptation_policy_owner`
+    - `delivery_segmentation_state`
+    - `delivery_formatting_state`
+  - Telegram delivery regressions prove:
+    - long outbound replies are segmented below expression and stay within the
+      transport limit
+    - supported markdown normalizes to Telegram HTML parse mode
+    - unsafe markdown falls back to plain text
+    - release smoke fails when the Telegram delivery-adaptation posture
+      disappears from `/health` or exported incident evidence
+  - `v1_readiness.final_acceptance_gate_states` contains only the approved
+    core no-UI `v1` gates and excludes organizer daily use
+  - `v1_readiness.final_acceptance_state` goes green only when the core gate
+    bundle is green
+  - approved external reads persist only bounded tool-grounded conclusion
+    kinds through action-owned capture and memory-owned conclusion writes
     - `/health.learned_state.tool_grounded_learning` and
       `incident_evidence.policy_posture["learned_state"].tool_grounded_learning`
       stay in parity
@@ -377,12 +394,17 @@ For meaningful repo changes, leave behind:
   from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_pipeline.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`
   - `.\scripts\run_behavior_validation.ps1 -GateMode ci -ArtifactPath artifacts/behavior_validation/report.json`
-  - coverage should pin:
-    - `/health.v1_readiness.time_aware_planned_work_*`
-    - exported `incident_evidence.policy_posture["v1_readiness"]` parity for
-      the same planned-work posture
-    - release-smoke failure when planned-work gate state drifts or disappears
-    - required behavior scenarios `T19.1..T19.2`
+- coverage should pin:
+  - `/health.v1_readiness.time_aware_planned_work_*`
+  - exported `incident_evidence.policy_posture["v1_readiness"]` parity for
+    the same planned-work posture
+  - semantic parity between `v1_readiness` and its owner surfaces for:
+    - conversation reliability
+    - learned-state inspection
+    - website reading
+    - deploy parity
+  - release-smoke failure when planned-work gate state drifts or disappears
+  - required behavior scenarios `T19.1..T19.2`
 - for runtime-topology, adaptive-governance, planning-governance, or
   deployment-policy surface changes, regression evidence from:
   - `.\.venv\Scripts\python -m pytest -q tests/test_runtime_policy.py tests/test_api_routes.py tests/test_deployment_trigger_scripts.py`

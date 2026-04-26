@@ -69,7 +69,49 @@ class FakeMemoryRepository:
 
     async def get_recent_for_user(self, user_id: str, limit: int = 5) -> list[dict]:
         self.recent_limits.append(limit)
-        return self.recent_memory[:limit]
+        return [
+            item
+            for item in self.recent_memory
+            if not item.get("user_id") or str(item.get("user_id")) == str(user_id)
+        ][:limit]
+
+    async def get_recent_chat_transcript_for_user(self, user_id: str, limit: int = 10) -> list[dict]:
+        normalized_limit = max(1, int(limit))
+        recent_items = await self.get_recent_for_user(user_id=user_id, limit=max(normalized_limit, 10))
+        transcript_items: list[dict] = []
+        for memory_item in recent_items:
+            payload = memory_item.get("payload") if isinstance(memory_item.get("payload"), dict) else {}
+            event_id = str(memory_item.get("event_id", "") or "").strip()
+            timestamp = memory_item.get("event_timestamp") or memory_item.get("timestamp")
+            channel = "telegram" if str(memory_item.get("source", "")).strip().lower() == "telegram" else "api"
+            event_text = str(payload.get("event", "") or "").strip()
+            expression_text = str(payload.get("expression", "") or "").strip()
+            response_language = str(payload.get("response_language", "") or payload.get("language", "") or "").strip()
+            if event_text:
+                transcript_items.append(
+                    {
+                        "message_id": f"{event_id}:user",
+                        "event_id": event_id,
+                        "role": "user",
+                        "text": event_text,
+                        "channel": channel,
+                        "timestamp": timestamp,
+                    }
+                )
+            if expression_text:
+                item = {
+                    "message_id": f"{event_id}:assistant",
+                    "event_id": event_id,
+                    "role": "assistant",
+                    "text": expression_text,
+                    "channel": channel,
+                    "timestamp": timestamp,
+                }
+                if response_language:
+                    item["metadata"] = {"language": response_language}
+                transcript_items.append(item)
+        transcript_items.sort(key=lambda item: item["timestamp"])
+        return transcript_items[-normalized_limit:]
 
     async def get_user_profile(self, user_id: str) -> dict | None:
         return self.user_profile
@@ -494,6 +536,9 @@ class PersistingFakeMemoryRepository(FakeMemoryRepository):
             0,
             {
                 "event_id": record["event_id"],
+                "user_id": kwargs["user_id"],
+                "source": kwargs["source"],
+                "event_timestamp": kwargs["event_timestamp"],
                 "timestamp": record["timestamp"],
                 "summary": record["summary"],
                 "payload": dict(record["payload"]),
@@ -713,12 +758,24 @@ class FakeHybridMemoryRepository(FakeMemoryRepository):
 
 
 class FakeTelegramClient:
-    async def send_message(self, chat_id: int | str, text: str) -> dict:
+    async def send_message(
+        self,
+        chat_id: int | str,
+        text: str,
+        *,
+        parse_mode: str | None = None,
+    ) -> dict:
         return {"ok": True}
 
 
 class FailingTelegramClient:
-    async def send_message(self, chat_id: int | str, text: str) -> dict:
+    async def send_message(
+        self,
+        chat_id: int | str,
+        text: str,
+        *,
+        parse_mode: str | None = None,
+    ) -> dict:
         raise TimeoutError("telegram transport timeout")
 
 
@@ -5799,6 +5856,46 @@ async def test_runtime_behavior_continuity_scenario_covers_multi_session_persona
     )
     assert len(results) == 1
     assert results[0].status == "pass"
+
+
+async def test_runtime_pipeline_projects_shared_transcript_for_api_and_telegram_turns_under_same_user() -> None:
+    memory = PersistingFakeMemoryRepository(recent_memory=[])
+    runtime = _build_behavior_runtime(memory)
+
+    api_result = await runtime.run(
+        _behavior_event(
+            event_id="evt-shared-api-1",
+            trace_id="t-shared-api-1",
+            user_id="linked-user-1",
+            text="hello from the app",
+        )
+    )
+    telegram_result = await runtime.run(
+        Event(
+            event_id="evt-shared-telegram-1",
+            source="telegram",
+            subsource="user_message",
+            timestamp=datetime.now(timezone.utc),
+            payload={"text": "hello from telegram", "chat_id": 123456},
+            meta=EventMeta(user_id="linked-user-1", trace_id="t-shared-telegram-1"),
+        )
+    )
+
+    transcript = await memory.get_recent_chat_transcript_for_user("linked-user-1", limit=10)
+
+    assert api_result.memory_record is not None
+    assert telegram_result.memory_record is not None
+    assert [item["message_id"] for item in transcript] == [
+        "evt-shared-api-1:user",
+        "evt-shared-api-1:assistant",
+        "evt-shared-telegram-1:user",
+        "evt-shared-telegram-1:assistant",
+    ]
+    assert [item["channel"] for item in transcript] == ["api", "api", "telegram", "telegram"]
+    assert transcript[0]["text"] == "hello from the app"
+    assert transcript[2]["text"] == "hello from telegram"
+    assert transcript[1]["metadata"] == {"language": "en"}
+    assert transcript[3]["metadata"] == {"language": "en"}
 
 
 async def test_runtime_behavior_failure_scenarios_cover_contradiction_missing_data_and_noise() -> None:
