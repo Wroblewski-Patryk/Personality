@@ -1778,17 +1778,27 @@ async def test_persist_episode_updates_proactive_state_from_typed_domain_intent(
         ]
     )
     record = await executor.persist_episode(
-        event=_event("scheduler proactive tick"),
+        event=Event(
+            event_id="evt-1",
+            source="scheduler",
+            subsource="proactive_tick",
+            timestamp=datetime.now(timezone.utc),
+            payload={"text": "scheduler proactive tick", "chat_id": 123456},
+            meta=EventMeta(user_id="u-1", trace_id="t-1"),
+        ),
         perception=_perception(["general", "proactive"]),
         context=_context(),
         motivation=_motivation(),
         role=_role("advisor"),
         plan=plan,
-        action_result=await executor.execute(plan, _delivery()),
-        expression=_expression(),
+        action_result=await executor.execute(plan, _delivery(channel="telegram", chat_id=123456)),
+        expression=ExpressionOutput(message="hello", tone="supportive", channel="telegram", language="en"),
     )
 
     assert record.payload["proactive_state_update"] == "delivery_ready:task_blocked:delivery_ready"
+    assert record.payload["event_visibility"] == "internal"
+    assert record.payload["assistant_visibility"] == "transcript"
+    assert record.payload["action_actions"] == ["send_telegram_message"]
     assert memory_repository.conclusion_updates == [
         {
             "user_id": "u-1",
@@ -1807,6 +1817,25 @@ async def test_persist_episode_updates_proactive_state_from_typed_domain_intent(
             "supporting_event_id": "evt-1",
         },
     ]
+
+
+async def test_persist_episode_marks_api_user_turn_as_transcript_visible() -> None:
+    memory_repository = FakeMemoryRepository()
+    executor = ActionExecutor(memory_repository=memory_repository, telegram_client=FakeTelegramClient())
+
+    record = await executor.persist_episode(
+        event=_event("hello there"),
+        perception=_perception(["general"]),
+        context=_context(),
+        motivation=_motivation(),
+        role=_role("advisor"),
+        plan=_plan(),
+        action_result=await executor.execute(_plan(), _delivery()),
+        expression=_expression(),
+    )
+
+    assert record.payload["event_visibility"] == "transcript"
+    assert record.payload["assistant_visibility"] == "transcript"
 
 
 async def test_persist_episode_updates_proactive_preference_from_typed_domain_intent() -> None:

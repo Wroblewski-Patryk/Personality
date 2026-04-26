@@ -2812,6 +2812,143 @@ async def test_memory_repository_projects_recent_chat_transcript_in_chronologica
     await engine.dispose()
 
 
+async def test_memory_repository_hides_scheduler_internal_prompt_but_keeps_delivered_scheduler_reply(tmp_path) -> None:
+    database_path = tmp_path / "memory-chat-transcript-scheduler.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    base_time = datetime(2026, 4, 26, 17, 44, tzinfo=timezone.utc)
+    await repository.write_episode(
+        event_id="evt-user-1",
+        trace_id="trace-user-1",
+        source="api",
+        user_id="usr-chat",
+        event_timestamp=base_time,
+        summary="User turn",
+        payload={
+            "event": "hej",
+            "event_visibility": "transcript",
+            "expression": "cześć",
+            "assistant_visibility": "transcript",
+            "response_language": "pl",
+            "memory_kind": "episodic",
+            "action": "success",
+        },
+        importance=0.5,
+    )
+    await repository.write_episode(
+        event_id="evt-scheduler-1",
+        trace_id="trace-scheduler-1",
+        source="scheduler",
+        user_id="usr-chat",
+        event_timestamp=base_time + timedelta(minutes=30),
+        summary="Scheduler proactive delivery",
+        payload={
+            "event": "time check-in follow up",
+            "event_visibility": "internal",
+            "expression": "Jak się dziś trzymasz?",
+            "assistant_visibility": "transcript",
+            "response_language": "pl",
+            "memory_kind": "episodic",
+            "chat_id": 123456,
+            "action": "success",
+            "action_actions": ["send_telegram_message"],
+            "proactive_state_update": "delivery_ready:time_checkin:delivery_ready",
+        },
+        importance=0.5,
+    )
+
+    items = await repository.get_recent_chat_transcript_for_user(user_id="usr-chat", limit=10)
+
+    assert [item["message_id"] for item in items] == [
+        "evt-user-1:user",
+        "evt-user-1:assistant",
+        "evt-scheduler-1:assistant",
+    ]
+    assert [item["text"] for item in items] == ["hej", "cześć", "Jak się dziś trzymasz?"]
+    assert [item["channel"] for item in items] == ["api", "api", "api"]
+
+    await engine.dispose()
+
+
+async def test_memory_repository_ignores_internal_rows_when_counting_unanswered_proactive_and_recent_activity(tmp_path) -> None:
+    database_path = tmp_path / "memory-proactive-guardrails.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    now = datetime.now(timezone.utc)
+    await repository.write_episode(
+        event_id="evt-user-old",
+        trace_id="trace-user-old",
+        source="api",
+        user_id="usr-guard",
+        event_timestamp=now - timedelta(hours=3),
+        summary="Old user turn",
+        payload={
+            "event": "hej",
+            "event_visibility": "transcript",
+            "expression": "odpowiedz",
+            "assistant_visibility": "transcript",
+            "memory_kind": "episodic",
+            "action": "success",
+        },
+        importance=0.4,
+    )
+    await repository.write_episode(
+        event_id="evt-proactive-1",
+        trace_id="trace-proactive-1",
+        source="scheduler",
+        user_id="usr-guard",
+        event_timestamp=now - timedelta(minutes=40),
+        summary="Delivered proactive",
+        payload={
+            "event": "time check-in follow up",
+            "event_visibility": "internal",
+            "expression": "jak leci?",
+            "assistant_visibility": "transcript",
+            "memory_kind": "episodic",
+            "chat_id": 123456,
+            "action": "success",
+            "action_actions": ["send_telegram_message"],
+            "proactive_state_update": "delivery_ready:time_checkin:delivery_ready",
+        },
+        importance=0.4,
+    )
+    await repository.write_episode(
+        event_id="evt-system-1",
+        trace_id="trace-system-1",
+        source="system",
+        user_id="usr-guard",
+        event_timestamp=now - timedelta(minutes=20),
+        summary="Reflection note",
+        payload={"memory_kind": "semantic"},
+        importance=0.1,
+    )
+    await repository.upsert_conclusion(
+        user_id="usr-guard",
+        kind="proactive_opt_in",
+        content="true",
+        confidence=0.95,
+        source="test",
+        supporting_event_id="evt-user-old",
+    )
+
+    candidates = await repository.get_proactive_scheduler_candidates(
+        proactive_interval_seconds=1800,
+        limit=5,
+    )
+
+    candidate = next(item for item in candidates if item["user_id"] == "usr-guard")
+    assert candidate["unanswered_proactive_count"] == 1
+    assert candidate["recent_user_activity"] == "away"
+
+    await engine.dispose()
+
+
 async def test_memory_repository_cleans_runtime_data_for_all_users_while_preserving_auth_and_profiles(tmp_path) -> None:
     database_path = tmp_path / "memory-runtime-cleanup-all-users.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")

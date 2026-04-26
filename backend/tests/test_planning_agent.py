@@ -2232,6 +2232,45 @@ def test_planning_agent_defers_proactive_outreach_when_interruption_cost_is_high
     assert result.domain_intents[0].state == "interruption_deferred"
 
 
+def test_planning_agent_keeps_plain_time_checkin_silent_without_active_work_or_strong_relation_signal() -> None:
+    result = PlanningAgent().run(
+        event=_scheduler_event(
+            {
+                "text": "scheduler proactive tick",
+                "chat_id": 123456,
+                "proactive": {
+                    "trigger": "time_checkin",
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": "away",
+                        "recent_outbound_count": 0,
+                        "unanswered_proactive_count": 0,
+                    },
+                },
+            }
+        ),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.3,
+            urgency=0.2,
+            valence=0.0,
+            arousal=0.1,
+            mode="ignore",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.8),
+        user_preferences={"proactive_opt_in": True},
+    )
+
+    assert result.proactive_decision is not None
+    assert result.proactive_decision.trigger == "time_checkin"
+    assert result.proactive_decision.should_interrupt is False
+    assert result.goal == "Defer proactive outreach until interruption cost becomes acceptable."
+    assert result.needs_response is False
+    assert result.needs_action is False
+    assert result.domain_intents[0].state == "interruption_deferred"
+
+
 def test_planning_agent_defers_proactive_outreach_when_opt_in_is_missing() -> None:
     result = PlanningAgent().run(
         event=_scheduler_event(

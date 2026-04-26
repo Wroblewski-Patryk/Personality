@@ -10,27 +10,26 @@ Last updated: 2026-04-26
   user preferences over time
 - Commercial model: TBD
 - Current phase: no-UI V1 baseline achieved in repo; core-V1 time-aware planning revision now active before later organizer-tool onboarding
-- 2026-04-26: fresh production analysis now freezes one bounded runtime repair
-  lane for proactive transcript truth and conscious outbound governance:
-  - current production evidence confirms that scheduler-owned proactive ticks
-    can be persisted and projected into transcript history as if they were
-    user-authored `api` turns
-  - the concrete synthetic text source is now confirmed in:
-    - `backend/app/memory/repository.py`
-      - `trigger = "time_checkin"`
-      - `text = "time check-in follow up"`
-  - the current transcript projection drift is also now explicit:
-    - scheduler-owned `payload.event` can still become transcript
-      `role=user` items
-  - one execution-ready repair plan now lives in:
-    - `docs/planning/proactive-transcript-truth-and-conscious-outbound-governance-plan.md`
-  - the seeded execution queue is:
-    - `PRJ-745` Freeze transcript truth and communication governance contract
-    - `PRJ-746` Repair transcript projection and runtime persistence semantics
-    - `PRJ-747` Tighten proactive wakeup execution and anti-spam behavior
-    - `PRJ-748` Add regression proof, runbook notes, and context sync
-  - one explicit architecture decision gate remains open before any
-    cross-channel proactive escalation is implemented:
+- 2026-04-26: the proactive transcript-truth and conscious outbound
+  governance repair lane is now complete locally:
+  - scheduler-owned wakeups now persist bounded transcript visibility markers
+    so internal prompt text no longer impersonates user-authored turns
+  - `/app/chat/history` now keeps delivered scheduler outreach visible as
+    assistant output while hiding internal scheduler prompts from the app
+    transcript
+  - plain `time_checkin` wakeups now default toward silent conscious analysis
+    unless active-work or relation signals justify outreach
+  - unanswered proactive counting now skips unrelated internal/system memory
+    rows instead of resetting anti-spam posture prematurely
+  - regression coverage now pins:
+    - transcript truth
+    - delivered-scheduler-assistant visibility
+    - silent low-value time-checkin behavior
+    - anti-spam continuity across internal memory rows
+  - operator guidance is now updated in:
+    - `docs/operations/runtime-ops-runbook.md`
+  - one explicit decision gate still remains open before any cross-channel
+    proactive escalation is implemented:
     - no escalation
     - delivery-failure-only escalation
     - silence-window escalation with explicit channel-priority ownership

@@ -25,6 +25,34 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-26 - Anti-spam counters must ignore internal memory rows when proactive streaks depend on conversation truth
+- Context:
+  - proactive cadence repeated outreach more often than expected even though
+    the repo already had unanswered proactive guardrails.
+- Symptom:
+  - scheduler-owned outreach could repeat because unrelated internal memory
+    rows appeared ahead of the last proactive delivery in `recent_memory`.
+- Root cause:
+  - `_unanswered_proactive_count` stopped at the first non-scheduler row
+    instead of skipping non-conversation or internal rows, so reflection or
+    system writes could accidentally reset the anti-spam streak.
+- Guardrail:
+  - counters that depend on conversation continuity must distinguish:
+    - user-authored turns
+    - delivered scheduler outreach
+    - internal/system memory writes
+- Preferred pattern:
+  - classify transcript visibility or conversation-turn posture once at
+    persistence/projection boundaries
+  - make anti-spam and activity heuristics consume that same truth boundary
+    instead of ad hoc source-only checks
+- Avoid:
+  - assuming every recent memory row participates in conversation continuity
+  - breaking proactive streak logic on the first unrelated internal write
+- Evidence:
+  - `backend/app/memory/repository.py`
+  - `backend/tests/test_memory_repository.py`
+
 ### 2026-04-26 - Scheduler-originated prompts must never impersonate user-authored transcript turns
 - Context:
   - fresh production investigation showed repeated `Ty/api` transcript entries

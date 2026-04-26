@@ -500,11 +500,18 @@ class FakeMemoryRepository:
             payload = memory_item.get("payload") if isinstance(memory_item.get("payload"), dict) else {}
             event_id = str(memory_item.get("event_id", "") or "")
             timestamp = memory_item.get("event_timestamp")
-            channel = "telegram" if str(memory_item.get("source", "")).strip().lower() == "telegram" else "api"
+            source = str(memory_item.get("source", "")).strip().lower()
+            channel = "telegram" if source == "telegram" else "api"
             event_text = str(payload.get("event", "") or "").strip()
             expression_text = str(payload.get("expression", "") or "").strip()
             response_language = str(payload.get("response_language", "") or payload.get("language", "") or "").strip()
-            if event_text:
+            event_visibility = str(payload.get("event_visibility", "") or "").strip().lower()
+            assistant_visibility = str(payload.get("assistant_visibility", "") or "").strip().lower()
+            show_event = event_visibility == "transcript" or (not event_visibility and source != "scheduler")
+            show_assistant = assistant_visibility == "transcript" or (
+                not assistant_visibility and source != "scheduler"
+            )
+            if event_text and show_event:
                 transcript_items.append(
                     {
                         "message_id": f"{event_id}:user",
@@ -515,7 +522,7 @@ class FakeMemoryRepository:
                         "timestamp": timestamp,
                     }
                 )
-            if expression_text:
+            if expression_text and show_assistant:
                 item = {
                     "message_id": f"{event_id}:assistant",
                     "event_id": event_id,
@@ -5126,6 +5133,63 @@ def test_app_chat_history_returns_recent_transcript_messages_for_authenticated_u
         "timestamp": body["items"][1]["timestamp"],
         "metadata": {"language": "en"},
     }
+
+
+def test_app_chat_history_hides_scheduler_internal_prompt_but_keeps_delivered_reply() -> None:
+    client, _, _ = _client()
+    repository = client.app.state.memory_repository
+    register_response = client.post(
+        "/app/auth/register",
+        json={
+            "email": "user@example.com",
+            "password": "super-secret-123",
+        },
+    )
+    user_id = register_response.json()["user"]["id"]
+    base_time = datetime(2026, 4, 26, 17, 44, tzinfo=timezone.utc)
+    repository.recent_memory = [
+        {
+            "event_id": "evt-app-1",
+            "source": "api",
+            "user_id": user_id,
+            "event_timestamp": base_time,
+            "summary": "App turn.",
+            "payload": {
+                "event": "hej",
+                "event_visibility": "transcript",
+                "expression": "cześć",
+                "assistant_visibility": "transcript",
+                "response_language": "pl",
+            },
+            "importance": 0.7,
+        },
+        {
+            "event_id": "evt-scheduler-1",
+            "source": "scheduler",
+            "user_id": user_id,
+            "event_timestamp": base_time + timedelta(minutes=30),
+            "summary": "Scheduler turn.",
+            "payload": {
+                "event": "time check-in follow up",
+                "event_visibility": "internal",
+                "expression": "Jak się dziś trzymasz?",
+                "assistant_visibility": "transcript",
+                "response_language": "pl",
+            },
+            "importance": 0.6,
+        },
+    ]
+
+    response = client.get("/app/chat/history")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [item["message_id"] for item in body["items"]] == [
+        "evt-app-1:user",
+        "evt-app-1:assistant",
+        "evt-scheduler-1:assistant",
+    ]
+    assert [item["text"] for item in body["items"]] == ["hej", "cześć", "Jak się dziś trzymasz?"]
 
 
 def test_app_chat_history_returns_latest_ten_messages_in_chronological_order() -> None:

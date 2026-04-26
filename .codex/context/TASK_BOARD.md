@@ -26,10 +26,30 @@ Last updated: 2026-04-26
     - conservative no-escalation
     - delivery-failure-only escalation
     - silence-window escalation with explicit preference ownership
-- the next smallest execution slice is now `PRJ-745`:
-  - freeze the transcript-truth contract
-  - freeze the user-vs-scheduler communication rule
-  - update architecture or runtime-reality docs before implementation changes
+- local execution on 2026-04-26 is now complete for `PRJ-745..PRJ-748`:
+  - `PRJ-745`
+    - architecture now freezes one explicit transcript-truth and
+      communication-governance contract
+  - `PRJ-746`
+    - episodic persistence now marks transcript visibility explicitly
+    - `/app/chat/history` no longer projects scheduler-owned synthetic prompts
+      as `role=user`
+  - `PRJ-747`
+    - plain `time_checkin` wakeups are now materially harder to escalate into
+      outbound chatter without active-work or relation signal support
+    - unanswered proactive counting now ignores internal/system memory rows
+      instead of resetting the anti-spam streak
+  - `PRJ-748`
+    - regression coverage now pins transcript truth and silent wakeup posture
+    - runbook and context truth are synchronized with the repaired behavior
+- validation completed locally:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_memory_repository.py tests/test_api_routes.py tests/test_planning_agent.py tests/test_action_executor.py tests/test_runtime_pipeline.py; Pop-Location`
+- the next explicit decision in this lane is no longer transcript repair
+- it is the still-open product policy gate for cross-channel proactive
+  escalation after silence:
+  - no escalation
+  - delivery-failure-only escalation
+  - silence-window escalation with explicit preference ownership
 
 ## Fresh Dashboard Route Baseline (2026-04-26)
 

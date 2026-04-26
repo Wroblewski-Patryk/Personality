@@ -83,11 +83,18 @@ class FakeMemoryRepository:
             payload = memory_item.get("payload") if isinstance(memory_item.get("payload"), dict) else {}
             event_id = str(memory_item.get("event_id", "") or "").strip()
             timestamp = memory_item.get("event_timestamp") or memory_item.get("timestamp")
-            channel = "telegram" if str(memory_item.get("source", "")).strip().lower() == "telegram" else "api"
+            source = str(memory_item.get("source", "")).strip().lower()
+            channel = "telegram" if source == "telegram" else "api"
             event_text = str(payload.get("event", "") or "").strip()
             expression_text = str(payload.get("expression", "") or "").strip()
             response_language = str(payload.get("response_language", "") or payload.get("language", "") or "").strip()
-            if event_text:
+            event_visibility = str(payload.get("event_visibility", "") or "").strip().lower()
+            assistant_visibility = str(payload.get("assistant_visibility", "") or "").strip().lower()
+            show_event = event_visibility == "transcript" or (not event_visibility and source != "scheduler")
+            show_assistant = assistant_visibility == "transcript" or (
+                not assistant_visibility and source != "scheduler"
+            )
+            if event_text and show_event:
                 transcript_items.append(
                     {
                         "message_id": f"{event_id}:user",
@@ -98,7 +105,7 @@ class FakeMemoryRepository:
                         "timestamp": timestamp,
                     }
                 )
-            if expression_text:
+            if expression_text and show_assistant:
                 item = {
                     "message_id": f"{event_id}:assistant",
                     "event_id": event_id,
@@ -5896,6 +5903,50 @@ async def test_runtime_pipeline_projects_shared_transcript_for_api_and_telegram_
     assert transcript[2]["text"] == "hello from telegram"
     assert transcript[1]["metadata"] == {"language": "en"}
     assert transcript[3]["metadata"] == {"language": "en"}
+
+
+async def test_runtime_pipeline_keeps_scheduler_prompt_out_of_shared_transcript_while_preserving_delivered_reply() -> None:
+    memory = PersistingFakeMemoryRepository(recent_memory=[])
+    memory.user_preferences = {"proactive_opt_in": True}
+    memory.active_tasks = [
+        {
+            "id": 21,
+            "name": "fix deploy blocker",
+            "description": "Unblock the deploy path",
+            "priority": "high",
+            "status": "blocked",
+        }
+    ]
+    runtime = _build_behavior_runtime(memory)
+
+    proactive_result = await runtime.run(
+        build_scheduler_event(
+            subsource="proactive_tick",
+            user_id="linked-user-1",
+            payload={
+                "text": "time check-in follow up",
+                "chat_id": 123456,
+                "proactive_trigger": "task_blocked",
+                "user_context": {
+                    "quiet_hours": False,
+                    "focus_mode": False,
+                    "recent_user_activity": "active",
+                    "recent_outbound_count": 0,
+                    "unanswered_proactive_count": 0,
+                },
+            },
+        )
+    )
+
+    transcript = await memory.get_recent_chat_transcript_for_user("linked-user-1", limit=10)
+
+    assert proactive_result.memory_record is not None
+    assert proactive_result.memory_record.payload["event_visibility"] == "internal"
+    assert proactive_result.memory_record.payload["assistant_visibility"] == "transcript"
+    assert [item["message_id"] for item in transcript] == [
+        f"{proactive_result.event.event_id}:assistant",
+    ]
+    assert transcript[0]["role"] == "assistant"
 
 
 async def test_runtime_behavior_failure_scenarios_cover_contradiction_missing_data_and_noise() -> None:

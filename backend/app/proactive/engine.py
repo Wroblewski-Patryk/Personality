@@ -53,12 +53,6 @@ class ProactiveDecisionEngine:
             delivery_reliability=delivery_reliability,
         )
 
-        importance = self._clamp_unit(
-            proactive_payload.get("importance", 0.55 + min(max(context.risk_level, 0.0), 0.2))
-        )
-        urgency = self._clamp_unit(
-            proactive_payload.get("urgency", 0.55 if output_type == "warning" else 0.45)
-        )
         relevance = self._relevance(
             trigger=trigger,
             context=context,
@@ -69,6 +63,14 @@ class ProactiveDecisionEngine:
             active_tasks=active_tasks or [],
         )
         user_context = proactive_payload.get("user_context") if isinstance(proactive_payload.get("user_context"), dict) else {}
+        has_active_work = bool(active_goals or active_tasks)
+        importance_default = 0.55 + min(max(context.risk_level, 0.0), 0.2)
+        urgency_default = 0.55 if output_type == "warning" else 0.45
+        if trigger == "time_checkin" and not has_active_work:
+            importance_default = 0.24
+            urgency_default = 0.12
+        importance = self._clamp_unit(proactive_payload.get("importance", importance_default))
+        urgency = self._clamp_unit(proactive_payload.get("urgency", urgency_default))
         interruption_cost = self._interruption_cost(
             user_context=user_context,
             relations=relations or [],
@@ -77,6 +79,12 @@ class ProactiveDecisionEngine:
 
         decision_score = round((importance * 0.45 + urgency * 0.35 + relevance * 0.2) - interruption_cost, 2)
         threshold = 0.2 if output_type == "warning" else 0.28
+        if trigger == "time_checkin":
+            threshold = 0.42
+            if has_active_work:
+                threshold -= 0.05
+            if str(user_context.get("recent_user_activity", "")).strip().lower() == "away":
+                threshold -= 0.03
         if bool(user_context.get("quiet_hours", False)):
             threshold += 0.07
         should_interrupt = decision_score >= threshold
@@ -123,9 +131,17 @@ class ProactiveDecisionEngine:
         active_goals: list[dict],
         active_tasks: list[dict],
     ) -> float:
-        relevance = 0.4 + min(max(context.risk_level, 0.0), 0.2)
         has_goal = bool(active_goals)
+        has_task = bool(active_tasks)
         has_blocked_task = any(str(task.get("status", "")).strip().lower() == "blocked" for task in active_tasks)
+        if trigger == "time_checkin":
+            relevance = 0.12
+            if has_goal:
+                relevance += 0.08
+            if has_task:
+                relevance += 0.05
+        else:
+            relevance = 0.4 + min(max(context.risk_level, 0.0), 0.2)
         if trigger in {"goal_stagnation", "goal_deadline"} and has_goal:
             relevance += 0.2
         if trigger in {"task_blocked", "task_overdue"} and has_blocked_task:

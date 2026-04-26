@@ -36,6 +36,12 @@ Every proactive action must be based on:
 - relation signals  
 - time context  
 
+Scheduler or subconscious wakeups may trigger analysis without forcing a
+visible message.
+
+If conscious evaluation finds no grounded reason to interrupt the user, the
+tick should stay silent and complete as internal runtime work.
+
 ---
 
 ## What Counts as Proactive Behavior
@@ -252,6 +258,7 @@ AION must NOT:
 - send multiple messages without response  
 - escalate without reason  
 - interrupt during low-relevance moments  
+- treat an internal scheduler prompt as if the user had authored a message  
 
 ---
 

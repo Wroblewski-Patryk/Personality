@@ -3367,12 +3367,13 @@ class MemoryRepository:
         event_id = str(memory_item.get("event_id", "") or "").strip()
         timestamp = self._coerce_datetime(memory_item.get("event_timestamp") or memory_item.get("timestamp"))
         channel = self._normalize_transcript_channel(memory_item.get("source"))
+        source = str(memory_item.get("source", "") or "").strip().lower()
         event_text = str(payload.get("event", "") or "").strip()
         expression_text = str(payload.get("expression", "") or "").strip()
         response_language = str(payload.get("response_language", "") or payload.get("language", "") or "").strip()
         items: list[dict[str, Any]] = []
 
-        if event_text:
+        if event_text and self._event_projects_to_transcript(payload=payload, source=source):
             items.append(
                 {
                     "message_id": f"{event_id}:user",
@@ -3384,7 +3385,7 @@ class MemoryRepository:
                 }
             )
 
-        if expression_text:
+        if expression_text and self._assistant_projects_to_transcript(payload=payload, source=source):
             metadata: dict[str, Any] | None = None
             if response_language:
                 metadata = {"language": response_language}
@@ -3408,6 +3409,67 @@ class MemoryRepository:
         if normalized == "telegram":
             return "telegram"
         return "api"
+
+    @staticmethod
+    def _event_projects_to_transcript(*, payload: dict[str, Any], source: str) -> bool:
+        visibility = str(payload.get("event_visibility", "") or "").strip().lower()
+        if visibility in {"transcript", "internal"}:
+            return visibility == "transcript"
+        return source != "scheduler"
+
+    @staticmethod
+    def _assistant_projects_to_transcript(*, payload: dict[str, Any], source: str) -> bool:
+        visibility = str(payload.get("assistant_visibility", "") or "").strip().lower()
+        if visibility in {"transcript", "internal"}:
+            return visibility == "transcript"
+        if source != "scheduler":
+            return True
+        actions = payload.get("action_actions")
+        if isinstance(actions, list) and "send_telegram_message" in actions:
+            return True
+        action_status = str(payload.get("action", "") or "").strip().lower()
+        chat_id = payload.get("chat_id")
+        proactive_state = str(payload.get("proactive_state_update", "") or "").strip().lower()
+        return (
+            action_status == "success"
+            and isinstance(chat_id, (int, str))
+            and str(chat_id).strip() != ""
+            and (
+                proactive_state.startswith("delivery_ready:")
+                or proactive_state == ""
+            )
+        )
+
+    @staticmethod
+    def _is_conversation_turn_memory(memory_item: dict[str, Any]) -> bool:
+        source = str(memory_item.get("source", "") or "").strip().lower()
+        if source not in {"api", "telegram", "scheduler"}:
+            return False
+        payload = memory_item.get("payload") if isinstance(memory_item.get("payload"), dict) else {}
+        memory_kind = str(payload.get("memory_kind", "") or "").strip().lower()
+        if memory_kind and memory_kind != "episodic":
+            return False
+        return True
+
+    @staticmethod
+    def _is_user_authored_turn(memory_item: dict[str, Any]) -> bool:
+        if not MemoryRepository._is_conversation_turn_memory(memory_item):
+            return False
+        source = str(memory_item.get("source", "") or "").strip().lower()
+        if source == "scheduler":
+            return False
+        payload = memory_item.get("payload") if isinstance(memory_item.get("payload"), dict) else {}
+        return MemoryRepository._event_projects_to_transcript(payload=payload, source=source)
+
+    @staticmethod
+    def _is_delivered_scheduler_outreach(memory_item: dict[str, Any]) -> bool:
+        if not MemoryRepository._is_conversation_turn_memory(memory_item):
+            return False
+        source = str(memory_item.get("source", "") or "").strip().lower()
+        if source != "scheduler":
+            return False
+        payload = memory_item.get("payload") if isinstance(memory_item.get("payload"), dict) else {}
+        return MemoryRepository._assistant_projects_to_transcript(payload=payload, source=source)
 
     def _serialize_goal(self, row: AionGoal) -> dict:
         return {
@@ -3692,12 +3754,9 @@ class MemoryRepository:
         now = datetime.now(timezone.utc)
         count = 0
         for item in recent_memory:
-            if str(item.get("source", "")).strip().lower() != "scheduler":
+            if not self._is_delivered_scheduler_outreach(item):
                 continue
             payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
-            update = str(payload.get("proactive_state_update", "")).strip().lower()
-            if not update.startswith("delivery_ready:"):
-                continue
             timestamp = self._coerce_datetime(item.get("timestamp") or item.get("event_timestamp"))
             if timestamp is None:
                 continue
@@ -3709,13 +3768,13 @@ class MemoryRepository:
     def _unanswered_proactive_count(self, *, recent_memory: list[dict]) -> int:
         count = 0
         for item in recent_memory:
-            source = str(item.get("source", "")).strip().lower()
-            payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
-            update = str(payload.get("proactive_state_update", "")).strip().lower()
-            if source == "scheduler" and update.startswith("delivery_ready:"):
+            if not self._is_conversation_turn_memory(item):
+                continue
+            if self._is_delivered_scheduler_outreach(item):
                 count += 1
                 continue
-            break
+            if self._is_user_authored_turn(item):
+                break
         return count
 
     def _recent_user_activity(
@@ -3726,8 +3785,7 @@ class MemoryRepository:
     ) -> str:
         now = datetime.now(timezone.utc)
         for item in recent_memory:
-            source = str(item.get("source", "")).strip().lower()
-            if source == "scheduler":
+            if not self._is_user_authored_turn(item):
                 continue
             timestamp = self._coerce_datetime(item.get("timestamp") or item.get("event_timestamp"))
             if timestamp is None:

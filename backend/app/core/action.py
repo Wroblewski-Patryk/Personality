@@ -204,6 +204,7 @@ class ActionExecutor:
         payload = {
             "payload_version": 1,
             "event": str(event.payload.get("text", "")),
+            "event_visibility": self._event_transcript_visibility(event=event),
             "chat_id": event.payload.get("chat_id"),
             "memory_kind": memory_kind,
             "memory_topics": memory_topics,
@@ -239,6 +240,12 @@ class ActionExecutor:
             "plan_goal": plan.goal,
             "plan_steps": plan.steps,
             "action": action_result.status,
+            "action_actions": list(action_result.actions),
+            "assistant_visibility": self._assistant_transcript_visibility(
+                event=event,
+                action_result=action_result,
+                expression=expression,
+            ),
             "expression": expression.message,
         }
         summary = build_episode_summary(payload, max_length=1000)
@@ -312,6 +319,28 @@ class ActionExecutor:
             payload=stored.get("payload", {}),
             importance=stored["importance"],
         )
+
+    def _event_transcript_visibility(self, *, event: Event) -> str:
+        if event.source == "scheduler":
+            return "internal"
+        return "transcript"
+
+    def _assistant_transcript_visibility(
+        self,
+        *,
+        event: Event,
+        action_result: ActionResult,
+        expression: ExpressionOutput,
+    ) -> str:
+        if not str(expression.message or "").strip():
+            return "internal"
+        if event.source == "scheduler":
+            if action_result.status == "success" and "send_telegram_message" in action_result.actions:
+                return "transcript"
+            return "internal"
+        if action_result.status not in {"success", "partial"}:
+            return "internal"
+        return "transcript"
 
     async def _execute_provider_backed_connector_intents(self, plan: PlanOutput) -> ActionResult | None:
         executed_actions: list[str] = []

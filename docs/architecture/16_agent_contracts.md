@@ -317,6 +317,32 @@ Contract rules:
 9. web and future mobile remain thin `/app/*` clients over this same
    transcript contract; Telegram transport specifics stay in action and
    integration layers rather than the client contract
+10. scheduler-originated or subconscious wakeups are internal runtime events,
+    not user-authored turns, so they must never project into
+    `/app/chat/history` as `role=user`
+11. scheduler-originated outreach may appear in the transcript only when the
+    conscious path actually authorized and delivered a user-visible outbound
+    message; silent internal wakeups stay hidden from the transcript
+
+## Shared Communication Governance Contract
+
+Foreground communication now follows one explicit user-vs-scheduler boundary.
+
+Contract rules:
+
+1. direct user-authored turns from first-party app or linked Telegram are
+   communication obligations and should always produce an outbound reply on the
+   originating channel unless architecture docs later approve an explicit
+   exception posture
+2. scheduler-owned or subconscious wakeups may complete with no user-visible
+   message when conscious evaluation concludes that no grounded outreach is
+   justified
+3. proactive outbound delivery is allowed only after the conscious
+   `planning -> expression -> action` path positively authorizes it
+4. a scheduler wakeup may stimulate analysis, relation maintenance, or
+   planned-work reevaluation without becoming a pseudo-user transcript turn
+5. future cross-channel escalation after silence remains a separate explicit
+   product decision; no implementation may assume it implicitly
 
 Illustrative contract shape:
 

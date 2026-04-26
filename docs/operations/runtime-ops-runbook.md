@@ -111,6 +111,20 @@ cadence posture:
 Use `/health.proactive` together with `/health.scheduler.last_proactive_summary`
 when triaging why proactive outreach is quiet, blocked, or actively delivering.
 
+Transcript-truth triage rule for proactive incidents:
+
+- if you see scheduler cadence firing but no user-visible outreach should have
+  happened, inspect transcript truth before assuming the user was messaged
+- `/app/chat/history` should now hide scheduler-owned internal prompt text such
+  as `time check-in follow up`
+- visible scheduler-originated transcript output should appear only as
+  assistant delivery that the conscious path actually sent
+- if repeated outreach still appears after silence, inspect:
+  - `recent_outbound_count`
+  - `unanswered_proactive_count`
+  - the latest scheduler-owned episodic rows for `assistant_visibility` and
+    `proactive_state_update`
+
 `GET /health` now also includes a `role_skill` object with the current
 role-versus-skill maturity baseline:
 
