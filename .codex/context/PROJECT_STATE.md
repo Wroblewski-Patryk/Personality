@@ -147,6 +147,14 @@ Last updated: 2026-04-26
     target, but does not yet claim parity
   - the next smallest remaining implementation gap is:
     - `PRJ-736` for transcript softness, top-control density, and tighter composer integration
+- 2026-04-26: the second chat-convergence implementation slice is now complete locally:
+  - `chat` top controls now read lighter and calmer through stacked pill treatment
+  - transcript cards now foreground conversation copy more strongly than route mechanics
+  - the quick-action row and composer now behave more like one shared premium action tray
+  - the route is materially closer to the canonical `chat` target, but still needs:
+    - final premium polish across route family consistency
+    - `personality` convergence on the refined shell
+    - explicit responsive and post-deploy screenshot parity proof
 - 2026-04-25: `PRJ-707` is now complete:
   - the GUI-language selector now rests on one shared locale metadata model
     carrying value, native label, localized label, icon token, and explicit

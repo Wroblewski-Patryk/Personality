@@ -2293,10 +2293,10 @@ export default function App() {
                     </div>
                     <p className="mt-2 text-sm leading-7 text-base-800">{routeDescription("/chat", resolvedUiLanguage)}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="aion-chat-topbar-controls">
                     {chatTopControls.map((item) => (
                       <div key={item.label} className="aion-chat-control-pill">
-                        <span className="text-sm text-base-800">{item.label}</span>
+                        <span className="aion-chat-control-label">{item.label}</span>
                         <span className="aion-chat-control-badge">{item.value}</span>
                       </div>
                     ))}
@@ -2305,7 +2305,7 @@ export default function App() {
                       onClick={() => setAccountPanelOpen((value) => !value)}
                       type="button"
                     >
-                      <span className="text-sm text-base-800">{copy.common.account}</span>
+                      <span className="aion-chat-control-label">{copy.common.account}</span>
                       <span className="aion-chat-control-badge">{currentUserLabel}</span>
                     </button>
                   </div>
@@ -2343,20 +2343,21 @@ export default function App() {
                           >
                             {!isUser ? <span className="aion-chat-avatar">A</span> : null}
                             <article className={`aion-chat-message ${isUser ? "aion-chat-message-user" : "aion-chat-message-assistant"}`}>
-                              <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-base-800/80">
+                              <div className="aion-chat-message-meta">
                                 <span>{transcriptRoleLabel(message.role, copy)}</span>
+                                <span className="aion-chat-meta-separator" />
                                 <span>{transcriptChannelLabel(message.channel)}</span>
                                 <span>{formatTimestamp(message.timestamp, resolvedUiLanguage)}</span>
                                 {isPending ? <span>{copy.chat.pending}</span> : null}
                               </div>
-                              <p className="text-sm leading-7">{message.text}</p>
-                              {metadataSummary ? <p className="mt-2 text-xs text-base-800/75">{metadataSummary}</p> : null}
+                              <p className="aion-chat-message-copy">{message.text}</p>
+                              {metadataSummary ? <p className="aion-chat-message-summary">{metadataSummary}</p> : null}
                               {message.metadata ? (
-                                <details className="mt-3 rounded-[1.1rem] border border-base-300/70 bg-white/60">
-                                  <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-base-900">
+                                <details className="aion-chat-message-details">
+                                  <summary className="aion-chat-message-details-summary">
                                     {copy.chat.messageDetails}
                                   </summary>
-                                  <div className="px-4 pb-4">
+                                  <div className="aion-chat-message-details-body">
                                     <pre className="overflow-x-auto rounded-xl bg-base-100/80 p-3 text-xs leading-6 text-base-900">
                                       {prettyJson(message.metadata)}
                                     </pre>
@@ -2369,20 +2370,19 @@ export default function App() {
                       })}
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {chatQuickActions.map((action) => (
-                        <button
-                          key={action}
-                          className="aion-chip-ghost rounded-full px-4 py-2 text-sm font-medium"
-                          type="button"
-                          onClick={() => setChatText(action)}
-                        >
-                          {action}
-                        </button>
-                      ))}
-                    </div>
-
                     <div className="aion-chat-composer-zone">
+                      <div className="aion-chat-action-tray">
+                        {chatQuickActions.map((action) => (
+                          <button
+                            key={action}
+                            className="aion-chat-action-chip"
+                            type="button"
+                            onClick={() => setChatText(action)}
+                          >
+                            {action}
+                          </button>
+                        ))}
+                      </div>
                       <form className="aion-chat-composer" onSubmit={(event) => void handleSendMessage(event)}>
                         <button className="aion-chat-icon-button" type="button" aria-label="Add context">
                           +

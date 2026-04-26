@@ -65,6 +65,16 @@ Last updated: 2026-04-26
     - transcript cards still need to feel softer and less inspector-like
     - top controls are still slightly denser than the canonical target
     - the quick-action plus composer area still has room for tighter premium integration
+  - `PRJ-736` is now complete locally:
+    - top controls now use lighter stacked pill hierarchy instead of heavier label-value chips
+    - transcript metadata, message copy, and detail affordances now read more editorially
+    - quick actions and composer now form one tighter bottom action region
+    - focused validation passed:
+      - `Push-Location .\web; npm run build; Pop-Location`
+  - the next remaining visual gap now shifts toward:
+    - final cross-route premium polish
+    - `personality` convergence onto the refined shell
+    - responsive and post-deploy screenshot parity proof
 
 ## Fresh Profile Local-Time Fix (2026-04-26)
 
