@@ -3,6 +3,8 @@
 ## Header
 - ID: PRJ-XXX
 - Title:
+- Task Type: fix | feature | refactor | design | research | release
+- Current Stage: intake | analysis | planning | implementation | verification | release | post-release
 - Status: BACKLOG | READY | IN_PROGRESS | BLOCKED | REVIEW | DONE
 - Owner: Planning Agent | Product Docs Agent | Backend Builder | Frontend Builder | QA/Test | Security | DB/Migrations | Ops/Release | Review
 - Depends on:
@@ -14,22 +16,32 @@ Where this work sits in the current project flow and architecture.
 ## Goal
 What must be achieved by this task.
 
+## Deliverable For This Stage
+Describe exactly what should be produced in the current stage only.
+
 ## Constraints
 - use existing systems and approved mechanisms
 - do not introduce new structures without approval
 - do not implement workarounds
 - do not duplicate logic
+- stay within the declared current stage unless explicit approval changes it
 
 ## Definition of Done
 - [ ] concrete completion condition 1
 - [ ] concrete completion condition 2
 - [ ] concrete completion condition 3
 
+## Stage Exit Criteria
+- [ ] The output matches the declared `Current Stage`.
+- [ ] Work from later stages was not mixed in without explicit approval.
+- [ ] Risks and assumptions for this stage are stated clearly.
+
 ## Forbidden
 - new systems without approval
 - duplicated logic or parallel implementations of the same contract
 - temporary bypasses, hacks, or workaround-only paths
 - architecture changes without explicit approval
+- implicit stage skipping
 
 ## Validation Evidence
 - Tests:
@@ -45,7 +57,32 @@ What must be achieved by this task.
 - Approval reference if architecture changed:
 - Follow-up architecture doc updates:
 
+## UX/UI Evidence (required for UX tasks)
+- Design source type: figma | approved_snapshot | stitch_exception
+- Design source reference:
+- Stitch used: yes | no
+- Experience-quality bar reviewed: yes | no
+- Visual-direction brief reviewed: yes | no
+- Existing shared pattern reused:
+- New shared pattern introduced: yes | no
+- Design-memory entry reused:
+- Design-memory update required: yes | no
+- State checks: loading | empty | error | success
+- Responsive checks: desktop | tablet | mobile
+- Input-mode checks: touch | pointer | keyboard
+- Accessibility checks:
+- Parity evidence:
+
+## Deployment / Ops Evidence (required for runtime or infra tasks)
+- Deploy impact: none | low | medium | high
+- Env or secret changes:
+- Health-check impact:
+- Smoke steps updated:
+- Rollback note:
+
 ## Review Checklist (mandatory)
+- [ ] Current stage is declared and respected.
+- [ ] Deliverable for the current stage is complete.
 - [ ] Architecture alignment confirmed.
 - [ ] Existing systems were reused where applicable.
 - [ ] No workaround paths were introduced.

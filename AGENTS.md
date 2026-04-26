@@ -4,7 +4,7 @@
 
 This repository uses a project-specific multi-agent workflow so Codex and
 related agents can evolve AION without drifting away from the current Python
-runtime, contracts, docs, and deployment reality.
+runtime, contracts, docs, deployment reality, or product-shell UX direction.
 
 ## Canonical Context
 
@@ -14,6 +14,7 @@ Read these before starting non-trivial work:
 - `.codex/context/TASK_BOARD.md`
 - `.codex/context/LEARNING_JOURNAL.md`
 - `.agents/workflows/general.md`
+- `.agents/workflows/documentation-governance.md`
 - `.agents/workflows/subagent-orchestration.md`
 
 ## Canonical Docs
@@ -35,6 +36,12 @@ Read these before starting non-trivial work:
 - `docs/operations/runtime-ops-runbook.md`
 - `docs/governance/working-agreements.md`
 - `docs/governance/repository-structure-policy.md`
+- `docs/ux/visual-direction-brief.md`
+- `docs/ux/experience-quality-bar.md`
+- `docs/ux/design-memory.md`
+- `docs/ux/screen-quality-checklist.md`
+- `docs/ux/anti-patterns.md`
+- `docs/ux/brand-personality-tokens.md`
 
 ## Core Rules
 
@@ -70,7 +77,28 @@ Each task must use `.codex/templates/task-template.md`, including:
 - `Definition of Done`
 - `Forbidden`
 
-### 5. Mandatory Review And Refactor
+### 5. Stage-Based Delivery Workflow
+
+Every task must declare its current delivery stage and the output expected from
+that stage.
+
+Supported stages:
+- `intake`
+- `analysis`
+- `planning`
+- `implementation`
+- `verification`
+- `release`
+- `post-release`
+
+Rules:
+- Do not skip stages implicitly.
+- Do not implement during `analysis` or `planning` unless explicitly requested.
+- Do not declare a task complete without `verification` evidence.
+- If missing information materially affects quality or risk, stop at the
+  current stage and surface the gap.
+
+### 6. Mandatory Review And Refactor
 
 After implementation, verify:
 
@@ -81,7 +109,7 @@ After implementation, verify:
 
 If any check fails, fix before closure.
 
-### 6. Repository Guardrails
+### 7. Repository Guardrails
 
 - Project state, task board, learning journal, and canonical docs are the
   source of truth.
@@ -105,6 +133,10 @@ If any check fails, fix before closure.
   scope.
 - For runtime, memory, reflection, language, or preference changes, leave
   behind focused tests and docs or context updates.
+- For UX/UI work, require explicit design source, state coverage, responsive
+  evidence, accessibility checks, and parity notes.
+- Reuse shared UI patterns before introducing screen-local style inventions.
+- When a new pattern is approved, record it in `docs/ux/design-memory.md`.
 - When a recurring environment or execution pitfall is discovered, record it in
   `.codex/context/LEARNING_JOURNAL.md` in the same task.
 - Follow the default loop:
@@ -174,12 +206,15 @@ If the user sends a short execution nudge such as `rob`, `dzialaj`, `start`,
 
 ## UX/UI Rule
 
-This repo is backend-first today. If a future web or admin UI is introduced:
+This repository now has active browser-shell work. For UX/UI scope:
 
-- require a design source or approved artifact,
-- check loading, empty, error, and success states,
-- check desktop and mobile behavior,
-- keep evidence in task notes or PR notes.
+- require a design source or approved artifact
+- check loading, empty, error, and success states
+- check desktop, tablet, and mobile behavior
+- check accessibility and input modes when relevant
+- keep evidence in task notes or PR notes
+- use `docs/ux/visual-direction-brief.md` before broad UI refresh work
+- use `docs/ux/screen-quality-checklist.md` before calling a screen polished
 
 ## Deployment Rule
 
