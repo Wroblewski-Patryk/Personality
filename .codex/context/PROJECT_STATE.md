@@ -120,6 +120,22 @@ Last updated: 2026-04-26
     than a row of generic utility cards
   - refreshed proof now exists in:
     - `.codex/artifacts/chat-premium-polish-pass-desktop.png`
+- 2026-04-26: canonical shell-and-chat convergence planning is now complete:
+  - production and local screenshot review confirm the current drift is now
+    compositional rather than directional:
+    - shell still reads too heavy and too dashboard-like for canonical `chat`
+    - `chat` still exposes too much process structure in the foreground
+    - the right-side support area still needs a calmer, more ambient hierarchy
+  - the execution-ready plan now lives in:
+    - `docs/planning/canonical-authenticated-shell-and-chat-convergence-plan.md`
+  - the next seeded convergence lane is:
+    - `PRJ-735` Shared Authenticated Shell Spine And Chrome Reduction
+    - `PRJ-736` Chat Transcript, Quick Actions, And Composer Convergence
+    - `PRJ-737` Chat Support Column And Ambient Embodiment Convergence
+    - `PRJ-738` Personality Convergence On The Shared Canonical Shell
+    - `PRJ-739` Shared Route Art, Material, And Typography Polish
+    - `PRJ-740` Responsive, State, And Accessibility Proof
+    - `PRJ-741` Production Screenshot Parity And Baseline Freeze
 - 2026-04-25: `PRJ-707` is now complete:
   - the GUI-language selector now rests on one shared locale metadata model
     carrying value, native label, localized label, icon token, and explicit

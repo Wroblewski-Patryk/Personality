@@ -22,6 +22,35 @@ Last updated: 2026-04-26
     post-deploy screenshot proof and compare it directly against the matching
     canonical asset before claiming visual convergence
 
+## Fresh Canonical Shell-Convergence Analysis (2026-04-26)
+
+- fresh production and local screenshot review now exposes one remaining
+  motif-led web gap:
+  - the current authenticated shell and `chat` route are directionally strong,
+    but still drift from the canonical route targets in composition, shell
+    weight, and support-panel hierarchy
+- the main problem is no longer missing art direction
+- the main problem is now convergence between:
+  - the parent authenticated shell
+  - the calmer canonical `chat` target
+  - the richer canonical `personality` target
+- `PRJ-734` is now complete:
+  - the repo now contains one execution-ready convergence plan:
+    - `docs/planning/canonical-authenticated-shell-and-chat-convergence-plan.md`
+  - the plan freezes the main drift categories:
+    - shell is still too heavy and dashboard-like for canonical `chat`
+    - transcript and support panels still expose too much process structure
+    - right-column support should become calmer, smaller, and more ambient
+    - cross-route shell grammar still needs stronger parent-frame consistency
+- planned execution order for this lane:
+  - `PRJ-735` Shared Authenticated Shell Spine And Chrome Reduction
+  - `PRJ-736` Chat Transcript, Quick Actions, And Composer Convergence
+  - `PRJ-737` Chat Support Column And Ambient Embodiment Convergence
+  - `PRJ-738` Personality Convergence On The Shared Canonical Shell
+  - `PRJ-739` Shared Route Art, Material, And Typography Polish
+  - `PRJ-740` Responsive, State, And Accessibility Proof
+  - `PRJ-741` Production Screenshot Parity And Baseline Freeze
+
 ## Fresh Profile Local-Time Fix (2026-04-26)
 
 - fresh user-reported local-time drift now seeds one bounded continuity fix
@@ -183,6 +212,10 @@ Last updated: 2026-04-26
       - keyboard, touch, pointer, contrast, and reduced-motion review
       - post-deploy screenshot comparison against
         `docs/ux/canonical-web-screen-reference-set.md` for motif-led routes
+    - fresh canonical review also showed that `PRJ-728` alone is not enough to
+      declare convergence:
+      - the current `chat` shell still needs one additional design-and-implementation lane
+        through `PRJ-741` before parity should be treated as accepted
 
 ## Current Active Lane
 
