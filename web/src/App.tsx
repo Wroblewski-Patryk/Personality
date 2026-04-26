@@ -2374,11 +2374,13 @@ export default function App() {
                   </aside>
 
                   <aside className="aion-chat-portrait-panel">
-                    <div className="aion-chat-hologram" />
-                    <div className="aion-chat-portrait-figure" />
-                    <div className="aion-chat-portrait-glow" />
-                    <div className="aion-chat-quote">
-                      Understanding leads to clarity. Clarity leads to action.
+                    <div className="aion-chat-portrait-copy">
+                      <span className="aion-chip rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-base-900">
+                        Embodied cognition
+                      </span>
+                      <p className="mt-4 max-w-[13rem] text-sm leading-7 text-base-800">
+                        Understanding leads to clarity. Clarity leads to action.
+                      </p>
                     </div>
                   </aside>
                 </div>

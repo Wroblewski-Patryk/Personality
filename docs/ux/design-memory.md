@@ -17,6 +17,10 @@
 - Timeline-backed metadata:
   Attach labels, chips, and mini-stats to explicit rails or sections instead of
   leaving metadata as floating decorative fragments.
+- Chat background artwork:
+  Use one route-specific right-weighted illustration with strong negative space
+  on the left for transcript readability, instead of trying to fake the full
+  premium effect from gradients alone.
 
 ## Reuse Notes
 
@@ -24,3 +28,5 @@
 - Record proven patterns here when they should guide future shell work.
 - The approved reference for the embodied cognition motif now lives in
   `docs/ux/aion-visual-motif-system.md`.
+- The current approved chat art direction reference now also includes
+  `docs/ux/assets/aion-chat-background-reference-v1.png`.

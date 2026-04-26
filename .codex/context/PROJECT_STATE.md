@@ -85,6 +85,20 @@ Last updated: 2026-04-26
     - `.codex/artifacts/chat-reference-pass-mobile-v2.png`
   - focused validation passed:
     - `Push-Location .\web; npm run build; Pop-Location`
+- 2026-04-26: chat background art integration is now complete locally:
+  - the generated premium chat artwork is now stored as:
+    - `docs/ux/assets/aion-chat-background-reference-v1.png`
+    - `web/public/aion-chat-background-reference-v1.png`
+  - the chat portrait zone now uses that real art layer instead of relying only
+    on CSS-built geometric illustration
+  - updated mocked proof now exists in:
+    - `.codex/artifacts/chat-background-asset-pass-desktop.png`
+    - `.codex/artifacts/chat-background-asset-pass-mobile.png`
+  - design guidance is now synced in:
+    - `docs/ux/design-memory.md`
+    - `docs/ux/aion-visual-motif-system.md`
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
 - 2026-04-25: `PRJ-707` is now complete:
   - the GUI-language selector now rests on one shared locale metadata model
     carrying value, native label, localized label, icon token, and explicit

@@ -222,6 +222,8 @@ V1 asset family for web:
 2. personality route extended composition
 3. tools route capability composition
 4. chat route soft continuity backdrop
+   - current approved reference:
+     `docs/ux/assets/aion-chat-background-reference-v1.png`
 5. settings route light trust illustration
 
 V2 concept direction:

@@ -142,6 +142,13 @@ Last updated: 2026-04-26
       - transcript + cognitive flow + portrait composition
       - bottom feature strip tied to continuity, channels, memory, reflection,
         and privacy
+    - chat now also has a real route-specific art asset instead of a CSS-only
+      symbolic portrait zone:
+      - `docs/ux/assets/aion-chat-background-reference-v1.png`
+      - `web/public/aion-chat-background-reference-v1.png`
+      - refreshed proof:
+        - `chat-background-asset-pass-desktop.png`
+        - `chat-background-asset-pass-mobile.png`
     - refreshed chat evidence now includes:
       - `chat-reference-pass-desktop.png`
       - `chat-reference-pass-mobile-v2.png`
