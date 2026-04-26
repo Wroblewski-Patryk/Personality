@@ -608,13 +608,11 @@ function normalizeRoute(pathname: string): RoutePath {
   }
   return "/login";
 }
-
 function navigate(path: RoutePath) {
   if (window.location.pathname !== path) {
     window.history.pushState({}, "", path);
   }
 }
-
 function normalizeUiLanguage(value: string | null | undefined): UiLanguageCode {
   if (value === "en" || value === "pl" || value === "de" || value === "system") {
     return value;
@@ -687,17 +685,6 @@ function truncateText(value: string, maxLength: number) {
   }
 
   return `${trimmed.slice(0, Math.max(0, maxLength - 1)).trimEnd()}...`;
-}
-
-function transcriptRoleLabel(role: AppChatHistoryEntry["role"], copy: (typeof UI_COPY)[ResolvedUiLanguageCode]) {
-  return role === "user" ? copy.common.user : copy.common.assistant;
-}
-
-function transcriptChannelLabel(channel: string) {
-  if (!channel) {
-    return "unknown";
-  }
-  return channel.replaceAll("_", " ");
 }
 
 function transcriptMetadataSummary(entry: AppChatHistoryEntry) {
@@ -860,7 +847,6 @@ function StatePanel({
     </div>
   );
 }
-
 function FeedbackBanner({
   tone,
   title,
@@ -1723,7 +1709,6 @@ export default function App() {
     { label: "System harmony", value: "92%", detail: "Optimal" },
     { label: "Conscious", value: "High", detail: "Balance across layers" },
     { label: "Subconscious", value: "Strong", detail: "Pattern depth" },
-    { label: "Creative", value: "Energized", detail: "Weekly pulse" },
   ];
   const personalityLayers = [
     {
@@ -1843,11 +1828,6 @@ export default function App() {
   const chatComposerTools = ["Attach", "Voice", "Memory", "Tools"];
   const chatCurrentFocus =
     stringValue(planningSummary?.active_goal_count, "0") !== "0" ? "Project planning" : "Conversation continuity";
-  const chatFlowMoments = [
-    { label: "Listen", title: "Perception", detail: "Understanding intent, tone, and what matters most right now." },
-    { label: "Shape", title: "Planning", detail: "Turning context and priorities into a steady next step." },
-    { label: "Keep", title: "Memory", detail: "Holding onto the details that deserve continuity later." },
-  ];
   const chatSupportCards = [
     {
       eyebrow: "Intent",
@@ -1890,7 +1870,7 @@ export default function App() {
       body: "Preserves a high-trust tone so the workspace stays personal, not extractive.",
     },
   ];
-  const chatActiveSummary = "Active conversation";
+  const chatActiveSummary = "Live";
   const personalityPreviewCallouts = [
     {
       key: "identity",
@@ -2774,35 +2754,10 @@ export default function App() {
                 </article>
               </section>
 
-              <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-                <article className="aion-panel-soft aion-dashboard-card">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm uppercase tracking-[0.2em] text-base-800">Reflection highlights</p>
-                      <h3 className="mt-2 font-display text-2xl text-base-900">Signals worth keeping</h3>
-                    </div>
-                    <button className="aion-dashboard-link" type="button">
-                      View all
-                    </button>
-                  </div>
-                  <div className="mt-5 grid gap-3">
-                    {dashboardReflectionRows.map((row) => (
-                      <article key={row.title} className="aion-dashboard-reflection-row">
-                        <div>
-                          <p className="text-base font-semibold text-base-900">{row.title}</p>
-                          <p className="mt-1 text-sm text-base-800">Shaped by recent memory and reflective loops.</p>
-                        </div>
-                        <span className="aion-chip-ghost rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em]">
-                          {row.tag}
-                        </span>
-                      </article>
-                    ))}
-                  </div>
-                </article>
-
+              <section className="grid gap-4">
                 <article className="aion-panel aion-dashboard-summary-band">
                   <div className="aion-dashboard-summary-layout">
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                       {dashboardBottomStats.map((stat) => (
                         <div key={stat.label} className="aion-dashboard-summary-item">
                           <p className="text-sm uppercase tracking-[0.2em] text-base-800">{stat.label}</p>
@@ -2822,6 +2777,16 @@ export default function App() {
                         <p className="mt-3 max-w-md text-sm leading-7 text-base-800">
                           The shell now holds your goals, memory, and reflections in one calmer path.
                         </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {dashboardReflectionRows.slice(0, 3).map((row) => (
+                            <span
+                              key={row.tag}
+                              className="aion-chip-ghost rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em]"
+                            >
+                              {row.tag}
+                            </span>
+                          ))}
+                        </div>
                         <button className="aion-dashboard-action-button mt-5" type="button">
                           See full report
                         </button>
@@ -2892,26 +2857,13 @@ export default function App() {
                             {!isUser ? <span className="aion-chat-avatar">A</span> : null}
                             <article className={`aion-chat-message ${isUser ? "aion-chat-message-user" : "aion-chat-message-assistant"}`}>
                               <div className="aion-chat-message-meta">
-                                <span>{transcriptRoleLabel(message.role, copy)}</span>
-                                <span className="aion-chat-meta-separator" />
-                                <span>{transcriptChannelLabel(message.channel)}</span>
                                 <span>{formatTimestamp(message.timestamp, resolvedUiLanguage)}</span>
                                 {isPending ? <span>{copy.chat.pending}</span> : null}
                                 {transcriptIsPreview ? <span>Starter preview</span> : null}
                               </div>
                               <p className="aion-chat-message-copy">{message.text}</p>
-                              {metadataSummary ? <p className="aion-chat-message-summary">{metadataSummary}</p> : null}
-                              {message.metadata ? (
-                                <details className="aion-chat-message-details">
-                                  <summary className="aion-chat-message-details-summary">
-                                    {copy.chat.messageDetails}
-                                  </summary>
-                                  <div className="aion-chat-message-details-body">
-                                    <pre className="overflow-x-auto rounded-xl bg-base-100/80 p-3 text-xs leading-6 text-base-900">
-                                      {prettyJson(message.metadata)}
-                                    </pre>
-                                  </div>
-                                </details>
+                              {metadataSummary && !transcriptIsPreview ? (
+                                <p className="aion-chat-message-summary">{metadataSummary}</p>
                               ) : null}
                             </article>
                           </div>
@@ -3017,23 +2969,6 @@ export default function App() {
                       </div>
                     </section>
 
-                    <section className="aion-chat-context-panel aion-chat-context-panel-compact">
-                      <div className="mb-4">
-                        <p className="text-sm font-semibold text-base-900">Response path</p>
-                        <p className="mt-1 text-sm text-[#5f8f93]">Calm cognitive summary</p>
-                      </div>
-                      <div className="grid gap-3">
-                        {chatFlowMoments.map((moment) => (
-                          <article key={moment.title} className="aion-chat-mini-flow">
-                            <span className="aion-chat-mini-flow-label">{moment.label}</span>
-                            <div>
-                              <p className="text-sm font-semibold text-base-900">{moment.title}</p>
-                              <p className="mt-1 text-sm leading-6 text-base-800">{moment.detail}</p>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    </section>
                   </aside>
                 </div>
               </section>
@@ -3569,24 +3504,6 @@ export default function App() {
                     </div>
                   </section>
 
-                  <InsightPanel
-                    eyebrow="Layer map"
-                    title="Embodied personality layers"
-                    body="The route reuses the same shell system, but this is where the product can show the richest architecture-to-visual mapping."
-                  >
-                    <div className="grid gap-4 lg:grid-cols-2">
-                      {personalityLayers.map((layer) => (
-                        <PersonalityLayerCard
-                          key={layer.title}
-                          zone={layer.zone}
-                          title={layer.title}
-                          symbol={layer.symbol}
-                          body={layer.body}
-                          highlights={layer.highlights}
-                        />
-                      ))}
-                    </div>
-                  </InsightPanel>
                 </div>
 
                 <div className="grid gap-6">

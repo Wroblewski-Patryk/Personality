@@ -215,3 +215,26 @@ Production-audit-backed refinement pass now also complete:
   - moving the `chat` portrait panel higher in the support column
   - removing the long payload-browser section from the flagship
     `personality` route
+
+Latest calming-and-compression pass now also complete:
+
+- `dashboard` now has a simpler scenic closure:
+  - the lower closure has been reduced to one premium summary band
+  - the scenic half now carries more visual weight than the stats half
+- `chat` is now closer to the canonical conversation-first target:
+  - transcript metadata is reduced to calmer time-first cues
+  - raw payload details no longer crowd the flagship transcript surface
+  - the support column no longer ends with the extra `response path` card
+  - the send control and headline emblem are now visually normalized through
+    route CSS treatment
+- `personality` is now shorter and closer to the canonical preview route:
+  - the extra `layer map` explainer block below the hero and timeline has been
+    removed
+  - the flagship route now centers the figure stage, timeline, and right-side
+    conscious / subconscious / recent-activity stack
+- one environment constraint is now explicit for proof planning:
+  - in-app browser automation is currently blocked locally because the
+    available `node_repl` runtime reports Node `v22.13.0`, while the browser
+    runtime requires `>= v22.22.0`
+  - until that is upgraded, live compare loops should continue using manual
+    deploy review plus stored screenshot evidence

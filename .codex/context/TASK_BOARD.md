@@ -1,6 +1,60 @@
 # TASK_BOARD
 
-Last updated: 2026-04-26
+Last updated: 2026-04-27
+
+## Fresh Flagship Canonical Calm-Down Pass (2026-04-27)
+
+- `PRJ-743` received another local implementation slice toward the canonical
+  `dashboard / chat / personality` family:
+  - dashboard closure is now shorter and more scenic
+  - chat transcript is now calmer and less payload-browser-like
+  - personality preview is now shorter and closer to the canonical overview
+- the latest route-family implementation specifically removed:
+  - the extra chat `response path` card
+  - the flagship transcript payload-details drawer
+  - the extra personality `layer map` explainer block
+- one proof constraint is now explicit for future compare loops:
+  - in-app browser automation is currently blocked locally because the
+    available `node_repl` runtime reports Node `v22.13.0`, below the browser
+    runtime requirement of `>= v22.22.0`
+- the next smallest parity loop after this slice is now:
+  - deploy the latest local shell pass
+  - capture fresh logged-in `dashboard / chat / personality` screenshots
+  - compare the new closure rhythm and right-column calmness against the
+    canonical references
+  - if drift still remains, focus the next slice only on:
+    - dashboard hero-stage atmosphere / connectors
+    - chat portrait-stage crop and support-column spacing
+    - personality callout visibility and stage balance
+
+## Fresh Aviary Web Brand Parity Repair Plan (2026-04-27)
+
+- fresh UX audit now confirms the current web implementation still leaks the old
+  product name in user-facing shell output despite the approved Aviary baseline:
+  - `Aviary` fonts are wired
+  - `aviary-logomark.svg` exists in the web app
+  - but multiple visible strings in `web/src/App.tsx` still render `AION`
+  - the reusable wordmark component still outputs `AION` text
+- `PRJ-768` is now ready for implementation:
+  - one implementation-ready repair plan now lives in:
+    - `.codex/tasks/PRJ-768-repair-aviary-web-brand-parity-and-shell-fidelity.md`
+  - execution must repair:
+    - shell brand lockup truth
+    - locale copy parity
+    - SVG logo activation parity
+    - final responsive screenshot verification
+  - focused implementation validation must include:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - real browser review on desktop, tablet, and mobile
+
+- local implementation is now complete for the code-side repair slice:
+  - active user-facing `AION` product-name strings were removed from the live
+    shell source
+  - the reusable shell wordmark now renders the visible `AVIARY` wordmark next
+    to the provided SVG mark
+  - lockup typography was tuned closer to the approved premium branding
+  - remaining gap is now narrowed to:
+    - real browser screenshot parity once the browser runtime is available
 
 ## Fresh Aviary Production Host Baseline (2026-04-26)
 

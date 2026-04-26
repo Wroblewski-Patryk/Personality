@@ -1,8 +1,49 @@
 # PROJECT_STATE
 
-Last updated: 2026-04-26
+Last updated: 2026-04-27
 
 ## Product Snapshot
+
+- 2026-04-27: the first Aviary web-brand repair pass is now complete locally:
+  - active user-facing `AION` product naming in the shell source has been
+    replaced with `Aviary`
+  - the reusable shell wordmark now renders the provided Aviary SVG alongside
+    the visible `AVIARY` wordmark
+  - the lockup typography has been tightened toward the approved premium
+    `Cormorant Garamond` plus `Inter` baseline
+  - browser screenshot parity is still pending because the in-app browser
+    runtime could not execute in this environment
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+
+- 2026-04-27: another canonical flagship calming pass is now complete locally:
+  - dashboard closure now converges more tightly toward the canonical scenic
+    lower band:
+    - the separate reflection-plus-summary ending has been compressed into one
+      premium summary band
+    - the scenic closure side now carries more weight than the stat side
+  - chat is now materially calmer and more conversation-first:
+    - transcript metadata is time-first instead of role-plus-channel-heavy
+    - raw payload detail drawers are removed from the flagship transcript
+    - the extra `response path` support card is removed so the right column
+      stays closer to the canonical support posture
+    - route CSS now normalizes the headline emblem and send-button symbol
+      rendering
+  - personality is now shorter and closer to the canonical overview:
+    - the extra `layer map` explainer section below the hero/timeline surface
+      is removed
+    - the route now centers the canonical trio more clearly:
+      - figure stage
+      - mind-layers timeline
+      - editorial right-column panels
+  - one proof constraint is now explicit:
+    - in-app browser automation is locally blocked because the available
+      `node_repl` runtime reports Node `v22.13.0`, while the browser runtime
+      currently requires `>= v22.22.0`
+    - until that runtime is upgraded, live parity loops should continue using
+      manual deploy review and the stored production screenshot evidence
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
 
 - 2026-04-26: the canonical first-party production host baseline is now:
   - `https://aviary.luckysparrow.ch`
