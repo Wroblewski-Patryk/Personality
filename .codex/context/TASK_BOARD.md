@@ -2,6 +2,35 @@
 
 Last updated: 2026-04-28
 
+## Fresh Production Conversation Silence Triage (2026-04-28)
+
+- production triage was run after the user reported sending messages and
+  receiving no reply:
+  - `GET https://aviary.luckysparrow.ch/health` returned `status=ok`
+  - `release_readiness.ready=true`
+  - `conversation_channels.telegram.round_trip_state=provider_backed_ready`
+  - Telegram counters were all zero:
+    - `ingress_attempts=0`
+    - `ingress_processed=0`
+    - `delivery_attempts=0`
+    - `delivery_failures=0`
+    - `last_ingress={}`
+    - `last_delivery={}`
+  - `POST https://aviary.luckysparrow.ch/event` with an API smoke payload
+    returned a normal foreground reply and `runtime.action_status=success`
+  - current evidence points away from foreground runtime failure and toward a
+    Telegram webhook/linking/transport visibility issue
+  - production is currently on runtime build revision:
+    - `ba714425afba00a2756b318bad1f74b7f42405a7`
+- `PRJ-770` is now READY:
+  - plan one small dashboard status banner/signal slice over existing backend
+    health truth
+  - the dashboard should distinguish provider readiness from observed recent
+    ingress/delivery so the user can see when the conversation channel is
+    configured but silent
+  - task file:
+    - `.codex/tasks/PRJ-770-plan-dashboard-conversation-channel-status-banner.md`
+
 ## Fresh Chat Canonical Reference V4 Freeze (2026-04-28)
 
 - user direction now replaces the active canonical `chat` visual target with a
@@ -11012,3 +11041,16 @@ Last updated: 2026-04-28
   - Priority: P2
   - Validation:
     - `.\.venv\Scripts\python -m pytest -q`
+
+Fresh Shell Tiering Pass (2026-04-28)
+
+- `dashboard` guidance now uses explicit lead/support tiers instead of reading
+  like a flatter stack of equal cards
+- `chat` topbar controls now use a calmer premium density closer to the
+  canonical reference rhythm
+- `personality` highlight metrics now use one anchored feature tile plus
+  supporting cards, reducing the equal-card dashboard feel
+- Next smallest useful parity loop after deploy:
+  - dashboard recent/intention relationship and lower-column pacing
+  - chat support-column spacing against the portrait crop
+  - personality mobile crop and side-panel compression

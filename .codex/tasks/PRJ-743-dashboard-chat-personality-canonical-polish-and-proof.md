@@ -255,3 +255,18 @@ Latest hero-stage-and-callout pass now also complete:
   - anchored callouts are brighter and easier to locate
   - connector endpoints are now more legible, so the route reads more like one
     symbolic system instead of floating labels
+
+Latest shell-tiering-and-highlight pass now also complete:
+
+- `dashboard` guidance now reads more like an editorial stack:
+  - the first guidance card is visually promoted as the lead recommendation
+  - the following cards are calmer and less equal-weight, closer to the
+    canonical curated-column feel
+- `chat` top controls now feel less app-heavy:
+  - control pills are denser, quieter, and better tiered
+  - the continuity pill carries the strongest emphasis while linked channels
+    no longer dominates the row
+- `personality` right-column highlights now have stronger hierarchy:
+  - the key signal card becomes the anchor tile in the metric grid
+  - the remaining summary cards now read as supporting signals instead of four
+    equal blocks

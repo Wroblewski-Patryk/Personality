@@ -4,6 +4,23 @@ Last updated: 2026-04-28
 
 ## Product Snapshot
 
+- 2026-04-28: production conversation-silence triage found that the current
+  production host is up and the foreground runtime path answers normally:
+  - `GET https://aviary.luckysparrow.ch/health` returned `status=ok`
+  - `release_readiness.ready=true`
+  - `POST https://aviary.luckysparrow.ch/event` returned a normal API reply
+    with `runtime.action_status=success`
+  - Telegram configuration posture is ready
+    (`conversation_channels.telegram.round_trip_state=provider_backed_ready`),
+    but observed Telegram ingress/delivery counters are all zero
+    (`ingress_attempts=0`, `delivery_attempts=0`, `last_ingress={}`,
+    `last_delivery={}`)
+  - the current evidence points toward webhook/linking/transport visibility
+    rather than a broken foreground runtime pipeline
+  - `PRJ-770` is now ready to plan and implement a dashboard status signal that
+    explains configured-but-silent conversation channels from existing backend
+    health truth
+
 - 2026-04-28: the active canonical `chat` screen target is now the supplied v4
   approved snapshot:
   - canonical asset:
@@ -4007,3 +4024,9 @@ Last updated: 2026-04-28
   tiles across login, route summary, settings, tools, and personality, while
   true tool-state chips were preserved. Refreshed screenshot proof was stored
   in `.codex/artifacts/prj708-visual-hierarchy-proof/`.
+- 2026-04-28: `PRJ-743` continued the canonical flagship parity loop for
+  `dashboard`, `chat`, and `personality`. The latest slice refined dashboard
+  guidance tiering, reduced chat topbar control density, and introduced an
+  anchored highlight hierarchy in the personality side column so the flagship
+  shell reads closer to the canonical references before the next deploy
+  compare-pass.

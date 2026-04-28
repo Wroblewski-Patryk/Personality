@@ -886,11 +886,13 @@ function MetricCard({
   value,
   detail,
   accent = "default",
+  className = "",
 }: {
   eyebrow: string;
   value: string;
   detail: string;
   accent?: "default" | "teal" | "gold";
+  className?: string;
 }) {
   const accentClasses =
     accent === "teal"
@@ -900,7 +902,7 @@ function MetricCard({
         : "border-base-300 bg-base-100";
 
   return (
-    <article className={`rounded-[1.5rem] border p-4 shadow-sm ${accentClasses}`}>
+    <article className={`rounded-[1.5rem] border p-4 shadow-sm ${accentClasses} ${className}`.trim()}>
       <p className="text-xs uppercase tracking-[0.22em] text-base-800">{eyebrow}</p>
       <p className="mt-3 font-display text-3xl text-base-900">{value}</p>
       <p className="mt-2 text-sm leading-7 text-base-800">{detail}</p>
@@ -2602,8 +2604,17 @@ export default function App() {
                     <h3 className="mt-2 font-display text-2xl text-base-900">Curated for you</h3>
                   </div>
                   <div className="grid gap-3">
-                    {dashboardGuidanceCards.map((card) => (
-                      <article key={card.title} className="aion-dashboard-guidance-card">
+                    {dashboardGuidanceCards.map((card, index) => (
+                      <article
+                        key={card.title}
+                        className={`aion-dashboard-guidance-card ${
+                          index === 0
+                            ? "aion-dashboard-guidance-card-primary"
+                            : index === 1
+                              ? "aion-dashboard-guidance-card-secondary"
+                              : "aion-dashboard-guidance-card-tertiary"
+                        }`}
+                      >
                         <div>
                           <p className="text-base font-semibold text-base-900">{card.title}</p>
                           <p className="mt-2 text-sm leading-6 text-base-800">{card.body}</p>
@@ -2818,8 +2829,17 @@ export default function App() {
                     </div>
                   </div>
                   <div className="aion-chat-topbar-controls">
-                    {chatTopControls.map((item) => (
-                      <div key={item.label} className="aion-chat-control-pill">
+                    {chatTopControls.map((item, index) => (
+                      <div
+                        key={item.label}
+                        className={`aion-chat-control-pill ${
+                          index === 0
+                            ? "aion-chat-control-pill-emphasis"
+                            : index === chatTopControls.length - 1
+                              ? "aion-chat-control-pill-wide"
+                              : ""
+                        }`}
+                      >
                         <span className="aion-chat-control-label">{item.label}</span>
                         <span className="aion-chat-control-badge">{item.value}</span>
                       </div>
@@ -3564,12 +3584,12 @@ export default function App() {
                     body="These summary cards keep the route readable before the user opens any deeper detail."
                     className="aion-personality-side-panel aion-personality-side-panel-highlight"
                   >
-                    <div className="grid gap-3">
+                    <div className="aion-personality-highlight-grid">
                       {[
                         {
                           title: copy.personality.goals,
                           value: stringValue(planningSummary?.active_goal_count, "0"),
-                      note: "Goals the personality is currently following",
+                          note: "Goals the personality is currently following",
                           accent: "gold" as const,
                         },
                         {
@@ -3587,16 +3607,21 @@ export default function App() {
                         {
                           title: copy.personality.preferences,
                           value: stringValue(preferenceSummary?.learned_preference_count, "0"),
-                      note: "Preferences the personality has picked up",
+                          note: "Preferences the personality has picked up",
                           accent: "default" as const,
                         },
-                      ].map((card) => (
+                      ].map((card, index) => (
                         <MetricCard
                           key={card.title}
                           eyebrow={card.title}
                           value={card.value}
                           detail={card.note}
                           accent={card.accent}
+                          className={
+                            index === 0
+                              ? "aion-personality-highlight-card aion-personality-highlight-card-primary"
+                              : "aion-personality-highlight-card"
+                          }
                         />
                       ))}
                     </div>
