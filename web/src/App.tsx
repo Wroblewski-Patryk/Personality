@@ -17,6 +17,7 @@ type RoutePath = "/login" | "/dashboard" | "/chat" | "/settings" | "/personality
 type AuthMode = "login" | "register";
 type UiLanguageCode = "system" | "en" | "pl" | "de";
 type ResolvedUiLanguageCode = Exclude<UiLanguageCode, "system">;
+type ChatDeliveryState = "sending" | "delivered" | "failed";
 type UtcOffsetOption = {
   value: string;
   label: string;
@@ -170,6 +171,8 @@ const UI_COPY = {
       composerHint: "Replies land back in this same transcript, so you can stay focused on one conversation.",
       send: "Send message",
       sending: "Sending...",
+      delivered: "Delivered",
+      failed: "Failed to send",
       thread: "Thread",
       latestMessages: "Latest messages",
       noHistory: "No shared messages yet.",
@@ -337,6 +340,8 @@ const UI_COPY = {
       composerHint: "Odpowiedzi wracają do tego samego transcriptu, żeby cały dialog został w jednym miejscu.",
       send: "Wyślij wiadomość",
       sending: "Wysyłanie...",
+      delivered: "Dostarczono",
+      failed: "Nie wysłano",
       thread: "Wątek",
       latestMessages: "Ostatnie wiadomości",
       noHistory: "Nie ma jeszcze wspólnych wiadomości.",
@@ -504,6 +509,8 @@ const UI_COPY = {
       composerHint: "Antworten landen wieder in diesem selben Transkript, damit die ganze Unterhaltung an einem Ort bleibt.",
       send: "Nachricht senden",
       sending: "Senden...",
+      delivered: "Zugestellt",
+      failed: "Nicht gesendet",
       thread: "Thread",
       latestMessages: "Letzte Nachrichten",
       noHistory: "Noch keine gemeinsamen Nachrichten.",
@@ -707,6 +714,22 @@ function transcriptMetadataSummary(entry: AppChatHistoryEntry) {
   ].filter(Boolean);
 
   return parts.length > 0 ? parts.join(" | ") : null;
+}
+
+function chatDeliveryState(entry: AppChatHistoryEntry): ChatDeliveryState | null {
+  const value = entry.metadata?.delivery_state;
+  return value === "sending" || value === "delivered" || value === "failed" ? value : null;
+}
+
+function reconcileLocalTranscriptItems(
+  localItems: AppChatHistoryEntry[],
+  durableItems: AppChatHistoryEntry[],
+) {
+  const durableMessageIds = new Set(durableItems.map((item) => item.message_id));
+  const durableEventIds = new Set(durableItems.map((item) => item.event_id));
+  return localItems.filter(
+    (item) => !durableMessageIds.has(item.message_id) && !durableEventIds.has(item.event_id),
+  );
 }
 
 function routeDescription(route: RoutePath, locale: ResolvedUiLanguageCode) {
@@ -1403,7 +1426,7 @@ export default function App() {
   const [history, setHistory] = useState<AppChatHistoryEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
-  const [pendingChatMessage, setPendingChatMessage] = useState<AppChatHistoryEntry | null>(null);
+  const [localTranscriptItems, setLocalTranscriptItems] = useState<AppChatHistoryEntry[]>([]);
   const [chatText, setChatText] = useState("");
   const [overview, setOverview] = useState<AppPersonalityOverviewResponse | null>(null);
   const [, setOverviewLoading] = useState(false);
@@ -1506,7 +1529,7 @@ export default function App() {
 
   useEffect(() => {
     if (!me || (route !== "/chat" && route !== "/dashboard")) {
-      setPendingChatMessage(null);
+      setLocalTranscriptItems([]);
       initialTranscriptScrollDoneRef.current = false;
       pendingAssistantScrollIdRef.current = null;
       return;
@@ -1520,6 +1543,7 @@ export default function App() {
         if (!cancelled) {
           setError(null);
           setHistory(payload.items);
+          setLocalTranscriptItems((items) => reconcileLocalTranscriptItems(items, payload.items));
         }
       })
       .catch((caught) => {
@@ -1539,8 +1563,8 @@ export default function App() {
   }, [me, route]);
 
   const transcriptItems = useMemo(
-    () => (pendingChatMessage ? [...history, pendingChatMessage] : history),
-    [history, pendingChatMessage],
+    () => [...history, ...reconcileLocalTranscriptItems(localTranscriptItems, history)],
+    [history, localTranscriptItems],
   );
   const transcriptIsPreview = transcriptItems.length === 0;
   const visibleTranscriptItems = useMemo<AppChatHistoryEntry[]>(
@@ -2198,7 +2222,7 @@ export default function App() {
       setToolsOverview(null);
       setTelegramLinkStart(null);
       setHistory([]);
-      setPendingChatMessage(null);
+      setLocalTranscriptItems([]);
       setToast("You have been signed out.");
       startTransition(() => {
         navigate("/login");
@@ -2224,7 +2248,7 @@ export default function App() {
       setToolsOverview(null);
       setTelegramLinkStart(null);
       setHistory([]);
-      setPendingChatMessage(null);
+      setLocalTranscriptItems([]);
       setResetConfirmationText("");
       setToast(`${copy.settings.resetSuccess} ${summary.total_deleted_records} items cleared.`);
       startTransition(() => {
@@ -2276,16 +2300,39 @@ export default function App() {
       return;
     }
 
+    const submittedAt = new Date().toISOString();
+    const localEventId = `local:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+    const localUserMessage: AppChatHistoryEntry = {
+      message_id: `${localEventId}:user`,
+      event_id: localEventId,
+      role: "user",
+      text,
+      channel: "app",
+      timestamp: submittedAt,
+      metadata: {
+        delivery_state: "sending",
+      },
+    };
+
+    pendingAssistantScrollIdRef.current = localUserMessage.message_id;
+    setLocalTranscriptItems((items) => [...items, localUserMessage]);
     setSendingMessage(true);
     setError(null);
     setChatText("");
 
     try {
       const reply = await api.sendChatMessage(text);
-      const pendingMessageId = `${reply.event_id}:assistant`;
-      pendingAssistantScrollIdRef.current = pendingMessageId;
-      setPendingChatMessage({
-        message_id: pendingMessageId,
+      const deliveredUserMessage: AppChatHistoryEntry = {
+        ...localUserMessage,
+        message_id: `${reply.event_id}:user`,
+        event_id: reply.event_id,
+        metadata: {
+          ...(localUserMessage.metadata ?? {}),
+          delivery_state: "delivered",
+        },
+      };
+      const localAssistantMessage: AppChatHistoryEntry = {
+        message_id: `${reply.event_id}:assistant`,
         event_id: reply.event_id,
         role: "assistant",
         text: reply.reply.message,
@@ -2297,12 +2344,31 @@ export default function App() {
           runtime_role: reply.runtime?.role ?? null,
           action_status: reply.runtime?.action_status ?? null,
         },
-      });
+      };
+      pendingAssistantScrollIdRef.current = localAssistantMessage.message_id;
+      setLocalTranscriptItems((items) => [
+        ...items.map((item) =>
+          item.message_id === localUserMessage.message_id ? deliveredUserMessage : item,
+        ),
+        localAssistantMessage,
+      ]);
       const freshHistory = await api.getChatHistory();
       setHistory(freshHistory.items);
-      setPendingChatMessage(null);
+      setLocalTranscriptItems((items) => reconcileLocalTranscriptItems(items, freshHistory.items));
     } catch (caught) {
-      setPendingChatMessage(null);
+      setLocalTranscriptItems((items) =>
+        items.map((item) =>
+          item.message_id === localUserMessage.message_id
+            ? {
+                ...item,
+                metadata: {
+                  ...(item.metadata ?? {}),
+                  delivery_state: "failed",
+                },
+              }
+            : item,
+        ),
+      );
       setError(caught instanceof Error ? caught.message : "Message delivery failed.");
     } finally {
       setSendingMessage(false);
@@ -3057,7 +3123,15 @@ export default function App() {
                       {visibleTranscriptItems.map((message) => {
                         const metadataSummary = transcriptMetadataSummary(message);
                         const isUser = message.role === "user";
-                        const isPending = pendingChatMessage?.message_id === message.message_id;
+                        const deliveryState = isUser ? chatDeliveryState(message) : null;
+                        const deliveryLabel =
+                          deliveryState === "sending"
+                            ? copy.chat.pending
+                            : deliveryState === "delivered"
+                              ? copy.chat.delivered
+                              : deliveryState === "failed"
+                                ? copy.chat.failed
+                                : null;
 
                         return (
                           <div
@@ -3071,7 +3145,13 @@ export default function App() {
                             <article className={`aion-chat-message ${isUser ? "aion-chat-message-user" : "aion-chat-message-assistant"}`}>
                               <div className="aion-chat-message-meta">
                                 <span>{formatTimestamp(message.timestamp, resolvedUiLanguage)}</span>
-                                {isPending ? <span>{copy.chat.pending}</span> : null}
+                                {deliveryState && deliveryLabel ? (
+                                  <span
+                                    aria-label={deliveryLabel}
+                                    className={`aion-chat-delivery-status aion-chat-delivery-status-${deliveryState}`}
+                                    title={deliveryLabel}
+                                  />
+                                ) : null}
                                 {transcriptIsPreview ? <span>Starter preview</span> : null}
                               </div>
                               <p className="aion-chat-message-copy">{message.text}</p>
