@@ -1,4 +1,4 @@
-## Summary
+﻿## Summary
 
 - Scope:
 - Risk level: Low / Medium / High
@@ -39,3 +39,23 @@ Flows executed:
 ## Rollback Plan
 
 -
+
+## Production Hardening Checklist
+
+- [ ] `DEFINITION_OF_DONE.md` satisfied.
+- [ ] `INTEGRATION_CHECKLIST.md` satisfied where applicable.
+- [ ] `NO_TEMPORARY_SOLUTIONS.md` satisfied.
+- [ ] `DEPLOYMENT_GATE.md` reviewed for release/deploy impact.
+- [ ] No mock, placeholder, fake, or temporary path remains.
+- [ ] Feature uses real data/API/service paths.
+- [ ] Feature works after refresh, reload, or restart where applicable.
+- [ ] Result report includes what was done, files changed, how tested, what is incomplete, next steps, and decisions made.
+
+## AI Safety Checklist
+
+- [ ] Not applicable.
+- [ ] `AI_TESTING_PROTOCOL.md` scenarios executed.
+- [ ] Prompt injection checks passed.
+- [ ] Data leakage checks passed.
+- [ ] Unauthorized access checks passed.
+- [ ] AI red-team findings resolved or explicitly accepted.

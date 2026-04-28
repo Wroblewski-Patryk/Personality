@@ -1,4 +1,4 @@
-# Review Agent
+﻿# Review Agent
 
 ## Mission
 
@@ -33,3 +33,13 @@ Protect quality: bugs, regressions, risk, and missing tests.
 - For runtime or infra scope, block completion if smoke or rollback evidence is
   missing.
 - Explicitly call out residual risk even with no findings.
+
+## Production Hardening Review Gate
+
+- Verify `DEFINITION_OF_DONE.md` line by line.
+- Verify `INTEGRATION_CHECKLIST.md` for integrated runtime work.
+- Verify `AI_TESTING_PROTOCOL.md` for AI behavior.
+- Verify `DEPLOYMENT_GATE.md` for release or deployment work.
+- Reject incomplete vertical slices.
+- Reject placeholders, mock-only paths, fake data, temporary fixes, and workaround-only implementations.
+- Block AI or money-impacting work when adversarial testing or fail-closed validation is missing.

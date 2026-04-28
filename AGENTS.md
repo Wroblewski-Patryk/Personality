@@ -1,4 +1,4 @@
-# AGENTS.md - Personality / AION
+﻿# AGENTS.md - Personality / AION
 
 ## Purpose
 
@@ -244,3 +244,20 @@ This repository now has active browser-shell work. For UX/UI scope:
 
 Do not create a commit when the required checks for the touched scope are
 failing, unless the user explicitly accepts the risk.
+
+## Production Hardening Gate
+
+Canonical hardening files:
+
+- `DEFINITION_OF_DONE.md`
+- `INTEGRATION_CHECKLIST.md`
+- `NO_TEMPORARY_SOLUTIONS.md`
+- `DEPLOYMENT_GATE.md`
+- `AI_TESTING_PROTOCOL.md`
+- `.codex/agents/ai-red-team-agent.md`
+
+Every task must include Goal, Scope, Implementation Plan, Acceptance Criteria, Definition of Done, and Result Report. A task is `DONE` only after `DEFINITION_OF_DONE.md` is satisfied with evidence.
+
+Runtime features must be vertical slices across UI, logic, API, DB, validation, error handling, and tests. Partial implementations, placeholders, mock-only behavior, fake data, temporary fixes, and hidden bypasses are forbidden.
+
+AI systems must be tested against prompt injection, data leakage, and unauthorized access before deployment. AI features require reproducible multi-turn scenarios from `AI_TESTING_PROTOCOL.md` and red-team review when risk is meaningful.

@@ -1,4 +1,4 @@
-# Task
+﻿# Task
 
 ## Header
 - ID: PRJ-XXX
@@ -101,3 +101,46 @@ Describe exactly what should be produced in the current stage only.
 
 ## Notes
 Risks, assumptions, links.
+
+## Production-Grade Required Contract
+
+Every task must include these mandatory sections before it can move to `READY` or `IN_PROGRESS`:
+
+- `Goal`
+- `Scope` with exact files, modules, routes, APIs, schemas, docs, or runtime surfaces
+- `Implementation Plan` with step-by-step execution and validation
+- `Acceptance Criteria` with testable conditions
+- `Definition of Done` using `DEFINITION_OF_DONE.md`
+- `Result Report`
+
+Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB -> validation -> error handling -> test. Partial implementations, mock-only paths, placeholders, fake data, and temporary fixes are forbidden.
+
+## Integration Evidence
+
+- `INTEGRATION_CHECKLIST.md` reviewed: yes | no | not applicable
+- Real API/service path used: yes | no | not applicable
+- Endpoint and client contract match: yes | no | not applicable
+- DB schema and migrations verified: yes | no | not applicable
+- Loading state verified: yes | no | not applicable
+- Error state verified: yes | no | not applicable
+- Refresh/restart behavior verified: yes | no | not applicable
+- Regression check performed:
+
+## AI Testing Evidence (required for AI features)
+
+- `AI_TESTING_PROTOCOL.md` reviewed: yes | no | not applicable
+- Memory consistency scenarios:
+- Multi-step context scenarios:
+- Adversarial or role-break scenarios:
+- Prompt injection checks:
+- Data leakage and unauthorized access checks:
+- Result:
+
+## Result Report
+
+- Task summary:
+- Files changed:
+- How tested:
+- What is incomplete:
+- Next steps:
+- Decisions made:
