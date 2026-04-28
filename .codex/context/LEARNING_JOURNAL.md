@@ -755,6 +755,40 @@ fixes for this repository.
   - production Coolify deployment logs on 2026-04-23
   - migration `20260419_0004_add_pgvector_semantic_embedding_scaffold.py`
 
+### 2026-04-28 - Telegram provider-ready does not prove active webhook delivery
+- Context:
+  - production `/health.conversation_channels.telegram.round_trip_state` was
+    `provider_backed_ready` and the first-party tools UI showed Telegram as
+    linked, but real Telegram messages were not receiving replies.
+- Symptom:
+  - foreground `POST /event` API smoke succeeded, while Telegram health
+    counters did not move after a real user message.
+  - a synthetic Telegram-shaped request without the webhook secret did reach
+    production and was recorded as `invalid_webhook_secret`.
+- Root cause:
+  - Telegram's active webhook was not correctly delivering to the canonical
+    production endpoint even though the production app had bot token and secret
+    configuration available.
+- Guardrail:
+  - when Telegram appears silent, compare real `ingress_attempts` after a user
+    message before assuming runtime failure.
+  - if the app-owned `/telegram/set-webhook` route is available and production
+    secrets are configured, reset the webhook to the canonical host before
+    deeper code debugging.
+- Preferred pattern:
+  - reset via `POST /telegram/set-webhook` with
+    `https://aviary.luckysparrow.ch/event` so the server reuses the configured
+    production secret without printing it locally.
+  - verify recovery through `/health.conversation_channels.telegram`:
+    `last_ingress.state=processed` and `last_delivery.state=sent`.
+- Avoid:
+  - trusting the tools UI `Linked` state as proof of live Telegram webhook
+    delivery; it confirms profile linking plus provider configuration, not
+    provider-to-app traffic.
+- Evidence:
+  - `PRJ-773`
+  - production webhook reset on 2026-04-28
+
 ### 2026-04-23 - PostgreSQL vector deploys must validate Python pgvector parity before startup
 - Context:
   - production Telegram webhook traffic reached the service, but every

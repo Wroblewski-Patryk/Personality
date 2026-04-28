@@ -3,6 +3,8 @@ import {
   ApiError,
   api,
   type AppChatHistoryEntry,
+  type AppHealthResponse,
+  type AppHealthTelegramChannel,
   type AppMeResponse,
   type AppPersonalityOverviewResponse,
   type AppResetDataResponse,
@@ -770,6 +772,137 @@ function summarizeToolAction(nextActions: string[], fallback: string) {
   return action.replaceAll("_", " ");
 }
 
+function numberValue(value: unknown, fallback = 0) {
+  const candidate = Number(value);
+  return Number.isFinite(candidate) ? candidate : fallback;
+}
+
+type ConversationChannelStatus = {
+  tone: "active" | "warning" | "error" | "loading";
+  label: string;
+  title: string;
+  body: string;
+  facts: Array<{ label: string; value: string }>;
+};
+
+function lastState(payload: Record<string, unknown> | undefined, key: string) {
+  const value = payload?.[key];
+  return typeof value === "string" ? value : "";
+}
+
+function conversationChannelStatus(
+  health: AppHealthResponse | null,
+  options: {
+    loading: boolean;
+    error: string | null;
+  },
+): ConversationChannelStatus {
+  const { loading, error } = options;
+  if (loading) {
+    return {
+      tone: "loading",
+      label: "Checking",
+      title: "Conversation channel",
+      body: "Reading backend health before showing Telegram delivery posture.",
+      facts: [
+        { label: "Ingress", value: "..." },
+        { label: "Delivery", value: "..." },
+      ],
+    };
+  }
+
+  if (error || !health) {
+    return {
+      tone: "error",
+      label: "Unavailable",
+      title: "Conversation channel",
+      body: error ?? "Backend health is not available right now.",
+      facts: [
+        { label: "Ingress", value: "unknown" },
+        { label: "Delivery", value: "unknown" },
+      ],
+    };
+  }
+
+  const telegram: AppHealthTelegramChannel = health.conversation_channels?.telegram ?? {};
+  const ingressProcessed = numberValue(telegram.ingress_processed);
+  const ingressAttempts = numberValue(telegram.ingress_attempts);
+  const ingressFailures = numberValue(telegram.ingress_runtime_failures);
+  const ingressRejections = numberValue(telegram.ingress_rejections);
+  const deliveryAttempts = numberValue(telegram.delivery_attempts);
+  const deliverySuccesses = numberValue(telegram.delivery_successes);
+  const deliveryFailures = numberValue(telegram.delivery_failures);
+  const lastIngressState = lastState(telegram.last_ingress, "state");
+  const lastIngressReason = lastState(telegram.last_ingress, "reason");
+  const lastDeliveryState = lastState(telegram.last_delivery, "state");
+  const lastDeliveryNote = lastState(telegram.last_delivery, "note");
+  const providerReady = Boolean(telegram.round_trip_ready);
+
+  const facts = [
+    { label: "Ingress", value: `${ingressProcessed}/${ingressAttempts}` },
+    { label: "Delivery", value: `${deliverySuccesses}/${deliveryAttempts}` },
+    { label: "Attention", value: `${numberValue(health.attention?.pending)} pending` },
+  ];
+
+  if (!providerReady) {
+    return {
+      tone: "error",
+      label: "Provider missing",
+      title: "Telegram is not configured",
+      body: String(telegram.round_trip_hint || "Telegram provider configuration is incomplete."),
+      facts,
+    };
+  }
+
+  if (ingressFailures > 0 || deliveryFailures > 0 || lastIngressState === "runtime_failed") {
+    return {
+      tone: "error",
+      label: "Needs attention",
+      title: "Telegram reached Aviary, but delivery is failing",
+      body: lastIngressReason || lastDeliveryNote || "The backend recorded a Telegram runtime or delivery failure.",
+      facts,
+    };
+  }
+
+  if (ingressRejections > 0 && ingressProcessed === 0) {
+    return {
+      tone: "error",
+      label: "Secret mismatch",
+      title: "Telegram webhook traffic is being rejected",
+      body: lastIngressReason || "Webhook traffic reached Aviary but failed validation.",
+      facts,
+    };
+  }
+
+  if (ingressProcessed > 0 && deliverySuccesses > 0 && lastDeliveryState === "sent") {
+    return {
+      tone: "active",
+      label: "Live",
+      title: "Telegram is delivering",
+      body: "Recent Telegram ingress was processed and the last reply was sent.",
+      facts,
+    };
+  }
+
+  if (ingressAttempts === 0 && deliveryAttempts === 0) {
+    return {
+      tone: "warning",
+      label: "Quiet",
+      title: "Telegram is configured but no traffic is visible",
+      body: "The provider is ready, but Aviary has not observed webhook ingress since this process started.",
+      facts,
+    };
+  }
+
+  return {
+    tone: "warning",
+    label: "Watching",
+    title: "Telegram status is partial",
+    body: lastIngressReason || lastDeliveryNote || "Aviary has some Telegram telemetry but no confirmed recent delivery.",
+    facts,
+  };
+}
+
 function summaryLines(sectionKey: string, payload: unknown): string[] {
   const record = payload && typeof payload === "object" ? (payload as Record<string, unknown>) : {};
   if (sectionKey === "identity_state") {
@@ -1276,6 +1409,9 @@ export default function App() {
   const [, setOverviewLoading] = useState(false);
   const [toolsOverview, setToolsOverview] = useState<AppToolsOverviewResponse | null>(null);
   const [toolsLoading, setToolsLoading] = useState(false);
+  const [healthSnapshot, setHealthSnapshot] = useState<AppHealthResponse | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [healthError, setHealthError] = useState<string | null>(null);
   const [savingToolId, setSavingToolId] = useState<string | null>(null);
   const [telegramLinkStart, setTelegramLinkStart] = useState<AppTelegramLinkStartResponse | null>(null);
   const [telegramLinkBusy, setTelegramLinkBusy] = useState(false);
@@ -1534,6 +1670,38 @@ export default function App() {
     };
   }, [me, route, toolsOverview]);
 
+  useEffect(() => {
+    if (!me || route !== "/dashboard") {
+      return;
+    }
+
+    let cancelled = false;
+    setHealthLoading(true);
+    setHealthError(null);
+    void api
+      .getHealth()
+      .then((payload) => {
+        if (!cancelled) {
+          setHealthSnapshot(payload);
+          setHealthError(null);
+        }
+      })
+      .catch((caught) => {
+        if (!cancelled) {
+          setHealthError(caught instanceof Error ? caught.message : "Failed to load channel health.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setHealthLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [me, route]);
+
   const planningSummary = (overview?.planning_state as Record<string, unknown> | undefined)?.continuity_summary as
     | Record<string, unknown>
     | undefined;
@@ -1707,6 +1875,10 @@ export default function App() {
     title: "Reflect",
     body: "Generating insight from recent experiences, active goals, and the latest conversation context.",
   };
+  const dashboardConversationStatus = conversationChannelStatus(healthSnapshot, {
+    loading: healthLoading,
+    error: healthError,
+  });
   const dashboardBottomStats = [
     { label: "System harmony", value: "92%", detail: "Optimal" },
     { label: "Conscious", value: "High", detail: "Balance across layers" },
@@ -2660,7 +2832,28 @@ export default function App() {
                 </aside>
               </section>
 
-              <section className="aion-panel aion-dashboard-flow-panel">
+              <section className={`aion-panel aion-dashboard-channel-status aion-dashboard-channel-status-${dashboardConversationStatus.tone}`}>
+                <div className="aion-dashboard-channel-status-copy">
+                  <p className="text-sm uppercase tracking-[0.22em] text-base-800">Conversation channel</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <h3 className="font-display text-2xl text-base-900">{dashboardConversationStatus.title}</h3>
+                    <span className="aion-dashboard-channel-status-pill">{dashboardConversationStatus.label}</span>
+                  </div>
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-base-800">
+                    {dashboardConversationStatus.body}
+                  </p>
+                </div>
+                <div className="aion-dashboard-channel-status-facts">
+                  {dashboardConversationStatus.facts.map((fact) => (
+                    <div key={fact.label} className="aion-dashboard-channel-status-fact">
+                      <p>{fact.label}</p>
+                      <strong>{fact.value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="aion-panel aion-dashboard-flow-panel aion-dashboard-flow-panel-bridge">
                 <div className="aion-dashboard-flow-header">
                   <div>
                     <p className="text-sm uppercase tracking-[0.22em] text-base-800">Cognitive flow</p>
@@ -2703,7 +2896,7 @@ export default function App() {
                 </div>
               </section>
 
-              <section className="aion-dashboard-lower-grid grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.9fr)]">
+              <section className="aion-dashboard-lower-grid aion-dashboard-lower-grid-condensed grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.9fr)]">
                 <article className="aion-panel-soft aion-dashboard-card aion-dashboard-card-primary">
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -2766,8 +2959,8 @@ export default function App() {
               </section>
 
               <section className="grid gap-4">
-                <article className="aion-panel aion-dashboard-summary-band">
-                  <div className="aion-dashboard-summary-layout">
+                <article className="aion-panel aion-dashboard-summary-band aion-dashboard-summary-band-closure">
+                  <div className="aion-dashboard-summary-layout aion-dashboard-summary-layout-closure">
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                       {dashboardBottomStats.map((stat) => (
                         <div key={stat.label} className="aion-dashboard-summary-item">
@@ -2777,7 +2970,7 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <div className="aion-dashboard-summary-scenic">
+                    <div className="aion-dashboard-summary-scenic aion-dashboard-summary-scenic-closure">
                       <div className="aion-dashboard-summary-scenic-copy">
                         <p className="text-sm uppercase tracking-[0.2em] text-base-800">Weekly summary</p>
                         <p className="mt-3 font-display text-2xl leading-tight text-base-900">
@@ -2942,7 +3135,7 @@ export default function App() {
                   </div>
 
                   <aside className="aion-chat-support-column">
-                    <aside className="aion-chat-portrait-panel">
+                    <aside className="aion-chat-portrait-panel aion-chat-portrait-panel-elevated">
                       <div className="aion-chat-portrait-overlay">
                         <p className="text-[11px] uppercase tracking-[0.22em] text-[#5f8f93]">Planning</p>
                         <p className="mt-2 font-display text-2xl text-base-900">{chatCurrentFocus}</p>

@@ -22,12 +22,24 @@ Last updated: 2026-04-28
     Telegram webhook/linking/transport visibility issue
   - production is currently on runtime build revision:
     - `ba714425afba00a2756b318bad1f74b7f42405a7`
-- `PRJ-770` is now READY:
-  - plan one small dashboard status banner/signal slice over existing backend
-    health truth
-  - the dashboard should distinguish provider readiness from observed recent
-    ingress/delivery so the user can see when the conversation channel is
-    configured but silent
+- `PRJ-770` is now DONE:
+  - the dashboard now includes a conversation-channel status signal over
+    existing backend health truth
+  - `web/src/lib/api.ts` now exposes the minimal `/health` client contract
+  - `web/src/App.tsx` derives Telegram status from:
+    - `round_trip_ready`
+    - ingress counters
+    - delivery counters
+    - `last_ingress`
+    - `last_delivery`
+    - attention pending count
+  - `web/src/index.css` styles the dashboard-local status band for live,
+    quiet, failure, loading, and unavailable states
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+  - local dashboard smoke passed:
+    - `http://127.0.0.1:5177/dashboard`
+    - HTTP `200`, `content-type=text/html`
   - task file:
     - `.codex/tasks/PRJ-770-plan-dashboard-conversation-channel-status-banner.md`
 - deeper production verification narrowed the runtime diagnosis further:
@@ -47,11 +59,25 @@ Last updated: 2026-04-28
   - therefore the likely incident boundary is upstream of runtime processing:
     Telegram webhook URL, webhook secret parity, bot/chat selection, or proxy
     delivery from Telegram into the production host
-- `PRJ-773` is now BLOCKED on secret-backed provider access:
-  - run `backend/scripts/run_telegram_mode_smoke.ps1` or `.sh` with the
-    production bot token, webhook secret, and known chat id
-  - choose the smallest repair from the captured `getWebhookInfo` and listen
-    probe evidence
+- `PRJ-773` is now DONE:
+  - production webhook was reset through the existing server-owned
+    `POST https://aviary.luckysparrow.ch/telegram/set-webhook` route
+  - Telegram API returned:
+    - `ok=true`
+    - `result=true`
+    - `description=Webhook was set`
+  - post-repair `/health.conversation_channels.telegram` showed:
+    - `ingress_attempts=2`
+    - `ingress_processed=1`
+    - `ingress_runtime_failures=0`
+    - `delivery_attempts=1`
+    - `delivery_successes=1`
+    - `delivery_failures=0`
+    - `last_ingress.state=processed`
+    - `last_delivery.state=sent`
+  - focused Telegram regressions passed:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py -k "telegram" tests/test_delivery_router.py tests/test_telegram_client.py tests/test_runtime_pipeline.py -k "telegram"; Pop-Location`
+    - result: `24 passed, 210 deselected`
   - task file:
     - `.codex/tasks/PRJ-773-verify-production-telegram-webhook-and-plan-repair.md`
 
@@ -11093,3 +11119,16 @@ Final Flagship Detail Loop Freeze (2026-04-28)
   - dashboard hero-to-lower transition and scenic closure proportion
   - chat portrait crop versus support-panel spacing
   - personality mobile callout compression and side-panel stacking proof
+
+Fresh Closure And Mobile Compression Pass (2026-04-28)
+
+- `dashboard` now treats the flow band more like a flagship bridge and the
+  scenic summary more like the route's final closure
+- `chat` portrait crop and planning inset were both rebalanced for a calmer
+  relationship on desktop and mobile
+- `personality` mobile callouts are now narrower and more inward-facing, so
+  the figure stage keeps more ceremonial balance under compression
+- next smallest parity loop after deploy:
+  - dashboard hero-scene crop and signal-card connector proportion
+  - chat support-column proof against real transcript length
+  - personality tablet/mobile screenshot proof for callout readability

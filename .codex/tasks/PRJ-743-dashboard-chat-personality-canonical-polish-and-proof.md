@@ -289,3 +289,20 @@ Latest rhythm-and-side-stack pass now also complete:
   - highlights now act as the summary anchor
   - subconscious remains secondary
   - recent activity now closes the stack as the quietest support block
+
+Latest closure-and-mobile-compression pass now also complete:
+
+- `dashboard` now smooths the flagship descent from hero into closure:
+  - the flow band reads more like a bridge between the hero and the lower grid
+  - lower-grid pacing is denser
+  - the final scenic closure now reads more like a true ending than another
+    generic card family
+- `chat` now improves portrait posture:
+  - the portrait panel sits slightly higher and taller
+  - the planning inset is placed lower with a calmer relationship to the face
+  - mobile crop now preserves more of the portrait while keeping the overlay
+    readable
+- `personality` now compresses more gracefully on mobile:
+  - callout cards are narrower and lighter
+  - planning and skills are pulled inward
+  - the role card and knowledge card now avoid the heavier stacked-card feel

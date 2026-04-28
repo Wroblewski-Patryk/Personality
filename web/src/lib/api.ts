@@ -134,6 +134,37 @@ export type AppTelegramLinkStartResponse = {
   expires_in_seconds: number;
 };
 
+export type AppHealthTelegramChannel = {
+  round_trip_ready?: boolean;
+  round_trip_state?: string;
+  round_trip_hint?: string;
+  ingress_attempts?: number;
+  ingress_rejections?: number;
+  ingress_queued?: number;
+  ingress_processed?: number;
+  ingress_runtime_failures?: number;
+  delivery_attempts?: number;
+  delivery_successes?: number;
+  delivery_failures?: number;
+  last_ingress?: Record<string, unknown>;
+  last_delivery?: Record<string, unknown>;
+};
+
+export type AppHealthResponse = {
+  status?: string;
+  conversation_channels?: {
+    telegram?: AppHealthTelegramChannel;
+  };
+  attention?: {
+    pending?: number;
+    claimed?: number;
+    answered?: number;
+  };
+  proactive?: {
+    scheduler_tick_summary?: Record<string, unknown>;
+  };
+};
+
 type JsonBody = Record<string, unknown> | undefined;
 
 function parseJsonIfPossible(text: string): unknown {
@@ -255,5 +286,8 @@ export const api = {
       "/app/tools/telegram/link/start",
       { method: "POST" },
     );
+  },
+  getHealth(): Promise<AppHealthResponse> {
+    return requestJson<AppHealthResponse>("/health", { method: "GET" });
   },
 };

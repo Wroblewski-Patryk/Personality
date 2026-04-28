@@ -17,9 +17,15 @@ Last updated: 2026-04-28
     `last_delivery={}`)
   - the current evidence points toward webhook/linking/transport visibility
     rather than a broken foreground runtime pipeline
-  - `PRJ-770` is now ready to plan and implement a dashboard status signal that
-    explains configured-but-silent conversation channels from existing backend
-    health truth
+  - `PRJ-770` is now complete locally:
+    - dashboard now fetches `/health` and renders a conversation-channel status
+      band from backend-owned Telegram ingress/delivery truth
+    - the status distinguishes live delivery, configured-but-idle, rejected or
+      failing webhook traffic, loading, and unavailable health states
+    - focused validation passed:
+      - `Push-Location .\web; npm run build; Pop-Location`
+    - local dashboard smoke passed:
+      - `http://127.0.0.1:5177/dashboard` returned HTTP `200`
 - 2026-04-28: the flagship canonical convergence lane now has a detail-level
   final checklist in:
   - `docs/planning/final-flagship-canonical-detail-checklist.md`
@@ -37,6 +43,17 @@ Last updated: 2026-04-28
   - the remaining high-value check is secret-backed Telegram provider
     inspection (`getWebhookInfo`, listen probe, and restore), captured as
     `PRJ-773`
+  - `PRJ-773` then reset the production Telegram webhook through the existing
+    server-owned route:
+    - `POST https://aviary.luckysparrow.ch/telegram/set-webhook`
+    - response: `ok=true`, `result=true`, `description=Webhook was set`
+  - post-repair production health confirmed real Telegram recovery:
+    - `ingress_processed=1`
+    - `delivery_attempts=1`
+    - `delivery_successes=1`
+    - `last_ingress.state=processed`
+    - `last_delivery.state=sent`
+  - focused Telegram regressions passed with `24 passed, 210 deselected`
 
 - 2026-04-28: the active canonical `chat` screen target is now the supplied v4
   approved snapshot:
@@ -4047,3 +4064,11 @@ Last updated: 2026-04-28
   anchored highlight hierarchy in the personality side column so the flagship
   shell reads closer to the canonical references before the next deploy
   compare-pass.
+- 2026-04-28: the flagship convergence lane also tightened closure and mobile
+  compression:
+  - `dashboard` now uses a calmer bridge from hero to lower cards and a more
+    explicit scenic ending
+  - `chat` portrait crop and planning inset were rebalanced for both desktop
+    and mobile
+  - `personality` mobile callouts were compressed inward to preserve a more
+    ceremonial figure stage
