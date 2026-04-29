@@ -4,6 +4,26 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
+- 2026-04-29: `PRJ-800F` started the next dashboard editorial parity loop:
+  - `web/src/App.tsx` now:
+    - trims dashboard signal-note copy to support a calmer, more canonical read
+    - simplifies the recent-activity heading so the right rail reads more editorial
+  - `web/src/index.css` now:
+    - tightens the dashboard stage, hero proportions, and center dominance
+    - calms the right rail through denser guidance and recent-activity pacing
+    - compresses the flow and summary closure so the lower half feels more panoramic
+  - result so far:
+    - the dashboard is closer to the canonical flagship composition without
+      inventing new structures
+    - the remaining proof gap is now live authenticated screenshot parity
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
+  - highest-value next steps:
+    - compare the deployed dashboard to
+      `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
+    - close `PRJ-800F` with one more micro-tuning pass if live evidence still shows drift
+
 - 2026-04-29: `PRJ-800E` completed the screenshot-driven public landing parity
   pass:
   - `web/src/App.tsx` now:

@@ -1865,14 +1865,14 @@ export default function App() {
       eyebrow: "Memory",
       value: stringValue(knowledgeSummary?.semantic_conclusion_count, "0"),
       detail: "Total memories",
-      note: "Continuity held across recent sessions.",
+      note: "Continuity remains visible.",
     },
     {
       placement: "left",
       eyebrow: "Reflection",
       value: stringValue(knowledgeSummary?.affective_conclusion_count, "0"),
       detail: "Insights gained",
-      note: "Slower learning shaping future replies.",
+      note: "Learning shapes future replies.",
     },
     {
       placement: "left",
@@ -1886,21 +1886,21 @@ export default function App() {
       eyebrow: "Motivation",
       value: stringValue(planningSummary?.active_goal_count, "0") === "0" ? "Steady" : "Aligned",
       detail: "Current posture",
-      note: "Goals and values stay in the foreground.",
+      note: "Goals stay in the foreground.",
     },
     {
       placement: "right",
       eyebrow: "Planning",
       value: `${stringValue(planningSummary?.active_goal_count, "0")} / ${stringValue(planningSummary?.active_task_count, "0")}`,
       detail: "Goals / tasks",
-      note: "Visible focus instead of hidden process.",
+      note: "Focus remains visible.",
     },
     {
       placement: "right",
       eyebrow: "Action",
       value: stringValue(toolsOverview?.summary.provider_ready_count, "0"),
       detail: "Ready capabilities",
-      note: "Execution stays safely product-bounded.",
+      note: "Execution stays safely bounded.",
     },
   ];
   const dashboardGuidanceCards = [
@@ -3163,7 +3163,7 @@ export default function App() {
                     <div className="mb-4 flex items-center justify-between gap-3">
                       <div>
                         <p className="text-sm uppercase tracking-[0.22em] text-base-800">Recent activity</p>
-                        <h4 className="mt-2 font-display text-xl text-base-900">What just changed</h4>
+                        <h4 className="mt-2 font-display text-xl text-base-900">Recent Activity</h4>
                       </div>
                       <button className="aion-dashboard-link" type="button">
                         View all

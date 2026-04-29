@@ -2,6 +2,28 @@
 
 Last updated: 2026-04-29
 
+## Fresh Dashboard Editorial Parity Slice (2026-04-29)
+
+- `PRJ-800F` is now IN_PROGRESS as the next dashboard closure loop:
+  - `.codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
+- purpose:
+  - tighten the dashboard hero, editorial rail, and lower closure on the now
+    stabilized shell and landing family
+- implemented in this slice:
+  - increased the center-stage authority by narrowing side columns and calming
+    signal-card density
+  - tightened the right rail so guidance, recent activity, and intention feel
+    closer to one editorial support stack
+  - compressed flow and summary spacing so the lower half reads more panoramic
+    and less modular
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
+- remaining work before DONE:
+  - deploy-side screenshot comparison against
+    `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
+  - one more micro-tuning pass from live evidence if needed
+
 ## Fresh Public-Home Screenshot Parity Pass (2026-04-29)
 
 - `PRJ-800E` is now DONE as the screenshot-driven landing refinement slice:

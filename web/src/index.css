@@ -2263,8 +2263,8 @@ body {
 
 .aion-dashboard-stage {
   display: grid;
-  gap: 1.28rem;
-  padding: 1.2rem;
+  gap: 1.04rem;
+  padding: 1.05rem;
   background:
     radial-gradient(circle at top, rgba(255, 246, 232, 0.9), rgba(255, 251, 245, 0.88) 52%, rgba(240, 231, 218, 0.78) 100%);
 }
@@ -2277,8 +2277,8 @@ body {
 .aion-dashboard-stage-copy {
   display: flex;
   align-items: flex-start;
-  gap: 0.85rem;
-  max-width: 37rem;
+  gap: 0.78rem;
+  max-width: 34rem;
 }
 
 .aion-dashboard-hero-grid {
@@ -2289,14 +2289,14 @@ body {
 
 .aion-dashboard-signal-column {
   display: grid;
-  gap: 0.82rem;
+  gap: 0.72rem;
 }
 
 .aion-dashboard-signal-card {
   position: relative;
   border: 1px solid rgba(88, 67, 52, 0.08);
   border-radius: 1.55rem;
-  padding: 0.94rem 0.96rem 0.92rem;
+  padding: 0.86rem 0.9rem 0.84rem;
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(255, 252, 247, 0.88), rgba(247, 239, 228, 0.74));
@@ -2319,17 +2319,17 @@ body {
   content: "";
   position: absolute;
   top: 50%;
-  width: 4.95rem;
+  width: 5.35rem;
   height: 1px;
   background: linear-gradient(90deg, rgba(111, 149, 146, 0.28), rgba(232, 194, 134, 0.3));
 }
 
 .aion-dashboard-signal-column:first-child .aion-dashboard-signal-card::after {
-  right: -4.2rem;
+  right: -4.55rem;
 }
 
 .aion-dashboard-signal-column:last-child .aion-dashboard-signal-card::after {
-  left: -4.2rem;
+  left: -4.55rem;
   transform: scaleX(-1);
 }
 
@@ -2343,24 +2343,24 @@ body {
 }
 
 .aion-dashboard-signal-value {
-  margin: 0.45rem 0 0;
+  margin: 0.38rem 0 0;
   color: var(--aion-ink);
   font-family: var(--font-display, ui-serif);
-  font-size: 1.86rem;
+  font-size: 1.78rem;
   line-height: 1;
 }
 
 .aion-dashboard-signal-detail,
 .aion-dashboard-signal-note {
-  margin: 0.35rem 0 0;
+  margin: 0.28rem 0 0;
   color: var(--aion-muted);
-  font-size: 0.88rem;
-  line-height: 1.5;
+  font-size: 0.82rem;
+  line-height: 1.48;
 }
 
 .aion-dashboard-signal-wave {
-  margin-top: 0.85rem;
-  height: 0.55rem;
+  margin-top: 0.72rem;
+  height: 0.48rem;
   border-radius: 999px;
   background:
     radial-gradient(circle at 0.3rem center, rgba(111, 149, 146, 0.62) 0.14rem, transparent 0.15rem),
@@ -2370,7 +2370,7 @@ body {
 
 .aion-dashboard-figure-stage {
   position: relative;
-  min-height: 35rem;
+  min-height: 34.1rem;
   border-radius: 2rem;
   overflow: hidden;
   background:
@@ -2404,9 +2404,9 @@ body {
     linear-gradient(180deg, rgba(255, 251, 245, 0.28), rgba(255, 251, 245, 0.08)),
     url("/aion-dashboard-hero-atmosphere-reference-v1.png");
   background-size: auto, cover;
-  background-position: center, center;
+  background-position: center, center 46%;
   mix-blend-mode: screen;
-  opacity: 0.95;
+  opacity: 0.98;
 }
 
 .aion-dashboard-figure-halo {
@@ -2424,8 +2424,8 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 10%;
-  transform: scale(1.01);
+  object-position: center 8%;
+  transform: scale(1.045);
   mix-blend-mode: multiply;
 }
 
@@ -2604,10 +2604,10 @@ body {
 
 .aion-dashboard-guidance-panel {
   display: grid;
-  gap: 0.92rem;
+  gap: 0.8rem;
   border: 1px solid rgba(88, 67, 52, 0.08);
   border-radius: 1.8rem;
-  padding: 1.08rem;
+  padding: 0.98rem;
   background:
     linear-gradient(180deg, rgba(255, 251, 245, 0.88), rgba(247, 239, 228, 0.72));
 }
@@ -2622,24 +2622,24 @@ body {
 
 .aion-dashboard-guidance-column {
   display: grid;
-  gap: 0.82rem;
+  gap: 0.68rem;
   align-content: start;
 }
 
 .aion-dashboard-guidance-list {
   display: grid;
-  gap: 0.78rem;
-  margin-top: 0.35rem;
+  gap: 0.64rem;
+  margin-top: 0.22rem;
 }
 
 .aion-dashboard-guidance-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.82rem;
+  gap: 0.72rem;
   align-items: start;
   border: 1px solid rgba(88, 67, 52, 0.08);
   border-radius: 1.3rem;
-  padding: 0.9rem 0.94rem;
+  padding: 0.84rem 0.88rem;
   background: rgba(255, 255, 255, 0.78);
   box-shadow:
     0 10px 22px rgba(78, 58, 43, 0.03),
@@ -2684,16 +2684,16 @@ body {
 .aion-dashboard-guidance-row-title {
   margin: 0;
   color: var(--aion-ink);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   line-height: 1.35;
 }
 
 .aion-dashboard-guidance-row-body {
-  margin: 0.35rem 0 0;
+  margin: 0.28rem 0 0;
   color: var(--aion-muted);
-  font-size: 0.86rem;
-  line-height: 1.55;
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 .aion-dashboard-mini-action-quiet {
@@ -2803,7 +2803,7 @@ body {
 }
 
 .aion-dashboard-recent-panel-compact {
-  padding: 0.92rem;
+  padding: 0.86rem;
   background:
     linear-gradient(180deg, rgba(255, 252, 247, 0.88), rgba(246, 238, 227, 0.76));
   box-shadow:
@@ -2815,9 +2815,9 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.85rem;
   border-bottom: 1px solid rgba(88, 67, 52, 0.08);
-  padding-bottom: 0.9rem;
+  padding-bottom: 0.78rem;
 }
 
 .aion-dashboard-recent-row:last-child {
@@ -2842,31 +2842,31 @@ body {
 }
 
 .aion-dashboard-side-story {
-  min-height: 13.25rem;
+  min-height: 12.3rem;
   border-radius: 1.6rem;
-  padding: 1.25rem;
+  padding: 1.08rem;
   background:
     linear-gradient(180deg, rgba(255, 250, 242, 0.55), rgba(255, 247, 236, 0.72)),
     linear-gradient(90deg, rgba(255, 250, 243, 0.88) 0%, rgba(255, 250, 243, 0.62) 46%, rgba(255, 250, 243, 0.18) 100%),
     url("/aion-dashboard-intention-background-v1.png");
   background-size: auto, auto, cover;
-  background-position: center, center, center bottom;
+  background-position: center, center, 56% bottom;
   box-shadow: 0 18px 34px rgba(78, 58, 43, 0.06);
 }
 
 .aion-dashboard-side-story-lead {
-  min-height: 11.4rem;
-  padding: 1.24rem;
-  background-position: center, center, 62% bottom;
+  min-height: 10.8rem;
+  padding: 1.08rem;
+  background-position: center, center, 60% bottom;
 }
 
 .aion-dashboard-guidance-intention {
-  min-height: 12.8rem;
+  min-height: 11.5rem;
 }
 
 .aion-dashboard-flow-panel,
 .aion-dashboard-summary-band {
-  padding: 1.16rem;
+  padding: 1rem;
 }
 
 .aion-dashboard-flow-panel-bridge {
@@ -2884,13 +2884,13 @@ body {
 
 .aion-dashboard-flow-shell {
   display: grid;
-  gap: 1rem;
+  gap: 0.88rem;
   align-items: stretch;
 }
 
 .aion-dashboard-flow-intro {
   display: grid;
-  gap: 1rem;
+  gap: 0.84rem;
 }
 
 .aion-dashboard-lower-grid {
@@ -2898,7 +2898,7 @@ body {
 }
 
 .aion-dashboard-lower-grid-condensed {
-  gap: 0.78rem;
+  gap: 0.68rem;
 }
 
 .aion-dashboard-flow-header {
@@ -2911,8 +2911,8 @@ body {
 .aion-dashboard-flow-track {
   display: grid;
   position: relative;
-  gap: 0.9rem;
-  margin-top: 1.25rem;
+  gap: 0.72rem;
+  margin-top: 1rem;
 }
 
 .aion-dashboard-flow-track::before {
@@ -2936,7 +2936,7 @@ body {
   position: relative;
   border: 1px solid rgba(88, 67, 52, 0.08);
   border-radius: 999px;
-  padding: 0.9rem 0.85rem 1rem;
+  padding: 0.82rem 0.78rem 0.92rem;
   background: rgba(255, 251, 245, 0.8);
   text-align: center;
   backdrop-filter: blur(12px);
@@ -2994,13 +2994,13 @@ body {
 }
 
 .aion-dashboard-card {
-  padding: 1.25rem;
+  padding: 1.08rem;
 }
 
 .aion-dashboard-flow-phase {
   border: 1px solid rgba(88, 67, 52, 0.08);
   border-radius: 1.65rem;
-  padding: 1.12rem;
+  padding: 1rem;
   background:
     linear-gradient(180deg, rgba(255, 251, 245, 0.9), rgba(244, 235, 223, 0.76));
   box-shadow:
@@ -3032,7 +3032,7 @@ body {
 }
 
 .aion-dashboard-summary-layout-closure {
-  gap: 0.88rem;
+  gap: 0.72rem;
 }
 
 .aion-dashboard-progress {
@@ -3159,7 +3159,7 @@ body {
 
 .aion-dashboard-summary-scenic {
   position: relative;
-  min-height: 15.6rem;
+  min-height: 14.2rem;
   border: 1px solid rgba(88, 67, 52, 0.08);
   border-radius: 1.65rem;
   overflow: hidden;
@@ -3168,14 +3168,14 @@ body {
     linear-gradient(180deg, rgba(255, 252, 248, 0.28), rgba(248, 241, 232, 0.18)),
     url("/aion-dashboard-summary-band-reference-v1.png");
   background-size: auto, auto, cover;
-  background-position: center, center, 56% center;
+  background-position: center, center, 60% center;
 }
 
 .aion-dashboard-summary-scenic-copy {
   position: relative;
   z-index: 1;
-  max-width: 29rem;
-  padding: 1.4rem;
+  max-width: 26rem;
+  padding: 1.12rem;
 }
 
 .aion-dashboard-summary-harmony,
@@ -3183,7 +3183,7 @@ body {
   border: 1px solid rgba(88, 67, 52, 0.08);
   border-radius: 1.55rem;
   background: rgba(255, 251, 245, 0.78);
-  padding: 1.18rem;
+  padding: 1.02rem;
 }
 
 .aion-dashboard-summary-harmony {
@@ -3718,12 +3718,12 @@ body {
 
 @media (min-width: 900px) {
   .aion-dashboard-stage {
-    grid-template-columns: minmax(0, 1.64fr) minmax(18.6rem, 0.38fr);
+    grid-template-columns: minmax(0, 1.72fr) minmax(17.4rem, 0.32fr);
     align-items: start;
   }
 
   .aion-dashboard-hero-grid {
-    grid-template-columns: minmax(10.8rem, 0.34fr) minmax(0, 1.54fr) minmax(10.8rem, 0.34fr);
+    grid-template-columns: minmax(9.8rem, 0.28fr) minmax(0, 1.66fr) minmax(9.8rem, 0.28fr);
   }
 
   .aion-dashboard-flow-track {
@@ -3731,7 +3731,7 @@ body {
   }
 
   .aion-dashboard-flow-shell {
-    grid-template-columns: minmax(0, 1.42fr) minmax(15rem, 0.58fr);
+    grid-template-columns: minmax(0, 1.5fr) minmax(14rem, 0.5fr);
     align-items: stretch;
   }
 
@@ -3741,11 +3741,11 @@ body {
   }
 
   .aion-dashboard-summary-scenic-closure {
-    min-height: 19rem;
+    min-height: 17.8rem;
   }
 
   .aion-dashboard-summary-layout-closure {
-    grid-template-columns: minmax(13.8rem, 0.56fr) minmax(14.6rem, 0.72fr) minmax(0, 1.42fr);
+    grid-template-columns: minmax(13rem, 0.5fr) minmax(13.8rem, 0.66fr) minmax(0, 1.5fr);
   }
 
   .aion-chat-stage {
