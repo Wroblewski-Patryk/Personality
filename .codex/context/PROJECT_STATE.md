@@ -4,6 +4,32 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
+- 2026-04-29: `PRJ-800E` completed the screenshot-driven public landing parity
+  pass:
+  - `web/src/App.tsx` now:
+    - removes the extra landing eyebrow and trims the hero-pill inventory
+    - simplifies the bridge lead so the first continuation below the hero is
+      less repetitive
+  - `web/src/index.css` now:
+    - further tightens the landing frame, hero proportions, and copy rhythm
+    - gives the motif scene more atmospheric scale with a softer panel feel
+    - overlaps the bridge band into the hero so the first viewport reads like
+      one integrated flagship composition
+  - result:
+    - the landing now behaves much closer to the canonical one-scene read
+      instead of separate copy, art, and strip blocks
+    - the biggest remaining public-home gap is now deployed screenshot tuning,
+      not another structural rewrite
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800E-public-home-screenshot-parity-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+  - parity evidence:
+    - `.codex/artifacts/local-home-after-prj800e-v2.png`
+    - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
+  - highest-value next steps:
+    - compare the deployed landing after push
+    - continue with the next dashboard screenshot-parity closure loop
+
 - 2026-04-29: `PRJ-800D` completed the next dashboard canonical-composition
   slice:
   - `web/src/App.tsx` now:

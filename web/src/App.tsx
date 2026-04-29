@@ -2667,7 +2667,6 @@ export default function App() {
               <main className="aion-public-home" id="aviary-home">
                 <section className="aion-public-hero">
                   <div className="aion-public-hero-copy">
-                    <p className="aion-public-section-label aion-public-hero-label">{copy.auth.badge}</p>
                     <h1 className="aion-public-hero-title">{publicHomeSurface.quote}</h1>
                     <p className="aion-public-hero-body">{publicHomeSurface.subquote}</p>
                     <div className="aion-public-cta-row">
@@ -2693,7 +2692,7 @@ export default function App() {
                       </button>
                     </div>
                     <div className="aion-public-pillar-row">
-                      {publicHomeSurface.pillars.map((pillar) => (
+                      {publicHomeSurface.pillars.slice(0, 3).map((pillar) => (
                         <span key={pillar.title} className="aion-public-pillar-pill">
                           {pillar.title}
                         </span>
@@ -2712,10 +2711,6 @@ export default function App() {
                 </section>
 
                 <section className="aion-public-feature-bridge aion-panel-soft rounded-[2rem] p-4 md:p-5">
-                  <div className="aion-public-feature-bridge-lead">
-                    <p className="aion-public-section-label">{publicHomeSurface.proofLine}</p>
-                    <p className="aion-public-feature-bridge-title">{publicHomeSurface.quote}</p>
-                  </div>
                   <div className="aion-public-feature-strip">
                     {publicHomeSurface.pillars.map((pillar, index) => (
                       <article key={pillar.title} className="aion-public-feature-card">
@@ -2729,7 +2724,7 @@ export default function App() {
                     <div className="aion-public-proof-bridge-copy">
                       <p className="aion-public-section-label">{publicHomeSurface.proofLine}</p>
                       <p className="aion-public-proof-bridge-body">
-                        {publicHomeSurface.subquote}
+                        {publicHomeSurface.quote}
                       </p>
                     </div>
                     <div className="aion-public-proof-bridge-list">

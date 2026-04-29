@@ -2,6 +2,31 @@
 
 Last updated: 2026-04-29
 
+## Fresh Public-Home Screenshot Parity Pass (2026-04-29)
+
+- `PRJ-800E` is now DONE as the screenshot-driven landing refinement slice:
+  - `.codex/tasks/PRJ-800E-public-home-screenshot-parity-pass.md`
+- purpose:
+  - push the public landing closer to canonical first-viewport parity by
+    integrating the hero, motif scene, and bridge band more tightly
+- implemented:
+  - tightened the landing frame, hero proportions, and copy rhythm again
+  - softened and enlarged the motif scene so the shared persona reads less
+    like a boxed panel and more like one flagship atmosphere
+  - turned the bridge band into an overlapping continuation of the hero instead
+    of a separate strip below it
+  - calmed the immediate lower story pacing so the first screen reads more like
+    one editorial composition
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800E-public-home-screenshot-parity-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- parity evidence:
+  - `.codex/artifacts/local-home-after-prj800e-v2.png`
+  - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
+- highest-value remaining drift after this slice:
+  - deployed screenshot compare for the landing
+  - then another dashboard parity loop on the stabilized shell and landing family
+
 ## Fresh Dashboard Canonical Convergence Pass (2026-04-29)
 
 - `PRJ-800D` is now DONE as the next execution slice after `public home`:
