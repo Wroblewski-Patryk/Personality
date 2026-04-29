@@ -4,6 +4,24 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
+- 2026-04-29: `PRJ-800H` completed the structural public-entry correction:
+  - `web/src/App.tsx` now:
+    - resolves `/` to the public landing route instead of private dashboard entry
+    - keeps the fullscreen bootstrap card only for private routes
+  - result:
+    - public entry is now landing-first locally on both `/` and `/login`
+    - the canonical landing can finally function as the actual first impression,
+      not a fallback after auth bootstrap
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/App.tsx .codex/tasks/PRJ-800H-make-public-entry-landing-first.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+  - route evidence:
+    - `.codex/artifacts/local-root-after-prj800h.png`
+    - `.codex/artifacts/local-login-after-prj800h.png`
+  - highest-value next steps:
+    - confirm on production that `/` no longer shows the fullscreen bootstrap card
+    - continue the next visual parity loop for `home` and `dashboard`
+
 - 2026-04-29: `PRJ-800G` started the next production-driven public-home parity loop:
   - `web/src/App.tsx` now:
     - replaces the hero feature-pill row with a lighter micro-proof row based on existing trust-band items

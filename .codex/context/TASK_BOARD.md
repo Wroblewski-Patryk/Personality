@@ -2,6 +2,26 @@
 
 Last updated: 2026-04-29
 
+## Fresh Public Entry Landing-First Fix (2026-04-29)
+
+- `PRJ-800H` is now DONE as the structural public-entry correction:
+  - `.codex/tasks/PRJ-800H-make-public-entry-landing-first.md`
+- purpose:
+  - make the public shell truly landing-first instead of auth-first on root entry
+- implemented:
+  - `/` now resolves to the public landing route instead of dashboard
+  - the fullscreen bootstrap card now stays scoped to private routes
+  - unauthenticated entry renders the public landing immediately on both `/` and `/login`
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx .codex/tasks/PRJ-800H-make-public-entry-landing-first.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- route evidence:
+  - `.codex/artifacts/local-root-after-prj800h.png`
+  - `.codex/artifacts/local-login-after-prj800h.png`
+- highest-value remaining drift after this slice:
+  - production must pick up the new revision so `/` can be rechecked live
+  - then continue the next parity loop for `home` and `dashboard`
+
 ## Fresh Public-Home Production Parity Slice (2026-04-29)
 
 - `PRJ-800G` is now IN_PROGRESS as the next production-driven home refinement:

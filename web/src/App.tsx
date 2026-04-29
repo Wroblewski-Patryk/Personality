@@ -601,8 +601,11 @@ const UI_COPY = {
 } as const;
 
 function normalizeRoute(pathname: string): RoutePath {
-  if (pathname === "/dashboard" || pathname === "/") {
+  if (pathname === "/dashboard") {
     return "/dashboard";
+  }
+  if (pathname === "/") {
+    return "/login";
   }
   if (pathname === "/settings") {
     return "/settings";
@@ -2350,6 +2353,7 @@ export default function App() {
     quote: publicQuote[resolvedUiLanguage],
     subquote: publicSubquote[resolvedUiLanguage],
   };
+  const isPublicRoute = route === "/login";
 
   function changeRoute(nextRoute: RoutePath) {
     startTransition(() => {
@@ -2610,7 +2614,7 @@ export default function App() {
     }
   }
 
-  if (initializing) {
+  if (initializing && !isPublicRoute) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-base-100 px-6 text-base-content">
         <div className="w-full max-w-md">
