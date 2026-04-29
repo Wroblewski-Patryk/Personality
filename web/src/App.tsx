@@ -3023,15 +3023,23 @@ export default function App() {
                         ))}
                     </div>
                   </div>
+
+                  <section className="aion-dashboard-hero-note">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-base-800">Embodied field</p>
+                    <p className="mt-2 text-sm leading-7 text-base-800">
+                      Memory, motivation, planning, and reflection remain visible together so the workspace reads like one
+                      living cognition scene instead of separate tools.
+                    </p>
+                  </section>
                 </div>
 
-                <aside className="aion-dashboard-guidance-panel">
+                <aside className="aion-dashboard-guidance-panel aion-dashboard-guidance-column">
                   <div className="mb-5">
                     <p className="text-sm uppercase tracking-[0.22em] text-base-800">Insights and guidance</p>
                     <h3 className="mt-2 font-display text-2xl text-base-900">Curated for you</h3>
                   </div>
                   <div className="aion-dashboard-guidance-card-stack">
-                    {dashboardGuidanceCards.map((card, index) => (
+                    {dashboardGuidanceCards.slice(0, 3).map((card, index) => (
                       <article
                         key={card.title}
                         className={`aion-dashboard-guidance-card ${
@@ -3052,6 +3060,18 @@ export default function App() {
                       </article>
                     ))}
                   </div>
+
+                  <section className="aion-dashboard-side-story aion-dashboard-side-story-lead aion-dashboard-guidance-intention">
+                    <p className="text-sm uppercase tracking-[0.22em] text-base-800">Today's intention</p>
+                    <p className="mt-4 font-display text-2xl leading-tight text-base-900">
+                      Create with clarity.
+                      <br />
+                      Serve with purpose.
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-base-800">
+                      Let the next action feel coherent with your memory, current goals, and inner rhythm.
+                    </p>
+                  </section>
 
                   <section
                     className={`aion-dashboard-channel-status aion-dashboard-channel-status-compact aion-dashboard-channel-status-${dashboardConversationStatus.tone}`}
@@ -3096,15 +3116,6 @@ export default function App() {
                       ))}
                     </div>
                   </section>
-
-                  <section className="aion-dashboard-side-story aion-dashboard-side-story-lead">
-                    <p className="text-sm uppercase tracking-[0.22em] text-base-800">Today's intention</p>
-                    <p className="mt-4 font-display text-2xl leading-tight text-base-900">
-                      Create with clarity.
-                      <br />
-                      Serve with purpose.
-                    </p>
-                  </section>
                 </aside>
               </section>
 
@@ -3119,7 +3130,11 @@ export default function App() {
                   </div>
                 </div>
                 <div className="aion-dashboard-flow-layout">
-                  <div className="aion-dashboard-flow-track">
+                  <div className="aion-dashboard-flow-bridge-copy">
+                    <p className="font-display text-3xl text-base-900">{dashboardCurrentPhase.title}</p>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-base-800">{dashboardCurrentPhase.body}</p>
+                  </div>
+                  <div className="aion-dashboard-flow-track aion-dashboard-flow-track-bridge">
                     {dashboardCognitiveSteps.map((step) => (
                       <article
                         key={step.title}
@@ -3131,17 +3146,9 @@ export default function App() {
                       </article>
                     ))}
                   </div>
-                  <aside className="aion-dashboard-flow-sidecard">
-                    <p className="text-sm uppercase tracking-[0.2em] text-base-800">Current phase</p>
-                    <p className="mt-3 font-display text-3xl text-base-900">{dashboardCurrentPhase.title}</p>
-                    <p className="mt-3 text-sm leading-7 text-base-800">{dashboardCurrentPhase.body}</p>
-                    <button className="aion-dashboard-action-button mt-5" type="button">
-                      View full flow
-                    </button>
-                  </aside>
                 </div>
                 <div className="aion-dashboard-flow-notes">
-                  {dashboardFlowItems.slice(0, 2).map((item) => (
+                  {dashboardFlowItems.map((item) => (
                     <article key={item.title} className="aion-dashboard-flow-note">
                       <p className="text-[11px] uppercase tracking-[0.2em] text-base-800">{item.eyebrow}</p>
                       <p className="mt-2 text-base font-semibold text-base-900">{item.title}</p>
@@ -3151,7 +3158,7 @@ export default function App() {
                 </div>
               </section>
 
-              <section className="aion-dashboard-lower-grid aion-dashboard-lower-grid-condensed grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.78fr)_minmax(0,0.88fr)]">
+              <section className="aion-dashboard-lower-grid aion-dashboard-lower-grid-condensed grid gap-3 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.72fr)_minmax(0,0.78fr)_minmax(0,0.84fr)]">
                 <article className="aion-panel-soft aion-dashboard-card aion-dashboard-card-primary">
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -3211,14 +3218,27 @@ export default function App() {
                     ))}
                   </div>
                 </article>
+
+                <article className="aion-panel-soft aion-dashboard-card aion-dashboard-card-reflection">
+                  <p className="text-sm uppercase tracking-[0.2em] text-base-800">Reflection highlights</p>
+                  <h3 className="mt-2 font-display text-2xl text-base-900">What is becoming clearer</h3>
+                  <div className="aion-dashboard-reflection-list mt-5">
+                    {dashboardReflectionRows.map((row) => (
+                      <div key={row.title} className="aion-dashboard-reflection-row">
+                        <span className="aion-dashboard-reflection-tag">{row.tag}</span>
+                        <p>{row.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                </article>
               </section>
 
               <section className="grid gap-4">
                 <article className="aion-panel aion-dashboard-summary-band aion-dashboard-summary-band-closure">
                   <div className="aion-dashboard-summary-layout aion-dashboard-summary-layout-closure">
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="aion-dashboard-summary-metrics">
                       {dashboardBottomStats.map((stat) => (
-                        <div key={stat.label} className="aion-dashboard-summary-item">
+                        <div key={stat.label} className="aion-dashboard-summary-item aion-dashboard-summary-item-compact">
                           <p className="text-sm uppercase tracking-[0.2em] text-base-800">{stat.label}</p>
                           <p className="mt-3 font-display text-3xl text-base-900">{stat.value}</p>
                           <p className="mt-2 text-sm text-base-800">{stat.detail}</p>

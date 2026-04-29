@@ -4,6 +4,49 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
+- 2026-04-29: `PRJ-778` captured a planning-grade analysis for the reported
+  short-term memory / proactive cadence drift:
+  - user evidence showed repeated proactive Telegram-style check-ins every
+    ~30 minutes despite explicit instructions not to write that often and not
+    to greet on every message
+  - current runtime already loads more than one memory item
+    (`RuntimeOrchestrator.MEMORY_LOAD_LIMIT=12`), so increasing the recent
+    window to 25 may be a secondary tuning option but is not the core fix
+  - likely root cause is preference propagation:
+    - narrow explicit proactive preference phrase detection
+    - older `proactive_opt_in=true` can remain the scheduler candidate driver
+    - no durable greeting-style preference currently shapes expression
+  - the approved repair path should reuse existing preference/conclusion,
+    planning intent, action persistence, proactive guard, and expression
+    owners rather than introducing a new short-term memory subsystem
+  - plan artifact:
+    - `.codex/tasks/PRJ-778-plan-short-term-memory-and-proactive-style-respect.md`
+
+- 2026-04-29: `PRJ-779` pushed the dashboard into its next structural
+  convergence pass:
+  - the dashboard hero now ends with a dedicated bridge note so the cognition
+    field reads more like one flagship scene
+  - the right editorial column is calmer and more ordered:
+    - guidance
+    - intention
+    - conversation channel
+    - recent activity
+  - the `cognitive flow` band no longer carries a competing sidecard; current
+    phase meaning now lives inside the bridge itself
+  - the lower row now separates:
+    - active goals
+    - current focus
+    - memory growth
+    - reflection highlights
+  - the final closure now gives relatively more authority to the scenic summary
+    and less to late-route stat density
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/App.tsx web/src/index.css`
+  - highest-value next step:
+    - fresh deploy screenshots and canonical parity review for `public home`
+      and `dashboard`
+
 - 2026-04-29: `PRJ-776` started the first real implementation slice from the
   layout/dashboard/public-home master audit:
   - unauthenticated entry is no longer structured as a standalone auth page

@@ -2,6 +2,54 @@
 
 Last updated: 2026-04-29
 
+## Fresh Short-Term Memory And Proactive Style Respect Plan (2026-04-29)
+
+- `PRJ-778` is now READY as a planning slice:
+  - `.codex/tasks/PRJ-778-plan-short-term-memory-and-proactive-style-respect.md`
+- fresh user evidence showed repeated proactive Telegram-style check-ins every
+  ~30 minutes on 2026-04-29, despite user instructions not to write that often
+  and not to greet on every message
+- planning analysis found the likely issue is not simply a one-message context
+  window:
+  - foreground runtime already loads `RuntimeOrchestrator.MEMORY_LOAD_LIMIT=12`
+  - proactive scheduler candidate selection is driven by persisted
+    `proactive_opt_in` truth plus candidate state
+  - current phrase detection is too narrow for natural Polish instructions such
+    as "nie pisz do mnie co pol godziny"
+  - greeting repetition has no explicit durable style preference owner yet
+- recommended implementation should reuse existing preference/conclusion,
+  planning intent, action persistence, proactive guard, and expression paths
+  rather than introducing a new short-term memory subsystem
+- next smallest implementation slice:
+  - detect explicit cadence opt-down/opt-out phrases
+  - persist them through existing action-owned conclusion writes
+  - make proactive candidate/guard logic honor newer explicit preference truth
+  - add a focused greeting-style preference consumed by expression
+  - cover the reported multi-turn behavior with tests
+
+## Fresh Dashboard Structural Convergence Pass (2026-04-29)
+
+- `PRJ-779` is now IN_PROGRESS as the next execution slice after `PRJ-776`:
+  - `.codex/tasks/PRJ-779-dashboard-structural-canonical-convergence-pass.md`
+- `web/src/App.tsx` now reshapes the dashboard through:
+  - a hero-note bridge beneath the cognition scene
+  - a more editorial right column ordered around guidance, intention, channel,
+    and recent activity
+  - a simpler `cognitive flow` bridge without the competing sidecard
+  - a differentiated lower row that now includes a dedicated reflection card
+  - a lighter summary-metric column so scenic closure carries more of the ending
+- `web/src/index.css` now supports:
+  - the new dashboard hero-note rhythm
+  - calmer flow-bridge layout
+  - compact summary metrics
+  - reflection-list treatment in the lower row
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx web/src/index.css`
+- highest-value remaining drift after this slice:
+  - browser screenshot parity for `public home + dashboard`
+  - final crop and responsive tuning after deploy review
+
 ## Fresh Public Home And Parent Shell Frame Pass (2026-04-29)
 
 - `PRJ-776` is now IN_PROGRESS as the first execution slice from the
