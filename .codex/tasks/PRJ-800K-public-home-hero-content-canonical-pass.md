@@ -1,64 +1,63 @@
 # Task
 
 ## Header
-- ID: PRJ-800J
-- Title: Public home first viewport live closure pass
+- ID: PRJ-800K
+- Title: Public home hero content canonical pass
 - Task Type: design
 - Current Stage: verification
-- Status: DONE
+- Status: IN_PROGRESS
 - Owner: Frontend Builder
-- Depends on: PRJ-800I
+- Depends on: PRJ-800J
 - Priority: P1
 
 ## Context
-`PRJ-800I` improved public-home parity and production now proves the landing is
-materially calmer. The latest live screenshot, however, shows that the first
-viewport still drifts from the canonical landing in three concrete ways:
+Fresh production evidence after `PRJ-800J` shows that the public landing first
+viewport is now structurally calmer, but it still drifts from the canonical
+landing because the hero message itself is too long and too slogan-like for the
+reference composition.
 
-- the headline column still dominates too much relative to the shared persona
-- the persona stage still behaves like a right panel instead of one central
-  scene
-- the bridge band still lands too low and too wide, which allows the auth
-  surface to creep into the first read
+The remaining gap is no longer just spacing. It is the relationship between:
 
-This task targets only that first-viewport closure loop using the latest live
-deploy evidence.
+- hero title length
+- hero body density
+- the shared persona stage
+
+The canonical landing uses a short introductory lead and lets the figure stage
+carry more of the emotional authority. This task moves the public landing
+toward that contract without inventing new route systems.
 
 ## Goal
-Bring the public-home first viewport closer to canonical parity by reducing
-headline dominance, increasing persona-stage authority, and compressing the
-bridge band into a cleaner end-stop before lower content begins.
+Bring the public-home hero closer to canonical parity by shortening the hero
+title, moving more meaning into calmer supporting copy, and rebalancing the
+first viewport around that lighter narrative center.
 
 ## Deliverable For This Stage
 A focused implementation pass in `web/src/App.tsx` and `web/src/index.css`
-that improves the first viewport on the live landing without inventing any new
-public-home subsystems.
+that changes hero content and matching first-viewport proportions for the
+public landing.
 
 ## Scope
 - `web/src/App.tsx`
 - `web/src/index.css`
-- `.codex/tasks/PRJ-800I-public-home-live-hero-bridge-parity-pass.md`
 - `.codex/tasks/PRJ-800J-public-home-first-viewport-live-closure-pass.md`
+- `.codex/tasks/PRJ-800K-public-home-hero-content-canonical-pass.md`
 - `.codex/context/TASK_BOARD.md`
 - `.codex/context/PROJECT_STATE.md`
 
 ## Implementation Plan
-1. Record the production evidence from `PRJ-800I` and close it as a completed
-   proof-backed slice.
-2. Reduce hero-copy dominance through proportion and type changes rather than
-   new sections.
-3. Expand and re-center the shared persona scene so it reads closer to the
-   canonical landing composition.
-4. Tighten the bridge band so it behaves like the final movement of the hero
-   instead of a separate, wide support block.
-5. Run focused validation and sync repo truth.
+1. Close `PRJ-800J` with the current production evidence.
+2. Introduce a shorter canonical hero-title contract for public-home copy.
+3. Rebalance the supporting body copy and CTA rhythm around that lighter title.
+4. Tune first-viewport proportions so the persona stage benefits from the new
+   lighter hero message.
+5. Validate, record parity evidence, and sync repo truth.
 
 ## Acceptance Criteria
-- The public landing first viewport reads more as one canonical scene.
-- The headline no longer overwhelms the stage.
-- The bridge band ends the hero cleanly and pushes lower content out of the
-  first read.
-- Validation passes and repo truth reflects the new slice.
+- The public landing hero title is materially shorter and closer to the
+  canonical landing posture.
+- The hero body remains informative without reintroducing heavy text density.
+- The first viewport reads more as one flagship scene around the shared persona.
+- Validation passes and repo truth reflects the slice.
 
 ## Constraints
 - use existing systems and approved mechanisms
@@ -68,8 +67,8 @@ public-home subsystems.
 - stay within the declared current stage unless explicit approval changes it
 
 ## Definition of Done
-- [x] Live evidence for `PRJ-800I` is recorded and that slice is closed honestly.
-- [x] First-viewport proportions are improved in code.
+- [x] `PRJ-800J` is closed honestly with deploy proof.
+- [x] Public-home hero content is lighter and more canonical.
 - [x] Validation and source-of-truth updates match the changed scope.
 
 ## Stage Exit Criteria
@@ -87,16 +86,16 @@ public-home subsystems.
 ## Validation Evidence
 - Tests:
   - `Push-Location .\web; npm run build; Pop-Location`
-  - `git diff --check -- web/src/index.css .codex/tasks/PRJ-800I-public-home-live-hero-bridge-parity-pass.md .codex/tasks/PRJ-800J-public-home-first-viewport-live-closure-pass.md`
+  - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800J-public-home-first-viewport-live-closure-pass.md .codex/tasks/PRJ-800K-public-home-hero-content-canonical-pass.md`
 - Manual checks:
-  - compared fresh production evidence against the canonical landing
-  - captured a local preview screenshot after the new first-viewport pass
+  - compared fresh production evidence after `PRJ-800J` against the canonical landing
+  - captured a new local preview screenshot after the hero-content pass
 - Screenshots/logs:
-  - production evidence: `.codex/artifacts/prod-login-live-after-prj800i-wait.png`
-  - local proof: `.codex/artifacts/local-login-after-prj800j.png`
+  - production evidence: `.codex/artifacts/prod-login-live-after-prj800j.png`
+  - local proof: `.codex/artifacts/local-login-after-prj800k.png`
   - canonical target: `docs/ux/assets/aion-landing-canonical-reference-v1.png`
 - High-risk checks:
-  - kept the pass within the existing public-home layout and shared persona system
+  - kept the slice inside the existing public-home system and shared persona stage
 
 ## Architecture Evidence (required for architecture-impacting tasks)
 - Architecture source reviewed:
@@ -110,7 +109,7 @@ public-home subsystems.
 
 ## UX/UI Evidence (required for UX tasks)
 - Design source type: approved_snapshot
-- Design source reference: `.codex/artifacts/prod-login-live-after-prj800i-wait.png`
+- Design source reference: `.codex/artifacts/prod-login-live-after-prj800j.png`
 - Canonical visual target: `docs/ux/assets/aion-landing-canonical-reference-v1.png`
 - Fidelity target: pixel_close
 - Stitch used: no
@@ -121,19 +120,19 @@ public-home subsystems.
 - Design-memory entry reused: `docs/ux/design-memory.md`
 - Design-memory update required: no
 - Visual gap audit completed: yes
-- Background or decorative asset strategy: reuse the existing painterly persona asset and route atmosphere
+- Background or decorative asset strategy: reuse the current shared persona and route atmosphere assets
 - Canonical asset extraction required: no
 - Screenshot comparison pass completed: yes
 - Remaining mismatches:
-  - the hero message itself still needs one more canonical pass
-  - the bridge band is cleaner now, but the lower story/auth boundary still needs a later pass
+  - deploy-side proof is still needed for this exact hero-content change
+  - the lower story and auth-priority still remain for a later landing pass
 - State checks: loading | empty | error | success
 - Responsive checks: desktop | tablet | mobile
 - Input-mode checks: touch | pointer | keyboard
-- Accessibility checks: existing button and link semantics preserved
+- Accessibility checks: existing buttons and links keep their prior semantics
 - Parity evidence:
-  - `.codex/artifacts/prod-login-live-after-prj800i-wait.png`
-  - `.codex/artifacts/local-login-after-prj800j.png`
+  - `.codex/artifacts/prod-login-live-after-prj800j.png`
+  - `.codex/artifacts/local-login-after-prj800k.png`
   - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
 
 ## Deployment / Ops Evidence (required for runtime or infra tasks)
@@ -141,7 +140,7 @@ public-home subsystems.
 - Env or secret changes: none
 - Health-check impact: none
 - Smoke steps updated: not needed
-- Rollback note: revert this slice if hero hierarchy regresses
+- Rollback note: revert this slice if public-home message hierarchy regresses
 
 ## Review Checklist (mandatory)
 - [x] Current stage is declared and respected.
@@ -152,12 +151,12 @@ public-home subsystems.
 - [x] No logic duplication was introduced.
 - [x] Definition of Done evidence is attached.
 - [x] Relevant validations were run.
-- [x] Docs or context were updated if repository truth changed.
+- [ ] Docs or context were updated if repository truth changed.
 - [ ] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
-This slice remains scoped to the public landing. Dashboard parity continues in
-its own lane after this first-viewport loop.
+This slice is still confined to public-home parity. It should not spill into
+dashboard or authenticated shell work in the same cycle.
 
 ## Production-Grade Required Contract
 
@@ -200,14 +199,14 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
 ## Result Report
 
 - Task summary:
-  - closed `PRJ-800I` with live production evidence
-  - reduced first-viewport headline dominance
-  - gave the shared persona more stage authority
-  - tightened the bridge band to end the hero more cleanly
+  - shortened the landing hero into a more canonical introductory lead
+  - moved more meaning into calmer supporting body copy
+  - rebalanced the first viewport around the lighter hero message and shared persona stage
 - Files changed:
+  - `web/src/App.tsx`
   - `web/src/index.css`
-  - `.codex/tasks/PRJ-800I-public-home-live-hero-bridge-parity-pass.md`
   - `.codex/tasks/PRJ-800J-public-home-first-viewport-live-closure-pass.md`
+  - `.codex/tasks/PRJ-800K-public-home-hero-content-canonical-pass.md`
   - `.codex/context/TASK_BOARD.md`
   - `.codex/context/PROJECT_STATE.md`
 - How tested:
@@ -216,11 +215,11 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
   - production screenshot comparison
   - local preview screenshot comparison
 - What is incomplete:
-  - final public-home hero-content tuning
-  - later public-home lower-story/auth-priority tuning
-  - dashboard continues as a separate parity lane
+  - deploy-side confirmation for this exact slice
+  - later lower-story/auth-priority tuning if landing still drifts
 - Next steps:
-  - continue the next hero-content slice from this evidence
+  - push and inspect production `/` and `/login`
+  - then either close public-home or return to dashboard parity
 - Decisions made:
-  - solved the next drift through proportion and closure tuning, not new sections
-  - kept the shared persona as the visual anchor of the landing
+  - used a shorter canonical hero lead instead of fighting the layout with a long slogan
+  - preserved the shared persona as the primary emotional anchor

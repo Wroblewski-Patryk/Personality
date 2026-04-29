@@ -168,8 +168,8 @@ body {
   display: grid;
   gap: 0.66rem;
   align-content: start;
-  max-width: 19.2rem;
-  padding: 1.25rem 0.05rem 0.1rem 0.08rem;
+  max-width: 20.8rem;
+  padding: 1.45rem 0.05rem 0.1rem 0.08rem;
   position: relative;
   z-index: 2;
 }
@@ -186,19 +186,19 @@ body {
 
 .aion-public-hero-title {
   margin: 0;
-  max-width: 5.9ch;
+  max-width: 8.6ch;
   font-family: var(--font-display, ui-serif);
-  font-size: clamp(2.7rem, 3.55vw, 4rem);
-  line-height: 0.92;
+  font-size: clamp(2.4rem, 3.15vw, 3.42rem);
+  line-height: 0.94;
   letter-spacing: -0.03em;
   color: var(--aion-ink);
 }
 
 .aion-public-hero-body {
   margin: 0;
-  max-width: 15.8rem;
-  font-size: 0.78rem;
-  line-height: 1.62;
+  max-width: 17.2rem;
+  font-size: 0.8rem;
+  line-height: 1.68;
   color: var(--aion-muted);
 }
 
@@ -253,7 +253,7 @@ body {
 .aion-public-hero-stage {
   position: relative;
   padding-right: 0;
-  margin-left: -3rem;
+  margin-left: -3.4rem;
   margin-bottom: -5.15rem;
   z-index: 1;
 }

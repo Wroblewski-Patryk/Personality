@@ -4,7 +4,29 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
-- 2026-04-29: `PRJ-800J` started the next first-viewport-only landing closure loop:
+- 2026-04-29: `PRJ-800K` started the next public-home hero-content pass:
+  - `web/src/App.tsx` now:
+    - introduces a shorter public-home hero title contract
+    - moves supporting meaning into calmer hero body copy
+  - `web/src/index.css` now:
+    - rebalances the first viewport around the lighter hero message
+    - lets the shared persona stage carry more of the flagship authority
+  - result so far:
+    - the landing hero is materially closer to the canonical introductory
+      posture in local proof
+    - deploy-side confirmation is still required for this exact slice
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800J-public-home-first-viewport-live-closure-pass.md .codex/tasks/PRJ-800K-public-home-hero-content-canonical-pass.md`
+  - parity evidence used:
+    - `.codex/artifacts/prod-login-live-after-prj800j.png`
+    - `.codex/artifacts/local-login-after-prj800k.png`
+    - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
+  - highest-value next steps:
+    - confirm this exact hero-content slice on production
+    - then either close public-home or return to dashboard parity
+
+- 2026-04-29: `PRJ-800J` completed the next first-viewport-only landing closure loop:
   - `web/src/index.css` now:
     - further reduces headline dominance
     - gives the shared persona more authority in the hero stage
@@ -21,9 +43,7 @@ Last updated: 2026-04-29
     - `.codex/artifacts/local-login-after-prj800j.png`
     - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
   - highest-value next steps:
-    - confirm this exact slice on production
-    - then decide whether public-home needs one final lower-story pass or we
-      return to dashboard parity
+    - use the new first-viewport state as the base for the hero-content pass
 
 - 2026-04-29: `PRJ-800I` completed the next live-driven landing parity loop:
   - `web/src/App.tsx` now:

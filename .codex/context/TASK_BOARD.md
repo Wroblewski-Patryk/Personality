@@ -2,9 +2,31 @@
 
 Last updated: 2026-04-29
 
+## Fresh Public-Home Hero Content Canonical Pass (2026-04-29)
+
+- `PRJ-800K` is now IN_PROGRESS as the next landing refinement slice:
+  - `.codex/tasks/PRJ-800K-public-home-hero-content-canonical-pass.md`
+- purpose:
+  - bring the hero message itself closer to canonical posture after the
+    first-viewport composition was stabilized
+- implemented in this slice:
+  - replaced the long slogan-like hero title with a shorter introductory lead
+  - moved more explanation into calmer supporting body copy
+  - rebalanced the hero proportions around the lighter message and shared persona
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800J-public-home-first-viewport-live-closure-pass.md .codex/tasks/PRJ-800K-public-home-hero-content-canonical-pass.md`
+- parity evidence:
+  - `.codex/artifacts/prod-login-live-after-prj800j.png`
+  - `.codex/artifacts/local-login-after-prj800k.png`
+  - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
+- remaining work before DONE:
+  - deploy-side confirmation for this exact slice
+  - then decide whether `home` needs one final lower-story pass or we return to `dashboard`
+
 ## Fresh Public-Home First Viewport Live Closure Pass (2026-04-29)
 
-- `PRJ-800J` is now IN_PROGRESS as the next viewport-only landing refinement:
+- `PRJ-800J` is now DONE as the previous viewport-only landing refinement:
   - `.codex/tasks/PRJ-800J-public-home-first-viewport-live-closure-pass.md`
 - purpose:
   - close the next visible gaps in the first landing viewport after live proof
@@ -22,9 +44,10 @@ Last updated: 2026-04-29
   - `.codex/artifacts/prod-login-live-after-prj800i-wait.png`
   - `.codex/artifacts/local-login-after-prj800j.png`
   - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
-- remaining work before DONE:
-  - deploy-side confirmation for this exact slice
-  - later lower-story/auth-priority tuning if live evidence still shows drift
+- closed with parity evidence:
+  - `.codex/artifacts/prod-login-live-after-prj800i-wait.png`
+  - `.codex/artifacts/local-login-after-prj800j.png`
+  - the next remaining hero drift is intentionally carried into `PRJ-800K`
 
 ## Fresh Public-Home Live Hero And Bridge Parity Pass (2026-04-29)
 

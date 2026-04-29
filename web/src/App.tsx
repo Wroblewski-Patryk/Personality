@@ -2334,6 +2334,16 @@ export default function App() {
     pl: "Zaufany przez uwaznych ludzi na calym swiecie",
     de: "Vertraut von achtsamen Menschen weltweit",
   } satisfies Record<ResolvedUiLanguageCode, string>;
+  const publicHeroTitle = {
+    en: "Meet Aviary",
+    pl: "Poznaj Aviary",
+    de: "Lerne Aviary kennen",
+  } satisfies Record<ResolvedUiLanguageCode, string>;
+  const publicHeroBody = {
+    en: "Your conscious companion for clarity, memory, and calm next steps.",
+    pl: "Twoj swiadomy towarzysz do jasnosci, pamieci i spokojnych kolejnych krokow.",
+    de: "Dein bewusster Begleiter fur Klarheit, Erinnerung und ruhige nachste Schritte.",
+  } satisfies Record<ResolvedUiLanguageCode, string>;
   const publicProofBridgeLead = {
     en: "Calm structure. Personal presence.",
     pl: "Spokojna struktura. Osobista obecnosc.",
@@ -2355,6 +2365,8 @@ export default function App() {
     pillars: publicFeaturePillars[resolvedUiLanguage],
     trustBand: publicTrustBandItems[resolvedUiLanguage],
     proofLine: publicProofLine[resolvedUiLanguage],
+    heroTitle: publicHeroTitle[resolvedUiLanguage],
+    heroBody: publicHeroBody[resolvedUiLanguage],
     proofBridgeLead: publicProofBridgeLead[resolvedUiLanguage],
     quote: publicQuote[resolvedUiLanguage],
     subquote: publicSubquote[resolvedUiLanguage],
@@ -2677,8 +2689,8 @@ export default function App() {
               <main className="aion-public-home" id="aviary-home">
                 <section className="aion-public-hero">
                   <div className="aion-public-hero-copy">
-                    <h1 className="aion-public-hero-title">{publicHomeSurface.quote}</h1>
-                    <p className="aion-public-hero-body">{publicHomeSurface.subquote}</p>
+                    <h1 className="aion-public-hero-title">{publicHomeSurface.heroTitle}</h1>
+                    <p className="aion-public-hero-body">{publicHomeSurface.heroBody}</p>
                     <div className="aion-public-cta-row">
                       <button
                         className="aion-public-cta aion-public-cta-primary"
