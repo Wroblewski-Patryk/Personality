@@ -2118,6 +2118,30 @@ export default function App() {
   const chatComposerTools = ["Attach", "Voice", "Memory", "Tools"];
   const chatCurrentFocus =
     stringValue(planningSummary?.active_goal_count, "0") !== "0" ? "Project planning" : "Conversation continuity";
+  const chatLinkedChannelsStatus = recentChannelsLabel === copy.common.noData ? "App only" : recentChannelsLabel;
+  const chatPersonaNotes = [
+    {
+      key: "memory",
+      className: "aion-chat-portrait-note aion-chat-portrait-note-memory",
+      eyebrow: "Memory continuity",
+      title: `${stringValue(preferenceSummary?.learned_preference_count, "0")} learned cues`,
+      body: "Earlier preferences and softer patterns stay available while the dialogue remains calm.",
+    },
+    {
+      key: "expression",
+      className: "aion-chat-portrait-note aion-chat-portrait-note-expression",
+      eyebrow: "Expression",
+      title: stringValue(me?.settings.preferred_language, "adaptive").toUpperCase(),
+      body: "The same persona adjusts tone and language without losing continuity or trust.",
+    },
+    {
+      key: "channels",
+      className: "aion-chat-portrait-note aion-chat-portrait-note-channels",
+      eyebrow: "Linked channels",
+      title: chatLinkedChannelsStatus,
+      body: "Conversation posture stays coherent whether the last turn lived here or beyond the app shell.",
+    },
+  ];
   const chatSupportCards = [
     {
       eyebrow: "Intent",
@@ -3507,6 +3531,19 @@ export default function App() {
 
                   <aside className="aion-chat-support-column">
                     <aside className="aion-chat-portrait-panel aion-chat-portrait-panel-elevated">
+                      {chatPersonaNotes.map((note) => (
+                        <article key={note.key} className={note.className}>
+                          <p className="aion-chat-portrait-note-eyebrow">{note.eyebrow}</p>
+                          <p className="aion-chat-portrait-note-title">{note.title}</p>
+                          <p className="aion-chat-portrait-note-body">{note.body}</p>
+                        </article>
+                      ))}
+                      <img
+                        alt=""
+                        aria-hidden="true"
+                        className="aion-chat-portrait-figure"
+                        src={CANONICAL_PERSONA_FIGURE_SRC}
+                      />
                       <div className="aion-chat-portrait-overlay">
                         <p className="text-[11px] uppercase tracking-[0.22em] text-[#5f8f93]">Planning</p>
                         <p className="mt-2 font-display text-2xl text-base-900">{chatCurrentFocus}</p>
@@ -3516,17 +3553,19 @@ export default function App() {
                             <span className="font-semibold text-base-900">High</span>
                           </div>
                           <div className="flex items-center justify-between gap-3">
-                            <span>Knowledge bridge</span>
-                            <span className="font-semibold text-[#5f8f93]">72%</span>
+                            <span>Learned cues</span>
+                            <span className="font-semibold text-[#5f8f93]">
+                              {stringValue(preferenceSummary?.learned_preference_count, "0")}
+                            </span>
                           </div>
                         </div>
                       </div>
                       <div className="aion-chat-portrait-copy">
                         <span className="aion-chip rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-base-900">
-                          Embodied cognition
+                          Shared persona
                         </span>
                         <p className="mt-4 max-w-[13rem] text-sm leading-7 text-base-800">
-                          Understanding leads to clarity. Clarity leads to action.
+                          The same embodied presence stays beside the thread, adapting to memory, language, and the next best reply.
                         </p>
                       </div>
                     </aside>

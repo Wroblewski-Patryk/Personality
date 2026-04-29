@@ -2,6 +2,24 @@
 
 Last updated: 2026-04-29
 
+## Fresh Shared Persona Chat Route Pass (2026-04-29)
+
+- `PRJ-796` is now DONE as the next flagship continuity slice:
+  - `.codex/tasks/PRJ-796-apply-shared-persona-to-chat-route.md`
+- purpose:
+  - move `chat` from route-specific portrait atmosphere toward the same
+    embodied Aviary persona already frozen for other flagship routes
+- implementation in progress:
+  - the chat portrait panel now layers the shared canonical persona over the
+    existing atmospheric backdrop
+  - conversation-specific note cards now frame memory continuity, expression,
+    and linked-channel posture
+  - assistant transcript avatars now reuse the same persona crop instead of a
+    generic letter avatar
+- highest-value remaining drift after this slice:
+  - deploy screenshot tuning for `chat` crop and support-column rhythm
+  - another parity pass for `dashboard` and `personality` after the shared-persona chat proof
+
 ## Fresh Shared Canonical Persona Figure Freeze (2026-04-29)
 
 - `PRJ-795` is now IN_PROGRESS as the next flagship persona-continuity slice:

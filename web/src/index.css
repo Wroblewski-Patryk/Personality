@@ -1408,9 +1408,13 @@ body {
   flex-shrink: 0;
   border-radius: 999px;
   border: 1px solid rgba(197, 145, 78, 0.42);
-  background: linear-gradient(180deg, rgba(255, 252, 247, 0.94), rgba(250, 239, 221, 0.94));
-  color: #c08437;
-  font-size: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 247, 0.72), rgba(250, 239, 221, 0.44)),
+    url("/aviary-persona-figure-canonical-reference-v1.png");
+  background-size: auto, cover;
+  background-position: center, center 14%;
+  color: transparent;
+  font-size: 0;
   font-weight: 700;
   box-shadow: 0 12px 24px rgba(197, 145, 78, 0.14);
 }
@@ -1776,11 +1780,11 @@ body {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(250, 245, 237, 0.95) 0%, rgba(250, 245, 237, 0.6) 26%, rgba(250, 245, 237, 0.06) 56%),
+    linear-gradient(90deg, rgba(250, 245, 237, 0.98) 0%, rgba(250, 245, 237, 0.72) 28%, rgba(250, 245, 237, 0.08) 58%),
     linear-gradient(180deg, rgba(255, 251, 245, 0.2), rgba(255, 251, 245, 0.02)),
     url("/aion-chat-background-reference-v1.png");
   background-size: cover;
-  background-position: 58% center;
+  background-position: 60% center;
 }
 
 .aion-chat-portrait-panel::after {
@@ -1788,8 +1792,22 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 70% 32%, rgba(255, 255, 255, 0.18), transparent 0 20%),
-    radial-gradient(circle at 84% 62%, rgba(197, 145, 78, 0.12), transparent 0 22%);
+    radial-gradient(circle at 70% 32%, rgba(255, 255, 255, 0.22), transparent 0 20%),
+    radial-gradient(circle at 84% 62%, rgba(197, 145, 78, 0.12), transparent 0 22%),
+    linear-gradient(180deg, rgba(255, 251, 245, 0.04), rgba(255, 251, 245, 0.22));
+}
+
+.aion-chat-portrait-figure {
+  position: absolute;
+  right: -2%;
+  bottom: 0;
+  z-index: 0;
+  width: min(23.5rem, 88%);
+  height: 100%;
+  object-fit: cover;
+  object-position: center 10%;
+  mix-blend-mode: multiply;
+  transform: scale(1.04);
 }
 
 .aion-chat-portrait-copy {
@@ -1816,6 +1834,113 @@ body {
     0 14px 28px rgba(81, 119, 118, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(14px);
+}
+
+.aion-chat-portrait-note {
+  position: absolute;
+  z-index: 1;
+  width: min(11.3rem, calc(100% - 2rem));
+  padding: 0.78rem 0.86rem;
+  border: 1px solid rgba(88, 67, 52, 0.08);
+  border-radius: 1.15rem;
+  background: rgba(255, 251, 245, 0.84);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 28px rgba(78, 58, 43, 0.06);
+}
+
+.aion-chat-portrait-note::before {
+  content: "";
+  position: absolute;
+  width: 2.8rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(111, 149, 146, 0.3), rgba(232, 194, 134, 0.14));
+}
+
+.aion-chat-portrait-note::after {
+  content: "";
+  position: absolute;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(88, 67, 52, 0.76);
+  box-shadow: 0 0 0 0.14rem rgba(255, 251, 245, 0.76);
+}
+
+.aion-chat-portrait-note-eyebrow,
+.aion-chat-portrait-note-title,
+.aion-chat-portrait-note-body {
+  margin: 0;
+}
+
+.aion-chat-portrait-note-eyebrow {
+  color: rgba(110, 98, 88, 0.82);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.aion-chat-portrait-note-title {
+  margin-top: 0.32rem;
+  color: var(--aion-ink);
+  font-family: var(--font-display, ui-serif);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.aion-chat-portrait-note-body {
+  margin-top: 0.42rem;
+  color: var(--aion-muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.aion-chat-portrait-note-memory {
+  top: 1.05rem;
+  left: 1rem;
+}
+
+.aion-chat-portrait-note-memory::before {
+  right: -2.6rem;
+  top: 50%;
+}
+
+.aion-chat-portrait-note-memory::after {
+  right: -2.8rem;
+  top: calc(50% - 0.21rem);
+}
+
+.aion-chat-portrait-note-expression {
+  top: 1.45rem;
+  right: 1rem;
+  background: linear-gradient(180deg, rgba(228, 245, 241, 0.34), rgba(255, 251, 245, 0.84));
+}
+
+.aion-chat-portrait-note-expression::before {
+  left: -2.6rem;
+  top: 50%;
+  transform: scaleX(-1);
+}
+
+.aion-chat-portrait-note-expression::after {
+  left: -2.8rem;
+  top: calc(50% - 0.21rem);
+}
+
+.aion-chat-portrait-note-channels {
+  right: 1rem;
+  bottom: 6.9rem;
+}
+
+.aion-chat-portrait-note-channels::before {
+  left: -2.6rem;
+  top: 42%;
+  transform: scaleX(-1);
+}
+
+.aion-chat-portrait-note-channels::after {
+  left: -2.8rem;
+  top: calc(42% - 0.21rem);
 }
 
 .aion-chat-feature-strip {
@@ -3429,6 +3554,12 @@ body {
     background-position: 63% center;
   }
 
+  .aion-chat-portrait-figure {
+    right: -6%;
+    width: min(19rem, 90%);
+    object-position: center 12%;
+  }
+
   .aion-chat-portrait-copy {
     left: 1rem;
     right: 1rem;
@@ -3443,6 +3574,30 @@ body {
     width: calc(100% - 2rem);
     max-width: 11rem;
     padding: 0.8rem 0.85rem;
+  }
+
+  .aion-chat-portrait-note::before {
+    display: none;
+  }
+
+  .aion-chat-portrait-note {
+    width: min(10rem, calc(100% - 2rem));
+    padding: 0.7rem 0.78rem;
+  }
+
+  .aion-chat-portrait-note-memory {
+    top: 0.9rem;
+    left: 0.9rem;
+  }
+
+  .aion-chat-portrait-note-expression {
+    top: 0.9rem;
+    right: 0.9rem;
+  }
+
+  .aion-chat-portrait-note-channels {
+    right: 0.9rem;
+    bottom: 5.35rem;
   }
 
   .aion-feature-card {

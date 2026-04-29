@@ -4,6 +4,24 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
+- 2026-04-29: `PRJ-796` pushed the shared canonical persona into the chat
+  route:
+  - `web/src/App.tsx` now gives the chat portrait column conversation-specific
+    persona notes for memory continuity, expression, and linked-channel posture
+  - `web/src/index.css` now:
+    - layers the shared persona figure into the chat portrait panel
+    - adapts assistant avatars to the same persona crop
+    - adds responsive note positioning so the right column still compresses on
+      smaller widths
+  - this materially reduces route drift where chat previously used a separate
+    portrait mood without the shared embodied identity
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/App.tsx web/src/index.css .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md .codex/tasks/PRJ-796-apply-shared-persona-to-chat-route.md`
+  - highest-value follow-up after this slice:
+    - deploy screenshot tuning for chat crop, note rhythm, and support-column spacing
+    - then another parity pass for dashboard and personality on the same shared-persona spine
+
 - 2026-04-29: `PRJ-795` froze a shared canonical Aviary persona figure for
   flagship web routes and started the first cross-route reuse pass:
   - the supplied figure is now stored as:
