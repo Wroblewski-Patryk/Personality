@@ -4,6 +4,33 @@ Last updated: 2026-04-30
 
 ## Product Snapshot
 
+- 2026-04-30: `PRJ-800M` completed the flagship route-pruning pass:
+  - `web/src/App.tsx` now:
+    - removes the separate bottom feature strip from `chat`
+    - removes the extra summary-chip row from the `personality` intro
+    - removes the extra `personality` preview-nav strip
+    - removes the extra `personality` highlights panel
+    - drops dead helper components and route data that existed only for those
+      non-canonical sections
+  - `web/src/index.css` now:
+    - removes the dead route-level CSS tied to the deleted `chat` and
+      `personality` sections
+    - removes leftover public-home proof-stack styles that no longer matched
+      any active JSX structure
+  - result:
+    - `chat` and `personality` are structurally calmer and closer to the
+      canonical screen inventory
+    - `home` was explicitly re-checked and did not need another whole-section
+      removal in the current code
+    - `dashboard` was explicitly checked and intentionally kept structurally
+      unchanged because its remaining drift is compositional
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800M-prune-non-canonical-route-sections.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+  - highest-value next steps:
+    - inspect the deployed flagship routes after the pruning pass
+    - continue canonical parity only on the remaining approved sections
+
 - 2026-04-30: `PRJ-800F` continued with a tighter dashboard composition pass:
   - `web/src/App.tsx` now:
     - calms the dashboard hero lead copy

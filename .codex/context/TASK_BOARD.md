@@ -2,6 +2,33 @@
 
 Last updated: 2026-04-30
 
+## Fresh Non-Canonical Route Pruning Pass (2026-04-30)
+
+- `PRJ-800M` is now DONE as the flagship section-pruning slice:
+  - `.codex/tasks/PRJ-800M-prune-non-canonical-route-sections.md`
+- purpose:
+  - remove route-level sections that do not belong to the approved canonical
+    `home / dashboard / chat / personality` compositions before doing more
+    screenshot-parity work
+- implemented in this slice:
+  - removed the separate bottom feature strip from `chat`
+  - removed the extra summary-chip row, preview-nav strip, and highlights panel
+    from `personality`
+  - removed the corresponding dead component/data/CSS remnants that only
+    supported those non-canonical sections
+  - explicitly re-checked `home` and confirmed that the older proof-stack
+    section was already gone from the current JSX, so no additional whole
+    section needed removal there
+  - explicitly checked `dashboard` and left it structurally unchanged because
+    its remaining drift is compositional rather than sectional
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-800M-prune-non-canonical-route-sections.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- remaining work after this cleanup:
+  - deploy-side screenshot proof for the pruned route inventory
+  - continue canonical parity work only on sections that genuinely belong to
+    the target screens
+
 ## Fresh Dashboard Hero And Rail Tightening Continuation (2026-04-30)
 
 - `PRJ-800F` remains IN_PROGRESS as the current dashboard parity lane:

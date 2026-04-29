@@ -250,14 +250,9 @@ const UI_COPY = {
       eyebrow: "Personality",
       title: "Personality overview",
       subtitle: "High-level insight first, with extra detail available only when you want it.",
-      goals: "Goals",
-      tasks: "Tasks",
-      knowledge: "Knowledge",
-      preferences: "Preferences",
       filter: "Filter sections",
       loading: "Loading personality overview.",
       empty: "No matching overview sections for this filter.",
-      highlights: "Highlights",
     },
   },
   pl: {
@@ -419,14 +414,9 @@ const UI_COPY = {
       eyebrow: "Osobowość",
       title: "Przegląd osobowości",
       subtitle: "Najpierw najważniejsze informacje, a dodatkowe szczegóły tylko wtedy, gdy ich potrzebujesz.",
-      goals: "Cele",
-      tasks: "Zadania",
-      knowledge: "Wiedza",
-      preferences: "Preferencje",
       filter: "Filtruj sekcje",
       loading: "Ładowanie przeglądu osobowości.",
       empty: "Brak sekcji pasujących do filtra.",
-      highlights: "Najważniejsze punkty",
     },
   },
   de: {
@@ -588,14 +578,9 @@ const UI_COPY = {
       eyebrow: "Persönlichkeit",
       title: "Persönlichkeitsübersicht",
       subtitle: "Zuerst die wichtigsten Einblicke, weitere Details nur dann, wenn du sie sehen willst.",
-      goals: "Ziele",
-      tasks: "Aufgaben",
-      knowledge: "Wissen",
-      preferences: "Präferenzen",
       filter: "Sektionen filtern",
       loading: "Persönlichkeitsübersicht wird geladen.",
       empty: "Keine passenden Sektionen für diesen Filter.",
-      highlights: "Highlights",
     },
   },
 } as const;
@@ -1041,35 +1026,6 @@ function FeedbackBanner({
   );
 }
 
-function MetricCard({
-  eyebrow,
-  value,
-  detail,
-  accent = "default",
-  className = "",
-}: {
-  eyebrow: string;
-  value: string;
-  detail: string;
-  accent?: "default" | "teal" | "gold";
-  className?: string;
-}) {
-  const accentClasses =
-    accent === "teal"
-      ? "border-[#8eb8b2]/30 bg-[#eff7f5]"
-      : accent === "gold"
-        ? "border-[#d2b07f]/30 bg-[#fcf6ea]"
-        : "border-base-300 bg-base-100";
-
-  return (
-    <article className={`rounded-[1.5rem] border p-4 shadow-sm ${accentClasses} ${className}`.trim()}>
-      <p className="text-xs uppercase tracking-[0.22em] text-base-800">{eyebrow}</p>
-      <p className="mt-3 font-display text-3xl text-base-900">{value}</p>
-      <p className="mt-2 text-sm leading-7 text-base-800">{detail}</p>
-    </article>
-  );
-}
-
 function ModuleEntryCard({
   label,
   title,
@@ -1394,26 +1350,6 @@ function ChatFlowStage({
       <div>
         <p className="text-base font-semibold text-base-900">{title}</p>
         <p className="mt-1 text-sm leading-6 text-base-800">{detail}</p>
-      </div>
-    </article>
-  );
-}
-
-function ChatFeatureCard({
-  token,
-  title,
-  body,
-}: {
-  token: string;
-  title: string;
-  body: string;
-}) {
-  return (
-    <article className="aion-feature-card">
-      <span className="aion-feature-token">{token}</span>
-      <div>
-        <p className="text-base font-semibold text-base-900">{title}</p>
-        <p className="mt-1 text-sm leading-6 text-base-800">{body}</p>
       </div>
     </article>
   );
@@ -2160,28 +2096,6 @@ export default function App() {
       accent: "Continuity",
     },
   ];
-  const chatFeatures = [
-    {
-      token: "C",
-      title: "Continuity",
-      body: "Remembers what matters between sessions without turning chat into an admin view.",
-    },
-    {
-      token: "L",
-      title: "Linked channels",
-      body: "Keeps one conversation posture across the app and connected touchpoints.",
-    },
-    {
-      token: "M",
-      title: "Memory",
-      body: "Turns useful moments into a calmer, more personal long-term context.",
-    },
-    {
-      token: "P",
-      title: "Privacy",
-      body: "Preserves a high-trust tone so the workspace stays personal, not extractive.",
-    },
-  ];
   const chatActiveSummary = "Live";
   const personalityPreviewCallouts = [
     {
@@ -2275,7 +2189,6 @@ export default function App() {
     { title: "Completed reflection cycle", when: "5h ago" },
     { title: "Learned preference captured", when: "Yesterday" },
   ];
-  const personalityPreviewTabs = ["Overview", "Knowledge", "Skills", "Memories", "Settings"];
   const publicNavLabels = {
     en: ["Features", "How it works", "Privacy", "Resources"],
     pl: ["Funkcje", "Jak to dziala", "Prywatnosc", "Zasoby"],
@@ -2354,16 +2267,6 @@ export default function App() {
     pl: "Zaloguj sie lub utworz konto, aby wrocic do pamieci, planowania i spokojnego prowadzenia.",
     de: "Melde dich an oder erstelle ein Konto, um mit Erinnerung, Planung und ruhiger Begleitung weiterzumachen.",
   } satisfies Record<ResolvedUiLanguageCode, string>;
-  const publicQuote = {
-    en: "Powerful by design. Personal by nature.",
-    pl: "Mocny z zalozenia. Osobisty z natury.",
-    de: "Kraftvoll im Design. Personlich im Wesen.",
-  } satisfies Record<ResolvedUiLanguageCode, string>;
-  const publicSubquote = {
-    en: "Aviary helps hold memory, plan calmly, and move with intention.",
-    pl: "Aviary pomaga pamietac, planowac spokojnie i dzialac z intencja.",
-    de: "Aviary hilft zu erinnern, ruhig zu planen und bewusst zu handeln.",
-  } satisfies Record<ResolvedUiLanguageCode, string>;
   const publicHomeSurface = {
     nav: publicNavLabels[resolvedUiLanguage],
     heroCards: publicHeroCards[resolvedUiLanguage],
@@ -2374,8 +2277,6 @@ export default function App() {
     heroBody: publicHeroBody[resolvedUiLanguage],
     proofBridgeLead: publicProofBridgeLead[resolvedUiLanguage],
     sessionIntro: publicSessionIntro[resolvedUiLanguage],
-    quote: publicQuote[resolvedUiLanguage],
-    subquote: publicSubquote[resolvedUiLanguage],
   };
   const isPublicRoute = route === "/login";
 
@@ -4078,33 +3979,6 @@ export default function App() {
                     <h2 className="mt-2 font-display text-4xl text-base-900">{copy.personality.title}</h2>
                     <p className="mt-3 text-sm leading-7 text-base-800">{copy.personality.subtitle}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      `${stringValue(planningSummary?.active_goal_count, "0")} goals`,
-                      `${stringValue(knowledgeSummary?.semantic_conclusion_count, "0")} patterns`,
-                      `${stringValue(preferenceSummary?.learned_preference_count, "0")} preferences`,
-                    ].map((chip) => (
-                      <span
-                        key={chip}
-                        className="aion-chip-ghost rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em]"
-                      >
-                        {chip}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </section>
-
-              <section className="aion-panel-soft aion-personality-preview-nav rounded-[1.8rem] p-3">
-                <div className="flex flex-wrap gap-2">
-                  {personalityPreviewTabs.map((tab, index) => (
-                    <span
-                      key={tab}
-                      className={`aion-personality-preview-tab ${index === 0 ? "aion-personality-preview-tab-active" : ""}`}
-                    >
-                      {tab}
-                    </span>
-                  ))}
                 </div>
               </section>
 
@@ -4162,55 +4036,6 @@ export default function App() {
                   </InsightPanel>
 
                   <InsightPanel
-                    eyebrow="Highlights"
-                    title="Current product signals"
-                    body="These summary cards keep the route readable before the user opens any deeper detail."
-                    className="aion-personality-side-panel aion-personality-side-panel-highlight aion-personality-side-panel-highlight-prominent"
-                  >
-                    <div className="aion-personality-highlight-grid">
-                      {[
-                        {
-                          title: copy.personality.goals,
-                          value: stringValue(planningSummary?.active_goal_count, "0"),
-                          note: "Goals the personality is currently following",
-                          accent: "gold" as const,
-                        },
-                        {
-                          title: copy.personality.tasks,
-                          value: stringValue(planningSummary?.active_task_count, "0"),
-                          note: "Tasks currently being tracked",
-                          accent: "default" as const,
-                        },
-                        {
-                          title: copy.personality.knowledge,
-                          value: stringValue(knowledgeSummary?.semantic_conclusion_count, "0"),
-                          note: "Learned patterns kept available",
-                          accent: "teal" as const,
-                        },
-                        {
-                          title: copy.personality.preferences,
-                          value: stringValue(preferenceSummary?.learned_preference_count, "0"),
-                          note: "Preferences the personality has picked up",
-                          accent: "default" as const,
-                        },
-                      ].map((card, index) => (
-                        <MetricCard
-                          key={card.title}
-                          eyebrow={card.title}
-                          value={card.value}
-                          detail={card.note}
-                          accent={card.accent}
-                          className={
-                            index === 0
-                              ? "aion-personality-highlight-card aion-personality-highlight-card-primary"
-                              : "aion-personality-highlight-card"
-                          }
-                        />
-                      ))}
-                    </div>
-                  </InsightPanel>
-
-                  <InsightPanel
                     eyebrow="Subconscious layer"
                     title="Background patterns and latent knowledge"
                     body="Longer memory, associations, and learned preferences stay active without crowding the live route."
@@ -4251,13 +4076,6 @@ export default function App() {
           ) : null}
             </main>
 
-            {route === "/chat" ? (
-              <section className="aion-panel aion-chat-feature-strip">
-                {chatFeatures.map((feature) => (
-                  <ChatFeatureCard key={feature.title} token={feature.token} title={feature.title} body={feature.body} />
-                ))}
-              </section>
-            ) : null}
           </div>
         </div>
           </div>
