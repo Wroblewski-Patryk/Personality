@@ -1257,17 +1257,88 @@ function PersonalityLayerCard({
   );
 }
 
+function SidebarGlyph({ kind }: { kind: "dashboard" | "chat" | "personality" | "tools" | "settings" }) {
+  const commonProps = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  if (kind === "dashboard") {
+    return (
+      <svg {...commonProps}>
+        <path d="M3.75 10.75 12 4l8.25 6.75" />
+        <path d="M6.5 9.5V19h11V9.5" />
+      </svg>
+    );
+  }
+
+  if (kind === "chat") {
+    return (
+      <svg {...commonProps}>
+        <path d="M7.5 18.5 4.75 20v-4.25A6.75 6.75 0 1 1 18 17H9.25" />
+        <path d="M8.5 9.5h6.75" />
+        <path d="M8.5 13h4.25" />
+      </svg>
+    );
+  }
+
+  if (kind === "personality") {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 20s5.25-5.68 5.25-9.5A5.25 5.25 0 1 0 6.75 10.5C6.75 14.32 12 20 12 20Z" />
+        <path d="M12 12.5a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" />
+      </svg>
+    );
+  }
+
+  if (kind === "tools") {
+    return (
+      <svg {...commonProps}>
+        <circle cx="8" cy="8" r="2.5" />
+        <circle cx="16" cy="8" r="2.5" />
+        <circle cx="8" cy="16" r="2.5" />
+        <circle cx="16" cy="16" r="2.5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...commonProps}>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 4.8v1.7" />
+      <path d="M12 17.5v1.7" />
+      <path d="m18.2 6.8-1.22 1.22" />
+      <path d="m7.02 17.98-1.22 1.22" />
+      <path d="M19.2 12h-1.7" />
+      <path d="M6.5 12H4.8" />
+      <path d="m18.2 17.2-1.22-1.22" />
+      <path d="M7.02 6.02 5.8 4.8" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <path d="m5.5 7.75 4.5 4.5 4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function ShellNavButton({
   label,
-  description,
   active,
-  token,
+  icon,
   onClick,
 }: {
   label: string;
-  description: string;
   active: boolean;
-  token: string;
+  icon: "dashboard" | "chat" | "personality" | "tools" | "settings";
   onClick: () => void;
 }) {
   return (
@@ -1276,11 +1347,10 @@ function ShellNavButton({
       onClick={onClick}
       type="button"
     >
-      <span className={`aion-nav-token ${active ? "aion-nav-token-active" : ""}`}>{token}</span>
-      <span className="min-w-0 flex-1 text-left">
-        <span className="block text-sm font-semibold text-base-900">{label}</span>
-        <span className="mt-0.5 block truncate text-xs text-base-800">{description}</span>
+      <span className={`aion-nav-icon ${active ? "aion-nav-icon-active" : ""}`}>
+        <SidebarGlyph kind={icon} />
       </span>
+      <span className="aion-nav-label">{label}</span>
     </button>
   );
 }
@@ -1293,6 +1363,15 @@ function AviaryWordmark({ className = "", compact = false }: { className?: strin
     >
       <img alt="" aria-hidden="true" className="aion-brand-mark" src="/aviary-logomark.svg" />
       <span className="aion-brand-word">AVIARY</span>
+    </div>
+  );
+}
+
+function SidebarBrandBlock() {
+  return (
+    <div className="aion-sidebar-brand">
+      <AviaryWordmark compact className="aion-sidebar-brand-lockup" />
+      <p className="aion-sidebar-brand-subtitle">Your conscious companion</p>
     </div>
   );
 }
@@ -2002,32 +2081,27 @@ export default function App() {
     {
       route: "/dashboard" as const,
       label: routeLabel("/dashboard", resolvedUiLanguage),
-      description: "Flagship overview",
-      token: "D",
+      icon: "dashboard" as const,
     },
     {
       route: "/chat" as const,
       label: routeLabel("/chat", resolvedUiLanguage),
-      description: "Active conversation",
-      token: "C",
+      icon: "chat" as const,
     },
     {
       route: "/personality" as const,
       label: routeLabel("/personality", resolvedUiLanguage),
-      description: "Identity map",
-      token: "P",
+      icon: "personality" as const,
     },
     {
       route: "/tools" as const,
       label: routeLabel("/tools", resolvedUiLanguage),
-      description: "Connected capabilities",
-      token: "T",
+      icon: "tools" as const,
     },
     {
       route: "/settings" as const,
       label: routeLabel("/settings", resolvedUiLanguage),
-      description: "Profile and shell",
-      token: "S",
+      icon: "settings" as const,
     },
   ];
   const chatTopControls = [
@@ -2798,57 +2872,56 @@ export default function App() {
           />
 
           <div className="aion-shell-window-body">
-        <div className="aion-shell-frame grid gap-4 xl:grid-cols-[12.5rem_minmax(0,1fr)]">
+        <div className="aion-shell-frame grid gap-4 xl:grid-cols-[14.25rem_minmax(0,1fr)]">
           <aside className="aion-app-rail hidden xl:flex xl:min-h-[calc(100vh-3rem)] xl:flex-col">
-            <div>
-              <AviaryWordmark className="max-w-full" />
-              <p className="mt-2 text-sm text-base-800">Your conscious companion</p>
-            </div>
+            <SidebarBrandBlock />
 
-            <nav className="mt-8 grid gap-2">
+            <nav className="aion-sidebar-nav" aria-label="Authenticated navigation">
               {shellNavItems.map((item) => (
                 <ShellNavButton
                   key={item.route}
                   label={item.label}
-                  description={item.description}
                   active={route === item.route}
-                  token={item.token}
+                  icon={item.icon}
                   onClick={() => changeRoute(item.route)}
                 />
               ))}
             </nav>
 
-            <div className="mt-auto grid gap-3">
-              <section className="aion-panel-soft aion-rail-health rounded-[1.8rem] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-base-800">System health</p>
+            <div className="aion-sidebar-support-stack mt-auto">
+              <section className="aion-panel-soft aion-rail-health aion-sidebar-support-card aion-sidebar-health-card rounded-[1.8rem] p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-base-800">System Health</p>
                 <div className="aion-rail-health-orb" aria-hidden="true">
-                  <span>92%</span>
+                  <span>Optimal</span>
                 </div>
-                <p className="text-base font-semibold text-base-900">Optimal</p>
-                <p className="mt-2 text-sm leading-6 text-base-800">All systems aligned and ready for thoughtful work.</p>
-              </section>
-
-              <section className="aion-panel-soft rounded-[1.8rem] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-base-800">{copy.common.signedInAs}</p>
-                <p className="mt-3 font-display text-xl text-base-900">{currentUserLabel}</p>
-                <p className="mt-1 text-sm text-base-800">{me.user.email}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {accountSummaryItems.slice(0, 2).map((item) => (
-                    <span key={item.label} className="aion-chip-ghost rounded-full px-3 py-1 text-xs font-medium">
-                      {item.value}
-                    </span>
-                  ))}
-                </div>
-                <button className="btn btn-outline mt-4 w-full" onClick={() => void handleLogout()} type="button">
-                  {copy.common.signOut}
+                <p className="aion-sidebar-health-status text-base font-semibold text-base-900">Optimal</p>
+                <p className="mt-2 text-sm leading-6 text-base-800">All systems aligned and operating well.</p>
+                <button className="aion-sidebar-quiet-button" type="button">
+                  View diagnostics
                 </button>
               </section>
 
-              <section className="aion-panel-soft aion-rail-story rounded-[1.8rem] p-4">
-                <p className="text-base font-semibold leading-7 text-base-900">“Clarity is the lamp that makes the path.”</p>
-                <div className="mt-4">
-                  <AviaryWordmark compact />
-                </div>
+              <button
+                className="aion-panel-soft aion-sidebar-support-card aion-sidebar-identity-card rounded-[1.6rem]"
+                onClick={() => setAccountPanelOpen((value) => !value)}
+                type="button"
+              >
+                <span className="aion-sidebar-avatar">
+                  <img alt="" aria-hidden="true" src="/aion-personality-figure-reference-v1.png" />
+                </span>
+                <span className="aion-sidebar-identity-copy">
+                  <span className="aion-sidebar-identity-name">{currentUserLabel}</span>
+                  <span className="aion-sidebar-identity-role">Explorer</span>
+                </span>
+                <span className="aion-sidebar-chevron">
+                  <ChevronDownIcon />
+                </span>
+              </button>
+
+              <section className="aion-panel-soft aion-rail-story aion-sidebar-support-card aion-sidebar-quote-card rounded-[1.8rem] p-4">
+                <p className="aion-sidebar-quote-mark">“</p>
+                <p className="aion-sidebar-quote-copy">Clarity is the lamp that makes the path.</p>
+                <p className="aion-sidebar-quote-signature">AVIARY</p>
               </section>
             </div>
           </aside>
@@ -2860,6 +2933,31 @@ export default function App() {
               accountPanelOpen={accountPanelOpen}
               onAccountClick={() => setAccountPanelOpen((value) => !value)}
             />
+
+            {accountPanelOpen ? (
+              <section className="aion-panel-soft aion-desktop-account-panel hidden rounded-[1.8rem] p-4 xl:block">
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                  <div className="aion-panel-soft rounded-[1.4rem] p-4">
+                    <p className="text-sm uppercase tracking-[0.24em] text-base-800">{copy.common.signedInAs}</p>
+                    <p className="mt-2 font-display text-2xl text-base-900">{currentUserLabel}</p>
+                    <p className="mt-1 text-sm text-base-800">{me.user.email}</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {accountSummaryItems.map((item) => (
+                        <div key={item.label} className="aion-panel-soft rounded-[1.4rem] p-4">
+                          <p className="text-xs uppercase tracking-[0.18em] text-base-800">{item.label}</p>
+                          <p className="mt-2 text-base font-semibold text-base-900">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <button className="btn btn-outline sm:self-end" onClick={() => void handleLogout()} type="button">
+                      {copy.common.signOut}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            ) : null}
 
             <header className="aion-panel rounded-[2rem] xl:hidden">
               <div className="flex flex-wrap items-center gap-3 px-4 py-4 sm:px-5">

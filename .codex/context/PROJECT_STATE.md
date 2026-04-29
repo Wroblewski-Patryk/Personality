@@ -4,6 +4,25 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
+- 2026-04-29: `PRJ-781` implemented the first canonical desktop sidebar spine
+  pass:
+  - the authenticated rail now uses a sidebar-specific brand block instead of
+    the generic shell lockup treatment
+  - desktop nav rows now use line icons and one-line labels rather than token
+    letters plus description lines
+  - the support stack is now closer to the canonical sidebar family:
+    - compact system health card
+    - compact identity card
+    - quieter aphorism closure card
+  - the shell now also exposes a desktop account panel through the existing
+    account-open state so sidebar compaction does not remove account access
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/App.tsx web/src/index.css`
+  - the main remaining gap for this layout spine is now:
+    - deployed screenshot parity and spacing/material tuning
+    - explicit route-contract decision for the full canonical nav inventory
+
 - 2026-04-29: `PRJ-780` froze the authenticated sidebar as its own canonical
   layout target:
   - canonical asset:
@@ -51,6 +70,15 @@ Last updated: 2026-04-29
     - semantic/conclusion memory
     - user-specific communication-boundary relation model
     - policy/procedural consumers for proactive delivery and expression
+  - `PRJ-778` now contains a detailed repair queue:
+    - contract freeze
+    - reflection input completeness
+    - model-assisted communication-boundary extraction
+    - relation persistence/reflection
+    - proactive candidate selection
+    - proactive planning/delivery guard
+    - expression ritual handling
+    - observability, AI behavior scenarios, docs, and release readiness
   - plan artifact:
     - `.codex/tasks/PRJ-778-plan-short-term-memory-and-proactive-style-respect.md`
 

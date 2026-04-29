@@ -2,6 +2,31 @@
 
 Last updated: 2026-04-29
 
+## Fresh Canonical Sidebar Desktop Spine Pass (2026-04-29)
+
+- `PRJ-781` is now IN_PROGRESS as the first implementation slice after the
+  sidebar freeze:
+  - `.codex/tasks/PRJ-781-implement-canonical-sidebar-desktop-spine-pass.md`
+- `web/src/App.tsx` now:
+  - introduces sidebar-specific icon primitives
+  - replaces token-letter nav rows with icon-led one-line rows
+  - adds a sidebar-specific brand block
+  - rebuilds the support stack into:
+    - compact health card
+    - compact identity card
+    - quieter aphorism closure card
+  - keeps account access through the existing shell account state
+- `web/src/index.css` now:
+  - narrows and softens the rail material
+  - redesigns active nav pill treatment
+  - adds sidebar-specific brand, card, avatar, quote, and quiet-button styling
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx web/src/index.css`
+- highest-value remaining drift after this slice:
+  - post-deploy pixel tuning of spacing, icon scale, and support-card proportions
+  - explicit decision on full canonical nav inventory beyond current route contracts
+
 ## Fresh Canonical Sidebar Layout Freeze (2026-04-29)
 
 - `PRJ-780` is now READY as a planning slice:
@@ -60,6 +85,16 @@ Last updated: 2026-04-29
   - make proactive candidate/guard logic honor high-confidence relation truth
   - make expression consume interaction-ritual relation truth
   - cover the reported multi-turn behavior with tests
+- detailed execution queue is now frozen in `PRJ-778`:
+  - `PRJ-779` Freeze communication-boundary contract
+  - `PRJ-781` Repair reflection input completeness
+  - `PRJ-782` Add communication-boundary extractor
+  - `PRJ-783` Persist and reflect communication-boundary relations
+  - `PRJ-784` Apply boundary relations to proactive candidate selection
+  - `PRJ-785` Apply boundary relations to proactive planning and delivery guard
+  - `PRJ-786` Apply interaction ritual relations to expression
+  - `PRJ-787` Observability, AI scenarios, docs, and release readiness
+  - note: `PRJ-780` is already occupied by a separate shell-planning task
 
 ## Fresh Dashboard Structural Convergence Pass (2026-04-29)
 
