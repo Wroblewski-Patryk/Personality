@@ -2,6 +2,32 @@
 
 Last updated: 2026-04-29
 
+## Fresh Layout Sidebar Home Dashboard Master Parity Ledger (2026-04-29)
+
+- `PRJ-800` is now DONE as a planning slice:
+  - `.codex/tasks/PRJ-800-freeze-layout-sidebar-home-dashboard-canonical-parity-ledger.md`
+- one new master ledger now defines the remaining convergence work for:
+  - authenticated parent layout
+  - authenticated sidebar
+  - public layout and public home
+  - dashboard
+- audit artifact:
+  - `docs/planning/layout-sidebar-home-dashboard-canonical-parity-master-ledger.md`
+- key conclusion:
+  - remaining drift is now primarily structural and hierarchical, not
+    decorative
+  - future work on this lane should prioritize:
+    - shell/frame exactness
+    - sidebar exactness
+    - public-home structural convergence
+    - dashboard one-screen flagship convergence
+    - then screenshot parity closure
+- explicit blocking issues now recorded:
+  - sidebar inventory mismatch versus current route contract
+  - authenticated shell still too app-like
+  - public home still too auth-derived in its lower half
+  - dashboard still too modular below the hero
+
 ## Fresh Shared Persona Chat Route Pass (2026-04-29)
 
 - `PRJ-796` is now DONE as the next flagship continuity slice:

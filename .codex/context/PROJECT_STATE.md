@@ -4,6 +4,25 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
+- 2026-04-29: `PRJ-800` created one master parity ledger for the remaining
+  canonical work on `layout + sidebar + home + dashboard`:
+  - audit artifact:
+    - `docs/planning/layout-sidebar-home-dashboard-canonical-parity-master-ledger.md`
+  - the ledger concludes that current drift is now primarily structural:
+    - the authenticated shell still feels too app-like
+    - the sidebar is close but not yet pixel-close
+    - public home still reveals too much of its auth-first origin below the hero
+    - dashboard still behaves like stacked premium sections instead of one
+      canonical flagship tableau
+  - the next recommended execution order is now explicit:
+    - shell/frame exactness
+    - sidebar exactness
+    - public-home structural convergence
+    - dashboard canonical composition
+    - screenshot-parity closure
+  - this should now replace ad-hoc polish as the governing execution order for
+    the current canonical web lane
+
 - 2026-04-29: `PRJ-796` pushed the shared canonical persona into the chat
   route:
   - `web/src/App.tsx` now gives the chat portrait column conversation-specific
