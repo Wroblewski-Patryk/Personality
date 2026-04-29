@@ -42,27 +42,33 @@ Last updated: 2026-04-29
     - sidebar visual spine pass using current routes
     - later explicit decision on route expansion for the full canonical nav inventory
 
-- 2026-04-29: `PRJ-778` captured a planning-grade analysis for the reported
-  short-term memory / proactive cadence drift:
+- 2026-04-29: `PRJ-778` implemented the short-term memory / proactive cadence
+  repair:
   - user evidence showed repeated proactive Telegram-style check-ins every
     ~30 minutes despite explicit instructions not to write that often and not
     to greet on every message
   - current runtime already loads more than one memory item
     (`RuntimeOrchestrator.MEMORY_LOAD_LIMIT=12`), so increasing the recent
     window to 25 may be a secondary tuning option but is not the core fix
-  - deeper analysis narrowed the likely root cause to relation/reflection
-    propagation rather than phrase detection alone:
-    - `persist_episode()` writes `proactive_preference_update`, but
-      `extract_episode_fields()` does not expose it to reflection
-    - relation updates currently cover delivery reliability, collaboration
-      dynamic, and support intensity, but not contact cadence, interruption
-      tolerance, or interaction rituals such as repeated greetings
-    - older `proactive_opt_in=true` can remain the scheduler candidate driver
-      because there is no stronger communication-boundary relation for
-      proactive cadence
-  - the approved repair path should reuse existing relation/conclusion,
-    reflection, planning intent, action persistence, proactive guard, and
-    expression owners rather than introducing a new short-term memory subsystem
+  - `backend/app/communication/boundary.py` now defines a bounded
+    communication-boundary relation model for:
+    - `contact_cadence_preference`
+    - `interruption_tolerance`
+    - `interaction_ritual_preference`
+  - planning now turns explicit user-authored boundary directives into
+    `maintain_relation` intents instead of relying on raw recent-message recall
+  - `extract_episode_fields()` now exposes relation and proactive update fields
+    so reflection can observe them
+  - reflection can derive communication-boundary relations from episode text
+    and relation-update payloads
+  - proactive scheduler candidate selection, proactive decisioning, and
+    delivery guardrails now honor high-confidence cadence/interruption
+    relations before sending
+  - expression now passes communication-boundary summaries into OpenAI prompts
+    and removes repeated greeting openings when the relation model requests it
+  - the repair reuses existing relation/conclusion, reflection, planning
+    intent, action persistence, proactive guard, and expression owners rather
+    than introducing a new short-term memory subsystem
   - external research grounding supports a five-layer model for Aviary
     continuity:
     - bounded working context
@@ -70,15 +76,11 @@ Last updated: 2026-04-29
     - semantic/conclusion memory
     - user-specific communication-boundary relation model
     - policy/procedural consumers for proactive delivery and expression
-  - `PRJ-778` now contains a detailed repair queue:
-    - contract freeze
-    - reflection input completeness
-    - model-assisted communication-boundary extraction
-    - relation persistence/reflection
-    - proactive candidate selection
-    - proactive planning/delivery guard
-    - expression ritual handling
-    - observability, AI behavior scenarios, docs, and release readiness
+  - focused validation passed:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_communication_boundary.py tests/test_planning_agent.py tests/test_expression_agent.py tests/test_openai_prompting.py tests/test_memory_repository.py -q; Pop-Location`
+  - full backend gate passed:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q; Pop-Location`
+    - `970 passed in 98.32s`
   - plan artifact:
     - `.codex/tasks/PRJ-778-plan-short-term-memory-and-proactive-style-respect.md`
 

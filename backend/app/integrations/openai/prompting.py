@@ -29,6 +29,7 @@ class OpenAIPromptBuilder:
         motivation_mode: str,
         response_tone: str,
         collaboration_preference: str | None,
+        communication_boundary_summary: str,
         identity_summary: str,
         current_turn_timestamp: str,
     ) -> list[dict[str, str]]:
@@ -40,6 +41,7 @@ class OpenAIPromptBuilder:
             "response_language_name": language_name(response_language),
             "response_style": response_style or "default",
             "collaboration_preference": collaboration_preference or "default",
+            "communication_boundary_summary": communication_boundary_summary or "default",
             "identity_summary": identity_summary or "default",
             "context_summary": context_summary,
             "foreground_awareness_summary": foreground_awareness_summary or "default",
@@ -78,12 +80,15 @@ class OpenAIPromptBuilder:
                         "The preferred response language is '{response_language_name}'. "
                         "The user's stable response style preference is '{response_style}'. "
                         "The user's stable collaboration preference is '{collaboration_preference}'. "
+                        "The user's communication boundary summary is '{communication_boundary_summary}'. "
                         "The stable identity summary is '{identity_summary}'. "
                         "The current turn timestamp is '{current_turn_timestamp}'. "
                         "Explicit foreground awareness for this turn is '{foreground_awareness_summary}'. "
                         "Respond clearly, preserve momentum, use the context summary when useful, "
                         "stay in the preferred response language unless the user explicitly asks to switch, "
                         "honor the response style preference when it is present, "
+                        "honor communication boundaries, especially contact cadence, interruption tolerance, "
+                        "and repeated-greeting preferences, "
                         "keep the wording aligned with the desired response tone, "
                         "if a collaboration preference exists, match the response shape to it, "
                         "do not contradict the stable identity, "
@@ -140,12 +145,15 @@ class OpenAIPromptBuilder:
                     f"The preferred response language is '{variables['response_language_name']}'. "
                     f"The user's stable response style preference is '{variables['response_style']}'. "
                     f"The user's stable collaboration preference is '{variables['collaboration_preference']}'. "
+                    f"The user's communication boundary summary is '{variables['communication_boundary_summary']}'. "
                     f"The stable identity summary is '{variables['identity_summary']}'. "
                     f"The current turn timestamp is '{variables['current_turn_timestamp']}'. "
                     f"Explicit foreground awareness for this turn is '{variables['foreground_awareness_summary']}'. "
                     "Respond clearly, preserve momentum, use the context summary when useful, "
                     "stay in the preferred response language unless the user explicitly asks to switch, "
                     "honor the response style preference when it is present, "
+                    "honor communication boundaries, especially contact cadence, interruption tolerance, "
+                    "and repeated-greeting preferences, "
                     "keep the wording aligned with the desired response tone, "
                     "if a collaboration preference exists, match the response shape to it, "
                     "do not contradict the stable identity, "

@@ -25,6 +25,53 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-29 - Communication-boundary relations must reach proactive and expression owners
+- Context:
+  - user reported repeated proactive Telegram-style check-ins every ~30 minutes
+    and repeated greetings despite telling the personality not to write that
+    often and not to greet on every message.
+- Symptom:
+  - recent user-authored instructions can exist in episodic memory while
+    scheduler-driven outreach and expression style continue from older
+    proactive opt-in/style behavior.
+- Root cause:
+  - planning analysis found a relation/reflection propagation gap:
+    `proactive_preference_update` is persisted in episode payloads but not
+    exposed by `extract_episode_fields()`, scheduler candidates are driven by
+    persisted `proactive_opt_in`, and current relation updates do not model
+    contact cadence, interruption tolerance, or interaction rituals such as
+    repeated greetings.
+- Guardrail:
+  - explicit user instructions about cadence, interruption tolerance, and
+    repeated greetings must be promoted into existing durable relation or
+    conclusion truth before scheduler/proactive/expression decisions rely on
+    them.
+  - the repo should model these as communication-boundary state with explicit
+    policy consumers, not as raw short-term context or phrase exceptions.
+- Preferred pattern:
+  - expose all action-written adaptive episode signals to reflection
+  - use bounded communication-relation families for contact cadence,
+    interruption tolerance, and interaction rituals
+  - persist explicit user communication instructions through action-owned
+    relation writes
+  - make proactive candidate selection and delivery guards honor newer
+    high-confidence relation truth
+  - make expression consume interaction-ritual relation truth
+- Avoid:
+  - treating a larger raw recent-message window as the complete fix
+  - adding a parallel short-term memory store for scheduler behavior
+  - allowing older opt-in conclusions to override newer explicit opt-down
+    instructions
+- Evidence:
+  - `.codex/tasks/PRJ-778-plan-short-term-memory-and-proactive-style-respect.md`
+  - `backend/app/communication/boundary.py`
+  - `backend/app/memory/episodic.py`
+  - `backend/app/reflection/relation_signals.py`
+  - `backend/app/memory/repository.py`
+  - `backend/app/proactive/engine.py`
+  - `backend/app/expression/generator.py`
+  - `backend/tests/test_communication_boundary.py`
+
 ### 2026-04-28 - Chat UI must render the user-authored turn before waiting for assistant completion
 - Context:
   - authenticated app chat uses backend-owned `/app/chat/history` as the

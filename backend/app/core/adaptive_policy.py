@@ -2,6 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Set
 
+from app.communication.boundary import (
+    CONTACT_CADENCE_RELATION,
+    CONTACT_LOW_FREQUENCY,
+    CONTACT_ON_DEMAND,
+    CONTACT_SCHEDULED_ONLY,
+    INTERRUPTION_LOW,
+    INTERRUPTION_TOLERANCE_RELATION,
+    INTERACTION_RITUAL_RELATION,
+)
+
 RELATION_CONFIDENCE_MIN = 0.68
 ROLE_COLLABORATION_RELATION_CONFIDENCE_MIN = 0.70
 PREFERRED_ROLE_CONFIDENCE_MIN = 0.72
@@ -113,6 +123,18 @@ def proactive_signal_context(
             relations=relations,
             relation_type="delivery_reliability",
         ),
+        "relation_contact_cadence": relation_value(
+            relations=relations,
+            relation_type=CONTACT_CADENCE_RELATION,
+        ),
+        "relation_interruption_tolerance": relation_value(
+            relations=relations,
+            relation_type=INTERRUPTION_TOLERANCE_RELATION,
+        ),
+        "relation_interaction_ritual": relation_value(
+            relations=relations,
+            relation_type=INTERACTION_RITUAL_RELATION,
+        ),
         "theta_channel": dominant_theta_channel(theta),
     }
 
@@ -138,6 +160,12 @@ def proactive_relevance_adjustment(
 
     if context["relation_support_intensity"] == "high_support" and trigger in {"time_checkin", "relation_nudge"}:
         adjustment += 0.05
+
+    if context["relation_contact_cadence"] in {CONTACT_ON_DEMAND, CONTACT_SCHEDULED_ONLY}:
+        if trigger in {"time_checkin", "goal_stagnation", "memory_pattern", "relation_nudge"}:
+            adjustment -= 0.12
+    elif context["relation_contact_cadence"] == CONTACT_LOW_FREQUENCY and trigger in {"time_checkin", "memory_pattern"}:
+        adjustment -= 0.08
 
     if context["relation_collaboration"] == "hands_on" and trigger in {
         "task_blocked",
@@ -183,6 +211,14 @@ def proactive_interruption_adjustment(
     if context["relation_support_intensity"] == "high_support":
         adjustment += 0.04
 
+    if context["relation_contact_cadence"] in {CONTACT_ON_DEMAND, CONTACT_SCHEDULED_ONLY}:
+        adjustment += 0.22
+    elif context["relation_contact_cadence"] == CONTACT_LOW_FREQUENCY:
+        adjustment += 0.12
+
+    if context["relation_interruption_tolerance"] == INTERRUPTION_LOW:
+        adjustment += 0.1
+
     if context["theta_channel"] == "support":
         adjustment += 0.03
 
@@ -207,10 +243,17 @@ def proactive_attention_limits(
     if context["relation_support_intensity"] == "high_support" or context["theta_channel"] == "support":
         unanswered_limit = min(unanswered_limit, 1)
 
+    if context["relation_contact_cadence"] in {CONTACT_ON_DEMAND, CONTACT_SCHEDULED_ONLY, CONTACT_LOW_FREQUENCY}:
+        recent_outbound_limit = min(recent_outbound_limit, 1)
+        unanswered_limit = min(unanswered_limit, 1)
+
     return {
         "recent_outbound_limit": recent_outbound_limit,
         "unanswered_proactive_limit": unanswered_limit,
         "relation_delivery_reliability": context["relation_delivery_reliability"],
         "relation_support_intensity": context["relation_support_intensity"],
+        "relation_contact_cadence": context["relation_contact_cadence"],
+        "relation_interruption_tolerance": context["relation_interruption_tolerance"],
+        "relation_interaction_ritual": context["relation_interaction_ritual"],
         "theta_channel": context["theta_channel"],
     }

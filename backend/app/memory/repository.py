@@ -5,6 +5,7 @@ from typing import Any
 from sqlalchemy import and_, delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app.communication.boundary import proactive_boundary_block_reason
 from app.core.contracts import MemoryLayerKind
 from app.core.reflection_scope_policy import (
     GLOBAL_SCOPE_KEY,
@@ -3707,16 +3708,28 @@ class MemoryRepository:
             trigger = "time_checkin"
             text = "time check-in follow up"
 
+        recent_outbound_count = self._recent_proactive_outbound_count(
+            recent_memory=recent_memory,
+            proactive_interval_seconds=proactive_interval_seconds,
+        )
+        unanswered_proactive_count = self._unanswered_proactive_count(recent_memory=recent_memory)
+        relations = await self.get_user_relations(user_id=user_id, limit=8)
+        boundary_block_reason = proactive_boundary_block_reason(
+            relations=relations,
+            trigger=trigger,
+            recent_outbound_count=recent_outbound_count,
+            unanswered_proactive_count=unanswered_proactive_count,
+        )
+        if boundary_block_reason is not None:
+            return None
+
         return {
             "user_id": user_id,
             "chat_id": chat_id,
             "trigger": trigger,
             "text": text[:160],
-            "recent_outbound_count": self._recent_proactive_outbound_count(
-                recent_memory=recent_memory,
-                proactive_interval_seconds=proactive_interval_seconds,
-            ),
-            "unanswered_proactive_count": self._unanswered_proactive_count(recent_memory=recent_memory),
+            "recent_outbound_count": recent_outbound_count,
+            "unanswered_proactive_count": unanswered_proactive_count,
             "recent_user_activity": self._recent_user_activity(
                 recent_memory=recent_memory,
                 proactive_interval_seconds=proactive_interval_seconds,

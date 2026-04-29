@@ -802,6 +802,7 @@ class FakeOpenAIClient:
         motivation_mode: str,
         response_tone: str,
         collaboration_preference: str | None,
+        communication_boundary_summary: str = "",
         identity_summary: str = "",
         current_turn_timestamp: str = "",
     ) -> str | None:
@@ -817,6 +818,7 @@ class FakeOpenAIClient:
                 "motivation_mode": motivation_mode,
                 "response_tone": response_tone,
                 "collaboration_preference": collaboration_preference or "",
+                "communication_boundary_summary": communication_boundary_summary,
                 "identity_summary": identity_summary,
                 "current_turn_timestamp": current_turn_timestamp,
             }

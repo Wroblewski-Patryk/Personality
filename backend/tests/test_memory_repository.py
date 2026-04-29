@@ -2949,6 +2949,59 @@ async def test_memory_repository_ignores_internal_rows_when_counting_unanswered_
     await engine.dispose()
 
 
+async def test_memory_repository_blocks_scheduler_candidate_when_contact_cadence_is_on_demand(tmp_path) -> None:
+    database_path = tmp_path / "memory-proactive-boundary.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")
+    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    repository = MemoryRepository(session_factory=session_factory)
+    await repository.create_tables(engine)
+
+    now = datetime.now(timezone.utc)
+    await repository.write_episode(
+        event_id="evt-boundary-user",
+        trace_id="trace-boundary-user",
+        source="api",
+        user_id="usr-boundary",
+        event_timestamp=now - timedelta(hours=1),
+        summary="User provided chat target",
+        payload={
+            "event": "hej",
+            "event_visibility": "transcript",
+            "expression": "odpowiedz",
+            "assistant_visibility": "transcript",
+            "memory_kind": "episodic",
+            "chat_id": 123456,
+            "action": "success",
+        },
+        importance=0.4,
+    )
+    await repository.upsert_conclusion(
+        user_id="usr-boundary",
+        kind="proactive_opt_in",
+        content="true",
+        confidence=0.95,
+        source="test",
+        supporting_event_id="evt-boundary-user",
+    )
+    await repository.upsert_relation(
+        user_id="usr-boundary",
+        relation_type="contact_cadence_preference",
+        relation_value="on_demand",
+        confidence=0.96,
+        source="communication_boundary_directive",
+        supporting_event_id="evt-boundary-user",
+    )
+
+    candidates = await repository.get_proactive_scheduler_candidates(
+        proactive_interval_seconds=1800,
+        limit=5,
+    )
+
+    assert all(candidate["user_id"] != "usr-boundary" for candidate in candidates)
+
+    await engine.dispose()
+
+
 async def test_memory_repository_cleans_runtime_data_for_all_users_while_preserving_auth_and_profiles(tmp_path) -> None:
     database_path = tmp_path / "memory-runtime-cleanup-all-users.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{database_path}")

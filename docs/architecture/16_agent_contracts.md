@@ -1808,8 +1808,8 @@ Decide what should happen next.
       },
       {
         "intent_type": "maintain_relation",
-        "relation_type": "delivery_reliability|collaboration_dynamic|support_intensity_preference",
-        "relation_value": "high_trust|guided|high_support",
+        "relation_type": "delivery_reliability|collaboration_dynamic|support_intensity_preference|contact_cadence_preference|interruption_tolerance|interaction_ritual_preference",
+        "relation_value": "high_trust|guided|high_support|on_demand|low_frequency|scheduled_only|low|high|avoid_repeated_greeting|warm_opening_ok",
         "confidence": 0.0,
         "source": "planning_intent",
         "scope_type": "global|goal|task",
@@ -1880,6 +1880,10 @@ Foreground truthfulness guardrails:
 3. if bounded external-read results already exist in the same turn, expression
    or the action-delivery handoff may summarize them, but action remains the
    side-effect owner of those reads
+4. expression may consume high-confidence communication-boundary relations to
+   shape wording and interaction ritual, including avoiding repeated greeting
+   openings when the relation model requests it; expression must not mutate
+   durable relation state
 
 ---
 

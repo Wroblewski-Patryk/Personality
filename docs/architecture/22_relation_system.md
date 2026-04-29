@@ -146,6 +146,27 @@ Examples:
 - habit  
 - interaction_style  
 
+Current communication-boundary relation families:
+
+- `contact_cadence_preference`
+  - `on_demand`
+  - `low_frequency`
+  - `scheduled_only`
+  - `open_to_checkins`
+- `interruption_tolerance`
+  - `low`
+  - `medium`
+  - `high`
+- `interaction_ritual_preference`
+  - `avoid_repeated_greeting`
+  - `warm_opening_ok`
+
+Explicit user-authored communication boundaries may be persisted from planning
+as high-confidence relation evidence. Reflection may also derive the same
+families from episodic evidence. Proactive candidate selection, proactive
+delivery guardrails, and expression style may consume only high-confidence
+communication-boundary relations through the shared adaptive policy surfaces.
+
 ---
 
 ## Relation Confidence

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.communication.boundary import proactive_boundary_block_reason
 from app.core.adaptive_policy import (
     proactive_interruption_adjustment,
     proactive_relevance_adjustment,
@@ -63,6 +64,26 @@ class ProactiveDecisionEngine:
             active_tasks=active_tasks or [],
         )
         user_context = proactive_payload.get("user_context") if isinstance(proactive_payload.get("user_context"), dict) else {}
+        boundary_block_reason = proactive_boundary_block_reason(
+            relations=relations or [],
+            trigger=trigger,
+            recent_outbound_count=self._safe_int(user_context.get("recent_outbound_count")),
+            unanswered_proactive_count=self._safe_int(user_context.get("unanswered_proactive_count")),
+        )
+        if boundary_block_reason is not None:
+            return ProactiveDecisionOutput(
+                trigger=trigger,
+                output_type=output_type,
+                mode="soft",
+                importance=0.0,
+                urgency=0.0,
+                relevance=0.0,
+                interruption_cost=1.0,
+                decision_score=0.0,
+                should_interrupt=False,
+                reason=boundary_block_reason,
+            )
+
         has_active_work = bool(active_goals or active_tasks)
         importance_default = 0.55 + min(max(context.risk_level, 0.0), 0.2)
         urgency_default = 0.55 if output_type == "warning" else 0.45
@@ -233,6 +254,7 @@ class ProactiveDeliveryGuard:
         *,
         event: Event,
         user_preferences: dict | None = None,
+        relations: list[dict] | None = None,
         proactive_decision: ProactiveDecisionOutput | None = None,
     ) -> ProactiveDeliveryGuardOutput | None:
         if event.source != "scheduler" or event.subsource != SCHEDULER_PROACTIVE_TICK:
@@ -271,6 +293,22 @@ class ProactiveDeliveryGuard:
         )
         recent_outbound_count = self._safe_int(user_context.get("recent_outbound_count"))
         unanswered_proactive_count = self._safe_int(user_context.get("unanswered_proactive_count"))
+
+        boundary_block_reason = proactive_boundary_block_reason(
+            relations=relations or [],
+            trigger=str(proactive_decision.trigger or "time_checkin"),
+            recent_outbound_count=recent_outbound_count,
+            unanswered_proactive_count=unanswered_proactive_count,
+        )
+        if boundary_block_reason is not None:
+            return ProactiveDeliveryGuardOutput(
+                allowed=False,
+                reason=boundary_block_reason,
+                recent_outbound_count=recent_outbound_count,
+                recent_outbound_limit=recent_outbound_limit,
+                unanswered_proactive_count=unanswered_proactive_count,
+                unanswered_proactive_limit=unanswered_limit,
+            )
 
         if recent_outbound_count >= recent_outbound_limit:
             return ProactiveDeliveryGuardOutput(

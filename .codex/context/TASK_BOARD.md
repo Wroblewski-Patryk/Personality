@@ -47,15 +47,15 @@ Last updated: 2026-04-29
   - sidebar desktop shell pass using current route contracts only
   - explicit later decision on route expansion for the full canonical nav inventory
 
-## Fresh Short-Term Memory And Proactive Style Respect Plan (2026-04-29)
+## Fresh Short-Term Memory And Proactive Style Respect Repair (2026-04-29)
 
-- `PRJ-778` is now READY as a planning slice:
+- `PRJ-778` is now DONE as an implementation slice:
   - `.codex/tasks/PRJ-778-plan-short-term-memory-and-proactive-style-respect.md`
 - fresh user evidence showed repeated proactive Telegram-style check-ins every
   ~30 minutes on 2026-04-29, despite user instructions not to write that often
   and not to greet on every message
-- deeper planning analysis found the likely issue is not simply a one-message
-  context window or missing phrase exception:
+- root cause was not simply a one-message context window or missing phrase
+  exception:
   - foreground runtime already loads `RuntimeOrchestrator.MEMORY_LOAD_LIMIT=12`
   - proactive scheduler candidate selection is driven by persisted
     `proactive_opt_in` truth plus candidate state
@@ -64,9 +64,25 @@ Last updated: 2026-04-29
   - relation updates currently cover delivery reliability, collaboration
     dynamic, and support intensity, but not contact cadence, interruption
     tolerance, or interaction rituals such as repeated greetings
-- recommended implementation should reuse existing relation/conclusion,
-  reflection, planning intent, action persistence, proactive guard, and
-  expression paths rather than introducing a new short-term memory subsystem
+- implementation now reuses existing relation/conclusion, reflection, planning
+  intent, action persistence, proactive guard, and expression paths rather than
+  introducing a new short-term memory subsystem
+- backend now includes `backend/app/communication/boundary.py` as the shared
+  communication-boundary model:
+  - `contact_cadence_preference`
+  - `interruption_tolerance`
+  - `interaction_ritual_preference`
+- planning now persists explicit communication-boundary directives as
+  `maintain_relation` intents
+- reflection now sees `relation_update`, `proactive_preference_update`, and
+  `proactive_state_update` episode fields and can derive boundary relations
+  from episode text
+- proactive scheduler candidate selection, proactive planning, and delivery
+  guardrails now block or dampen outreach from high-confidence boundary
+  relations such as `on_demand`, `scheduled_only`, and `low_frequency`
+- expression now passes communication-boundary summaries into OpenAI prompting
+  and removes repeated greeting openings when the relation model says to avoid
+  them
 - external research grounding now supports the layered model:
   - working context is a bounded integration workspace
   - episodic memory records what happened
@@ -74,27 +90,11 @@ Last updated: 2026-04-29
   - communication common ground must be updated as interaction proceeds
   - interruption timing should be governed by context and user boundaries, not
     fixed cadence
-- next smallest implementation slice:
-  - freeze the communication-boundary contract in docs before code
-  - expose missing episode fields to reflection
-  - add a bounded communication-relation model for cadence/interruption/rituals
-  - add a model-assisted communication-boundary extractor with deterministic
-    fallback and allowlisted outputs
-  - persist explicit user communication instructions through existing typed
-    relation-owned writes
-  - make proactive candidate/guard logic honor high-confidence relation truth
-  - make expression consume interaction-ritual relation truth
-  - cover the reported multi-turn behavior with tests
-- detailed execution queue is now frozen in `PRJ-778`:
-  - `PRJ-779` Freeze communication-boundary contract
-  - `PRJ-781` Repair reflection input completeness
-  - `PRJ-782` Add communication-boundary extractor
-  - `PRJ-783` Persist and reflect communication-boundary relations
-  - `PRJ-784` Apply boundary relations to proactive candidate selection
-  - `PRJ-785` Apply boundary relations to proactive planning and delivery guard
-  - `PRJ-786` Apply interaction ritual relations to expression
-  - `PRJ-787` Observability, AI scenarios, docs, and release readiness
-  - note: `PRJ-780` is already occupied by a separate shell-planning task
+- focused validation passed:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_communication_boundary.py tests/test_planning_agent.py tests/test_expression_agent.py tests/test_openai_prompting.py tests/test_memory_repository.py -q; Pop-Location`
+- full backend gate passed:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q; Pop-Location`
+  - `970 passed in 98.32s`
 
 ## Fresh Dashboard Structural Convergence Pass (2026-04-29)
 

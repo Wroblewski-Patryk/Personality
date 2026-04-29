@@ -246,6 +246,8 @@ It decides:
 - structure
 - language
 - channel adaptation
+- interaction ritual adaptation from high-confidence communication-boundary
+  relations
 
 Expression answers "what and how to communicate."
 It also emits the explicit response-execution handoff consumed by action.
@@ -418,6 +420,8 @@ When justified, reflection updates slower-changing adaptive state such as:
 
 - theta
 - relation notes
+- communication-boundary relations such as contact cadence, interruption
+  tolerance, and repeated-greeting preference
 - goal progress signals
 - milestone signals
 

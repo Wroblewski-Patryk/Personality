@@ -25,6 +25,7 @@ from app.core.contracts import (
     RoleOutput,
     SubconsciousProposalRecord,
     KnowledgeSearchDomainIntent,
+    MaintainRelationDomainIntent,
     UpsertPlannedWorkItemDomainIntent,
     WebBrowserAccessDomainIntent,
     UpdateProactiveStateDomainIntent,
@@ -35,6 +36,7 @@ from app.core.contracts import (
     UpsertGoalDomainIntent,
     UpsertTaskDomainIntent,
 )
+from app.communication.boundary import extract_communication_boundary_signals
 from app.core.connector_policy import (
     build_connector_permission_gate,
     resolve_connector_capability_discovery_policy,
@@ -427,6 +429,7 @@ class PlanningAgent:
         delivery_guard = self.proactive_delivery_guard.evaluate(
             event=event,
             user_preferences=user_preferences,
+            relations=relations,
             proactive_decision=proactive_decision,
         )
         if delivery_guard is not None and not delivery_guard.allowed:
@@ -594,6 +597,23 @@ class PlanningAgent:
                 UpdateProactivePreferenceDomainIntent(
                     opt_in=proactive_preference.opt_in,
                     source=proactive_preference.source,
+                )
+            )
+
+        boundary_relation_keys: set[tuple[str, str]] = set()
+        for signal in extract_communication_boundary_signals(event_text):
+            key = (signal.relation_type, signal.relation_value)
+            if key in boundary_relation_keys:
+                continue
+            boundary_relation_keys.add(key)
+            intents.append(
+                MaintainRelationDomainIntent(
+                    relation_type=signal.relation_type,
+                    relation_value=signal.relation_value,
+                    confidence=signal.confidence,
+                    source=signal.source,
+                    evidence_count=1,
+                    decay_rate=0.02,
                 )
             )
 

@@ -11,6 +11,7 @@ from app.core.contracts import (
     Event,
     EventMeta,
     ExternalTaskSyncDomainIntent,
+    MaintainRelationDomainIntent,
     MaintainTaskStatusDomainIntent,
     MotivationOutput,
     PromoteInferredGoalDomainIntent,
@@ -2138,9 +2139,81 @@ def test_planning_agent_builds_proactive_warning_plan_when_interrupt_is_allowed(
     assert "prioritize_immediate_attention" in result.steps
     assert "send_telegram_message" in result.steps
     assert result.needs_response is True
-    assert result.needs_action is True
+
+
+def test_planning_agent_persists_communication_boundary_directives_as_relations() -> None:
+    result = PlanningAgent().run(
+        event=_event(text="Nie pisz do mnie co pol godziny i nie musisz sie witac co wiadomosc."),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.7,
+            urgency=0.2,
+            valence=0.0,
+            arousal=0.2,
+            mode="respond",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.8),
+    )
+
+    relation_intents = [
+        intent for intent in result.domain_intents if isinstance(intent, MaintainRelationDomainIntent)
+    ]
+    assert {
+        (intent.relation_type, intent.relation_value)
+        for intent in relation_intents
+    } >= {
+        ("contact_cadence_preference", "low_frequency"),
+        ("interaction_ritual_preference", "avoid_repeated_greeting"),
+    }
+
+
+def test_planning_agent_defers_proactive_outreach_when_contact_cadence_is_on_demand() -> None:
+    result = PlanningAgent().run(
+        event=_scheduler_event(
+            {
+                "text": "scheduler proactive tick",
+                "chat_id": 123456,
+                "proactive": {
+                    "trigger": "task_blocked",
+                    "importance": 0.9,
+                    "urgency": 0.9,
+                    "user_context": {
+                        "quiet_hours": False,
+                        "focus_mode": False,
+                        "recent_user_activity": "active",
+                        "recent_outbound_count": 0,
+                        "unanswered_proactive_count": 0,
+                    },
+                },
+            }
+        ),
+        context=_context(),
+        motivation=MotivationOutput(
+            importance=0.9,
+            urgency=0.9,
+            valence=0.0,
+            arousal=0.4,
+            mode="execute",
+        ),
+        role=RoleOutput(selected="advisor", confidence=0.8),
+        user_preferences={"proactive_opt_in": True},
+        relations=[
+            {
+                "relation_type": "contact_cadence_preference",
+                "relation_value": "on_demand",
+                "confidence": 0.96,
+            }
+        ],
+        active_tasks=[{"id": 21, "name": "fix deploy blocker", "status": "blocked"}],
+    )
+
+    assert result.proactive_decision is not None
+    assert result.proactive_decision.should_interrupt is False
+    assert result.proactive_decision.reason == "contact_cadence_on_demand"
+    assert result.needs_response is False
+    assert result.needs_action is False
     assert result.domain_intents[0].intent_type == "update_proactive_state"
-    assert result.domain_intents[0].state == "delivery_ready"
+    assert result.domain_intents[0].state == "interruption_deferred"
     assert result.domain_intents[0].trigger == "task_blocked"
 
 

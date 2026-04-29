@@ -30,6 +30,7 @@ class NoReplyOpenAI:
         motivation_mode: str,
         response_tone: str,
         collaboration_preference: str | None,
+        communication_boundary_summary: str = "",
         identity_summary: str = "",
         current_turn_timestamp: str = "",
     ) -> str | None:
@@ -52,6 +53,7 @@ class ReplyOpenAI:
         motivation_mode: str,
         response_tone: str,
         collaboration_preference: str | None,
+        communication_boundary_summary: str = "",
         identity_summary: str = "",
         current_turn_timestamp: str = "",
     ) -> str | None:
@@ -67,11 +69,18 @@ class ReplyOpenAI:
                 "motivation_mode": motivation_mode,
                 "response_tone": response_tone,
                 "collaboration_preference": collaboration_preference or "",
+                "communication_boundary_summary": communication_boundary_summary,
                 "identity_summary": identity_summary,
                 "current_turn_timestamp": current_turn_timestamp,
             }
         )
         return "OpenAI response"
+
+
+class GreetingOpenAI(ReplyOpenAI):
+    async def generate_reply(self, *args, **kwargs) -> str | None:
+        await super().generate_reply(*args, **kwargs)
+        return "Czesc Patryk! Jasne, przechodze do konkretu."
 
 
 def _event(text: str = "hello") -> Event:
@@ -305,10 +314,54 @@ async def test_expression_uses_openai_when_available() -> None:
             "motivation_mode": "respond",
             "response_tone": "supportive",
             "collaboration_preference": "",
+            "communication_boundary_summary": "",
             "identity_summary": "",
             "current_turn_timestamp": openai.calls[0]["current_turn_timestamp"],
         }
     ]
+
+
+async def test_expression_passes_communication_boundary_summary_to_openai() -> None:
+    openai = ReplyOpenAI()
+    agent = ExpressionAgent(openai_client=openai)
+    await agent.run(
+        _event("hello"),
+        _perception(language="pl"),
+        _context(),
+        _plan(),
+        _role(),
+        _motivation(),
+        relations=[
+            {
+                "relation_type": "interaction_ritual_preference",
+                "relation_value": "avoid_repeated_greeting",
+                "confidence": 0.96,
+            }
+        ],
+    )
+
+    assert "avoid greeting" in openai.calls[0]["communication_boundary_summary"]
+
+
+async def test_expression_removes_repeated_greeting_when_relation_requests_it() -> None:
+    agent = ExpressionAgent(openai_client=GreetingOpenAI())
+    result = await agent.run(
+        _event("hello"),
+        _perception(language="pl"),
+        _context(),
+        _plan(),
+        _role(),
+        _motivation(),
+        relations=[
+            {
+                "relation_type": "interaction_ritual_preference",
+                "relation_value": "avoid_repeated_greeting",
+                "confidence": 0.96,
+            }
+        ],
+    )
+
+    assert result.message == "Jasne, przechodze do konkretu."
 
 
 async def test_expression_passes_structured_preference_to_openai() -> None:

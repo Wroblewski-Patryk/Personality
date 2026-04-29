@@ -154,7 +154,7 @@ class ContextAgent:
                 continue
             seen.add(summary)
             relation_parts.append(summary)
-            if len(relation_parts) >= 2:
+            if len(relation_parts) >= 4:
                 break
 
         if not relation_parts:
@@ -177,6 +177,25 @@ class ContextAgent:
                 return "interaction trust is high when concrete delivery is proposed"
             if relation_value == "medium_trust":
                 return "interaction trust improves with explicit next-step delivery"
+        if relation_type == "contact_cadence_preference":
+            if relation_value == "on_demand":
+                return "user prefers assistant-initiated contact only on demand"
+            if relation_value == "low_frequency":
+                return "user prefers less frequent proactive contact"
+            if relation_value == "scheduled_only":
+                return "user prefers only scheduled reminders"
+            if relation_value == "open_to_checkins":
+                return "user is open to proactive check-ins"
+        if relation_type == "interruption_tolerance":
+            if relation_value == "low":
+                return "user has low tolerance for interruptions"
+            if relation_value == "high":
+                return "user accepts more frequent interruptions"
+        if relation_type == "interaction_ritual_preference":
+            if relation_value == "avoid_repeated_greeting":
+                return "avoid greeting the user at the start of every message"
+            if relation_value == "warm_opening_ok":
+                return "warm openings are acceptable"
         if relation_type == "goal_execution_trust":
             return "goal-focused trust is currently " + relation_value.replace("_", " ")
         return ""

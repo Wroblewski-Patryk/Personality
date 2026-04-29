@@ -1,3 +1,9 @@
+import re
+
+from app.communication.boundary import (
+    communication_boundary_summary,
+    should_avoid_repeated_greeting,
+)
 from app.core.contracts import (
     AffectiveAssessmentOutput,
     ContextOutput,
@@ -38,11 +44,13 @@ class ExpressionAgent:
         text = str(event.payload.get("text", "")).strip()
         response_style = preferred_response_style(user_preferences)
         collaboration_preference = preferred_collaboration_preference(user_preferences)
+        active_relations = relations or []
         relation_support_intensity = self._relation_value(
-            relations=relations or [],
+            relations=active_relations,
             relation_type="support_intensity_preference",
             min_confidence=0.68,
         )
+        boundary_summary = communication_boundary_summary(active_relations)
         tone = self._select_tone(
             affective=perception.affective,
             motivation=motivation,
@@ -86,6 +94,7 @@ class ExpressionAgent:
                     motivation_mode=motivation.mode,
                     response_tone=tone,
                     collaboration_preference=collaboration_preference,
+                    communication_boundary_summary=boundary_summary,
                     identity_summary=identity.summary if identity is not None else "",
                     current_turn_timestamp=event.timestamp.isoformat(),
                 )
@@ -115,6 +124,7 @@ class ExpressionAgent:
                         relation_support_intensity=relation_support_intensity,
                     )
 
+        message = self._apply_interaction_rituals(message=message, relations=active_relations)
         if event.source == "telegram":
             channel = "telegram"
         elif event.source == "scheduler" and isinstance(event.payload.get("chat_id"), (int, str)):
@@ -281,6 +291,20 @@ class ExpressionAgent:
                 return "guiding"
             return "guiding"
         return None
+
+    def _apply_interaction_rituals(self, *, message: str, relations: list[dict]) -> str:
+        if not should_avoid_repeated_greeting(relations):
+            return message
+        return self._strip_repeated_greeting(message)
+
+    def _strip_repeated_greeting(self, message: str) -> str:
+        stripped = str(message or "").lstrip()
+        pattern = re.compile(
+            r"^(czesc|hej|siema|dzien dobry|hi|hello)\s*(?:patryk)?\s*[!,. :;-]*\s*",
+            re.IGNORECASE,
+        )
+        cleaned = pattern.sub("", stripped, count=1).lstrip()
+        return cleaned or stripped
 
     def _needs_support(self, affective: AffectiveAssessmentOutput) -> bool:
         label = str(affective.affect_label).strip().lower()

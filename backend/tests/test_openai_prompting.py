@@ -44,6 +44,7 @@ def test_openai_prompt_builder_fallback_without_langchain() -> None:
         motivation_mode="respond",
         response_tone="supportive",
         collaboration_preference="guided",
+        communication_boundary_summary="Interaction ritual: avoid greeting the user at the start of every message.",
         identity_summary="helpful and clear",
         current_turn_timestamp="2026-04-25T21:22:00+00:00",
     )
@@ -52,6 +53,7 @@ def test_openai_prompt_builder_fallback_without_langchain() -> None:
     assert messages[0]["role"] == "system"
     assert "advisor" in messages[0]["content"]
     assert "English" in messages[0]["content"]
+    assert "avoid greeting" in messages[0]["content"]
     assert "2026-04-25T21:22:00+00:00" in messages[0]["content"]
     assert messages[1] == {
         "role": "user",

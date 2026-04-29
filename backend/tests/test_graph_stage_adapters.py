@@ -40,6 +40,7 @@ class _FakeOpenAIClient:
         motivation_mode: str,
         response_tone: str,
         collaboration_preference: str | None,
+        communication_boundary_summary: str = "",
         identity_summary: str = "",
         current_turn_timestamp: str = "",
     ) -> str | None:
