@@ -2,6 +2,25 @@
 
 Last updated: 2026-04-29
 
+## Fresh Layout Sidebar Home Dashboard Micro Parity Checklist (2026-04-29)
+
+- `PRJ-801` is now DONE as a planning supplement to `PRJ-800`:
+  - `.codex/tasks/PRJ-801-freeze-layout-sidebar-home-dashboard-micro-parity-checklist.md`
+- checklist artifact:
+  - `docs/planning/layout-sidebar-home-dashboard-micro-parity-checklist.md`
+- purpose:
+  - enumerate visible sub-elements so future parity work can no longer hide
+    behind broad statements like "the shell is closer"
+- status model:
+  - `MATCHED`
+  - `DRIFT`
+  - `BLOCKED`
+- current conclusion from the checklist:
+  - the majority of high-impact sub-elements in `layout`, `sidebar`, `home`,
+    and `dashboard` are still in `DRIFT`
+  - this confirms that the lane still needs a disciplined structural execution
+    sequence before final screenshot parity can be claimed
+
 ## Fresh Layout Sidebar Home Dashboard Master Parity Ledger (2026-04-29)
 
 - `PRJ-800` is now DONE as a planning slice:

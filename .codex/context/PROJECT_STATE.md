@@ -4,6 +4,21 @@ Last updated: 2026-04-29
 
 ## Product Snapshot
 
+- 2026-04-29: `PRJ-801` added a micro parity checklist on top of the master
+  ledger for `layout + sidebar + home + dashboard`:
+  - checklist artifact:
+    - `docs/planning/layout-sidebar-home-dashboard-micro-parity-checklist.md`
+  - the checklist marks visible sub-elements as:
+    - `MATCHED`
+    - `DRIFT`
+    - `BLOCKED`
+  - result:
+    - we now have both a structural ledger and a visible-element checklist for
+      the same canonical lane
+    - the audit confirms that many important sub-elements still drift, even
+      when the overall mood is already close
+  - this should make the next execution slices more exact and less impressionistic
+
 - 2026-04-29: `PRJ-800` created one master parity ledger for the remaining
   canonical work on `layout + sidebar + home + dashboard`:
   - audit artifact:
