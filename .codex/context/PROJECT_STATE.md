@@ -30,6 +30,8 @@ Last updated: 2026-04-30
       mini-links in favor of calmer support accents
     - now also reduces the quick-action tray and removes the extra helper line
       below the composer so the route stays more transcript-first
+    - now also swaps the headline star for the Aviary logomark treatment and
+      reduces topbar control-pill density
   - `web/src/App.tsx` additionally now:
     - replaces rough chat composer glyphs with explicit SVG icon components
     - restores cleaner role-and-time metadata inside chat bubbles
@@ -51,6 +53,7 @@ Last updated: 2026-04-30
     - compresses right-rail panel padding and spacing
     - tightens topbar, transcript, action-tray, and composer spacing for a
       calmer conversation rhythm
+    - reduces chat bubble widths and padding for a calmer canonical read
   - new implementation task:
     - `.codex/tasks/PRJ-816-chat-canonical-parity-closure-lane.md`
   - current evidence sources:

@@ -60,6 +60,10 @@ Last updated: 2026-04-30
   - removed the helper line below the composer
   - tightened transcript and composer spacing so the route keeps more focus on
     the conversation thread
+- implemented in the latest polish slice:
+  - replaced the headline star with the Aviary logomark treatment
+  - reduced topbar control-pill density
+  - tightened bubble widths and padding for a calmer transcript read
 - focused validation:
   - `Push-Location .\web; npm run build; Pop-Location`
   - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-816-chat-canonical-parity-closure-lane.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`

@@ -254,6 +254,10 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
     - removed the extra helper sentence below the composer
     - tightened topbar, transcript, and composer spacing so the thread keeps
       more of the visual attention
+  - completed one more surface-polish pass that:
+    - replaced the chat headline star with the Aviary logomark treatment
+    - reduced topbar control-pill density
+    - tightened message-card widths and padding for calmer transcript rhythm
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`
