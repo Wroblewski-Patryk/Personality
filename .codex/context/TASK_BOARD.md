@@ -2,6 +2,40 @@
 
 Last updated: 2026-04-30
 
+## Fresh Internal Chat And Telegram Message Quality Implementation (2026-04-30)
+
+- `PRJ-811..PRJ-815` are now DONE:
+  - `.codex/tasks/PRJ-811-fix-internal-chat-local-transcript-reconciliation.md`
+  - `.codex/tasks/PRJ-812-render-safe-markdown-in-internal-chat.md`
+  - `.codex/tasks/PRJ-813-prove-full-length-internal-chat-message-rendering.md`
+  - `.codex/tasks/PRJ-814-improve-telegram-sentence-aware-segmentation.md`
+  - `.codex/tasks/PRJ-815-align-telegram-and-internal-chat-markdown-support.md`
+- implemented:
+  - internal chat optimistic reconciliation now matches durable transcript
+    truth by exact message id or role-aware event key instead of event id alone
+  - internal chat renders safe Markdown as React elements, covering bold,
+    italic, inline code, fenced code, ordered lists, and unordered lists
+  - long chat message bodies expand naturally inside the transcript scroll
+    surface
+  - Telegram segmentation now prefers paragraph, newline, sentence, then word
+    boundaries before hard splitting
+  - Telegram supported Markdown metadata now includes italic and plain-text
+    list readability
+- evidence:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_delivery_router.py tests/test_telegram_client.py; Pop-Location`
+    - `15 passed`
+  - `Push-Location .\web; npm run build; Pop-Location`
+    - passed
+  - responsive proof:
+    - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-desktop.png`
+    - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-tablet.png`
+    - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-mobile.png`
+    - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-proof.json`
+- additional validation:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py -k "telegram_round_trip_readiness_state or chat"; Pop-Location`
+    - `9 passed, 108 deselected`
+  - final diff check still pending before closure
+
 ## Fresh Internal Chat And Telegram Message Quality Plan (2026-04-30)
 
 - `PRJ-810` is now DONE as the planning slice:
@@ -177,6 +211,25 @@ Last updated: 2026-04-30
 - remaining work before DONE:
   - deploy-side screenshot proof for this exact scale pass
   - then decide whether `dashboard` is finally ready to close at the `95%` gate
+
+## Fresh Dashboard Flow And Closure Rhythm Pass (2026-04-30)
+
+- `PRJ-800F` remains IN_PROGRESS as the only active flagship surface:
+  - `.codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
+- purpose:
+  - reduce the last middle-and-bottom widget rhythm so the dashboard keeps one
+    calmer flagship read below the hero
+- implemented in this continuation:
+  - softened flow-step density, icon weight, and active-step emphasis
+  - compressed the lower focus, memory, and reflection cards
+  - tightened the summary-band shadow, chart spacing, and reflection tags so
+    the closure feels less operational
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/index.css .codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- remaining work before DONE:
+  - deploy-side screenshot proof for this exact flow-and-closure pass
+  - then decide whether only tiny spacing drift remains before the `95%` gate
 
 ## Fresh Shared Persona Adaptation Rule Freeze (2026-04-30)
 

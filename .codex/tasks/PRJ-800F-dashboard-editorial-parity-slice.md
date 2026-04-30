@@ -224,6 +224,9 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
   - continued again with a signal-and-callout scale pass that reduces the card
     feel of side metrics, figure notes, and harmony ornament so the screen
     reads more like one illustration-led product surface
+  - continued with a flow-and-closure rhythm pass that softens the center
+    orchestration instrument and compresses the lower cards so the bottom half
+    reads more like one calm continuation of the hero
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`

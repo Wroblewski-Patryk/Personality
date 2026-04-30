@@ -2,6 +2,42 @@
 
 Last updated: 2026-04-30
 
+- 2026-04-30: `PRJ-811..PRJ-815` implemented the internal chat and Telegram message-quality lane:
+  - `web/src/App.tsx` now:
+    - reconciles optimistic transcript items by exact message id or
+      role-aware `(event_id, role)` key so a durable user item cannot remove a
+      still-local assistant reply for the same event
+    - renders safe Markdown in chat bubbles through React elements instead of
+      raw HTML injection
+  - `web/src/index.css` now:
+    - styles chat Markdown paragraphs, emphasis, inline code, fenced code, and
+      lists inside the existing bubble pattern
+    - lets long message bodies expand naturally while the transcript remains
+      scrollable
+  - `backend/app/integrations/delivery_router.py` now:
+    - prefers paragraph, newline, sentence, then word boundaries for Telegram
+      segmentation before last-resort hard splitting
+    - supports safe italic Markdown in addition to bold and code formatting
+  - `backend/app/integrations/telegram/telemetry.py` now:
+    - reports italic and plain-text list readability in
+      `delivery_supported_markdown`
+  - docs/context now describe the implemented behavior:
+    - `docs/planning/internal-chat-and-telegram-message-quality-plan.md`
+    - `docs/implementation/runtime-reality.md`
+    - `docs/ux/design-memory.md`
+  - validation so far:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_delivery_router.py tests/test_telegram_client.py; Pop-Location`
+      - `15 passed`
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_api_routes.py -k "telegram_round_trip_readiness_state or chat"; Pop-Location`
+      - `9 passed, 108 deselected`
+    - `Push-Location .\web; npm run build; Pop-Location`
+      - passed
+    - responsive proof:
+      - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-desktop.png`
+      - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-tablet.png`
+      - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-mobile.png`
+      - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-proof.json`
+
 - 2026-04-30: `PRJ-810` planned the internal chat and Telegram message-quality lane:
   - new plan:
     - `docs/planning/internal-chat-and-telegram-message-quality-plan.md`
@@ -186,6 +222,22 @@ Last updated: 2026-04-30
   - result so far:
     - the dashboard should now feel less like a collection of premium widgets
       and more like one illustration-led flagship route
+    - deploy-side screenshot proof is still required before declaring the
+      `95%` parity gate reached
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/index.css .codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+
+- 2026-04-30: `PRJ-800F` continued with a flow-and-closure rhythm pass on the
+  dashboard:
+  - `web/src/index.css` now:
+    - softens flow-step density and icon weight
+    - compresses the lower focus, memory, and reflection cards
+    - reduces the operational feel of the summary band through calmer spacing
+      and lighter ornament rhythm
+  - result so far:
+    - the dashboard should now keep a more continuous flagship read from hero
+      through the middle instrument into the lower closure
     - deploy-side screenshot proof is still required before declaring the
       `95%` parity gate reached
   - focused validation passed:
