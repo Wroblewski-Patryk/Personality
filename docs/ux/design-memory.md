@@ -150,3 +150,16 @@
 - When a canonical screenshot drives implementation, record background and
   decorative fidelity rules here so future parity passes reuse them instead of
   flattening them into generic gradients.
+## 2026-04-30 - Public home full-bleed shell framing
+
+- The public `home` surface should not read as a nested panel or browser-like
+  window.
+- Use full-width `header`, `hero`, and `footer` sections, each with its own
+  full-width shell/background treatment.
+- Keep inner navigation, hero copy, bridge content, and trust-band content
+  visually aligned through a consistent max-width rhythm, even if the DOM does
+  not use a separate wrapper for every section.
+- On wide screens, let the public navigation float above the scenic hero
+  background rather than sitting inside a separate framed card.
+- Treat the landing artwork as the hero-stage background, not as an image
+  nested inside another visible container.

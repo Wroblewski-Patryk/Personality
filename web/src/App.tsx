@@ -2907,8 +2907,8 @@ export default function App() {
   if (!me) {
     return (
       <div className="aion-public-shell min-h-screen text-base-content">
-        <div className="mx-auto max-w-[112rem]">
-          <section className="aion-public-window aion-panel overflow-hidden">
+        <div className="aion-public-shell-frame">
+          <section className="aion-public-window">
             <div className="aion-public-window-body">
               <header className="aion-public-nav">
                 <AviaryWordmark compact />
@@ -2981,9 +2981,9 @@ export default function App() {
                   </div>
                 </section>
 
-                <section className="aion-public-feature-bridge aion-panel-soft rounded-[2rem] p-4 md:p-5">
+                <section className="aion-public-feature-bridge aion-panel-soft">
                   <div className="aion-public-feature-strip">
-                    {publicHomeSurface.pillars.map((pillar, index) => (
+                    {publicHomeSurface.pillars.map((pillar) => (
                       <article key={pillar.title} className="aion-public-feature-card">
                         <span className="aion-public-feature-icon" aria-hidden="true">
                           <PublicGlyph kind={pillar.icon} />
@@ -3010,7 +3010,7 @@ export default function App() {
                   </div>
                 </section>
 
-                <section className="aion-public-trust-band">
+                <footer className="aion-public-trust-band">
                   {publicHomeSurface.trustBand.map((item) => (
                     <article key={item.label} className="aion-public-trust-item">
                       <span className="aion-public-trust-icon" aria-hidden="true">
@@ -3019,7 +3019,7 @@ export default function App() {
                       <p>{item.label}</p>
                     </article>
                   ))}
-                </section>
+                </footer>
               </main>
 
               {authModalOpen ? (

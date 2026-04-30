@@ -2,6 +2,25 @@
 
 Last updated: 2026-04-30
 
+- 2026-04-30: `PRJ-818` rebuilt the public `home` into a full-bleed shell:
+  - `web/src/App.tsx` now:
+    - uses full-width `header`, `hero`, and `footer` sections for the public
+      landing instead of a nested `window` panel
+    - overlays public navigation above the scenic hero stage
+    - keeps public section content calmer and less container-like without the
+      earlier nested-window framing
+  - `web/src/index.css` now:
+    - gives the public hero a true desktop `100vh` stage
+    - stretches the scenic artwork shell across the full landing section
+    - retunes the `feature bridge` and `trust band` for the new full-width
+      structure
+    - adds responsive shell behavior for the new header/hero/footer framing
+  - new implementation task:
+    - `.codex/tasks/PRJ-818-home-full-bleed-hero-shell-pass.md`
+  - highest-value next steps:
+    - compare live `home` against the canonical crop and note density
+    - if needed, perform one final micro-pass only on that deployed proof
+
 - 2026-04-30: `PRJ-817` opened a bounded web-copy encoding regression fix:
   - `web/src/App.tsx` now:
     - restores the damaged Polish flagship-shell strings in route labels,

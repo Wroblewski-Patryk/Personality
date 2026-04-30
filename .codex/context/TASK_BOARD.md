@@ -2,6 +2,29 @@
 
 Last updated: 2026-04-30
 
+## Fresh Public Home Full-Bleed Hero Shell Pass (2026-04-30)
+
+- `PRJ-818` is now DONE as a bounded `home` shell-framing slice:
+  - `.codex/tasks/PRJ-818-home-full-bleed-hero-shell-pass.md`
+- purpose:
+  - apply the user's explicit shell interpretation so `home` stops reading as
+    a nested panel and starts reading as a true full-bleed flagship landing
+- implemented:
+  - replaced the nested public window structure with full-width
+    `header / hero / footer` sections
+  - moved the navigation into an overlay layer above the scenic hero
+  - constrained public content rhythm without keeping the old nested panel
+  - turned the hero into a `100vh` stage on desktop
+  - retuned `feature bridge` and `trust band` to follow the new shell rhythm
+- focused validation:
+  - `Push-Location .\web; npm exec tsc -b; Pop-Location`
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx web/src/index.css docs/ux/design-memory.md .codex/tasks/PRJ-818-home-full-bleed-hero-shell-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- next smallest useful task:
+  - compare the deployed `home` against the canonical crop
+  - then, only if needed, do one last micro-pass on note-card styling and
+    bridge/trust spacing
+
 ## Fresh Web Copy Encoding Regression Fix (2026-04-30)
 
 - `PRJ-817` is now DONE as a bounded shell-quality fix:
