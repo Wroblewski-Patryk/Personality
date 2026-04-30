@@ -58,6 +58,10 @@ Last updated: 2026-04-30
 - closure evidence:
   - live `/` and `/login` proof now confirm the home route is above the `95%`
     parity gate for the active canonical spec
+- post-closure interpretation refinement:
+  - applied the user-requested wrapper cleanup for `home`
+  - moved copy into the shared hero stage with a clearer desktop `40/60` split
+  - removed unnecessary outer scenic nesting so the background art has more room
 - next smallest useful task:
   - return to `dashboard` as the next single active flagship surface
 

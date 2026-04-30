@@ -76,6 +76,22 @@ Last updated: 2026-04-30
   - highest-value next steps:
     - start the next single-surface flagship loop on `dashboard`
 
+- 2026-04-30: `home` received one explicit user-interpretation refinement after closure:
+  - `web/src/App.tsx` now:
+    - removes the extra public-shell outer padding wrapper from the landing
+    - drops the explicit rounded class from the public window wrapper
+    - moves landing copy into the shared hero-stage alongside the scenic figure
+    - removes one redundant scenic wrapper layer so the motif scene itself owns
+      the useful panel/stage classes
+  - `web/src/index.css` now:
+    - reshapes the landing hero to a clearer desktop `40/60` split between
+      copy and scene
+    - removes the old offset logic that existed only to compensate for the
+      extra scenic wrapper
+  - result:
+    - the public landing reads more like one integrated stage and less like
+      copy beside a separate boxed scenic card
+
 - 2026-04-30: `PRJ-800F` continued with a route-corrected dashboard hero-art
   swap:
   - `web/src/App.tsx` now:

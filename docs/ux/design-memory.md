@@ -88,6 +88,11 @@
   When a route-specific hero illustration is meant to behave like atmosphere or
   stage art, render it as the scenic background layer of the section instead of
   as an obvious nested image card inside another card.
+- Landing hero stage composition:
+  Keep the public landing copy and scenic figure inside one shared hero stage,
+  with roughly a `40/60` split between copy and scene on desktop. Avoid
+  redundant nested scenic wrappers when the artwork is already acting as the
+  route background.
 - Integrated composer tray:
   Keep the main chat input, send control, and low-priority support actions
   inside one shared tray so the conversation footer reads like one premium

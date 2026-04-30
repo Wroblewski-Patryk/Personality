@@ -1064,31 +1064,29 @@ function MotifFigurePanel({
 }) {
   return (
     <div
-      className={`aion-panel aion-halo aion-motif-panel aion-landing-motif-panel rounded-[2.15rem] p-4 md:p-5 ${
-        scenic ? "aion-landing-motif-panel-scenic" : ""
+      className={`aion-panel aion-halo aion-motif-panel aion-landing-motif-panel aion-landing-motif-stage rounded-[2.15rem] p-4 md:p-5 ${
+        scenic ? "aion-landing-motif-panel-scenic aion-landing-motif-stage-scenic" : ""
       }`}
     >
-      <div className={`aion-landing-motif-stage ${scenic ? "aion-landing-motif-stage-scenic" : ""}`}>
-        <div className="aion-landing-motif-orbit" aria-hidden="true" />
-        {scenic ? (
-          <div
-            aria-hidden="true"
-            className="aion-landing-motif-scene"
-            style={{ backgroundImage: `url("${artSrc}")` }}
-          />
-        ) : (
-          <img alt="" aria-hidden="true" className="aion-landing-motif-art" src={artSrc} />
-        )}
-        {highlights.map((item, index) => (
-          <article
-            key={item.label}
-            className={`aion-landing-motif-note aion-landing-motif-note-${index + 1}`}
-          >
-            <p className="aion-landing-motif-note-label">{item.label}</p>
-            <p className="aion-landing-motif-note-value">{item.value}</p>
-          </article>
-        ))}
-      </div>
+      <div className="aion-landing-motif-orbit" aria-hidden="true" />
+      {scenic ? (
+        <div
+          aria-hidden="true"
+          className="aion-landing-motif-scene"
+          style={{ backgroundImage: `url("${artSrc}")` }}
+        />
+      ) : (
+        <img alt="" aria-hidden="true" className="aion-landing-motif-art" src={artSrc} />
+      )}
+      {highlights.map((item, index) => (
+        <article
+          key={item.label}
+          className={`aion-landing-motif-note aion-landing-motif-note-${index + 1}`}
+        >
+          <p className="aion-landing-motif-note-label">{item.label}</p>
+          <p className="aion-landing-motif-note-value">{item.value}</p>
+        </article>
+      ))}
     </div>
   );
 }
@@ -2697,8 +2695,8 @@ export default function App() {
   if (!me) {
     return (
       <div className="aion-public-shell min-h-screen text-base-content">
-        <div className="mx-auto max-w-[112rem] px-4 py-4 sm:px-5 md:px-6 md:py-5 xl:px-7">
-          <section className="aion-public-window aion-panel overflow-hidden rounded-[2.35rem]">
+        <div className="mx-auto max-w-[112rem]">
+          <section className="aion-public-window aion-panel overflow-hidden">
             <div className="aion-public-window-body">
               <header className="aion-public-nav">
                 <AviaryWordmark compact />
@@ -2729,45 +2727,45 @@ export default function App() {
 
               <main className="aion-public-home" id="aviary-home">
                 <section className="aion-public-hero">
-                  <div className="aion-public-hero-copy">
-                    <h1 className="aion-public-hero-title">{publicHomeSurface.heroTitle}</h1>
-                    <p className="aion-public-hero-body">{publicHomeSurface.heroBody}</p>
-                    <div className="aion-public-cta-row">
-                      <button
-                        className="aion-public-cta aion-public-cta-primary"
-                        onClick={() => openAuthModal("register")}
-                        type="button"
-                      >
-                        {copy.auth.createAccount}
-                      </button>
-                      <button
-                        className="aion-public-cta aion-public-cta-secondary"
-                        onClick={() => openAuthModal("login")}
-                        type="button"
-                      >
-                        {copy.auth.enterWorkspace}
-                      </button>
+                  <div className="aion-public-hero-stage">
+                    <div className="aion-public-hero-copy">
+                      <h1 className="aion-public-hero-title">{publicHomeSurface.heroTitle}</h1>
+                      <p className="aion-public-hero-body">{publicHomeSurface.heroBody}</p>
+                      <div className="aion-public-cta-row">
+                        <button
+                          className="aion-public-cta aion-public-cta-primary"
+                          onClick={() => openAuthModal("register")}
+                          type="button"
+                        >
+                          {copy.auth.createAccount}
+                        </button>
+                        <button
+                          className="aion-public-cta aion-public-cta-secondary"
+                          onClick={() => openAuthModal("login")}
+                          type="button"
+                        >
+                          {copy.auth.enterWorkspace}
+                        </button>
+                      </div>
+                      <div className="aion-public-micro-proof-row">
+                        {publicHomeSurface.trustBand.slice(0, 3).map((item) => (
+                          <span key={item.label} className="aion-public-micro-proof-item">
+                            <span className="aion-public-micro-proof-dot" aria-hidden="true" />
+                            {item.label}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="aion-public-micro-proof-row">
-                      {publicHomeSurface.trustBand.slice(0, 3).map((item) => (
-                        <span key={item.label} className="aion-public-micro-proof-item">
-                          <span className="aion-public-micro-proof-dot" aria-hidden="true" />
-                          {item.label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
 
-                    <div className="aion-public-hero-stage">
-                      <MotifFigurePanel
-                        artSrc={LANDING_HERO_ART_SRC}
-                        highlights={publicHomeSurface.heroCards.map((card) => ({
-                          label: card.title,
-                          value: card.body,
-                        }))}
-                        scenic
-                      />
-                    </div>
+                    <MotifFigurePanel
+                      artSrc={LANDING_HERO_ART_SRC}
+                      highlights={publicHomeSurface.heroCards.map((card) => ({
+                        label: card.title,
+                        value: card.body,
+                      }))}
+                      scenic
+                    />
+                  </div>
                 </section>
 
                 <section className="aion-public-feature-bridge aion-panel-soft rounded-[2rem] p-4 md:p-5">

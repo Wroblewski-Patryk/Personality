@@ -236,6 +236,9 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
     than a card within a card
   - replaced placeholder numbering and dots in the lower `home` closure with
     route-appropriate semantic iconography for the feature strip and trust bar
+  - applied the user-requested structural simplification by removing the extra
+    scenic wrapper layer, moving the landing copy into the shared hero stage,
+    and using a clearer desktop `40/60` copy-to-scene split
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`
@@ -251,6 +254,7 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
   - focused `git diff --check`
   - production screenshot comparison against the canonical landing
   - local screenshot proof for `/` and `/login` via `vite preview` plus Playwright
+  - local screenshot proof after wrapper removal and `40/60` restructuring
 - What is incomplete:
   - later dashboard parity remains the next major flagship loop
 - Next steps:

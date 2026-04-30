@@ -159,18 +159,15 @@ body {
 }
 
 .aion-public-hero {
-  display: grid;
-  gap: 0.02rem;
-  align-items: center;
-  grid-template-columns: minmax(0, 0.49fr) minmax(0, 1.51fr);
+  display: block;
 }
 
 .aion-public-hero-copy {
   display: grid;
   gap: 0.5rem;
-  align-content: start;
-  max-width: 19rem;
-  padding: 1.18rem 0.05rem 0.08rem 0.08rem;
+  align-content: center;
+  width: min(100%, 19.5rem);
+  padding: 1.18rem 0.2rem 0.08rem 0.08rem;
   position: relative;
   z-index: 2;
 }
@@ -253,8 +250,12 @@ body {
 
 .aion-public-hero-stage {
   position: relative;
+  display: grid;
+  align-items: center;
+  gap: 1.1rem;
+  grid-template-columns: minmax(0, 0.4fr) minmax(0, 0.6fr);
   padding-right: 0;
-  margin-left: -2.35rem;
+  margin-left: 0;
   margin-bottom: -3.9rem;
   z-index: 1;
 }
@@ -409,7 +410,7 @@ body {
   position: relative;
   min-height: 34.6rem;
   overflow: hidden;
-  border-radius: inherit;
+  border-radius: 2.15rem;
 }
 
 .aion-landing-motif-stage-scenic {
@@ -735,7 +736,6 @@ body {
     justify-content: flex-start;
   }
 
-  .aion-public-hero,
   .aion-public-feature-strip,
   .aion-public-trust-band,
   .aion-public-proof-bridge {
@@ -743,8 +743,12 @@ body {
   }
 
   .aion-public-hero-stage {
-    margin-left: 0;
+    grid-template-columns: 1fr;
     margin-bottom: 0;
+  }
+
+  .aion-public-hero-copy {
+    width: min(100%, 22rem);
   }
 
   .aion-public-feature-bridge {
@@ -768,6 +772,7 @@ body {
   }
 
   .aion-public-hero-copy {
+    width: 100%;
     padding-left: 0;
     padding-right: 0;
   }
