@@ -60,8 +60,12 @@ Last updated: 2026-04-30
     parity gate for the active canonical spec
 - post-closure interpretation refinement:
   - applied the user-requested wrapper cleanup for `home`
-  - moved copy into the shared hero stage with a clearer desktop `40/60` split
+  - moved copy into the shared scenic hero stage instead of leaving it beside
+    the background art
+  - kept a clearer desktop `40/60` split between copy and scene inside that
+    same shared stage
   - removed unnecessary outer scenic nesting so the background art has more room
+  - retuned the landing note cards so the copy keeps its own protected zone
 - next smallest useful task:
   - return to `dashboard` as the next single active flagship surface
 

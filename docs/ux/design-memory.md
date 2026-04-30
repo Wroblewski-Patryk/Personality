@@ -92,7 +92,8 @@
   Keep the public landing copy and scenic figure inside one shared hero stage,
   with roughly a `40/60` split between copy and scene on desktop. Avoid
   redundant nested scenic wrappers when the artwork is already acting as the
-  route background.
+  route background. The landing copy should sit on top of that same scenic
+  stage, not beside it in a separate sibling column.
 - Integrated composer tray:
   Keep the main chat input, send control, and low-priority support actions
   inside one shared tray so the conversation footer reads like one premium

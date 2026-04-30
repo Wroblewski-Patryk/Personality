@@ -1057,16 +1057,16 @@ function MotifFigurePanel({
   highlights,
   artSrc = CANONICAL_PERSONA_FIGURE_SRC,
   scenic = false,
+  overlay,
 }: {
   highlights: Array<{ label: string; value: string }>;
   artSrc?: string;
   scenic?: boolean;
+  overlay?: ReactNode;
 }) {
   return (
     <div
-      className={`aion-panel aion-halo aion-motif-panel aion-landing-motif-panel aion-landing-motif-stage rounded-[2.15rem] p-4 md:p-5 ${
-        scenic ? "aion-landing-motif-panel-scenic aion-landing-motif-stage-scenic" : ""
-      }`}
+      className={`aion-landing-motif-stage ${scenic ? "aion-landing-motif-stage-scenic" : ""}`}
     >
       <div className="aion-landing-motif-orbit" aria-hidden="true" />
       {scenic ? (
@@ -1078,6 +1078,7 @@ function MotifFigurePanel({
       ) : (
         <img alt="" aria-hidden="true" className="aion-landing-motif-art" src={artSrc} />
       )}
+      {overlay ? <div className="aion-landing-motif-overlay">{overlay}</div> : null}
       {highlights.map((item, index) => (
         <article
           key={item.label}
@@ -2728,41 +2729,42 @@ export default function App() {
               <main className="aion-public-home" id="aviary-home">
                 <section className="aion-public-hero">
                   <div className="aion-public-hero-stage">
-                    <div className="aion-public-hero-copy">
-                      <h1 className="aion-public-hero-title">{publicHomeSurface.heroTitle}</h1>
-                      <p className="aion-public-hero-body">{publicHomeSurface.heroBody}</p>
-                      <div className="aion-public-cta-row">
-                        <button
-                          className="aion-public-cta aion-public-cta-primary"
-                          onClick={() => openAuthModal("register")}
-                          type="button"
-                        >
-                          {copy.auth.createAccount}
-                        </button>
-                        <button
-                          className="aion-public-cta aion-public-cta-secondary"
-                          onClick={() => openAuthModal("login")}
-                          type="button"
-                        >
-                          {copy.auth.enterWorkspace}
-                        </button>
-                      </div>
-                      <div className="aion-public-micro-proof-row">
-                        {publicHomeSurface.trustBand.slice(0, 3).map((item) => (
-                          <span key={item.label} className="aion-public-micro-proof-item">
-                            <span className="aion-public-micro-proof-dot" aria-hidden="true" />
-                            {item.label}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
                     <MotifFigurePanel
                       artSrc={LANDING_HERO_ART_SRC}
                       highlights={publicHomeSurface.heroCards.map((card) => ({
                         label: card.title,
                         value: card.body,
                       }))}
+                      overlay={
+                        <div className="aion-public-hero-copy">
+                          <h1 className="aion-public-hero-title">{publicHomeSurface.heroTitle}</h1>
+                          <p className="aion-public-hero-body">{publicHomeSurface.heroBody}</p>
+                          <div className="aion-public-cta-row">
+                            <button
+                              className="aion-public-cta aion-public-cta-primary"
+                              onClick={() => openAuthModal("register")}
+                              type="button"
+                            >
+                              {copy.auth.createAccount}
+                            </button>
+                            <button
+                              className="aion-public-cta aion-public-cta-secondary"
+                              onClick={() => openAuthModal("login")}
+                              type="button"
+                            >
+                              {copy.auth.enterWorkspace}
+                            </button>
+                          </div>
+                          <div className="aion-public-micro-proof-row">
+                            {publicHomeSurface.trustBand.slice(0, 3).map((item) => (
+                              <span key={item.label} className="aion-public-micro-proof-item">
+                                <span className="aion-public-micro-proof-dot" aria-hidden="true" />
+                                {item.label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      }
                       scenic
                     />
                   </div>

@@ -137,6 +137,7 @@ repo truth for the next parity loop.
   - `.codex/artifacts/prod-home-live-after-a8cb3bf-login.png`
   - `.codex/artifacts/local-home-root-icons-pass-2026-04-30.png`
   - `.codex/artifacts/local-home-modal-pass-2026-04-30.png`
+  - `.codex/artifacts/local-home-overlay-pass-root-v2-2026-04-30.png`
 
 ## Deployment / Ops Evidence (required for runtime or infra tasks)
 - Deploy impact: low
@@ -236,6 +237,9 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
     than a card within a card
   - replaced placeholder numbering and dots in the lower `home` closure with
     route-appropriate semantic iconography for the feature strip and trust bar
+  - embedded the landing copy directly inside that same scenic hero stage,
+    using the approved desktop `40/60` copy-to-scene split instead of keeping
+    copy as a sibling column beside the artwork
   - applied the user-requested structural simplification by removing the extra
     scenic wrapper layer, moving the landing copy into the shared hero stage,
     and using a clearer desktop `40/60` copy-to-scene split

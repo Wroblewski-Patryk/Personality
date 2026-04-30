@@ -80,7 +80,8 @@ Last updated: 2026-04-30
   - `web/src/App.tsx` now:
     - removes the extra public-shell outer padding wrapper from the landing
     - drops the explicit rounded class from the public window wrapper
-    - moves landing copy into the shared hero-stage alongside the scenic figure
+    - moves landing copy into the same scenic hero-stage as the background art
+      instead of leaving it beside the scene
     - removes one redundant scenic wrapper layer so the motif scene itself owns
       the useful panel/stage classes
   - `web/src/index.css` now:
@@ -88,9 +89,13 @@ Last updated: 2026-04-30
       copy and scene
     - removes the old offset logic that existed only to compensate for the
       extra scenic wrapper
+    - retunes the landing note cards so the scenic callouts no longer crowd
+      the copy column
   - result:
     - the public landing reads more like one integrated stage and less like
       copy beside a separate boxed scenic card
+    - the post-closure screenshot proof now shows copy, scene, and callouts
+      sharing one coherent flagship surface
 
 - 2026-04-30: `PRJ-800F` continued with a route-corrected dashboard hero-art
   swap:
