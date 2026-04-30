@@ -2,6 +2,37 @@
 
 Last updated: 2026-04-30
 
+- 2026-04-30: `PRJ-810` planned the internal chat and Telegram message-quality lane:
+  - new plan:
+    - `docs/planning/internal-chat-and-telegram-message-quality-plan.md`
+  - user notes covered:
+    - internal chat messages can appear lost until refresh
+    - internal chat should not visually cut long messages
+    - Telegram should split long replies into smaller ordered messages without
+      cutting words when safe boundaries exist
+    - Markdown should render in Telegram and internal chat instead of showing
+      raw markers
+  - analysis found:
+    - web chat already uses optimistic local transcript items, but
+      reconciliation currently removes local items when the durable event id
+      appears, which can remove an assistant item before the durable assistant
+      message exists
+    - web chat renders message text directly as text, so Markdown is not styled
+    - Telegram delivery already has bounded segmentation and safe
+      Markdown-to-HTML support for a partial subset, so the next lane should
+      refine sentence-aware splitting and supported Markdown rather than
+      introduce a second transport path
+  - execution queue seeded:
+    - `PRJ-811` internal chat reconciliation
+    - `PRJ-812` internal chat Markdown rendering
+    - `PRJ-813` long-message responsive proof
+    - `PRJ-814` Telegram sentence-aware segmentation
+    - `PRJ-815` cross-channel Markdown support alignment
+  - validation:
+    - planning-only code/doc cross-review; no automated tests run
+  - next smallest useful task:
+    - `PRJ-811` fix internal chat local transcript reconciliation
+
 - 2026-04-30: `PRJ-803` froze the skill-guided bounded action loop direction:
   - `docs/architecture/16_agent_contracts.md` now:
     - defines skills as reusable strategies, tools as action-executed

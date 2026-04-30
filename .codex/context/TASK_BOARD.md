@@ -2,6 +2,36 @@
 
 Last updated: 2026-04-30
 
+## Fresh Internal Chat And Telegram Message Quality Plan (2026-04-30)
+
+- `PRJ-810` is now DONE as the planning slice:
+  - `.codex/tasks/PRJ-810-plan-internal-chat-and-telegram-message-quality.md`
+- purpose:
+  - turn the latest user notes about internal chat reliability, long-message
+    readability, Telegram splitting, and Markdown rendering into one bounded
+    execution lane
+- planning output:
+  - `docs/planning/internal-chat-and-telegram-message-quality-plan.md`
+- analysis found:
+  - internal chat already uses `/app/chat/history` plus optimistic local items,
+    but local reconciliation can remove items too early because it matches by
+    event id instead of exact message identity
+  - internal chat currently renders transcript text directly, so Markdown
+    markers such as `**bold**` and `*italic*` remain visible
+  - Telegram already has delivery-layer segmentation and partial Markdown
+    formatting, so the next work should refine sentence-aware splitting and
+    supported Markdown rather than replace the delivery router
+- new execution queue:
+  - `PRJ-811` fix internal chat local transcript reconciliation
+  - `PRJ-812` render safe Markdown in internal chat
+  - `PRJ-813` prove full-length internal chat message rendering
+  - `PRJ-814` improve Telegram sentence-aware segmentation
+  - `PRJ-815` align Telegram and internal chat Markdown support
+- validation:
+  - planning-only code/doc cross-review; no automated tests run
+- next smallest useful task:
+  - `PRJ-811` fix internal chat local transcript reconciliation
+
 ## Fresh Skill-Guided Bounded Action Loop Plan (2026-04-30)
 
 - `PRJ-803` is now DONE as the planning/architecture freeze:

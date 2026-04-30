@@ -7,6 +7,59 @@ This plan translates the repo analysis into an execution roadmap that brings the
 The goal is not to add more features first.
 The goal is to make the current AION runtime more correct, more inspectable, and easier to extend without architectural drift.
 
+## Planned On 2026-04-30 For Internal Chat And Telegram Message Quality
+
+Fresh user notes identify one product-facing quality lane around the shared
+conversation surfaces:
+
+- internal chat messages can appear lost until refresh
+- long internal chat messages should remain fully readable
+- Telegram should split long replies into ordered smaller messages without
+  cutting words when safe sentence or whitespace boundaries exist
+- Markdown should render in both Telegram and the internal chat instead of
+  exposing raw markers such as `**bold**` or `*italic*`
+
+### Fresh Gap Snapshot
+
+Observed from the current repo:
+
+- `/app/chat/history` remains the canonical transcript owner and should stay
+  that way
+- `web/src/App.tsx` already renders optimistic local transcript items, but its
+  local reconciliation can remove local items too early when a durable event id
+  appears before every durable message item for that event
+- internal chat renders message text directly and therefore has no Markdown
+  rendering path
+- `backend/app/integrations/delivery_router.py` already performs
+  delivery-layer Telegram segmentation and safe Markdown-to-HTML formatting for
+  a partial subset
+- Telegram splitting currently prefers paragraph, newline, and space
+  boundaries, but not sentence endings before word boundaries
+
+### New Queue
+
+- `PRJ-810` Plan internal chat and Telegram message quality. (complete)
+  - Result:
+    - new execution-ready plan lives in
+      `docs/planning/internal-chat-and-telegram-message-quality-plan.md`
+    - no runtime behavior changed in this planning slice
+
+- `PRJ-811` Fix internal chat local transcript reconciliation.
+- `PRJ-812` Render safe Markdown in internal chat.
+- `PRJ-813` Prove full-length internal chat message rendering.
+- `PRJ-814` Improve Telegram sentence-aware segmentation.
+- `PRJ-815` Align Telegram and internal chat Markdown support.
+
+Why this order:
+
+- first stop messages from appearing lost
+- then render Markdown in the canonical internal chat
+- then prove long-message readability across responsive breakpoints
+- then refine Telegram delivery splitting without moving transport adaptation
+  into expression
+- finally align supported Markdown metadata and behavior across web and
+  Telegram
+
 ## Planned On 2026-04-30 For Skill-Guided Bounded Action Execution
 
 Fresh user direction now resolves the near-term tool-orchestration concept:
