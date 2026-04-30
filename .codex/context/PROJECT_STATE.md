@@ -2,6 +2,17 @@
 
 Last updated: 2026-04-30
 
+- 2026-04-30: `PRJ-825` opened the second authenticated-shell frame slice:
+  - `web/src/index.css` now:
+    - reduces outer shell padding and frame gap
+    - reduces shell-atmosphere intensity behind route surfaces
+    - tightens toolbar spacing before the active route canvas
+  - new implementation task:
+    - `.codex/tasks/PRJ-825-authenticated-shell-canvas-opening-pass.md`
+  - highest-value next steps:
+    - compare the deployed authenticated shell
+    - move to sidebar exactness once the frame opening feels sufficiently calm
+
 - 2026-04-30: `home` now has fresh deploy-side proof after the latest closure
   slices:
   - production evidence:

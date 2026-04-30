@@ -2,6 +2,25 @@
 
 Last updated: 2026-04-30
 
+## Fresh Authenticated Shell Canvas Opening Pass (2026-04-30)
+
+- `PRJ-825` is now IN_PROGRESS as the second slice of the authenticated-shell
+  group:
+  - `.codex/tasks/PRJ-825-authenticated-shell-canvas-opening-pass.md`
+- purpose:
+  - tighten the shell opening between rail, toolbar, backdrop, and active
+    canvas before moving to sidebar exactness
+- implemented in the current slice:
+  - reduced outer shell padding and frame gap
+  - reduced shell-backdrop and stage-atmosphere intensity
+  - tightened toolbar spacing before the route canvas
+- focused validation:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/index.css .codex/tasks/PRJ-825-authenticated-shell-canvas-opening-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- next smallest useful task:
+  - compare the deployed authenticated shell
+  - if the frame feels calm enough, move to the first sidebar exactness slice
+
 ## Fresh Authenticated Shell Utility Bar Calm Pass (2026-04-30)
 
 - `PRJ-824` is now IN_PROGRESS as the first slice of the authenticated-shell

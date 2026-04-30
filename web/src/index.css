@@ -760,7 +760,7 @@ body {
 }
 
 .aion-shell-window-body {
-  padding: 1.05rem 0.98rem 0.98rem;
+  padding: 0.96rem 0.9rem 0.9rem;
 }
 
 .aion-shell {
@@ -773,7 +773,7 @@ body {
 }
 
 .aion-shell-frame-canonical {
-  gap: 0.78rem;
+  gap: 0.64rem;
 }
 
 .aion-shell-stage {
@@ -788,9 +788,9 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 0%, rgba(255, 250, 243, 0.64), transparent 0 18%),
-    radial-gradient(circle at 84% 12%, rgba(111, 149, 146, 0.06), transparent 0 16%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 18%);
+    radial-gradient(circle at 18% 0%, rgba(255, 250, 243, 0.48), transparent 0 16%),
+    radial-gradient(circle at 84% 12%, rgba(111, 149, 146, 0.04), transparent 0 14%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 16%);
 }
 
 .aion-shell::before {
@@ -799,10 +799,15 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent 0, rgba(255, 255, 255, 0.18) 48%, transparent 100%),
-    radial-gradient(circle at 20% 18%, rgba(255, 249, 240, 0.75), transparent 0 24%),
-    radial-gradient(circle at 80% 12%, rgba(247, 233, 208, 0.28), transparent 0 20%);
+    linear-gradient(90deg, transparent 0, rgba(255, 255, 255, 0.12) 48%, transparent 100%),
+    radial-gradient(circle at 20% 18%, rgba(255, 249, 240, 0.6), transparent 0 22%),
+    radial-gradient(circle at 80% 12%, rgba(247, 233, 208, 0.18), transparent 0 18%);
   opacity: 0.8;
+}
+
+.aion-shell-toolbar {
+  display: grid;
+  gap: 0.48rem;
 }
 
 @media (max-width: 1199px) {
