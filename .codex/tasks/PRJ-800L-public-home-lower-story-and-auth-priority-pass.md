@@ -199,6 +199,9 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
   - moved the dark trust closure directly below the bridge so the landing first read stays product-first
   - shortened and visually demoted the auth panel so it behaves more like a supporting session-entry block
   - tightened the lower proof/auth region into a calmer editorial continuation
+  - removed the lingering lower proof-story grid entirely so the landing no
+    longer falls into a second pseudo-screen that does not exist in the
+    canonical public entry
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`

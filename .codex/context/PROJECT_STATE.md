@@ -2,6 +2,33 @@
 
 Last updated: 2026-04-30
 
+- 2026-04-30: `PRJ-800F` continued with a unified dashboard-hero artwork pass,
+  and `PRJ-800L` continued with a calmer lower landing continuation:
+  - `web/src/App.tsx` now:
+    - swaps the dashboard figure stage from a split persona-plus-atmosphere
+      implementation to one wide integrated hero artwork
+    - removes the separate dashboard figure-atmosphere layer and the remaining
+      non-canonical lower proof-story region from `home`
+    - keeps the auth panel as the sole quiet continuation below the trust
+      closure
+  - `web/src/index.css` now:
+    - crops and scales the new dashboard hero artwork for a stronger canonical
+      scenic read
+    - removes dead dashboard caption/atmosphere styling and narrows the
+      landing auth continuation
+  - new canonical-support assets:
+    - `docs/ux/assets/aviary-dashboard-hero-canonical-reference-v3.png`
+    - `web/public/aviary-dashboard-hero-canonical-reference-v3.png`
+  - result so far:
+    - the dashboard should now read from one continuous scenic hero instead of
+      two visibly layered images
+    - the public landing should now avoid dropping into a second non-canonical
+      proof grid beneath the first-screen trust closure
+  - highest-value next steps:
+    - rerun final validation for this exact slice
+    - inspect deployed `dashboard` and public landing against their canonical
+      targets
+
 ## Product Snapshot
 
 - 2026-04-30: `PRJ-800F` continued with a figure-caption and rail simplification pass:

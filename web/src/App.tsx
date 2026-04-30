@@ -25,6 +25,7 @@ type UtcOffsetOption = {
 
 const BUILD_REVISION = String(import.meta.env.VITE_APP_BUILD_REVISION ?? "dev");
 const CANONICAL_PERSONA_FIGURE_SRC = "/aviary-persona-figure-canonical-reference-v1.png";
+const DASHBOARD_HERO_ART_SRC = "/aviary-dashboard-hero-canonical-reference-v3.png";
 const RESET_DATA_CONFIRMATION_TEXT = "RESET MY DATA";
 const ROUTES: RoutePath[] = ["/dashboard", "/chat", "/personality", "/tools", "/settings"];
 const UI_LANGUAGE_OPTIONS: Array<{
@@ -142,20 +143,6 @@ const UI_COPY = {
       createAccount: "Create account",
       tabsLogin: "Login",
       tabsRegister: "Register",
-      trustCards: [
-        {
-          title: "Fast return to your workspace",
-          body: "Your chat, settings, and linked tools stay one sign-in away.",
-        },
-        {
-          title: "A clear place to manage preferences",
-          body: "Profile details, language, and proactive follow-ups stay easy to reach.",
-        },
-        {
-          title: "Built for privacy and control",
-          body: "You can reset runtime continuity later without deleting the account itself.",
-        },
-      ],
     },
     dashboard: {
       eyebrow: "Dashboard",
@@ -311,20 +298,6 @@ const UI_COPY = {
       createAccount: "Utwórz konto",
       tabsLogin: "Logowanie",
       tabsRegister: "Rejestracja",
-      trustCards: [
-        {
-          title: "Szybki powrót do workspace'u",
-          body: "Czat, ustawienia i podpięte narzędzia są dostępne zaraz po zalogowaniu.",
-        },
-        {
-          title: "Jeden prosty panel preferencji",
-          body: "Profil, język i proaktywne follow-upy pozostają łatwe do znalezienia i zmiany.",
-        },
-        {
-          title: "Prywatność i kontrola po Twojej stronie",
-          body: "Później możesz zresetować continuity runtime'u bez usuwania samego konta.",
-        },
-      ],
     },
     chat: {
       eyebrow: "Rozmowa",
@@ -475,20 +448,6 @@ const UI_COPY = {
       createAccount: "Konto erstellen",
       tabsLogin: "Login",
       tabsRegister: "Registrieren",
-      trustCards: [
-        {
-          title: "Schnell zurück im Workspace",
-          body: "Chat, Einstellungen und verbundene Tools sind nach dem Login direkt da.",
-        },
-        {
-          title: "Ein klarer Ort für deine Präferenzen",
-          body: "Profil, Sprache und proaktive Follow-ups bleiben leicht erreichbar.",
-        },
-        {
-          title: "Mehr Privatsphäre und Kontrolle",
-          body: "Später kannst du die Runtime-Kontinuität zurücksetzen, ohne das Konto zu löschen.",
-        },
-      ],
     },
     chat: {
       eyebrow: "Gespräch",
@@ -2678,25 +2637,7 @@ export default function App() {
                   ))}
                 </section>
 
-                <section className="aion-public-story-grid">
-                  <aside className="aion-public-proof-column">
-                    <article className="aion-panel-soft aion-public-quote-card rounded-[2rem] p-6">
-                      <p className="aion-public-section-label">{publicHomeSurface.proofLine}</p>
-                      <p className="aion-public-quote">{publicHomeSurface.quote}</p>
-                      <p className="aion-public-quote-body">{publicHomeSurface.subquote}</p>
-                    </article>
-
-                    <div className="aion-public-story-card-grid">
-                      {copy.auth.trustCards.map((card) => (
-                        <article key={card.title} className="aion-panel-soft aion-public-story-card rounded-[1.7rem] p-5">
-                          <p className="aion-public-feature-title">{card.title}</p>
-                          <p className="mt-2 text-sm leading-7 text-base-800">{card.body}</p>
-                        </article>
-                      ))}
-                    </div>
-                  </aside>
-
-                  <section className="aion-public-auth-panel aion-panel-soft" id="aviary-auth">
+                <section className="aion-public-auth-panel aion-panel-soft" id="aviary-auth">
                     <div className="aion-public-auth-header">
                       <div>
                         <p className="aion-public-section-label">{copy.auth.sessionEntry}</p>
@@ -2788,7 +2729,6 @@ export default function App() {
                         />
                       </div>
                     ) : null}
-                  </section>
                 </section>
               </main>
             </div>
@@ -3023,7 +2963,6 @@ export default function App() {
                     </div>
 
                     <div className="aion-dashboard-figure-stage">
-                      <div className="aion-dashboard-figure-atmosphere" aria-hidden="true" />
                       <div className="aion-dashboard-figure-halo" aria-hidden="true" />
                       {dashboardFigureNotes.map((note) => (
                         <article key={note.key} className={note.className}>
@@ -3034,8 +2973,8 @@ export default function App() {
                       ))}
                       <img
                         className="aion-dashboard-figure-image"
-                        src={CANONICAL_PERSONA_FIGURE_SRC}
-                        alt="Embodied personality overview"
+                        src={DASHBOARD_HERO_ART_SRC}
+                        alt="Dashboard cognition field"
                       />
                       <div className="aion-dashboard-figure-badge">
                         <span className="aion-dashboard-figure-badge-core">✦</span>

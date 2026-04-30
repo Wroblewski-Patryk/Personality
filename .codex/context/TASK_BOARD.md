@@ -2,6 +2,30 @@
 
 Last updated: 2026-04-30
 
+## Fresh Unified Dashboard Hero Artwork And Home Continuation Pass (2026-04-30)
+
+- `PRJ-800F` remains IN_PROGRESS as the active flagship surface:
+  - `.codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
+- `PRJ-800L` continues only as the quieter public-home follow-up:
+  - `.codex/tasks/PRJ-800L-public-home-lower-story-and-auth-priority-pass.md`
+- purpose:
+  - replace the split dashboard hero implementation with one integrated scenic
+    artwork and remove the lingering non-canonical lower proof grid from
+    `home`
+- implemented in this continuation:
+  - generated and wired one new wide dashboard hero artwork derived from the
+    canonical dashboard and the shared Aviary persona figure
+  - removed the separate dashboard atmosphere layer in code so the hero now
+    reads from one raster stage instead of two visible image systems
+  - removed the lingering lower proof-story block from `home`, leaving the
+    auth panel as a quieter continuation below the trust closure
+- focused validation:
+  - pending final rerun after source-of-truth sync in this exact slice
+- remaining work before DONE:
+  - final build and diff validation for this combined dashboard/home pass
+  - deploy-side screenshot proof for the new dashboard hero and the calmer
+    public-home continuation
+
 ## Fresh Dashboard Figure-Caption And Rail Simplification Pass (2026-04-30)
 
 - `PRJ-800F` remains IN_PROGRESS as the only active flagship surface:

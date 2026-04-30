@@ -66,6 +66,8 @@ They define the UX/UI target that future implementation should move toward.
 
 - Asset:
   - `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
+- Implementation support asset:
+  - `docs/ux/assets/aviary-dashboard-hero-canonical-reference-v3.png`
 - Role:
   - flagship authenticated overview target
 - Must preserve:
@@ -73,6 +75,8 @@ They define the UX/UI target that future implementation should move toward.
   - magical but usable information hierarchy
   - strong guidance, goals, insights, and state readability
   - premium editorial density without collapsing into analytics clutter
+  - one continuous scenic hero composition when translated into production
+    code, instead of visibly separate figure and atmosphere layers
 
 ![AION dashboard canonical reference](./assets/aion-dashboard-canonical-reference-v2.png)
 

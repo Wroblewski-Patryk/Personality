@@ -119,6 +119,7 @@ comparison.
 - Design-memory update required: no
 - Visual gap audit completed: yes
 - Background or decorative asset strategy: reuse existing dashboard atmosphere and scenic closure assets
+- Background or decorative asset strategy: use one integrated dashboard hero artwork plus the existing scenic closure assets
 - Canonical asset extraction required: no
 - Screenshot comparison pass completed: partial
 - Remaining mismatches:
@@ -206,9 +207,14 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
   - continued the same single-surface lane by removing the non-canonical
     figure caption, simplifying recent-activity rows, and trimming extra
     narrative copy from the intention card
+  - replaced the split dashboard hero implementation with one integrated wide
+    hero artwork so the shared persona, atmosphere, and cognition details read
+    as one continuous scenic stage
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`
+  - `docs/ux/assets/aviary-dashboard-hero-canonical-reference-v3.png`
+  - `web/public/aviary-dashboard-hero-canonical-reference-v3.png`
   - `.codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
   - `.codex/context/TASK_BOARD.md`
   - `.codex/context/PROJECT_STATE.md`

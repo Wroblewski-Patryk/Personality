@@ -46,6 +46,11 @@
   When the central dashboard hero still feels too generic, add one dedicated
   scenic atmosphere asset behind the figure and use light connective ornament
   before adding more standalone cards.
+- Unified dashboard hero artwork:
+  When the canonical dashboard depends on one continuous scenic composition,
+  prefer one wide raster hero artwork that already integrates the shared
+  persona, aura, and right-side cognition detail instead of layering a separate
+  figure asset over a second atmosphere image.
 - Frame-first flagship shell:
   Keep the public and authenticated shells premium, inset, and composed, but
   do not simulate browser controls, title bars, or fake window chrome as part
@@ -97,6 +102,8 @@
   top bar reused across premium authenticated routes.
 - The current approved canonical web screen-set now lives in
   `docs/ux/canonical-web-screen-reference-set.md`.
+- The current approved dashboard hero implementation asset now includes
+  `docs/ux/assets/aviary-dashboard-hero-canonical-reference-v3.png`.
 - Future web UX tasks should capture post-deploy screenshots and compare them
   directly against the canonical screen-set instead of relying only on memory
   or prompt descriptions.
