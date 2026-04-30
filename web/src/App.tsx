@@ -2356,7 +2356,6 @@ export default function App() {
     { label: "Importance", value: stringValue(planningSummary?.active_goal_count, "0") !== "0" ? "0.80" : "0.62" },
     { label: "Urgency", value: stringValue(planningSummary?.active_task_count, "0") !== "0" ? "0.50" : "0.32" },
     { label: "Valence", value: "+0.20" },
-    { label: "Arousal", value: "0.60" },
   ];
   const chatGoalCard = {
     title: "Project: Next meaningful step",
@@ -3856,6 +3855,13 @@ export default function App() {
                       <div className="aion-chat-goal-progress" aria-hidden="true">
                         <span style={{ width: chatGoalCard.progress }} />
                       </div>
+                      <div className="aion-chat-goal-footer">
+                        <div>
+                          <p className="aion-chat-checkin-title">{chatProactiveCheckIn.title}</p>
+                          <p className="aion-chat-checkin-body">{chatProactiveCheckIn.body}</p>
+                        </div>
+                        <span className="aion-chat-support-accent">{chatProactiveCheckIn.action}</span>
+                      </div>
                     </section>
 
                     <section className="aion-chat-context-panel aion-chat-context-panel-compact">
@@ -3891,16 +3897,6 @@ export default function App() {
                       </div>
                     </section>
 
-                    <section className="aion-chat-context-panel aion-chat-context-panel-compact">
-                      <p className="mb-4 text-sm font-semibold text-base-900">Next proactive check-in</p>
-                      <div className="aion-chat-checkin-row">
-                        <div>
-                          <p className="aion-chat-checkin-title">{chatProactiveCheckIn.title}</p>
-                          <p className="aion-chat-checkin-body">{chatProactiveCheckIn.body}</p>
-                        </div>
-                        <span className="aion-chat-support-accent">{chatProactiveCheckIn.action}</span>
-                      </div>
-                    </section>
                   </aside>
                 </div>
               </section>

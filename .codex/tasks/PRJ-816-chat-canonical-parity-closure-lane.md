@@ -263,6 +263,11 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
     - reduced suggested actions from three to two
     - shortened the proactive check-in action label
     - tightened memory and action card spacing for a less list-heavy rail
+  - completed one more rail consolidation pass that:
+    - reduced motivation metrics from four to three
+    - folded proactive check-in into the active-goal card instead of keeping a
+      separate rail section
+    - tightened topbar spacing and message-meta rhythm for a calmer read
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`

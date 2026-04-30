@@ -69,6 +69,10 @@ Last updated: 2026-04-30
   - reduced suggested actions from three items to two
   - shortened the proactive check-in label and tightened memory/action card
     spacing so the right rail reads less like a stacked list
+- implemented in the latest rail-consolidation slice:
+  - reduced motivation metrics from four to three
+  - folded the proactive check-in into the active-goal card
+  - tightened topbar and message-meta rhythm for a calmer flagship read
 - focused validation:
   - `Push-Location .\web; npm run build; Pop-Location`
   - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-816-chat-canonical-parity-closure-lane.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`

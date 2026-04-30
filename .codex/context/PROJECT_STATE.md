@@ -34,6 +34,8 @@ Last updated: 2026-04-30
       reduces topbar control-pill density
     - now also shortens the right rail by trimming memory/action inventory and
       tightening the remaining card spacing
+    - now also reduces motivation from four metrics to three and folds the
+      proactive check-in into the active-goal card
   - `web/src/App.tsx` additionally now:
     - replaces rough chat composer glyphs with explicit SVG icon components
     - restores cleaner role-and-time metadata inside chat bubbles
@@ -52,6 +54,8 @@ Last updated: 2026-04-30
     - trims the related-memory list to two items and the suggested-actions
       list to two items
     - shortens the proactive check-in action label from `Modify` to `Edit`
+    - removes the standalone proactive check-in section in favor of an
+      integrated goal footer
   - `web/src/index.css` now also:
     - enlarges the embodied persona crop
     - reduces portrait-note weight and connector length
@@ -60,6 +64,8 @@ Last updated: 2026-04-30
       calmer conversation rhythm
     - reduces chat bubble widths and padding for a calmer canonical read
     - reduces memory/action card gaps and padding for a shorter rail
+    - reduces topbar and message-meta spacing and gives the goal footer a
+      responsive stacked treatment
   - new implementation task:
     - `.codex/tasks/PRJ-816-chat-canonical-parity-closure-lane.md`
   - current evidence sources:
