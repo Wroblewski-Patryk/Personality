@@ -16,6 +16,8 @@ Last updated: 2026-04-30
     staging from the public-entry scene
   - tightened hero copy, bridge width, trust-band width, and auth-panel
     spacing to preserve a calmer first-screen read
+  - froze a 10-step micro-slice queue for finishing the remaining `home`
+    closure without opening other route lanes
 - focused validation passed:
   - `Push-Location .\web; npm run build; Pop-Location`
   - `git diff --check -- web/src/App.tsx web/src/index.css docs/ux/design-memory.md docs/ux/canonical-web-screen-reference-set.md .codex/tasks/PRJ-800L-public-home-lower-story-and-auth-priority-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`

@@ -155,6 +155,19 @@ repo truth for the next parity loop.
 This slice intentionally stays within the landing route. It should not spill
 into dashboard parity or authenticated-shell tuning in the same cycle.
 
+Planned micro-slice queue for `home` before surface closure:
+
+1. route-correct landing hero artwork
+2. hero copy-width and line-break refinement
+3. hero-stage crop and scenic balance refinement
+4. note-card placement and density refinement
+5. first CTA row proportion and emphasis refinement
+6. bridge width and overlap rhythm refinement
+7. feature-strip density and card-divider refinement
+8. trust-band width, padding, and icon rhythm refinement
+9. auth-panel vertical spacing and quiet-entry refinement
+10. deploy-side screenshot proof and final `95%` closure decision
+
 ## Production-Grade Required Contract
 
 Every task must include these mandatory sections before it can move to `READY`
