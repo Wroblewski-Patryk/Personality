@@ -3005,6 +3005,9 @@ export default function App() {
                     <div className="aion-public-proof-bridge-list">
                       {publicHomeSurface.trustBand.slice(0, 3).map((item) => (
                         <span key={item.label} className="aion-public-proof-bridge-pill">
+                          <span className="aion-public-proof-bridge-pill-icon" aria-hidden="true">
+                            <PublicGlyph kind={item.icon} />
+                          </span>
                           {item.label}
                         </span>
                       ))}

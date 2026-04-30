@@ -2,6 +2,20 @@
 
 Last updated: 2026-04-30
 
+- 2026-04-30: `PRJ-823` opened one more bounded `home` lower-closure slice:
+  - `web/src/App.tsx` now:
+    - renders proof-bridge markers with semantic glyph icons instead of plain
+      text-only chips
+  - `web/src/index.css` now:
+    - tightens proof-pill spacing and material
+    - reduces trust-band icon weight and spacing
+    - gives the lower closure a calmer editorial rhythm
+  - new implementation task:
+    - `.codex/tasks/PRJ-823-home-bridge-and-trust-closure-pass.md`
+  - highest-value next steps:
+    - compare the deployed `home`
+    - if needed, spend one final micro-pass only on remaining live closure drift
+
 - 2026-04-30: `PRJ-822` opened one more bounded `home` first-viewport slice:
   - `web/src/App.tsx` now:
     - renders the landing micro-proof row with semantic glyph icons instead

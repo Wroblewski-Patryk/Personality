@@ -2,6 +2,23 @@
 
 Last updated: 2026-04-30
 
+## Fresh Public Home Bridge And Trust Closure Pass (2026-04-30)
+
+- `PRJ-823` is now IN_PROGRESS as a bounded `home` lower-closure slice:
+  - `.codex/tasks/PRJ-823-home-bridge-and-trust-closure-pass.md`
+- purpose:
+  - calm the remaining chip-like feeling in the proof bridge and trust band
+- implemented in the current slice:
+  - enriched proof-bridge pills with semantic iconography
+  - tightened proof-pill spacing and material weight
+  - tightened trust-band spacing, icon scale, and label rhythm
+- focused validation:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-823-home-bridge-and-trust-closure-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- next smallest useful task:
+  - compare the deployed `home`
+  - if still needed, spend one final bounded `home` slice on remaining live first-viewport drift
+
 ## Fresh Public Home Header And Proof Iconography Pass (2026-04-30)
 
 - `PRJ-822` is now IN_PROGRESS as a bounded `home` first-viewport slice:
