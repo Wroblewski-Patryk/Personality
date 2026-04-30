@@ -4,8 +4,8 @@
 - ID: PRJ-800L
 - Title: Public home lower story and auth priority pass
 - Task Type: design
-- Current Stage: verification
-- Status: IN_PROGRESS
+- Current Stage: post-release
+- Status: DONE
 - Owner: Frontend Builder
 - Depends on: PRJ-800K
 - Priority: P1
@@ -56,6 +56,7 @@ repo truth for the next parity loop.
 - The auth panel reads as a supporting session-entry module instead of a co-equal flagship block.
 - The lower landing section is visually calmer and less likely to intrude into the first-screen read.
 - Validation passes and repo truth reflects the new remaining gap accurately.
+- The deployed public landing reaches the `95%` parity gate for the active canonical spec.
 
 ## Constraints
 - use existing systems and approved mechanisms
@@ -122,8 +123,8 @@ repo truth for the next parity loop.
 - Canonical asset extraction required: no
 - Screenshot comparison pass completed: yes
 - Remaining mismatches:
-  - deploy-side proof is still needed for this exact lower-story/auth-priority slice
-  - dashboard remains the next major flagship drift after this landing pass
+  - minor crop and ornament drift may still exist, but no longer blocks closure of the `home` surface
+  - dashboard is now the next major flagship drift after this landing pass
 - State checks: loading | empty | error | success
 - Responsive checks: desktop | tablet | mobile
 - Input-mode checks: touch | pointer | keyboard
@@ -131,6 +132,11 @@ repo truth for the next parity loop.
 - Parity evidence:
   - `.codex/artifacts/prod-login-live-after-prj800k.png`
   - `docs/ux/assets/aion-landing-canonical-reference-v1.png`
+  - `.codex/artifacts/prod-home-live-after-a8cb3bf-root.png`
+  - `.codex/artifacts/prod-home-live-after-8dd11a8-root-wait2.png`
+  - `.codex/artifacts/prod-home-live-after-a8cb3bf-login.png`
+  - `.codex/artifacts/local-home-root-icons-pass-2026-04-30.png`
+  - `.codex/artifacts/local-home-modal-pass-2026-04-30.png`
 
 ## Deployment / Ops Evidence (required for runtime or infra tasks)
 - Deploy impact: low
@@ -246,16 +252,10 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
   - production screenshot comparison against the canonical landing
   - local screenshot proof for `/` and `/login` via `vite preview` plus Playwright
 - What is incomplete:
-  - deploy-side confirmation for the final modal-plus-scenic-plus-iconography slice
-  - final judgement whether the home surface is now above the `95%` gate or
-    still needs one last micro-pass after live proof
   - later dashboard parity remains the next major flagship loop
 - Next steps:
-  - inspect deployed `/` and `/login` after this push
-  - if live proof still shows drift, keep the next pass limited to home-only
-    crop and trust-band rhythm
-  - only return to `dashboard` after the landing first-screen read clears the
-    `95%` gate
+  - keep `home` frozen unless a new user interpretation note changes the active spec
+  - move the next single-surface flagship loop to `dashboard`
 - Decisions made:
   - promoted trust closure instead of inventing a new public-home section
   - used calmer hierarchy and proportion changes instead of adding new decorative systems

@@ -29,6 +29,8 @@ Last updated: 2026-04-30
       web tools UI for search, browser, and ClickUp
 
 - 2026-04-30: `PRJ-800L` continued with a landing-specific hero-art pass:
+  - final closure evidence now confirms the `home` surface above the `95%`
+    parity gate on deployed `/` and `/login`
   - `web/src/App.tsx` now:
     - points the public-home motif stage at
       `web/public/aviary-landing-hero-canonical-reference-v1.png`
@@ -66,13 +68,13 @@ Last updated: 2026-04-30
     - the newest detail pass lifts the bottom of the screen from placeholder
       tokens toward route-appropriate iconography, which materially improves
       the canonical feel of the lower closure
+    - `home` is now treated as closed for the current canonical spec, with
+      only minor residual ornament drift that does not block moving on
   - focused validation passed:
     - `Push-Location .\web; npm run build; Pop-Location`
     - `git diff --check -- web/src/App.tsx web/src/index.css docs/ux/design-memory.md docs/ux/canonical-web-screen-reference-set.md .codex/tasks/PRJ-800L-public-home-lower-story-and-auth-priority-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
   - highest-value next steps:
-    - inspect the deployed `/` and `/login` against the canonical landing
-    - if drift remains, keep the next pass limited to home-only trust-band
-      rhythm
+    - start the next single-surface flagship loop on `dashboard`
 
 - 2026-04-30: `PRJ-800F` continued with a route-corrected dashboard hero-art
   swap:

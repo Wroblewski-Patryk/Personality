@@ -24,14 +24,14 @@ Last updated: 2026-04-30
   - `PRJ-804` expose skill-tool bindings in `/app/tools/overview` and the web
     tools UI for search, browser, and ClickUp
 
-## Fresh Landing-Specific Hero Artwork And Viewport Tightening Pass (2026-04-30)
+## Fresh Landing Surface Closure At 95 Percent Parity Gate (2026-04-30)
 
-- `PRJ-800L` remains IN_PROGRESS as the only active `home` surface:
+- `PRJ-800L` is now DONE as the closed `home` surface:
   - `.codex/tasks/PRJ-800L-public-home-lower-story-and-auth-priority-pass.md`
 - purpose:
-  - replace the generic shared-persona stage on `home` with a route-correct
-    welcoming composition and tighten the first viewport around it
-- implemented in this continuation:
+  - finish the public landing to the approved `95%` parity gate before opening
+    the next flagship route
+- implemented across this closure lane:
   - generated and wired one new landing-specific scenic hero artwork based on
     the shared Aviary identity
   - kept the same persona continuity while removing dashboard/personality
@@ -55,11 +55,11 @@ Last updated: 2026-04-30
 - focused validation passed:
   - `Push-Location .\web; npm run build; Pop-Location`
   - `git diff --check -- web/src/App.tsx web/src/index.css docs/ux/design-memory.md docs/ux/canonical-web-screen-reference-set.md .codex/tasks/PRJ-800L-public-home-lower-story-and-auth-priority-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
-- remaining work before DONE:
-  - deploy-side screenshot proof for the modal-plus-scenic-plus-iconography
-    landing slice
-  - one last home-only judgment on trust-band rhythm before the route can
-    clear the `95%` gate
+- closure evidence:
+  - live `/` and `/login` proof now confirm the home route is above the `95%`
+    parity gate for the active canonical spec
+- next smallest useful task:
+  - return to `dashboard` as the next single active flagship surface
 
 ## Fresh Dashboard Route-Corrected Hero Artwork Pass (2026-04-30)
 
