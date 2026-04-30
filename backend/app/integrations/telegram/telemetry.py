@@ -11,8 +11,11 @@ TELEGRAM_DELIVERY_MESSAGE_LIMIT = 4096
 TELEGRAM_DELIVERY_SEGMENT_TARGET = 3500
 TELEGRAM_DELIVERY_SUPPORTED_MARKDOWN = [
     "bold",
+    "italic",
     "inline_code",
     "fenced_code",
+    "ordered_lists_plain_text",
+    "unordered_lists_plain_text",
 ]
 
 

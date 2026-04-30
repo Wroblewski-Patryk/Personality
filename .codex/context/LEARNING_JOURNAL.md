@@ -25,6 +25,33 @@ fixes for this repository.
 
 ## Entries
 
+### 2026-04-30 - Optimistic chat reconciliation must be message-role aware
+- Context:
+  - internal chat uses backend-owned `/app/chat/history` as canonical durable
+    transcript truth, while the web client renders transient local user and
+    assistant items during an in-flight send.
+- Symptom:
+  - a local assistant reply can appear to vanish after a history refresh when
+    durable history contains another item for the same event but not yet the
+    durable assistant item.
+- Root cause:
+  - local transcript reconciliation matched on broad `event_id` rather than
+    exact message identity or role-aware event identity.
+- Guardrail:
+  - reconcile transient chat items only against exact `message_id` or the
+    matching `(event_id, role)` durable transcript item.
+- Preferred pattern:
+  - keep `/app/chat/history` as durable truth
+  - keep optimistic items local and transient
+  - remove a local user item only when the durable user item exists
+  - remove a local assistant item only when the durable assistant item exists
+- Avoid:
+  - treating event-level durability as proof that every message item for that
+    event has reached the transcript projection
+- Evidence:
+  - `web/src/App.tsx`
+  - `.codex/tasks/PRJ-811-fix-internal-chat-local-transcript-reconciliation.md`
+
 ### 2026-04-30 - Flagship UX work drifts when multiple surfaces are polished before the current one is screenshot-closed
 - Context:
   - repeated `landing / dashboard / chat / personality` work created visible

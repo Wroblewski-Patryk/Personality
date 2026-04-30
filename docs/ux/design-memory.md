@@ -4,6 +4,12 @@
 
 - Conversation shell:
   Keep message reading effortless and input affordances stable across states.
+- Safe Markdown chat messages:
+  Render transcript Markdown as semantic message content inside the existing
+  chat bubble pattern, using escaped React-rendered elements for emphasis,
+  lists, and code. Do not use raw HTML injection for user-authored content, and
+  let long message bodies expand naturally inside the transcript scroll surface
+  instead of clamping the bubble.
 - Settings groups:
   Prefer clear sectioning, short helper copy, and visible save or success
   feedback.

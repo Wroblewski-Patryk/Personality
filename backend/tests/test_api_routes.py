@@ -4804,7 +4804,14 @@ def test_health_endpoint_exposes_telegram_round_trip_readiness_state() -> None:
     assert telegram["delivery_formatting_state"] == "supported_markdown_to_html_with_plain_text_fallback"
     assert telegram["delivery_message_limit"] == 4096
     assert telegram["delivery_segment_target"] == 3500
-    assert telegram["delivery_supported_markdown"] == ["bold", "inline_code", "fenced_code"]
+    assert telegram["delivery_supported_markdown"] == [
+        "bold",
+        "italic",
+        "inline_code",
+        "fenced_code",
+        "ordered_lists_plain_text",
+        "unordered_lists_plain_text",
+    ]
 
 
 def test_health_endpoint_marks_v1_readiness_conversation_gate_incomplete_without_telegram_round_trip() -> None:

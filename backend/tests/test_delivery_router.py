@@ -220,6 +220,74 @@ async def test_delivery_router_segments_long_telegram_messages() -> None:
     assert snapshot["last_delivery"]["formatting_state"] == "plain_text"
 
 
+async def test_delivery_router_prefers_sentence_boundary_for_telegram_segments() -> None:
+    telegram_client = FakeTelegramClient(ok=True)
+    router = DeliveryRouter(telegram_client=telegram_client)
+    first_sentence = "First sentence " + ("alpha " * 580) + "ends."
+    second_sentence = "Second sentence stays intact."
+    message = f"{first_sentence} {second_sentence}"
+
+    result = await router.deliver(
+        ActionDelivery(
+            message=message,
+            tone="supportive",
+            channel="telegram",
+            language="en",
+            chat_id=42,
+        )
+    )
+
+    assert result.status == "success"
+    assert len(telegram_client.calls) == 2
+    assert str(telegram_client.calls[0]["text"]).endswith("ends.")
+    assert str(telegram_client.calls[1]["text"]) == second_sentence
+    assert all(len(str(call["text"])) <= 4096 for call in telegram_client.calls)
+
+
+async def test_delivery_router_uses_word_boundary_before_hard_split() -> None:
+    telegram_client = FakeTelegramClient(ok=True)
+    router = DeliveryRouter(telegram_client=telegram_client)
+    message = ("word " * 720) + "tail"
+
+    result = await router.deliver(
+        ActionDelivery(
+            message=message,
+            tone="supportive",
+            channel="telegram",
+            language="en",
+            chat_id=42,
+        )
+    )
+
+    assert result.status == "success"
+    assert len(telegram_client.calls) == 2
+    assert not str(telegram_client.calls[0]["text"]).endswith(" ")
+    assert str(telegram_client.calls[1]["text"]).startswith("word")
+    assert all(len(str(call["text"])) <= 4096 for call in telegram_client.calls)
+
+
+async def test_delivery_router_hard_splits_only_when_no_safe_boundary_exists() -> None:
+    telegram_client = FakeTelegramClient(ok=True)
+    router = DeliveryRouter(telegram_client=telegram_client)
+    message = "x" * 4300
+
+    result = await router.deliver(
+        ActionDelivery(
+            message=message,
+            tone="supportive",
+            channel="telegram",
+            language="en",
+            chat_id=42,
+        )
+    )
+
+    assert result.status == "success"
+    assert len(telegram_client.calls) == 2
+    assert len(str(telegram_client.calls[0]["text"])) == 3500
+    assert len(str(telegram_client.calls[1]["text"])) == 800
+    assert all(len(str(call["text"])) <= 4096 for call in telegram_client.calls)
+
+
 async def test_delivery_router_applies_safe_html_formatting_for_supported_markdown() -> None:
     telegram_client = FakeTelegramClient(ok=True)
     telemetry = TelegramChannelTelemetry()
@@ -245,6 +313,35 @@ async def test_delivery_router_applies_safe_html_formatting_for_supported_markdo
     ]
     snapshot = telemetry.snapshot(bot_token_configured=True, webhook_secret_configured=False)
     assert snapshot["last_delivery"]["segment_count"] == 1
+    assert snapshot["last_delivery"]["formatting_state"] == "telegram_html"
+
+
+async def test_delivery_router_applies_safe_italic_formatting_for_supported_markdown() -> None:
+    telegram_client = FakeTelegramClient(ok=True)
+    telemetry = TelegramChannelTelemetry()
+    router = DeliveryRouter(telegram_client=telegram_client, telegram_telemetry=telemetry)
+
+    result = await router.deliver(
+        ActionDelivery(
+            message="Use *italic* with **bold**.",
+            tone="supportive",
+            channel="telegram",
+            language="en",
+            chat_id=42,
+        )
+    )
+
+    assert result.status == "success"
+    assert telegram_client.calls == [
+        {
+            "chat_id": 42,
+            "text": "Use <i>italic</i> with <b>bold</b>.",
+            "parse_mode": "HTML",
+        }
+    ]
+    snapshot = telemetry.snapshot(bot_token_configured=True, webhook_secret_configured=False)
+    assert "italic" in snapshot["delivery_supported_markdown"]
+    assert "ordered_lists_plain_text" in snapshot["delivery_supported_markdown"]
     assert snapshot["last_delivery"]["formatting_state"] == "telegram_html"
 
 

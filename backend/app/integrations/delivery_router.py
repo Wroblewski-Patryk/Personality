@@ -190,11 +190,27 @@ def _split_telegram_text(text: str, *, max_length: int) -> list[str]:
 
 
 def _preferred_split_index(text: str, *, max_length: int) -> int:
-    for separator in ("\n\n", "\n", " "):
+    for separator in ("\n\n", "\n"):
         candidate = text.rfind(separator, 0, max_length + 1)
         if candidate > 0:
             return candidate
+
+    sentence_boundary = _sentence_split_index(text, max_length=max_length)
+    if sentence_boundary > 0:
+        return sentence_boundary
+
+    candidate = text.rfind(" ", 0, max_length + 1)
+    if candidate > 0:
+        return candidate
     return max_length
+
+
+def _sentence_split_index(text: str, *, max_length: int) -> int:
+    window = text[: max_length + 1]
+    matches = list(re.finditer(r"(?<=[.!?])[\)\]\"']*\s+", window))
+    if not matches:
+        return -1
+    return matches[-1].end()
 
 
 def _format_telegram_segment(segment: str) -> _TelegramPreparedMessage:
@@ -214,7 +230,7 @@ def _telegram_formatting_state(prepared_messages: list[_TelegramPreparedMessage]
 
 
 def _render_supported_markdown_to_html(text: str) -> str | None:
-    if not any(marker in text for marker in ("```", "`", "**")):
+    if not any(marker in text for marker in ("```", "`", "**", "*")):
         return None
 
     if text.count("```") % 2 != 0:
@@ -257,6 +273,18 @@ def _render_supported_markdown_to_html(text: str) -> str | None:
     if rendered is None:
         return None
 
+    if _unmatched_telegram_italic_marker_exists(rendered):
+        return None
+
+    rendered = _replace_markdown_pattern(
+        rendered,
+        pattern=r"(?<!\*)\*([^*\n]+?)\*(?!\*)",
+        placeholders=placeholders,
+        template=lambda inner: f"<i>{html.escape(inner)}</i>",
+    )
+    if rendered is None:
+        return None
+
     if any(marker in rendered for marker in ("```", "`", "**")):
         return None
 
@@ -264,6 +292,16 @@ def _render_supported_markdown_to_html(text: str) -> str | None:
     for token, replacement in placeholders.items():
         escaped = escaped.replace(token, replacement)
     return escaped
+
+
+def _unmatched_telegram_italic_marker_exists(text: str) -> bool:
+    stripped = re.sub(r"(?<!\*)\*([^*\n]+?)\*(?!\*)", "", text)
+    for line in stripped.splitlines():
+        if line.lstrip().startswith(("* ", "- ", "+ ")):
+            continue
+        if "*" in line:
+            return True
+    return False
 
 
 def _replace_markdown_pattern(

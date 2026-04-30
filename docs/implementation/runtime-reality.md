@@ -1247,11 +1247,21 @@ Current limitation:
   - delivery counters and last-delivery evidence
 - Telegram-specific delivery shaping stays below expression:
   - long outbound replies are segmented inside delivery routing according to
-    transport-owned limits
-  - supported markdown is normalized into Telegram HTML parse mode
+    transport-owned limits, with paragraph, newline, sentence, and word
+    boundaries preferred before last-resort hard splitting
+  - supported markdown is normalized into Telegram HTML parse mode; the current
+    supported subset is bold, italic, inline code, fenced code, and plain-text
+    ordered/unordered list readability
   - structurally unsafe markdown falls back to plain text
   - this does not imply the same limits or formatting posture for API or later
     first-party UI channels
+- first-party internal chat renders the same safe message subset in the web
+  transcript through React element rendering, not raw HTML injection:
+  - bold and italic emphasis
+  - inline code and fenced code
+  - ordered and unordered lists
+  - full-length wrapped message bodies inside the existing transcript scroll
+    surface
 - debug-mode `incident_evidence.policy_posture` now also includes
   `conversation_channels.telegram`, so release smoke and behavior-validation
   gates can verify Telegram conversation posture from exported evidence rather

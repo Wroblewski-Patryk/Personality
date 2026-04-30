@@ -50,6 +50,16 @@ Observed from the current repo:
 - `PRJ-814` Improve Telegram sentence-aware segmentation.
 - `PRJ-815` Align Telegram and internal chat Markdown support.
 
+Queue update:
+
+- `PRJ-811..PRJ-815` are now complete.
+- internal chat now reconciles optimistic items by exact message id or
+  role-aware event key, renders safe Markdown, and has responsive proof for
+  long Markdown-rich messages.
+- Telegram delivery now prefers sentence-aware segmentation and reports the
+  expanded supported Markdown subset including italic and plain-text list
+  readability.
+
 Why this order:
 
 - first stop messages from appearing lost

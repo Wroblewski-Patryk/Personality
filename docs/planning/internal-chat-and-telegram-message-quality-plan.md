@@ -341,3 +341,34 @@ Why this order:
 - Telegram safe Markdown support and fallback are test-covered
 - backend tests, web build, responsive proof, docs, and context truth all agree
   on the final behavior
+
+## Implemented On 2026-04-30
+
+The lane was implemented as `PRJ-811..PRJ-815`:
+
+- internal chat local reconciliation now removes optimistic items only when the
+  matching durable message id or matching `(event_id, role)` item exists
+- internal chat renders safe Markdown through React elements rather than raw
+  HTML injection
+- chat message styling now supports paragraphs, bold, italic, inline code,
+  fenced code, ordered lists, and unordered lists while keeping long message
+  bodies naturally expandable
+- Telegram segmentation now prefers paragraph, newline, sentence, then word
+  boundaries before last-resort hard splitting
+- Telegram supported Markdown metadata now includes italic and plain-text list
+  readability
+- Telegram delivery tests cover sentence-aware splitting, word-boundary
+  fallback, last-resort hard splitting, italic formatting, and unsafe Markdown
+  fallback
+
+Validation evidence:
+
+- `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_delivery_router.py tests/test_telegram_client.py; Pop-Location`
+  - result: `15 passed`
+- `Push-Location .\web; npm run build; Pop-Location`
+  - result: passed
+- responsive proof:
+  - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-desktop.png`
+  - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-tablet.png`
+  - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-mobile.png`
+  - `.codex/artifacts/prj811-815-chat-message-quality/chat-long-markdown-proof.json`
