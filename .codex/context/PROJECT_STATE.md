@@ -24,6 +24,8 @@ Last updated: 2026-04-30
       note spacing, and right-rail pacing for a calmer flagship read
     - now also performs one more visual-only compression pass on topbar
       density, stage spacing, portrait authority, and rail calmness
+    - now also removes the extra `Persona` pill and composer mode-tab row so
+      the route reads closer to the canonical conversation-first workspace
   - `web/src/App.tsx` additionally now:
     - replaces rough chat composer glyphs with explicit SVG icon components
     - restores cleaner role-and-time metadata inside chat bubbles
@@ -33,6 +35,8 @@ Last updated: 2026-04-30
       were still visibly affected by encoding drift
     - removes the extra topbar description paragraph so the route reads closer
       to the canonical conversation-first heading
+    - removes the extra `Persona` control pill and the non-canonical mode tabs
+      above the composer tray
   - new implementation task:
     - `.codex/tasks/PRJ-816-chat-canonical-parity-closure-lane.md`
   - current evidence sources:

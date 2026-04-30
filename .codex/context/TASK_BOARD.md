@@ -44,6 +44,11 @@ Last updated: 2026-04-30
   - tightened control-pill density and stage spacing one more step
   - increased embodied-stage authority while slightly narrowing the right rail
   - replaced the last remaining rail action glyph with CSS-owned icon output
+- implemented in the latest cleanup slice:
+  - removed the extra `Persona` control pill from the chat topbar
+  - removed the mode-tab strip above the composer
+  - simplified the composer tray so the route reads less tool-like and closer
+    to the canonical conversation workspace
 - focused validation:
   - `Push-Location .\web; npm run build; Pop-Location`
   - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-816-chat-canonical-parity-closure-lane.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`

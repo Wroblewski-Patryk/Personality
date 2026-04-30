@@ -238,6 +238,11 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
     - tightened the topbar pills and stage spacing
     - gave the embodied panel more authority against the transcript and rail
     - replaced the remaining rail action glyph with a CSS-owned arrow
+  - completed one more canonical cleanup pass that:
+    - removed the extra `Persona` pill from the chat topbar
+    - removed the non-canonical mode-tab row above the composer
+    - simplified the composer tray so the thread reads less like a tool panel
+      and closer to the approved conversation-first reference
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`

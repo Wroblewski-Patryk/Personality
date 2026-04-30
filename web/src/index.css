@@ -2148,42 +2148,12 @@ body {
 
 .aion-chat-composer {
   display: grid;
-  gap: 0.58rem;
   padding: 0.68rem;
   border: 1px solid rgba(88, 67, 52, 0.1);
   border-radius: 1.68rem;
   background:
     linear-gradient(180deg, rgba(255, 252, 247, 0.94), rgba(249, 243, 234, 0.9));
   box-shadow: 0 18px 32px rgba(78, 58, 43, 0.05);
-}
-
-.aion-chat-mode-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.28rem;
-  padding-bottom: 0.02rem;
-}
-
-.aion-chat-mode-tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.95rem;
-  padding: 0.32rem 0.76rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: rgba(255, 251, 245, 0.4);
-  color: rgba(88, 67, 52, 0.78);
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.aion-chat-mode-tab-active {
-  border-color: rgba(126, 167, 159, 0.2);
-  background: linear-gradient(180deg, rgba(236, 247, 244, 0.74), rgba(255, 251, 245, 0.84));
-  color: #426a6b;
 }
 
 .aion-chat-composer-primary {
@@ -2195,27 +2165,6 @@ body {
 
 .aion-chat-input-stack {
   display: grid;
-  gap: 0.65rem;
-}
-
-.aion-chat-composer-support {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.42rem;
-  padding: 0 0.08rem 0.08rem;
-}
-
-.aion-chat-support-button {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0.36rem 0.74rem;
-  border: 1px solid rgba(88, 67, 52, 0.08);
-  border-radius: 999px;
-  background: rgba(255, 251, 245, 0.68);
-  color: var(--aion-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
 }
 
 .aion-chat-icon-button,
@@ -2248,8 +2197,8 @@ body {
 
 .aion-chat-input {
   width: 100%;
-  min-height: 4.55rem;
-  padding: 0.94rem 1rem;
+  min-height: 5rem;
+  padding: 1rem 1.02rem;
   border: 1px solid rgba(88, 67, 52, 0.1);
   border-radius: 1.15rem;
   background: rgba(255, 255, 255, 0.62);

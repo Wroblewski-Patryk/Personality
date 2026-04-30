@@ -2334,10 +2334,6 @@ export default function App() {
       value: Boolean(preferenceSummary?.learned_preference_count) ? copy.common.on : copy.common.off,
     },
     {
-      label: "Persona",
-      value: "Advisor",
-    },
-    {
       label: "Language",
       value: stringValue(me?.settings.preferred_language, copy.common.system).toUpperCase(),
     },
@@ -2346,9 +2342,7 @@ export default function App() {
       value: recentChannelsLabel === copy.common.noData ? "App" : recentChannelsLabel,
     },
   ];
-  const chatModeTabs = ["Ask", "Plan", "Reflect", "Execute"];
   const chatQuickActions = ["Plan my day", "Summarize yesterday", "What did I learn?", "Check my goals"];
-  const chatComposerTools = ["Memory", "Voice", "Tools"];
   const chatCurrentFocus =
     stringValue(planningSummary?.active_goal_count, "0") !== "0" ? "Daily planning" : "Conversation continuity";
   const chatLinkedChannelsStatus = recentChannelsLabel === copy.common.noData ? "App only" : recentChannelsLabel;
@@ -3756,17 +3750,6 @@ export default function App() {
                         ))}
                       </div>
                       <form className="aion-chat-composer" onSubmit={(event) => void handleSendMessage(event)}>
-                        <div className="aion-chat-mode-tabs" aria-label="Conversation mode">
-                          {chatModeTabs.map((mode, index) => (
-                            <button
-                              key={mode}
-                              className={`aion-chat-mode-tab ${index === 0 ? "aion-chat-mode-tab-active" : ""}`}
-                              type="button"
-                            >
-                              {mode}
-                            </button>
-                          ))}
-                        </div>
                         <div className="aion-chat-composer-primary">
                           <button className="aion-chat-icon-button" type="button" aria-label="Add context">
                             <PlusIcon />
@@ -3778,13 +3761,6 @@ export default function App() {
                               value={chatText}
                               onChange={(event) => setChatText(event.target.value)}
                             />
-                            <div className="aion-chat-composer-support">
-                              {chatComposerTools.map((tool) => (
-                                <button key={tool} className="aion-chat-support-button" type="button">
-                                  {tool}
-                                </button>
-                              ))}
-                            </div>
                           </div>
                           <button className="aion-chat-icon-button hidden sm:inline-flex" type="button" aria-label="Voice input">
                             <MicrophoneIcon />
