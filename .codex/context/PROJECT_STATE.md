@@ -177,6 +177,21 @@ Last updated: 2026-04-30
     - `Push-Location .\web; npm run build; Pop-Location`
     - `git diff --check -- web/src/index.css .codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
 
+- 2026-04-30: `PRJ-800F` continued with a signal-and-callout scale pass on the
+  dashboard:
+  - `web/src/index.css` now:
+    - shrinks the side signal cards and their typography
+    - scales down the figure callouts and dashboard badge
+    - reduces the harmony-ring size in the closure band
+  - result so far:
+    - the dashboard should now feel less like a collection of premium widgets
+      and more like one illustration-led flagship route
+    - deploy-side screenshot proof is still required before declaring the
+      `95%` parity gate reached
+  - focused validation passed:
+    - `Push-Location .\web; npm run build; Pop-Location`
+    - `git diff --check -- web/src/index.css .codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+
 - 2026-04-30: shared persona continuity rules were refined for future flagship
   artwork:
   - `docs/ux/design-memory.md`,

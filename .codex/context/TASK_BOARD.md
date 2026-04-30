@@ -158,6 +158,26 @@ Last updated: 2026-04-30
   - deploy-side screenshot proof for this exact crop-and-spacing pass
   - then decide whether `dashboard` crosses the `95%` gate or still needs one last micro-pass
 
+## Fresh Dashboard Signal And Callout Scale Pass (2026-04-30)
+
+- `PRJ-800F` remains IN_PROGRESS as the only active flagship surface:
+  - `.codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
+- purpose:
+  - reduce the last visibly card-like details inside the dashboard hero and
+    closure without touching the route structure
+- implemented in this continuation:
+  - scaled down side signal cards and their typography
+  - scaled down the figure callouts and badge so the central persona keeps more
+    visual authority
+  - reduced the size of the harmony ring so the summary band feels less like a
+    dashboard widget and more like part of one calm ending
+- focused validation passed:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/index.css .codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- remaining work before DONE:
+  - deploy-side screenshot proof for this exact scale pass
+  - then decide whether `dashboard` is finally ready to close at the `95%` gate
+
 ## Fresh Shared Persona Adaptation Rule Freeze (2026-04-30)
 
 - purpose:

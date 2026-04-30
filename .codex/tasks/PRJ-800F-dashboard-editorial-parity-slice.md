@@ -221,6 +221,9 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
   - continued once more with a crop-and-spacing pass that lifts the dashboard
     persona higher in frame, narrows the right rail density, and lets the
     closure scenic panel breathe more like the canonical panoramic ending
+  - continued again with a signal-and-callout scale pass that reduces the card
+    feel of side metrics, figure notes, and harmony ornament so the screen
+    reads more like one illustration-led product surface
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`
