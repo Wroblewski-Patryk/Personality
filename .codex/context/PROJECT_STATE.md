@@ -2,6 +2,27 @@
 
 Last updated: 2026-04-30
 
+- 2026-04-30: `home` now has fresh deploy-side proof after the latest closure
+  slices:
+  - production evidence:
+    - `.codex/artifacts/prj823-prod-home-root-proof.png`
+    - `.codex/artifacts/prj823-prod-home-proof.png`
+  - current judgment:
+    - `home` is now sufficiently close to the canonical landing to stop broad
+      polish and proceed to the next dependent surface group
+
+- 2026-04-30: `PRJ-824` opened the authenticated-shell group again with one
+  bounded utility-bar calm pass:
+  - `web/src/index.css` now:
+    - reduces utility-bar chrome weight, padding, and shadow
+    - tightens search, signal, pill, and account-control rhythm
+    - slightly tightens the route-canvas opening around the shell frame
+  - new implementation task:
+    - `.codex/tasks/PRJ-824-authenticated-shell-utility-bar-calm-pass.md`
+  - highest-value next steps:
+    - compare the deployed authenticated shell
+    - keep closing shell and sidebar slices before reopening route-local polish
+
 - 2026-04-30: `PRJ-823` opened one more bounded `home` lower-closure slice:
   - `web/src/App.tsx` now:
     - renders proof-bridge markers with semantic glyph icons instead of plain

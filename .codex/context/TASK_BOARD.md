@@ -2,6 +2,31 @@
 
 Last updated: 2026-04-30
 
+## Fresh Authenticated Shell Utility Bar Calm Pass (2026-04-30)
+
+- `PRJ-824` is now IN_PROGRESS as the first slice of the authenticated-shell
+  group:
+  - `.codex/tasks/PRJ-824-authenticated-shell-utility-bar-calm-pass.md`
+- proof and gate update:
+  - fresh production evidence for `home` now exists in:
+    - `.codex/artifacts/prj823-prod-home-root-proof.png`
+    - `.codex/artifacts/prj823-prod-home-proof.png`
+  - current judgment:
+    - `home` is now close enough to stop broad polishing and open the next
+      dependent surface group
+- purpose:
+  - calm the authenticated utility bar so route surfaces gain more authority
+- implemented in the current slice:
+  - reduced utility-bar padding, chrome weight, and cardiness
+  - tightened search, signal, pill, and account-control rhythm
+  - slightly tightened the shell opening around the utility frame
+- focused validation:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - `git diff --check -- web/src/index.css .codex/tasks/PRJ-824-authenticated-shell-utility-bar-calm-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
+- next smallest useful task:
+  - compare the deployed authenticated shell
+  - then continue the shell group before reopening route-local dashboard/chat/personality polish
+
 ## Fresh Public Home Bridge And Trust Closure Pass (2026-04-30)
 
 - `PRJ-823` is now IN_PROGRESS as a bounded `home` lower-closure slice:
