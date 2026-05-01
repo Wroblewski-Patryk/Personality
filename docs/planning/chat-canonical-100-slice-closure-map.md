@@ -165,3 +165,11 @@ Recommended focus order from the current state:
    a regression there
 3. move into Batch 10 only after the desktop route looks sufficiently calm in
    deploy-side proof
+
+Current emphasis inside Batches 7..9:
+
+- Batch 7: nearly exhausted locally; remaining value is mostly deploy-proof
+  confirmation
+- Batch 8: mostly reduced to tiny density and hierarchy corrections
+- Batch 9: still the best local source of value through action-row quietness,
+  memory/action closure, and final transcript-first balancing

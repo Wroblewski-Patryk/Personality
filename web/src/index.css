@@ -1970,7 +1970,7 @@ body {
 .aion-chat-transcript {
   display: flex;
   flex-direction: column;
-  gap: 0.82rem;
+  gap: 0.78rem;
   min-height: 24.8rem;
   max-height: 36rem;
   padding: 0.24rem 0.08rem 0.14rem;
@@ -1979,7 +1979,7 @@ body {
 
 .aion-chat-message-row {
   display: flex;
-  gap: 0.64rem;
+  gap: 0.6rem;
   align-items: flex-start;
 }
 
@@ -2498,14 +2498,14 @@ body {
 .aion-chat-context-action {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.52rem;
+  gap: 0.46rem;
   align-items: center;
-  padding: 0.56rem 0.62rem;
+  padding: 0.5rem 0.56rem;
   border: 1px solid rgba(88, 67, 52, 0.06);
-  border-radius: 1.02rem;
-  background: rgba(255, 252, 247, 0.74);
+  border-radius: 0.96rem;
+  background: rgba(255, 252, 247, 0.7);
   text-align: left;
-  box-shadow: 0 7px 16px rgba(78, 58, 43, 0.022);
+  box-shadow: 0 6px 14px rgba(78, 58, 43, 0.018);
 }
 
 .aion-chat-context-action-copy {
@@ -2513,14 +2513,14 @@ body {
 }
 
 .aion-chat-context-action-arrow {
-  color: #9f7d4c;
+  color: #a98a5b;
   font-size: 0;
   font-weight: 700;
 }
 
 .aion-chat-context-action-arrow::before {
   content: "\2192";
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   line-height: 1;
 }
 

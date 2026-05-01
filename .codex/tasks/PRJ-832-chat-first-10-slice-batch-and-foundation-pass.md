@@ -255,6 +255,11 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
     the later rail-density batches instead of still pointing back to Batch 1
   - implemented one more bounded rail-quietness batch by softening the lead
     card material, reducing support-accent weight, and thinning goal-progress
+  - updated the chat 100-slice map again so the current emphasis explicitly
+    points to late Batch 7..9 drift instead of generic route-wide continuation
+  - implemented one more bounded action-row batch by tightening transcript row
+    cadence and reducing the padding, radius, shadow, and arrow emphasis of
+    suggested-action rows
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`
@@ -270,7 +275,7 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
   - deploy-side proof for the new chat batch
   - remaining batches beyond the foundation pass
 - Next steps:
-  - compare the deployed chat after the rail-quietness and goal-progress batch
+  - compare the deployed chat after the action-row and transcript-cadence batch
   - if needed, open the next bounded chat continuation lane only for remaining
     proof-backed drift
 - Decisions made:
