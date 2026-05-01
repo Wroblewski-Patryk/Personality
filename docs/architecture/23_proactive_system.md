@@ -42,6 +42,18 @@ visible message.
 If conscious evaluation finds no grounded reason to interrupt the user, the
 tick should stay silent and complete as internal runtime work.
 
+Proactivity is external future-facing planning, not the internal execution
+loop for a turn that has already started. A scheduler cadence may support
+passive reevaluation, but it should not wake the conscious loop unless a cheap
+planned-action observer finds due planned work or an actionable relation-backed
+proposal. If no such item exists, the cadence should end as a no-op and avoid
+spending a full foreground run.
+
+Relationship-based care, such as noticing unusual silence after an established
+communication rhythm, should be inferred into planned work or a subconscious
+proposal. It must not be encoded as a fixed code-level obligation to contact
+the user every N hours.
+
 ---
 
 ## What Counts as Proactive Behavior
@@ -80,6 +92,9 @@ Examples:
 - evening reflection  
 - weekly planning  
 - deadline approaching  
+
+Time alone is not sufficient for user-visible outreach. It only makes
+planned-work and proposal reevaluation eligible.
 
 ---
 

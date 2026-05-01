@@ -764,6 +764,57 @@ Rules:
 7. current time, timezone posture, quiet-hour posture, active goals, and
    recent user context are valid reevaluation inputs; they do not by
    themselves grant direct delivery authority
+8. external contact planning, including care/check-in reasoning inferred from
+   relationship history, may create or update planned work or proposals, but it
+   must not become a hard-coded scheduler obligation to contact the user
+9. a planned-action observer should check for due or actionable work before
+   starting a full foreground runtime cycle; an empty observer result should be
+   a cheap no-op
+10. this contract governs future-facing external planning only; once a
+    foreground stimulus is admitted, the internal execution path still proceeds
+    through planning -> expression -> action -> memory -> reflection trigger
+
+### Passive And Active Runtime Trigger Boundary
+
+Runtime trigger ownership follows one passive/active split.
+
+Passive triggers may run:
+
+- reflection queue drain
+- relationship and behavior-pattern analysis
+- planned-work reevaluation
+- proposal maintenance
+- cheap planned-action observer checks
+
+Passive triggers may write only background-owned state:
+
+- conclusions
+- relations
+- theta updates
+- planned-work records
+- subconscious proposals
+- execution or failure evidence for later reflection
+
+Active triggers may start conscious foreground execution only when one of these
+inputs exists:
+
+- a direct user-authored event
+- a due planned-work item that crossed the observer and attention boundary
+- an actionable retriable proposal admitted through attention
+- an explicit admin/system event allowed by the foreground event contract
+
+Rules:
+
+1. subconscious and passive scheduler loops must not call conscious runtime as
+   a generic stimulus.
+2. passive loops must not send, notify, mutate external systems, or perform
+   user-visible delivery.
+3. active conscious execution remains the only path that may decide and perform
+   user-visible outreach.
+4. failed action attempts should be preserved as execution evidence even when
+   expression decides not to report the failure to the user.
+5. learned expression policy may shape whether failures are communicated, but
+   it must not suppress durable failure evidence needed by reflection.
 
 ### Bounded Autonomous Research-Window Policy
 
@@ -1383,8 +1434,9 @@ Production proactive baseline for no-UI `v1`:
 1. production proactive should be enabled only for bounded opt-in follow-up,
    not for generic autonomous outreach
 2. cadence ownership remains external-scheduler-owned in production
-3. candidate selection remains limited to opted-in users with active work or
-   time-checkin triggers
+3. candidate selection remains limited to due planned work or relation-backed
+   proposals admitted by the planned-action observer, rather than generic
+   time-passing check-in pressure
 4. delivery target remains bounded to Telegram direct message using recent chat
    id or the existing numeric user-id fallback
 5. rollback posture remains explicit:

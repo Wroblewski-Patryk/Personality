@@ -326,6 +326,14 @@ Dual-loop execution keeps one explicit ownership split:
 This split keeps turn assembly and proposal lifecycle durable without blurring
 the action boundary.
 
+The split also distinguishes external future-facing planning from the internal
+execution loop of a foreground turn. Background cognition may plan future
+contact, care, routines, or research windows by writing planned work or
+subconscious proposals. It must not use a cadence tick as a direct conscious
+stimulus when no due planned action or actionable proposal exists. After a
+foreground stimulus is admitted, the normal internal path still runs to action,
+memory persistence, and reflection trigger.
+
 ---
 
 ## Adaptive Influence Governance Boundary
@@ -355,6 +363,8 @@ The background loop starts because:
 - a reflection schedule fires
 - explicit reflection was requested
 - a scheduler cadence tick reopens time-aware planned work for reevaluation
+- a passive relationship or proactive reevaluation window checks whether any
+  future-facing plan should be created, updated, or left silent
 
 ### Step 2. Planned-Work Reevaluation
 
@@ -382,6 +392,16 @@ Typical outcomes:
 Background reevaluation must not send user-visible messages directly.
 If something becomes due, it still crosses into the normal attention ->
 planning -> expression -> action path.
+
+The efficient target posture is a planned-action observer:
+
+- scan durable planned work and retriable proposals cheaply
+- emit no foreground event when nothing is due or actionable
+- mark, reschedule, cancel, or propose future work inside background ownership
+- hand off only due/actionable items through attention for conscious evaluation
+
+This observer is not a second planner. It is the gate between passive external
+planning and active conscious execution.
 
 ### Step 3. Reflection Scope Load
 

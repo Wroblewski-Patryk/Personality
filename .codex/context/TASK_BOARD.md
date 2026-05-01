@@ -1,6 +1,35 @@
 # TASK_BOARD
 
-Last updated: 2026-05-01
+Last updated: 2026-05-02
+
+## Fresh Passive/Active Runtime Trigger Boundary (2026-05-02)
+
+- `PRJ-853` is DONE as the architecture contract slice for passive external
+  planning versus active conscious execution:
+  - `.codex/tasks/PRJ-853-passive-active-runtime-trigger-boundary.md`
+- purpose:
+  - stop treating scheduler time passing as a generic reason to wake conscious
+    outreach
+  - preserve relationship-based care/check-ins as inferred planned work or
+    proposals rather than hard-coded contact duties
+  - keep the internal foreground execution loop unchanged once a real stimulus
+    is admitted
+- implemented:
+  - canonical architecture now states that external contact/care/outreach
+    planning belongs to planned work or subconscious proposals
+  - `docs/architecture/16_agent_contracts.md` now defines the passive/active
+    runtime trigger boundary
+  - the planned-action observer is now the target bridge: cheap scan first,
+    full foreground run only when due/actionable work exists
+  - runtime reality records that current proactive cadence still needs a
+    follow-up implementation alignment
+- validation:
+  - `git diff --check`
+  - result: passed
+- deployment impact:
+  - docs/context only; no runtime, API, DB, env, or deployment behavior change
+- next smallest useful task:
+  - `PRJ-854` add planned-action observer policy and health/debug posture
 
 ## Fresh Release Smoke Provider Missing Settings Summary (2026-05-01)
 

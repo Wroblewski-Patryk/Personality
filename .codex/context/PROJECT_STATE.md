@@ -1,6 +1,27 @@
 # PROJECT_STATE
 
-Last updated: 2026-05-01
+Last updated: 2026-05-02
+
+- 2026-05-02: `PRJ-853` froze the passive/active runtime trigger boundary:
+  - new task:
+    - `.codex/tasks/PRJ-853-passive-active-runtime-trigger-boundary.md`
+  - canonical architecture now distinguishes external future-facing planning
+    from the internal execution loop of an admitted foreground turn
+  - passive background cadence may analyze, update conclusions/relations,
+    maintain planned work, and create proposals, but must not wake conscious
+    outreach merely because time passed
+  - relation-backed care/check-in reasoning is now modeled as planned work or
+    subconscious proposal state, not as a hard-coded scheduler obligation
+  - the planned-action observer is now the target bridge before full
+    foreground execution: cheap due/actionable scan first, no-op when empty
+  - runtime reality records that current proactive cadence still needs
+    implementation alignment with the observer target
+  - validation:
+    - `git diff --check`
+    - result: passed
+  - highest-value next step:
+    - execute `PRJ-854` by adding planned-action observer policy and
+      health/debug posture before rerouting proactive cadence
 
 - 2026-05-01: `PRJ-850` improved release-smoke provider activation evidence:
   - new task:

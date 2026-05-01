@@ -183,6 +183,9 @@ fixes for this repository.
     repeated greetings must be promoted into existing durable relation or
     conclusion truth before scheduler/proactive/expression decisions rely on
     them.
+  - external future-facing contact planning must stay passive until a due
+    planned-work item or actionable proposal crosses the attention boundary;
+    scheduler time passing alone must not wake conscious outreach.
   - natural observational feedback about repeated greetings or excessive
     contact frequency should be treated as communication-boundary evidence too;
     requiring the user to phrase it as an imperative leaves the same product
@@ -209,6 +212,8 @@ fixes for this repository.
     than adding a parallel short-term memory store
   - make proactive candidate selection and delivery guards honor newer
     high-confidence relation truth
+  - model inferred care/check-ins as planned work or subconscious proposals,
+    then use a cheap planned-action observer before any full foreground run
   - make expression consume interaction-ritual relation truth
   - preserve behavior-feedback evidence in episodic payloads so repeated weak
     relation-backed observations can consolidate through reflection instead of
@@ -221,6 +226,8 @@ fixes for this repository.
   - adding a parallel short-term memory store for scheduler behavior
   - allowing older opt-in conclusions to override newer explicit opt-down
     instructions
+  - hard-coding a contact obligation such as "write every N hours" instead of
+    letting relation evidence create planned work or proposals
 - Evidence:
   - `.codex/tasks/PRJ-778-plan-short-term-memory-and-proactive-style-respect.md`
   - `backend/app/communication/boundary.py`
@@ -238,6 +245,7 @@ fixes for this repository.
   - `.codex/tasks/PRJ-839-expression-self-review-for-known-communication-preferences.md`
   - `.codex/tasks/PRJ-840-end-to-end-behavior-learning-scenarios.md`
   - `.codex/tasks/PRJ-841-sync-runtime-docs-ops-notes-and-learning-journal.md`
+  - `.codex/tasks/PRJ-853-passive-active-runtime-trigger-boundary.md`
 
 ### 2026-04-28 - Chat UI must render the user-authored turn before waiting for assistant completion
 - Context:

@@ -1073,6 +1073,11 @@ What is already live:
 - proactive scheduler events now pass through an explicit attention gate
   (quiet-hours, cooldown, unanswered-backlog with adaptive-only tightening
   limits) before delivery planning
+- canonical architecture now narrows the intended target beyond the current
+  proactive tick implementation: passive relationship/proactive cadence should
+  create or update planned work/proposals, and a cheap planned-action observer
+  should avoid full conscious runtime execution when no due/actionable item
+  exists
 - proactive planning now records the resulting delivery posture through typed
   `update_proactive_state` intents
 - proactive outreach outcomes and connector permission-gate outcomes now share
@@ -1195,6 +1200,11 @@ Important non-live notes:
   directly
 - conscious runtime remains the only owner of user-visible delivery and other
   external side effects
+- generic scheduler time passing is no longer the target trigger for conscious
+  outreach; future implementation should replace generic proactive wakeups
+  with due planned work or actionable proposal admission through attention
+- this target applies to external future-facing planning only, not to the
+  internal execution path of a foreground turn that has already been admitted
 
 This coordination model baseline is now implemented through `PRJ-295`.
 

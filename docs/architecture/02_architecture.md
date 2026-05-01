@@ -213,12 +213,16 @@ The core rule is:
 - "reminder" is only one possible outward expression of planned work
 - planned work stays internal until runtime decides it is due or newly relevant
 - user-visible delivery still goes through the normal foreground pipeline
+- externally planned contact, care, or outreach is planned work or a
+  subconscious proposal; it is not an always-on duty embedded in scheduler code
 
 This keeps AION closer to human-like time reasoning:
 
 - context plus current time shape what should happen now
 - the system may defer, advance, skip, or deliver a planned action
 - the scheduler only wakes reevaluation; it does not become a second planner
+- a lightweight due-work observer may check whether any planned action is due
+  before a full conscious foreground run is started
 
 ---
 
@@ -239,7 +243,7 @@ Subconscious or background triggers:
 - reflection enqueue after completed turns
 - scheduler or cron cadence ticks
 - maintenance windows
-- proactive reevaluation windows
+- passive proactive or relationship reevaluation windows
 - planned-work reevaluation windows
 
 Background processing may decide that something is due.
@@ -252,6 +256,16 @@ If a due item should reach the user, background ownership may only:
 - update durable planned-work state
 
 Foreground runtime remains the owner of any later user-visible response.
+
+Scheduler cadence must not wake the conscious loop merely because time passed.
+It may first run a cheap observer over planned work, proposal state, and
+relation-backed external planning signals. If nothing is due, actionable, or
+newly relevant, no foreground event should be emitted.
+
+This distinction applies only to external future-facing planning. Once a real
+foreground stimulus has been admitted, the internal execution loop still
+completes the current path through planning, expression, action, memory, and
+reflection evidence.
 
 ---
 

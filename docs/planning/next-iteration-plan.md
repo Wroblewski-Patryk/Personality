@@ -7,6 +7,65 @@ This plan translates the repo analysis into an execution roadmap that brings the
 The goal is not to add more features first.
 The goal is to make the current AION runtime more correct, more inspectable, and easier to extend without architectural drift.
 
+## Planned On 2026-05-02 For Passive/Active Runtime Trigger Boundary
+
+Fresh user direction now clarifies the second-layer architecture target:
+
+- "external planning" means future-facing contact, care, reminders, routines,
+  and planned outreach
+- it is separate from the internal execution loop for a foreground turn that
+  has already been admitted
+- subconscious/background cadence should not wake consciousness merely because
+  time passed
+- subconscious cognition may infer relationship care needs, but should persist
+  them as planned work or proposals rather than a hard-coded contact duty
+- a cheap planned-action observer should scan for due/actionable items before
+  starting a full conscious runtime run
+
+### Fresh Gap Snapshot
+
+Observed from the current repo:
+
+- canonical docs already say subconscious paths may propose but never directly
+  execute
+- planned work already exists as the canonical future-work model
+- proactive scheduler ticks currently still use repository-backed candidate
+  selection and full runtime execution for bounded scheduler events
+- this keeps the implementation too close to generic autonomous outreach even
+  though communication guardrails and relation learning have improved
+
+### New Queue
+
+- `PRJ-853` Freeze passive/active runtime trigger boundary and planned-action
+  observer. (complete)
+  - Result:
+    - canonical architecture now distinguishes passive external planning from
+      active conscious execution
+    - relation-backed care/check-in reasoning is planned work or proposal
+      state, not a code-level scheduler obligation
+    - planned-action observer posture is now the target bridge before a full
+      foreground run
+    - the internal foreground execution loop remains unchanged once a stimulus
+      is admitted
+  - Validation:
+    - architecture/runtime/planning docs cross-review
+
+Suggested implementation queue after this contract:
+
+- `PRJ-854` Add planned-action observer policy and health/debug posture.
+- `PRJ-855` Route proactive cadence through observer-backed due work/proposals.
+- `PRJ-856` Persist skipped/failed proactive execution evidence for reflection.
+- `PRJ-857` Add behavior scenarios for silent no-op, due outreach, and failure
+  learning without user-visible failure spam.
+- `PRJ-858` Sync ops, release smoke, and learning journal after implementation.
+
+Why this order:
+
+- freeze target semantics before changing scheduler behavior
+- make the observer visible before routing cadence through it
+- preserve failure evidence before tuning expression visibility
+- prove the behavior across time instead of relying on unit-level posture only
+
 ## Planned On 2026-05-01 For Behavior Feedback Learning
 
 Fresh user direction now approves a broader behavior-learning lane:
