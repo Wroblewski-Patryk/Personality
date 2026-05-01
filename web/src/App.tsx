@@ -3785,8 +3785,8 @@ export default function App() {
                     />
                     <div className="aion-chat-portrait-overlay">
                       <p className="text-[11px] uppercase tracking-[0.22em] text-[#5f8f93]">Planning</p>
-                      <p className="mt-2 font-display text-[1.72rem] leading-[1.08] text-base-900">{chatCurrentFocus}</p>
-                      <div className="mt-3.5 space-y-2 text-[0.82rem] text-base-800">
+                      <p className="mt-2 font-display text-[1.62rem] leading-[1.08] text-base-900">{chatCurrentFocus}</p>
+                      <div className="mt-3 text-[0.8rem] text-base-800">
                         <div className="flex items-center justify-between gap-3">
                           <span>Current focus</span>
                           <span className="font-semibold text-base-900">{chatIntentCard.emphasis}</span>
@@ -3817,12 +3817,12 @@ export default function App() {
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-[10px] uppercase tracking-[0.16em] text-base-800">Current intent</p>
-                            <h3 className="mt-1.5 font-display text-[1.66rem] leading-[1.04] text-base-900">{chatIntentCard.title}</h3>
-                            <p className="mt-1.5 text-[0.82rem] leading-[1.5] text-base-800">{chatIntentCard.body}</p>
+                            <h3 className="mt-1.5 font-display text-[1.54rem] leading-[1.04] text-base-900">{chatIntentCard.title}</h3>
+                            <p className="mt-1.25 text-[0.8rem] leading-[1.46] text-base-800">{chatIntentCard.body}</p>
                           </div>
                           <div className="text-right">
                             <span className="aion-chat-support-accent">{chatIntentCard.status}</span>
-                            <p className="mt-2.5 text-[0.78rem] font-semibold text-[#5f8f93]">{chatIntentCard.emphasis}</p>
+                            <p className="mt-2 text-[0.74rem] font-semibold text-[#5f8f93]">{chatIntentCard.emphasis}</p>
                           </div>
                         </div>
                       </article>
@@ -3848,8 +3848,8 @@ export default function App() {
                         <p className="text-sm font-semibold text-base-900">Active goal</p>
                         <span className="aion-chat-support-accent">{chatGoalCard.progress}</span>
                       </div>
-                      <h3 className="font-display text-[1.34rem] leading-[1.08] text-base-900">{chatGoalCard.title}</h3>
-                      <p className="mt-1.5 text-[0.82rem] leading-[1.55] text-base-800">{chatGoalCard.body}</p>
+                      <h3 className="font-display text-[1.26rem] leading-[1.08] text-base-900">{chatGoalCard.title}</h3>
+                      <p className="mt-1.25 text-[0.8rem] leading-[1.5] text-base-800">{chatGoalCard.body}</p>
                       <div className="aion-chat-goal-progress" aria-hidden="true">
                         <span style={{ width: chatGoalCard.progress }} />
                       </div>

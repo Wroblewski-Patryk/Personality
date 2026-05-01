@@ -269,6 +269,9 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
     quick-action chips, composer shell, input, and control-button proportions
   - implemented one more bounded transcript-surface batch by reducing avatar
     scale, message-card padding/shadow, and meta/body-copy density
+  - implemented one more bounded title-hierarchy batch by softening the
+    portrait-overlay heading, lead-card title/body scale, and active-goal
+    heading density
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`
@@ -284,7 +287,7 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
   - deploy-side proof for the new chat batch
   - remaining batches beyond the foundation pass
 - Next steps:
-  - compare the deployed chat after the transcript-surface batch
+  - compare the deployed chat after the title-hierarchy batch
   - if needed, open the next bounded chat continuation lane only for remaining
     proof-backed drift
 - Decisions made:
