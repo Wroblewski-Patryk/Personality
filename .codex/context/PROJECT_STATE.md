@@ -17,12 +17,13 @@ Last updated: 2026-05-01
     - increases portrait-stage authority and scenic crop
     - reduces portrait note scale and connector lengths
     - narrows the cognitive rail and reduces rail panel heaviness
+    - reduces motivation, active-goal, memory, and action density in the right rail
   - new implementation task:
     - `.codex/tasks/PRJ-832-chat-first-10-slice-batch-and-foundation-pass.md`
   - highest-value next steps:
-    - compare the deployed chat after the portrait-and-rail batch
-    - if needed, continue the next bounded `chat` batch on
-      motivation/goal and memory/actions density
+    - compare the deployed chat after the density batch
+    - if needed, continue the next bounded `chat` batch on composer tray and
+      final transcript polish
 
 - 2026-05-01: `PRJ-831` opened the dashboard surface group:
   - planning truth now:

@@ -16,13 +16,15 @@ Last updated: 2026-05-01
     assistant/user bubble materials
   - increased portrait-stage authority, calmed portrait notes/connectors, and
     narrowed the cognitive rail
+  - reduced density in motivation, active goal, related memory, and suggested
+    actions so the right rail reads less list-heavy
 - focused validation:
   - `Push-Location .\web; npm run build; Pop-Location`
   - `git diff --check -- web/src/App.tsx web/src/index.css docs/planning/canonical-100-slice-closure-map.md docs/planning/chat-canonical-100-slice-closure-map.md .codex/tasks/PRJ-832-chat-first-10-slice-batch-and-foundation-pass.md .codex/context/TASK_BOARD.md .codex/context/PROJECT_STATE.md`
 - next smallest useful task:
   - take the next deploy-side chat proof
-  - if drift remains, continue the next bounded `chat` batch on
-    motivation/goal and memory/actions density
+  - if drift remains, continue the next bounded `chat` batch on composer tray
+    and final transcript polish
 
 ## Fresh Dashboard First 10 Slice Batch And Intro Pass (2026-05-01)
 

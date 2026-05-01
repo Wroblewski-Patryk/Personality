@@ -3852,8 +3852,8 @@ export default function App() {
                         <p className="text-sm font-semibold text-base-900">Active goal</p>
                         <span className="aion-chat-support-accent">{chatGoalCard.progress}</span>
                       </div>
-                      <h3 className="font-display text-[1.45rem] leading-[1.1] text-base-900">{chatGoalCard.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-base-800">{chatGoalCard.body}</p>
+                      <h3 className="font-display text-[1.34rem] leading-[1.08] text-base-900">{chatGoalCard.title}</h3>
+                      <p className="mt-1.5 text-[0.82rem] leading-[1.55] text-base-800">{chatGoalCard.body}</p>
                       <div className="aion-chat-goal-progress" aria-hidden="true">
                         <span style={{ width: chatGoalCard.progress }} />
                       </div>
@@ -3872,7 +3872,7 @@ export default function App() {
                         <span className="aion-chat-support-accent">Recent</span>
                       </div>
                       <div className="aion-chat-memory-list">
-                        {chatRelatedMemory.map((item) => (
+                        {chatRelatedMemory.slice(0, 2).map((item) => (
                           <article key={item.title} className="aion-chat-memory-item">
                             <div>
                               <p className="aion-chat-memory-item-title">{item.title}</p>
@@ -3887,7 +3887,7 @@ export default function App() {
                     <section className="aion-chat-context-panel aion-chat-context-panel-compact">
                       <p className="mb-4 text-sm font-semibold text-base-900">Suggested actions</p>
                       <div className="aion-chat-action-list">
-                        {chatSuggestedActions.map((item) => (
+                        {chatSuggestedActions.slice(0, 2).map((item) => (
                           <button key={item.title} className="aion-chat-context-action" type="button">
                             <div className="aion-chat-context-action-copy">
                               <p className="aion-chat-context-action-title">{item.title}</p>
