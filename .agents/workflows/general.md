@@ -83,7 +83,7 @@ description: Workspace rules for this project
 - Do not skip from analysis or planning straight to implementation unless
   explicitly requested.
 - Follow the default loop:
-  `plan -> implement -> test -> architecture review -> sync context -> repeat`.
+  `analyze -> select one task -> plan -> implement -> verify -> self-review -> sync knowledge -> repeat`.
 - Apply the validation commands from `.codex/context/PROJECT_STATE.md` before
   every commit.
 - Use subagents only according to `.agents/workflows/subagent-orchestration.md`.
@@ -106,6 +106,7 @@ description: Workspace rules for this project
   active visual notes, or handoff expectations need to stay explicit.
 - Use `.agents/workflows/world-class-delivery.md` for substantial product,
   runtime, release, UX, security, or AI work.
+- Use `docs/governance/autonomous-engineering-loop.md` for autonomous iteration structure, process self-audit, one-task selection, and `BUILDER` / `ARCHITECT` / `TESTER` mode rotation.
 - For broad UX review, use `docs/ux/evidence-driven-ux-review.md` and turn
   screenshot or clickthrough evidence into prioritized implementation slices.
 - For deployable services or critical journeys, define the relevant SLI/SLO,

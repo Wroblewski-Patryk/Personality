@@ -20,6 +20,7 @@ Implement one planned task with minimal ambiguity.
 - brief implementation notes
 
 ## Rules
+- Before implementation, confirm the task contract includes the autonomous process self-audit, iteration number, operation mode, and all seven loop evidence sections.
 
 - Start only a `READY` or `IN_PROGRESS` task.
 - Keep one-task scope.

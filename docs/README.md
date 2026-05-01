@@ -69,6 +69,7 @@ near-term coordination direction without rewriting the canonical architecture.
 - `governance/working-agreements.md`
 - `governance/repository-structure-policy.md`
 - `governance/function-coverage-ledger-standard.md`
+- `governance/autonomous-engineering-loop.md`
 - `governance/function-coverage-ledger-template.csv`
 
 ## Engineering
@@ -123,3 +124,9 @@ Additional cross-project standards synced from `!template`:
 - `docs/operations/service-reliability-and-observability.md`
 - `docs/security/secure-development-lifecycle.md`
 - `docs/ux/evidence-driven-ux-review.md`
+
+## Governance Addendum
+
+## Governance Addendum
+
+## Governance Addendum

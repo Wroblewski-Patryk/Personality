@@ -22,6 +22,7 @@ Translate project truth into executable work for Personality / AION.
 - docs planning updates when roadmap truth changed
 
 ## Rules
+- Before creating or refreshing the queue, run the process self-audit from `docs/governance/autonomous-engineering-loop.md` and record iteration number, operation mode, and one-task scope.
 
 - tasks must be small and testable
 - keep clear dependencies and owner role
