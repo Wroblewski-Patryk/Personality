@@ -3813,20 +3813,20 @@ export default function App() {
 
                   <aside className="aion-chat-context-rail">
                     <section className="aion-chat-context-panel aion-chat-context-panel-curated aion-chat-context-panel-lead">
-                      <div className="mb-4 flex items-center justify-between gap-3">
+                      <div className="mb-3.5 flex items-center justify-between gap-3">
                         <p className="text-sm font-semibold text-base-900">Cognitive context</p>
                         <span className="aion-chat-live-dot" />
                       </div>
                       <article className="aion-chat-support-card aion-chat-support-card-lead">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-base-800">Current intent</p>
-                            <h3 className="mt-2 font-display text-[1.9rem] leading-[1.05] text-base-900">{chatIntentCard.title}</h3>
-                            <p className="mt-2 text-sm leading-6 text-base-800">{chatIntentCard.body}</p>
+                            <p className="text-[10px] uppercase tracking-[0.16em] text-base-800">Current intent</p>
+                            <h3 className="mt-1.5 font-display text-[1.66rem] leading-[1.04] text-base-900">{chatIntentCard.title}</h3>
+                            <p className="mt-1.5 text-[0.82rem] leading-[1.5] text-base-800">{chatIntentCard.body}</p>
                           </div>
                           <div className="text-right">
                             <span className="aion-chat-support-accent">{chatIntentCard.status}</span>
-                            <p className="mt-3 text-sm font-semibold text-[#5f8f93]">{chatIntentCard.emphasis}</p>
+                            <p className="mt-2.5 text-[0.78rem] font-semibold text-[#5f8f93]">{chatIntentCard.emphasis}</p>
                           </div>
                         </div>
                       </article>
