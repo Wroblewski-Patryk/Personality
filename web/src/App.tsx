@@ -2385,21 +2385,21 @@ export default function App() {
       className: "aion-chat-portrait-note aion-chat-portrait-note-memory",
       eyebrow: "Memory continuity",
       title: `${stringValue(preferenceSummary?.learned_preference_count, "0")} learned cues`,
-      body: "Earlier preferences stay available while the dialogue remains calm.",
+      body: "Earlier preferences stay available.",
     },
     {
       key: "expression",
       className: "aion-chat-portrait-note aion-chat-portrait-note-expression",
       eyebrow: "Expression",
       title: stringValue(me?.settings.preferred_language, "adaptive").toUpperCase(),
-      body: "Tone stays adaptive and calm.",
+      body: "Tone stays adaptive.",
     },
     {
       key: "channels",
       className: "aion-chat-portrait-note aion-chat-portrait-note-channels",
       eyebrow: "Linked channels",
       title: chatLinkedChannelsStatus,
-      body: "The same posture stays coherent across touchpoints.",
+      body: "Posture stays coherent across touchpoints.",
     },
   ];
   const chatActiveSummary = "Live";

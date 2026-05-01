@@ -241,6 +241,9 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
   - implemented one more bounded right-rail copy batch by shortening current
     intent, active-goal, and memory body copy while tightening compact-panel
     and support-row spacing
+  - implemented one more bounded portrait-note batch by shortening scenic-note
+    copy, lightening note-card material, and shifting a little more desktop
+    authority back to the transcript column
 - Files changed:
   - `web/src/App.tsx`
   - `web/src/index.css`
@@ -256,7 +259,7 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
   - deploy-side proof for the new chat batch
   - remaining batches beyond the foundation pass
 - Next steps:
-  - compare the deployed chat after the rail-copy and compact-spacing batch
+  - compare the deployed chat after the portrait-note and transcript-authority batch
   - if needed, open the next bounded chat continuation lane only for remaining
     proof-backed drift
 - Decisions made:
