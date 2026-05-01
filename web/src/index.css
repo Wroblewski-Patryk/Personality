@@ -2388,33 +2388,33 @@ body {
 .aion-chat-motivation-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.42rem;
+  gap: 0.34rem;
 }
 
 .aion-chat-motivation-card {
   display: grid;
-  gap: 0.18rem;
-  padding: 0.62rem 0.68rem;
+  gap: 0.14rem;
+  padding: 0.56rem 0.62rem;
   border: 1px solid rgba(88, 67, 52, 0.06);
-  border-radius: 1rem;
+  border-radius: 0.94rem;
   background: rgba(255, 252, 247, 0.72);
 }
 
 .aion-chat-motivation-label {
   margin: 0;
   color: rgba(110, 98, 88, 0.82);
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .aion-chat-motivation-value {
   margin: 0;
   color: var(--aion-ink);
-  font-size: 0.94rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.16;
 }
 
 .aion-chat-goal-progress {
@@ -2436,9 +2436,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.7rem;
-  margin-top: 0.74rem;
-  padding-top: 0.68rem;
+  gap: 0.58rem;
+  margin-top: 0.66rem;
+  padding-top: 0.58rem;
   border-top: 1px solid rgba(88, 67, 52, 0.07);
 }
 
