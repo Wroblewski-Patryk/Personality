@@ -75,6 +75,17 @@ LEARNED_STATE_REFLECTION_GROWTH_SIGNAL_KINDS = [
     "adaptive_outputs",
     "relations",
 ]
+PLANNED_ACTION_OBSERVER_POSTURE = {
+    "policy_owner": "planned_action_observer_policy",
+    "last_observer_state": "empty_noop",
+    "last_observer_reason": "no_due_or_actionable_work",
+    "empty_result_behavior": "no_foreground_event",
+    "due_planned_work_count": 0,
+    "actionable_proposal_count": 0,
+    "foreground_events_emitted": 0,
+    "noop_supported": True,
+    "raw_payload_exposure": "counts_only",
+}
 TOOL_GROUNDED_LEARNING_CONTRACT = {
     "policy_owner": "tool_grounded_learning_policy",
     "capture_owner": "action_owned_external_read_summaries_only",
@@ -777,6 +788,7 @@ def stub_aion_server() -> _StubAionServer:
             "enabled": True,
             "production_baseline_ready": True,
             "production_baseline_state": "external_scheduler_target_owner",
+            "planned_action_observer": dict(PLANNED_ACTION_OBSERVER_POSTURE),
         },
         "deployment": {
             "deployment_automation_policy_owner": "coolify_repo_deploy_automation",
@@ -1150,6 +1162,7 @@ def stub_aion_server() -> _StubAionServer:
                 "enabled": True,
                 "production_baseline_ready": True,
                 "production_baseline_state": "external_scheduler_target_owner",
+                "planned_action_observer": dict(PLANNED_ACTION_OBSERVER_POSTURE),
             },
             "scheduler.external_owner_policy": {
                 "policy_owner": "external_scheduler_cadence_policy",
@@ -1554,6 +1567,7 @@ def _write_incident_bundle(
                     "enabled": True,
                     "production_baseline_ready": True,
                     "production_baseline_state": "external_scheduler_target_owner",
+                    "planned_action_observer": dict(PLANNED_ACTION_OBSERVER_POSTURE),
                 },
                 "scheduler.external_owner_policy": {
                     "policy_owner": "external_scheduler_cadence_policy",
@@ -1951,6 +1965,10 @@ def test_release_smoke_allows_optional_deployment_evidence_to_be_omitted(
     assert summary["proactive_enabled"] is True
     assert summary["proactive_production_baseline_ready"] is True
     assert summary["proactive_production_baseline_state"] == "external_scheduler_target_owner"
+    assert summary["proactive_observer_policy_owner"] == "planned_action_observer_policy"
+    assert summary["proactive_observer_state"] == "empty_noop"
+    assert summary["proactive_observer_empty_result_behavior"] == "no_foreground_event"
+    assert summary["proactive_observer_due_planned_work_count"] == 0
     assert summary["deployment_hosting_baseline"] == "coolify_medium_term_standard"
     assert summary["deployment_automation_policy_owner"] == "coolify_repo_deploy_automation"
     assert summary["deployment_primary_trigger_mode"] == "source_automation"
@@ -2014,6 +2032,23 @@ def test_release_smoke_allows_optional_deployment_evidence_to_be_omitted(
     assert summary["deployment_evidence_checked"] is False
     assert summary["deployment_evidence_path"] == ""
     assert summary["deployment_evidence_status_code"] is None
+
+
+def test_release_smoke_fails_when_proactive_observer_posture_is_missing(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original = dict(_StubAionHandler.health_payload["proactive"])
+    broken = dict(original)
+    broken.pop("planned_action_observer", None)
+    _StubAionHandler.health_payload["proactive"] = broken
+    try:
+        result = _run_release_smoke("-BaseUrl", stub_aion_server.base_url, cwd=ROOT)
+    finally:
+        _StubAionHandler.health_payload["proactive"] = original
+
+    assert result.returncode != 0
+    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    assert "proactive planned_action_observer posture is missing" in combined_output
 
 
 def test_release_smoke_fails_when_relation_source_policy_evidence_is_missing(
@@ -2220,6 +2255,8 @@ def test_release_smoke_validates_exported_incident_evidence_when_debug_mode_is_r
     assert summary["incident_evidence_proactive_production_baseline_state"] == (
         "external_scheduler_target_owner"
     )
+    assert summary["incident_evidence_proactive_observer_policy_owner"] == "planned_action_observer_policy"
+    assert summary["incident_evidence_proactive_observer_state"] == "empty_noop"
     assert summary["incident_evidence_deployment_automation_policy_owner"] == (
         "coolify_repo_deploy_automation"
     )
@@ -2337,6 +2374,8 @@ def test_release_smoke_verifies_incident_evidence_bundle_when_bundle_path_is_pro
     assert summary["incident_bundle_proactive_production_baseline_state"] == (
         "external_scheduler_target_owner"
     )
+    assert summary["incident_bundle_proactive_observer_policy_owner"] == "planned_action_observer_policy"
+    assert summary["incident_bundle_proactive_observer_state"] == "empty_noop"
     assert summary["incident_bundle_deployment_automation_policy_owner"] == (
         "coolify_repo_deploy_automation"
     )

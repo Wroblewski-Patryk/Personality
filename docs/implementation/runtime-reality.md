@@ -1083,6 +1083,10 @@ What is already live:
   and debug incident evidence as counts-only posture:
   `empty_noop`, `due_planned_work`, `actionable_proposal`,
   `blocked_by_policy`, or `observer_unavailable`
+- release smoke and incident-evidence bundle validation now pin that observer
+  posture, including policy owner, latest observer state, empty-result behavior,
+  and due planned-work count, so passive/active trigger drift blocks release
+  evidence instead of staying hidden in logs
 - `app/workers/scheduler.py` no longer emits generic proactive scheduler
   candidate events from opt-in/user-activity alone; proactive cadence records
   an observer no-op when no due planned work or actionable proposal is present

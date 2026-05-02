@@ -2,6 +2,27 @@
 
 Last updated: 2026-05-02
 
+- 2026-05-02: `PRJ-859` synced ops and release-smoke observer evidence:
+  - new task:
+    - `.codex/tasks/PRJ-859-sync-ops-release-smoke-and-learning-journal.md`
+  - release evidence:
+    - `backend/scripts/run_release_smoke.ps1` now fails when
+      `/health.proactive.planned_action_observer` is missing or not owned by
+      `planned_action_observer_policy`
+    - debug `incident_evidence.policy_posture.proactive` and incident-evidence
+      bundle validation now pin the same observer posture
+    - smoke summaries now include observer policy owner, latest observer state,
+      empty-result behavior, due planned-work count, and bundle/debug observer
+      posture
+  - docs/context:
+    - ops runbook, logging/debugging architecture, runtime reality, next plan,
+      and learning journal now describe the release-visible observer gate
+  - validation:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py -k "release_smoke and (proactive_observer or optional_deployment_evidence or incident_evidence or incident_bundle)"; Pop-Location`
+    - result: `13 passed, 39 deselected`
+  - highest-value next step:
+    - execute `PRJ-860` by running the final backend gate and closing
+      docs/context
 - 2026-05-02: `PRJ-858` added observer-gated proactivity behavior scenarios:
   - new task:
     - `.codex/tasks/PRJ-858-observer-gated-proactivity-behavior-scenarios.md`

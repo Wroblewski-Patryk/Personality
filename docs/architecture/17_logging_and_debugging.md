@@ -223,6 +223,11 @@ failed observer-admitted work in scheduler cadence evidence without forcing a
 user-visible expression. The evidence shape should stay bounded to metadata
 such as source, work id, user id, work kind, channel, outcome, reason, and
 `expression_visible`.
+Release smoke and incident-evidence bundle validation must consume the same
+planned-action observer posture exposed under proactive policy evidence:
+`policy_owner=planned_action_observer_policy`, latest observer state,
+`empty_result_behavior`, and due/actionable counts. Missing observer posture is
+release drift, not a manual-interpretation warning.
 
 ---
 

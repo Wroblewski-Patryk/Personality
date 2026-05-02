@@ -2,6 +2,33 @@
 
 Last updated: 2026-05-02
 
+## Fresh Ops Release Smoke Observer Evidence (2026-05-02)
+
+- `PRJ-859` is DONE as the release-evidence sync slice:
+  - `.codex/tasks/PRJ-859-sync-ops-release-smoke-and-learning-journal.md`
+- purpose:
+  - make planned-action observer posture release-visible after passive/active
+    scheduler changes
+  - fail smoke when proactive evidence loses the observer boundary
+  - keep observer evidence counts-only rather than exposing raw planned-work
+    payloads
+- implemented:
+  - `backend/scripts/run_release_smoke.ps1` validates
+    `/health.proactive.planned_action_observer`
+  - debug `incident_evidence.policy_posture.proactive` and incident-evidence
+    bundle validation now require `planned_action_observer_policy`
+  - smoke summaries include live, debug, and bundle observer policy/state
+    fields
+  - ops/runtime docs and the learning journal now describe the observer release
+    gate
+- validation:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py -k "release_smoke and (proactive_observer or optional_deployment_evidence or incident_evidence or incident_bundle)"; Pop-Location`
+  - result: `13 passed, 39 deselected`
+- deployment impact:
+  - low; release-smoke validation and docs only, no DB/env/API shape change
+    beyond already-exported observer posture
+- next smallest useful task:
+  - `PRJ-860` run the final backend gate and close docs/context
 ## Fresh Observer-Gated Proactivity Behavior Scenarios (2026-05-02)
 
 - `PRJ-858` is DONE as the observer-gated behavior scenario slice:

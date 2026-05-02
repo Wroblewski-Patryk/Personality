@@ -351,6 +351,9 @@ function Validate-IncidentEvidenceBundle {
         proactive_policy_owner = $null
         proactive_enabled = $null
         proactive_production_baseline_state = $null
+        proactive_observer_policy_owner = $null
+        proactive_observer_state = $null
+        proactive_observer_empty_result_behavior = $null
         deployment_automation_policy_owner = $null
         deployment_primary_trigger_mode = $null
         deployment_runtime_trigger_mode = $null
@@ -528,6 +531,13 @@ function Validate-IncidentEvidenceBundle {
     if ([string]$proactive.production_baseline_state -eq "disabled_by_policy") {
         throw "Incident evidence bundle verification failed: proactive production baseline is still disabled_by_policy."
     }
+    $proactiveObserver = $proactive.planned_action_observer
+    if ($null -eq $proactiveObserver) {
+        throw "Incident evidence bundle verification failed: proactive planned_action_observer posture is missing."
+    }
+    if ([string]$proactiveObserver.policy_owner -ne "planned_action_observer_policy") {
+        throw "Incident evidence bundle verification failed: unexpected proactive planned_action_observer policy_owner '$($proactiveObserver.policy_owner)'."
+    }
     $retrieval = $incidentEvidence.policy_posture.memory_retrieval
     $retrievalAlignment = Assert-RetrievalAlignmentPosture `
         -MemoryRetrieval $retrieval `
@@ -644,6 +654,9 @@ function Validate-IncidentEvidenceBundle {
         proactive_policy_owner = [string]$proactive.policy_owner
         proactive_enabled = [bool]$proactive.enabled
         proactive_production_baseline_state = [string]$proactive.production_baseline_state
+        proactive_observer_policy_owner = [string]$proactiveObserver.policy_owner
+        proactive_observer_state = [string]$proactiveObserver.last_observer_state
+        proactive_observer_empty_result_behavior = [string]$proactiveObserver.empty_result_behavior
         deployment_automation_policy_owner = [string]$incidentDeployment.deployment_automation_policy_owner
         deployment_primary_trigger_mode = [string]$incidentDeployment.deployment_automation_baseline.primary_trigger_mode
         deployment_runtime_trigger_mode = [string]$incidentDeployment.runtime_trigger_mode
@@ -2118,6 +2131,13 @@ if (-not [bool]$proactive.production_baseline_ready) {
 if ([string]$proactive.production_baseline_state -eq "disabled_by_policy") {
     throw "Health check failed: proactive production baseline is still disabled_by_policy."
 }
+$proactiveObserver = $proactive.planned_action_observer
+if ($null -eq $proactiveObserver) {
+    throw "Health check failed: proactive planned_action_observer posture is missing."
+}
+if ([string]$proactiveObserver.policy_owner -ne "planned_action_observer_policy") {
+    throw "Health check failed: unexpected proactive planned_action_observer policy_owner '$($proactiveObserver.policy_owner)'."
+}
 $deployment = $health.deployment
 if ($null -eq $deployment) {
     throw "Health check failed: response is missing deployment."
@@ -2592,6 +2612,13 @@ if ($IncludeDebug) {
     if ([string]$incidentProactive.production_baseline_state -eq "disabled_by_policy") {
         throw "Smoke request failed: incident_evidence proactive production baseline is still disabled_by_policy."
     }
+    $incidentProactiveObserver = $incidentProactive.planned_action_observer
+    if ($null -eq $incidentProactiveObserver) {
+        throw "Smoke request failed: incident_evidence proactive planned_action_observer posture is missing."
+    }
+    if ([string]$incidentProactiveObserver.policy_owner -ne "planned_action_observer_policy") {
+        throw "Smoke request failed: unexpected incident_evidence proactive planned_action_observer policy_owner '$($incidentProactiveObserver.policy_owner)'."
+    }
     $incidentRetrieval = $incidentEvidence.policy_posture.memory_retrieval
     $incidentRetrievalAlignment = Assert-RetrievalAlignmentPosture `
         -MemoryRetrieval $incidentRetrieval `
@@ -2736,6 +2763,10 @@ $summary = @{
     proactive_enabled = [bool]$proactive.enabled
     proactive_production_baseline_ready = [bool]$proactive.production_baseline_ready
     proactive_production_baseline_state = [string]$proactive.production_baseline_state
+    proactive_observer_policy_owner = [string]$proactive.planned_action_observer.policy_owner
+    proactive_observer_state = [string]$proactive.planned_action_observer.last_observer_state
+    proactive_observer_empty_result_behavior = [string]$proactive.planned_action_observer.empty_result_behavior
+    proactive_observer_due_planned_work_count = [int]$proactive.planned_action_observer.due_planned_work_count
     deployment_hosting_baseline = [string]$deployment.hosting_baseline
     deployment_automation_policy_owner = [string]$deployment.deployment_automation_policy_owner
     deployment_primary_trigger_mode = [string]$deployment.deployment_automation_baseline.primary_trigger_mode
@@ -2807,6 +2838,8 @@ $summary = @{
     incident_evidence_proactive_enabled = if ($null -ne $incidentProactive) { [bool]$incidentProactive.enabled } else { $null }
     incident_evidence_proactive_production_baseline_ready = if ($null -ne $incidentProactive) { [bool]$incidentProactive.production_baseline_ready } else { $null }
     incident_evidence_proactive_production_baseline_state = if ($null -ne $incidentProactive) { [string]$incidentProactive.production_baseline_state } else { $null }
+    incident_evidence_proactive_observer_policy_owner = if ($null -ne $incidentProactive) { [string]$incidentProactive.planned_action_observer.policy_owner } else { $null }
+    incident_evidence_proactive_observer_state = if ($null -ne $incidentProactive) { [string]$incidentProactive.planned_action_observer.last_observer_state } else { $null }
     incident_evidence_learned_state_policy_owner = if ($null -ne $incidentLearnedStateContract) { [string]$incidentLearnedStateContract.policy_owner } else { $null }
     incident_evidence_learned_state_internal_inspection_path = if ($null -ne $incidentLearnedStateContract) { [string]$incidentLearnedStateContract.internal_inspection_path } else { $null }
     incident_evidence_learned_state_inspection_sections = if ($null -ne $incidentLearnedStateContract) { @($incidentLearnedStateContract.inspection_sections) } else { @() }
@@ -2885,6 +2918,8 @@ $summary = @{
     incident_bundle_proactive_policy_owner = $incidentEvidenceBundleCheck.proactive_policy_owner
     incident_bundle_proactive_enabled = $incidentEvidenceBundleCheck.proactive_enabled
     incident_bundle_proactive_production_baseline_state = $incidentEvidenceBundleCheck.proactive_production_baseline_state
+    incident_bundle_proactive_observer_policy_owner = $incidentEvidenceBundleCheck.proactive_observer_policy_owner
+    incident_bundle_proactive_observer_state = $incidentEvidenceBundleCheck.proactive_observer_state
     incident_bundle_deployment_automation_policy_owner = $incidentEvidenceBundleCheck.deployment_automation_policy_owner
     incident_bundle_deployment_primary_trigger_mode = $incidentEvidenceBundleCheck.deployment_primary_trigger_mode
     incident_bundle_deployment_runtime_trigger_mode = $incidentEvidenceBundleCheck.deployment_runtime_trigger_mode

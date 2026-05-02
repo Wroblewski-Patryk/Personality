@@ -200,6 +200,9 @@ fixes for this repository.
     confidence-gate it, action/reflection may write relation truth, and
     expression may only self-review generated wording against already-known
     preferences.
+  - release and incident-evidence gates should fail when passive/active
+    observer posture disappears; otherwise scheduler drift can look like an
+    operator interpretation problem instead of a release regression.
 - Preferred pattern:
   - expose all action-written adaptive episode signals to reflection
   - use bounded communication-relation families for contact cadence,
@@ -221,6 +224,9 @@ fixes for this repository.
   - prove behavior-learning changes with scenario-level evidence that covers
     later expression change, reflection consolidation, and unclear-feedback
     non-mutation
+  - expose planned-action observer posture in `/health`, debug incident
+    evidence, release smoke summaries, and bundle validation with counts-only
+    fields rather than raw planned-work payloads
 - Avoid:
   - treating a larger raw recent-message window as the complete fix
   - adding a parallel short-term memory store for scheduler behavior
@@ -246,6 +252,7 @@ fixes for this repository.
   - `.codex/tasks/PRJ-840-end-to-end-behavior-learning-scenarios.md`
   - `.codex/tasks/PRJ-841-sync-runtime-docs-ops-notes-and-learning-journal.md`
   - `.codex/tasks/PRJ-853-passive-active-runtime-trigger-boundary.md`
+  - `.codex/tasks/PRJ-859-sync-ops-release-smoke-and-learning-journal.md`
 
 ### 2026-04-28 - Chat UI must render the user-authored turn before waiting for assistant completion
 - Context:

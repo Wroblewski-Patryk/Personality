@@ -115,6 +115,9 @@ cadence posture:
   unanswered threshold)
 - latest proactive tick summary, planned-action observer state, and last tick
   timestamp
+- planned-action observer policy owner, `empty_result_behavior`, due-work count,
+  and counts-only passive/active evidence for skipped, blocked, delayed, or
+  failed observer-admitted work
 - live enabled state plus production baseline readiness and state
   (`enabled=true`,
   `production_baseline_state=external_scheduler_target_owner` in Coolify
@@ -124,6 +127,8 @@ Use `/health.proactive` together with `/health.scheduler.last_proactive_summary`
 when triaging why proactive outreach is quiet, blocked, or actively delivering.
 An `empty_noop` observer state means cadence found no due/actionable work and
 should not have started a conscious foreground run.
+Release smoke fails if `/health.proactive.planned_action_observer` or exported
+incident evidence loses the `planned_action_observer_policy` posture.
 `/health.proactive.communication_boundary_contract` exposes the relation-owned
 communication-boundary policy used by planning, reflection, proactive
 candidate selection, proactive delivery guardrails, and expression ritual
@@ -1273,7 +1278,10 @@ Optional debug payload:
 
 With `-IncludeDebug`, release smoke now also validates exported
 `incident_evidence` directly and records its schema version, stage count, and
-policy-surface coverage in the smoke summary.
+policy-surface coverage in the smoke summary. It also records the proactive
+planned-action observer policy owner and latest observer state from live
+`/health`, debug `incident_evidence`, and incident-evidence bundle validation
+so passive/active trigger drift is release-visible.
 
 For dedicated debug-ingress retirement, `-IncludeDebug` now also proves:
 

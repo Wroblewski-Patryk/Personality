@@ -96,8 +96,13 @@ Queue update:
 - runtime behavior-testing docs now define `T22.1..T22.4` for silent no-op,
   due planned-work admission, relation-care handoff, and internal
   failure-learning evidence.
-- `PRJ-859` remains the next slice for ops, release smoke, and learning-journal
-  sync.
+- `PRJ-859` is now complete.
+- release smoke now validates and summarizes planned-action observer posture
+  from `/health.proactive`, debug `incident_evidence`, and incident-evidence
+  bundle validation.
+- ops/runtime docs and the learning journal now treat missing observer posture
+  as passive/active trigger drift.
+- `PRJ-860` remains the next slice for the final backend gate and closure.
 
 Why this order:
 
