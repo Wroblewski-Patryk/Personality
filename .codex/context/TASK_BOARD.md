@@ -2,6 +2,23 @@
 
 Last updated: 2026-05-03
 
+## Fresh Organizer Provider Activation Smoke (2026-05-03)
+
+- `PRJ-918` is BLOCKED:
+  - `.codex/tasks/PRJ-918-organizer-provider-activation-smoke.md`
+  - `docs/planning/v1-organizer-provider-activation-smoke.md`
+- result:
+  - live organizer provider smoke was not run because production still reports
+    `provider_credentials_missing`
+  - production currently reports `provider_ready_operation_count=0/5` and
+    `daily_use_ready_workflow_count=0/3`
+  - no provider secrets were changed or stored
+- validation:
+  - production `/health` organizer snapshot reviewed
+  - `git diff --check`
+- next smallest useful task:
+  - `PRJ-920` Minimal External Health Monitor
+
 ## Fresh Organizer Provider Credential Activation Runbook (2026-05-03)
 
 - `PRJ-917` is DONE:

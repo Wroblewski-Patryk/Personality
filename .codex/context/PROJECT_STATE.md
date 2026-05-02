@@ -2,6 +2,19 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-918` is blocked for organizer provider activation smoke:
+  - new task:
+    - `.codex/tasks/PRJ-918-organizer-provider-activation-smoke.md`
+  - new planning source:
+    - `docs/planning/v1-organizer-provider-activation-smoke.md`
+  - result:
+    - production organizer health still reports `provider_credentials_missing`
+    - production reports `provider_ready_operation_count=0/5`
+    - production reports `daily_use_ready_workflow_count=0/3`
+    - live provider smoke was not run and no provider secrets were changed
+  - next execution priority:
+    - `PRJ-920` Minimal External Health Monitor
+
 - 2026-05-03: `PRJ-917` completed the organizer provider credential
   activation runbook:
   - new task:

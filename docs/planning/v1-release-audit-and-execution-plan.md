@@ -406,6 +406,9 @@ Tasks:
     for ClickUp, Google Calendar, and Google Drive.
 
 - `PRJ-918` Organizer Provider Activation Smoke
+  - Status: BLOCKED
+  - Output: `docs/planning/v1-organizer-provider-activation-smoke.md` records
+    that production still reports `provider_credentials_missing`.
   - After credentials are configured, run production release smoke and provider
     read-only smoke.
   - Confirm `organizer_daily_use_state` and provider-specific readiness are
@@ -495,7 +498,8 @@ Tasks:
 4. `PRJ-915` Backend-Backed Dashboard Summary Surface - DONE locally
 5. `PRJ-916` Web Empty And Error State Audit - DONE locally
 6. `PRJ-917` Organizer Provider Credential Activation Runbook - DONE locally
-7. `PRJ-918` Organizer Provider Activation Smoke
+7. `PRJ-918` Organizer Provider Activation Smoke - BLOCKED by provider
+   credentials
 8. `PRJ-920` Minimal External Health Monitor
 9. `PRJ-921` Release Evidence Archive Standard
 10. `PRJ-931` V1 AI Red-Team Scenario Pack
