@@ -2,6 +2,18 @@
 
 Last updated: 2026-05-02
 
+- 2026-05-02: `PRJ-860` ran the final passive/active backend gate:
+  - new task:
+    - `.codex/tasks/PRJ-860-final-passive-active-backend-gate.md`
+  - verification:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q; Pop-Location`
+    - result: `1019 passed`
+  - result:
+    - the passive/active trigger implementation queue from `PRJ-853` through
+      `PRJ-860` is closed with full backend regression evidence
+  - highest-value next step:
+    - select the next independent product/runtime slice from the task board
+      instead of extending the completed passive/active lane by default
 - 2026-05-02: `PRJ-859` synced ops and release-smoke observer evidence:
   - new task:
     - `.codex/tasks/PRJ-859-sync-ops-release-smoke-and-learning-journal.md`

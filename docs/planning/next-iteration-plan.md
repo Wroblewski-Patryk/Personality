@@ -102,7 +102,11 @@ Queue update:
   bundle validation.
 - ops/runtime docs and the learning journal now treat missing observer posture
   as passive/active trigger drift.
-- `PRJ-860` remains the next slice for the final backend gate and closure.
+- `PRJ-860` is now complete.
+- the final backend gate passed with `1019 passed`, closing the planned
+  passive/active trigger implementation queue through release verification.
+- remaining future work should be selected from fresh product/runtime
+  priorities rather than extending this completed lane by default.
 
 Why this order:
 

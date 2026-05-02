@@ -2,6 +2,21 @@
 
 Last updated: 2026-05-02
 
+## Fresh Passive/Active Final Backend Gate (2026-05-02)
+
+- `PRJ-860` is DONE as the final passive/active verification slice:
+  - `.codex/tasks/PRJ-860-final-passive-active-backend-gate.md`
+- purpose:
+  - close the planned passive/active trigger queue with full backend evidence
+  - prove the observer, scheduler, evidence, behavior-doc, and release-smoke
+    changes did not regress the wider backend suite
+- validation:
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q; Pop-Location`
+  - result: `1019 passed`
+- deployment impact:
+  - none; verification/context-only closure
+- next smallest useful task:
+  - select a new independent product/runtime slice from the board
 ## Fresh Ops Release Smoke Observer Evidence (2026-05-02)
 
 - `PRJ-859` is DONE as the release-evidence sync slice:
