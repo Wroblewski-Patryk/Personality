@@ -3349,6 +3349,28 @@ export default function App() {
   const preferenceSummary = (overview?.identity_state as Record<string, unknown> | undefined)?.preference_summary as
     | Record<string, unknown>
     | undefined;
+  const roleSkillState = overview?.role_skill_state as Record<string, unknown> | undefined;
+  const selectionVisibilitySummary = roleSkillState?.selection_visibility_summary as Record<string, unknown> | undefined;
+  const skillRegistry = roleSkillState?.skill_registry as Record<string, unknown> | undefined;
+  const activeGoalCount = numberValue(planningSummary?.active_goal_count);
+  const activeTaskCount = numberValue(planningSummary?.active_task_count);
+  const blockedTaskCount = numberValue(planningSummary?.blocked_task_count);
+  const pendingProposalCount = numberValue(planningSummary?.pending_proposal_count);
+  const semanticConclusionCount = numberValue(knowledgeSummary?.semantic_conclusion_count);
+  const affectiveConclusionCount = numberValue(knowledgeSummary?.affective_conclusion_count);
+  const learnedPreferenceCount = numberValue(preferenceSummary?.learned_preference_count);
+  const relationCount = numberValue(knowledgeSummary?.relation_count);
+  const adaptiveOutputCount = Array.isArray(knowledgeSummary?.adaptive_output_keys)
+    ? knowledgeSummary.adaptive_output_keys.length
+    : 0;
+  const skillCatalogCount = numberValue(
+    selectionVisibilitySummary?.catalog_skill_count ?? skillRegistry?.catalog_count ?? roleSkillState?.skill_count,
+  );
+  const workPartnerRoleAvailable = Boolean(selectionVisibilitySummary?.work_partner_role_available);
+  const preferredRolePresent = Boolean(selectionVisibilitySummary?.preferred_role_present);
+  const claritySignalCount = semanticConclusionCount + learnedPreferenceCount + activeGoalCount;
+  const intuitiveSignalCount =
+    relationCount + affectiveConclusionCount + adaptiveOutputCount + (Boolean(knowledgeSummary?.theta_present) ? 1 : 0);
   const selectedUiLanguage = normalizeUiLanguage(
     route === "/settings" ? settingsDraft.uiLanguage : me?.settings.ui_language ?? settingsDraft.uiLanguage,
   );
@@ -4280,21 +4302,17 @@ export default function App() {
       key: "skills",
       className: "aion-personality-callout aion-personality-callout-skills",
       eyebrow: "Skills",
-      title: stringValue(
-        ((overview?.role_skill_state as Record<string, unknown> | undefined)?.skill_summary as
-          | Record<string, unknown>
-          | undefined)?.skill_count ??
-          (overview?.role_skill_state as Record<string, unknown> | undefined)?.skill_count,
-        "18",
-      ),
-      body: "Visible capabilities and tools.",
+      title: skillCatalogCount > 0 ? `${skillCatalogCount} catalogued` : "Catalog pending",
+      body: workPartnerRoleAvailable
+        ? "Visible capabilities from the runtime catalog."
+        : "Runtime catalog is waiting for available role-skill data.",
     },
     {
       key: "role",
       className: "aion-personality-role-card",
       eyebrow: "Role",
-      title: "Advisor & creator",
-      body: "Strategic, thoughtful, supportive.",
+      title: workPartnerRoleAvailable ? "Work partner ready" : "Adaptive role",
+      body: preferredRolePresent ? "Preferred role is learned." : "Role posture stays adaptive until preferences grow.",
     },
   ];
   const personalityTimelineRows = [
@@ -4336,16 +4354,16 @@ export default function App() {
     },
   ];
   const personalityConsciousSignals = [
-    { label: "Focus", value: stringValue(planningSummary?.active_goal_count, "0") !== "0" ? "High" : "Steady" },
-    { label: "Clarity", value: "87%" },
-    { label: "Energy", value: "Steady" },
-    { label: "Load", value: stringValue(planningSummary?.active_task_count, "0") === "0" ? "Light" : "Moderate" },
+    { label: "Focus", value: activeGoalCount > 0 ? `${activeGoalCount} goals` : "No goals" },
+    { label: "Clarity", value: claritySignalCount > 0 ? `${claritySignalCount} signals` : "No signals" },
+    { label: "Energy", value: pendingProposalCount > 0 ? `${pendingProposalCount} proposals` : "No proposals" },
+    { label: "Load", value: `${activeTaskCount} tasks / ${blockedTaskCount} blocked` },
   ];
   const personalitySubconsciousSignals = [
-    { label: "Patterns", value: `${stringValue(knowledgeSummary?.semantic_conclusion_count, "0")}` },
-    { label: "Associations", value: `${stringValue(knowledgeSummary?.affective_conclusion_count, "0")}` },
-    { label: "Preferences", value: `${stringValue(preferenceSummary?.learned_preference_count, "0")}` },
-    { label: "Intuition", value: "Strong" },
+    { label: "Patterns", value: `${semanticConclusionCount}` },
+    { label: "Associations", value: `${affectiveConclusionCount}` },
+    { label: "Preferences", value: `${learnedPreferenceCount}` },
+    { label: "Intuition", value: intuitiveSignalCount > 0 ? `${intuitiveSignalCount} signals` : "No signals" },
   ];
   const personalityRecentActivity = recentActivityRows(
     overview,

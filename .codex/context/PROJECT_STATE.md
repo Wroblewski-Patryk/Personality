@@ -2,6 +2,25 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-914` replaced remaining static Personality metrics:
+  - new task:
+    - `.codex/tasks/PRJ-914-replace-static-personality-metrics.md`
+  - new planning source:
+    - `docs/planning/v1-replace-static-personality-metrics.md`
+  - implementation:
+    - `web/src/App.tsx` now derives Personality focus, clarity, energy, load,
+      intuition, role, and skills display values from existing overview data
+    - removed fixed `87%`, `Strong`, and fallback `18` skills claims from the
+      Personality route
+  - validation:
+    - web build passed
+    - focused `/personality` desktop/mobile smoke passed with `2` checks, `0`
+      failures, and `0` unexpected console issues
+    - screenshots and JSON evidence were captured in
+      `.codex/artifacts/prj914-personality-metrics/`
+  - next execution priority:
+    - `PRJ-915` Backend-Backed Dashboard Summary Surface
+
 - 2026-05-03: `PRJ-913` completed the web v1 route smoke after release
   candidate:
   - new task:

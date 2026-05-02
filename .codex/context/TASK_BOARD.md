@@ -2,6 +2,25 @@
 
 Last updated: 2026-05-03
 
+## Fresh Replace Static Personality Metrics (2026-05-03)
+
+- `PRJ-914` is DONE:
+  - `.codex/tasks/PRJ-914-replace-static-personality-metrics.md`
+  - `docs/planning/v1-replace-static-personality-metrics.md`
+- result:
+  - Personality clarity, energy, load, focus, intuition, role, and skills
+    values now derive from existing `/app/personality/overview` data where
+    they imply runtime truth
+  - removed fixed `87%`, `Strong`, and fallback `18` skills claims
+  - the focused `/personality` desktop/mobile smoke passed with no failures
+    and no unexpected console issues
+- validation:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - bundled Node + Playwright focused Personality metrics smoke
+  - `git diff --check`
+- next smallest useful task:
+  - `PRJ-915` Backend-Backed Dashboard Summary Surface
+
 ## Fresh Web V1 Route Smoke After Release Candidate (2026-05-03)
 
 - `PRJ-913` is DONE:

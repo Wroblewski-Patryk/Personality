@@ -367,8 +367,12 @@ Tasks:
   - Check desktop/mobile, empty/loading/success/error where practical.
 
 - `PRJ-914` Replace Remaining Static Personality Metrics
-  - Convert clarity, energy, load, intuition, and similar values to backend
-    truth or explicitly decorative copy.
+  - Status: DONE
+  - Output: `docs/planning/v1-replace-static-personality-metrics.md` records
+    the replacement of fixed Personality clarity, intuition, and skill-count
+    claims with values derived from the existing overview contract.
+  - Converted clarity, energy, load, focus, intuition, role, and skills values
+    to backend truth or explicit empty runtime state.
 
 - `PRJ-915` Backend-Backed Dashboard Summary Surface
   - Replace route-local dashboard summary cards that imply live operational
@@ -475,7 +479,7 @@ Tasks:
 1. `PRJ-909` Production Telegram Mode Smoke - BLOCKED by operator
    preconditions
 2. `PRJ-913` Web V1 Route Smoke After Release Candidate - DONE locally
-3. `PRJ-914` Replace Remaining Static Personality Metrics
+3. `PRJ-914` Replace Remaining Static Personality Metrics - DONE locally
 4. `PRJ-915` Backend-Backed Dashboard Summary Surface
 5. `PRJ-916` Web Empty And Error State Audit
 6. `PRJ-917` Organizer Provider Credential Activation Runbook
