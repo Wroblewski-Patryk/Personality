@@ -384,8 +384,12 @@ Tasks:
     `/app/tools/overview`.
 
 - `PRJ-916` Web Empty And Error State Audit
-  - Confirm all first-party routes handle unauthenticated, loading, empty,
-    backend error, and success states without raw technical leakage.
+  - Status: DONE
+  - Output: `docs/planning/v1-web-empty-and-error-state-audit.md` records
+    authenticated route smoke and backend-down dashboard smoke evidence.
+  - Confirmed first-party routes handle unauthenticated, empty/success, and
+    backend-error postures without route failures or raw technical leakage in
+    the checked local states.
 
 ### Phase 5 - Extension Readiness
 
@@ -485,7 +489,7 @@ Tasks:
 2. `PRJ-913` Web V1 Route Smoke After Release Candidate - DONE locally
 3. `PRJ-914` Replace Remaining Static Personality Metrics - DONE locally
 4. `PRJ-915` Backend-Backed Dashboard Summary Surface - DONE locally
-5. `PRJ-916` Web Empty And Error State Audit
+5. `PRJ-916` Web Empty And Error State Audit - DONE locally
 6. `PRJ-917` Organizer Provider Credential Activation Runbook
 7. `PRJ-918` Organizer Provider Activation Smoke
 8. `PRJ-920` Minimal External Health Monitor

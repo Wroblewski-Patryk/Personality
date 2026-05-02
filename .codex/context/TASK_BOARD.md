@@ -2,6 +2,25 @@
 
 Last updated: 2026-05-03
 
+## Fresh Web Empty And Error State Audit (2026-05-03)
+
+- `PRJ-916` is DONE:
+  - `.codex/tasks/PRJ-916-web-empty-and-error-state-audit.md`
+  - `docs/planning/v1-web-empty-and-error-state-audit.md`
+- result:
+  - authenticated route smoke passed for `/login` plus 12 authenticated routes
+    on desktop and mobile
+  - backend-down `/dashboard` mobile smoke passed without raw technical
+    leakage or horizontal overflow
+  - no runtime fix was required in this slice
+- validation:
+  - `Push-Location .\web; npm run build; Pop-Location`
+  - bundled Node + Playwright authenticated route smoke
+  - bundled Node + Playwright backend-down dashboard smoke
+  - `git diff --check`
+- next smallest useful task:
+  - `PRJ-917` Organizer Provider Credential Activation Runbook
+
 ## Fresh Backend-Backed Dashboard Summary Surface (2026-05-03)
 
 - `PRJ-915` is DONE:

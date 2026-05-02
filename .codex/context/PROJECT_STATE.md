@@ -2,6 +2,21 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-916` completed the web empty/error state audit:
+  - new task:
+    - `.codex/tasks/PRJ-916-web-empty-and-error-state-audit.md`
+  - new planning source:
+    - `docs/planning/v1-web-empty-and-error-state-audit.md`
+  - result:
+    - web build passed
+    - authenticated route smoke passed with `24` route/viewport checks, `0`
+      failures, and `0` unexpected console issues
+    - backend-down `/dashboard` mobile smoke passed with `1` check, `0`
+      failures, and `0` unexpected console issues
+    - no runtime fix was required in this slice
+  - next execution priority:
+    - `PRJ-917` Organizer Provider Credential Activation Runbook
+
 - 2026-05-03: `PRJ-915` completed the backend-backed dashboard summary
   surface:
   - new task:
