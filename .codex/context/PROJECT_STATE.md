@@ -2,6 +2,27 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-726` completed stale authenticated dashboard shell queue sync:
+  - task:
+    - `.codex/tasks/PRJ-726-authenticated-dashboard-shell-and-responsive-layout-foundation.md`
+  - result:
+    - the authenticated dashboard shell and responsive layout foundation task
+      is no longer a false `READY` item
+    - existing `web/src/App.tsx` shell, navigation, `/dashboard` normalization,
+      dashboard canvas, continuity sections, and module-entry sections remain
+      the reuse path
+    - existing `web/src/index.css` shell/dashboard responsive styling remains
+      the implementation layer
+    - no parallel shell, route-topology change, backend contract change, or
+      workaround was introduced
+  - validation:
+    - planning contract, task-board history, shell/dashboard code, and
+      responsive CSS evidence were reviewed
+    - `git diff --check` passed
+  - next execution priority:
+    - review `PRJ-727` for stale READY/task-board drift before selecting new
+      implementation work
+
 - 2026-05-03: `PRJ-725` completed stale shared token infrastructure queue sync:
   - task:
     - `.codex/tasks/PRJ-725-shared-tokens-surfaces-and-motif-infrastructure.md`

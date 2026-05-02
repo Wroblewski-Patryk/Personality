@@ -2,6 +2,33 @@
 
 Last updated: 2026-05-03
 
+## Fresh Authenticated Dashboard Shell Queue Sync (2026-05-03)
+
+- `PRJ-726` is DONE:
+  - `.codex/tasks/PRJ-726-authenticated-dashboard-shell-and-responsive-layout-foundation.md`
+- result:
+  - the stale `READY` task was closed against the existing authenticated shell
+    and dashboard route instead of creating a parallel shell path
+  - `web/src/App.tsx` already contains:
+    - authenticated shell frame
+    - shell navigation and utility bar
+    - `/dashboard` route normalization
+    - dashboard canvas with continuity and module-entry sections
+  - `web/src/index.css` already carries the authenticated shell/dashboard
+    responsive styling used by later canonical route passes
+- validation:
+  - verified dashboard section-order and responsive expectations in the
+    planning contract
+  - verified shell/dashboard ownership in `web/src/App.tsx` and
+    `web/src/index.css`
+  - verified historical board evidence that `PRJ-724..PRJ-727` were complete
+    locally and that later dashboard/shell proof exists
+  - `git diff --check`
+  - result: passed
+- next smallest useful task:
+  - review `PRJ-727` for the same stale READY/task-board drift before
+    selecting new implementation work
+
 ## Fresh Shared Token Infrastructure Queue Sync (2026-05-03)
 
 - `PRJ-725` is DONE:
