@@ -2,6 +2,30 @@
 
 Last updated: 2026-05-02
 
+## Fresh Current V1 Release Boundary (2026-05-02)
+
+- `PRJ-903` is DONE:
+  - `.codex/tasks/PRJ-903-freeze-current-v1-release-boundary.md`
+  - `docs/planning/current-v1-release-boundary.md`
+- release boundary:
+  - core `v1` remains the no-UI life-assistant bundle:
+    conversation reliability, learned-state inspection, bounded website
+    reading, tool-grounded learning, time-aware planned work, and production
+    deploy parity
+  - current web shell and canonical route work are included in the candidate as
+    a product-facing surface, but only with build, route-smoke, and deployed
+    revision-parity evidence
+  - organizer providers, richer daily-use workflows, multimodal Telegram,
+    mobile/Expo restart, and external observability are extension gates unless
+    explicitly promoted by a future scope decision
+  - production smoke, incident evidence, rollback/recovery, privacy/debug
+    posture, and AI red-team evidence remain queued hardening/release gates
+- validation:
+  - `git diff --check`
+  - result: passed
+- next smallest useful task:
+  - start `PRJ-904` V1 Commit Scope Audit against the frozen boundary
+
 ## Fresh V1 Release Audit And Execution Plan (2026-05-02)
 
 - `PRJ-902` is DONE as a detailed v1 audit and execution plan:
@@ -36,8 +60,7 @@ Last updated: 2026-05-02
   - `PRJ-911` V1 Rollback And Recovery Drill
   - `PRJ-912` V1 Data Privacy And Debug Posture Check
 - next smallest useful task:
-  - start `PRJ-903` and freeze the exact release boundary before any more
-    implementation or publish work
+  - `PRJ-903` is complete; continue with `PRJ-904` V1 Commit Scope Audit
 
 ## Fresh Real Recent Activity Surface (2026-05-02)
 

@@ -2,6 +2,9 @@
 
 Last updated: 2026-05-02
 
+Current release boundary:
+`docs/planning/current-v1-release-boundary.md`.
+
 ## Purpose
 
 This document turns the current repository state into a concrete path for
@@ -208,8 +211,10 @@ Tasks:
 
 - `PRJ-903` Freeze Current V1 Release Boundary
   - Type: planning
-  - Output: one source-of-truth statement separating core release blockers,
-    web-product blockers, and extension blockers.
+  - Status: DONE
+  - Output: `docs/planning/current-v1-release-boundary.md` separates core
+    release blockers, included web-product checks, extension gates, and
+    hardening gates.
 
 ### Phase 1 - Clean And Package The Candidate
 

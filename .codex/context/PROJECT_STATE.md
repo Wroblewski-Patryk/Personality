@@ -2,6 +2,24 @@
 
 Last updated: 2026-05-02
 
+- 2026-05-02: `PRJ-903` froze the current `v1` release boundary:
+  - new task:
+    - `.codex/tasks/PRJ-903-freeze-current-v1-release-boundary.md`
+  - new planning source:
+    - `docs/planning/current-v1-release-boundary.md`
+  - decision:
+    - core `v1` remains the no-UI life-assistant release gate
+    - current web shell work is included as a candidate product-facing surface
+      only with build, route-smoke, and deployed revision-parity evidence
+    - organizer provider activation, richer daily-use workflows, multimodal
+      Telegram, mobile/Expo restart, and external observability remain
+      extension gates unless explicitly promoted later
+  - verification:
+    - `git diff --check`
+    - result: passed
+  - next execution priority:
+    - `PRJ-904` V1 Commit Scope Audit
+
 - 2026-05-02: `PRJ-902` completed the v1 release audit and execution plan:
   - new task:
     - `.codex/tasks/PRJ-902-v1-release-audit-and-execution-plan.md`
