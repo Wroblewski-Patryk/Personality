@@ -2,6 +2,26 @@
 
 Last updated: 2026-05-02
 
+- 2026-05-02: `PRJ-908` is blocked after a production incident-evidence bundle
+  attempt:
+  - new task:
+    - `.codex/tasks/PRJ-908-production-incident-evidence-bundle.md`
+  - new planning source:
+    - `docs/planning/v1-production-incident-evidence-bundle.md`
+  - blocker:
+    - the canonical export helper depends on `/internal/event/debug`
+    - production returns `403` when debug payload access is disabled
+    - enabling `EVENT_DEBUG_ENABLED=true` under current production strict policy
+      caused the runtime to remain unhealthy during redeploy
+  - restoration:
+    - `EVENT_DEBUG_ENABLED=false` was restored in Coolify
+    - the user reported Coolify-side token cleanup complete
+    - the local debug-token artifact was deleted
+    - production release smoke passed after restoration
+  - next execution priority:
+    - choose a production-safe incident-evidence export path or carry the
+      blocker into `PRJ-910` acceptance evidence
+
 - 2026-05-02: `PRJ-906` published the validated v1 candidate:
   - new task:
     - `.codex/tasks/PRJ-906-publish-v1-candidate.md`

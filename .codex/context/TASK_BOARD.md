@@ -2,6 +2,29 @@
 
 Last updated: 2026-05-02
 
+## Fresh Production Incident Evidence Bundle Blocker (2026-05-02)
+
+- `PRJ-908` is BLOCKED:
+  - `.codex/tasks/PRJ-908-production-incident-evidence-bundle.md`
+  - `docs/planning/v1-production-incident-evidence-bundle.md`
+- result:
+  - canonical production bundle export failed because `/internal/event/debug`
+    returns `403` when production debug payload access is disabled
+  - a user-approved temporary Coolify debug window was attempted
+  - production strict policy rejected `EVENT_DEBUG_ENABLED=true` by leaving the
+    runtime unhealthy during the redeploy
+  - `EVENT_DEBUG_ENABLED=false` was restored
+  - the user reported Coolify-side token cleanup complete
+  - the local debug-token artifact was deleted
+- restoration validation:
+  - production `/health` returned to `event_debug_enabled=false`
+  - production `/health` returned to `release_readiness.ready=true`
+  - release smoke passed with deploy parity for
+    `948e7f6245c9dd4c5e767e0c8b840223b141cfa4`
+- next smallest useful task:
+  - either create a production-safe incident-evidence export route, or continue
+    to `PRJ-910` with PRJ-908 recorded as a blocked evidence gap
+
 ## Fresh V1 Candidate Publish (2026-05-02)
 
 - `PRJ-906` is DONE:

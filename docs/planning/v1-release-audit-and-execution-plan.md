@@ -272,6 +272,10 @@ Tasks:
     - runtime action smoke succeeds
 
 - `PRJ-908` Production Incident Evidence Bundle
+  - Status: BLOCKED
+  - Output: `docs/planning/v1-production-incident-evidence-bundle.md` records
+    that the current canonical bundle export path requires debug payload
+    access, while production strict policy rejects `EVENT_DEBUG_ENABLED=true`.
   - Export current production incident-evidence bundle.
   - Attach the latest behavior-validation report.
   - Verify release smoke accepts the bundle path.
