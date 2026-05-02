@@ -1,4 +1,4 @@
-# Docs Index
+# Docs README
 
 This repository uses a two-layer documentation model:
 
@@ -7,6 +7,8 @@ This repository uses a two-layer documentation model:
 
 ## Start Here
 
+- `index.md` - engineering system-map entrypoint for traceability, modules,
+  pipelines, drift, operations, and governance
 - `overview.md` - short current-state summary of what the runtime actually does today
 - `implementation/runtime-reality.md` - current implementation details and transitional runtime notes
 - `architecture/02_architecture.md` - canonical cognitive architecture
@@ -64,6 +66,18 @@ These files describe what is implemented today, including transitional runtime d
 They also carry supplemental non-canonical notes when the repo needs to record
 near-term coordination direction without rewriting the canonical architecture.
 
+## Engineering System Map
+
+- `analysis/documentation-inventory.md`
+- `analysis/documentation-drift.md`
+- `architecture/codebase-map.md`
+- `architecture/traceability-matrix.md`
+- `api/index.md`
+- `data/index.md`
+- `pipelines/index.md`
+- `modules/index.md`
+- `CONTRIBUTING-DOCS.md`
+
 ## Governance
 
 - `governance/working-agreements.md`
@@ -113,9 +127,10 @@ If implementation and canonical architecture diverge:
 - update `docs/architecture/` only when the intended architecture itself changed
 - record live implementation details in `docs/implementation/` and `docs/overview.md`
 - keep `docs/operations/`, `docs/planning/`, and `.codex/context/` honest about what is already live
+
 ## Template Sync: Shared Agent Standards
 
-Additional cross-project standards synced from `!template`:
+Additional cross-project standards synced from the shared agent template:
 
 - `.agents/workflows/user-collaboration.md`
 - `.agents/workflows/world-class-delivery.md`
@@ -124,9 +139,3 @@ Additional cross-project standards synced from `!template`:
 - `docs/operations/service-reliability-and-observability.md`
 - `docs/security/secure-development-lifecycle.md`
 - `docs/ux/evidence-driven-ux-review.md`
-
-## Governance Addendum
-
-## Governance Addendum
-
-## Governance Addendum

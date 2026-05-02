@@ -2,21 +2,61 @@
 
 Last updated: 2026-05-03
 
-## Fresh Minimal External Health Monitor (2026-05-03)
+## Fresh Documentation Gap Repair Queue (2026-05-03)
 
-- `PRJ-920` is DONE:
-  - `.codex/tasks/PRJ-920-minimal-external-health-monitor.md`
-  - `docs/planning/v1-minimal-external-health-monitor.md`
-  - `docs/operations/production-health-monitor.md`
-- result:
-  - created active hourly automation `aion-production-health-monitor`
-  - monitor checks production `/health` and reports readiness/degraded fields
-  - runbook documents checked fields, alert criteria, and operator response
+- `PRJ-945` is DONE:
+  - `.codex/tasks/PRJ-945-documentation-gap-repair-queue.md`
+  - `docs/planning/documentation-system-gap-repair-plan.md`
+- queued:
+  - `PRJ-946` Generated OpenAPI Reference - READY
+  - `PRJ-947` ERD And Column Model Reference - BACKLOG
+  - `PRJ-948` Test Feature Pipeline Ownership Ledger - BACKLOG
+  - `PRJ-949` Frontend Route And Component Map - BACKLOG
+  - `PRJ-950` Provider Specific Integration Docs - BACKLOG
 - validation:
-  - automation creation returned `aion-production-health-monitor`
+  - local markdown link check passed
   - `git diff --check`
+  - result: passed
 - next smallest useful task:
-  - `PRJ-921` Release Evidence Archive Standard
+  - `PRJ-946` Generated OpenAPI Reference
+
+## Fresh Tools Pipeline Reference (2026-05-03)
+
+- `PRJ-944` is DONE:
+  - `.codex/tasks/PRJ-944-tools-pipeline-reference.md`
+- created:
+  - `docs/pipelines/tools.md`
+- updated:
+  - `docs/index.md`
+  - `docs/pipelines/index.md`
+  - `docs/analysis/documentation-drift.md`
+  - `docs/architecture/traceability-matrix.md`
+- validation:
+  - tools pipeline coverage check passed
+  - local markdown link check passed
+  - `git diff --check -- docs .codex/context/PROJECT_STATE.md .codex/context/TASK_BOARD.md .codex/tasks/PRJ-944-tools-pipeline-reference.md`
+  - result: passed
+- next smallest useful task:
+  - add stable feature/pipeline IDs to tests or create a test ownership ledger
+
+## Fresh Scheduler Proactive Pipeline Reference (2026-05-03)
+
+- `PRJ-943` is DONE:
+  - `.codex/tasks/PRJ-943-scheduler-proactive-pipeline-reference.md`
+- created:
+  - `docs/pipelines/scheduler-proactive.md`
+- updated:
+  - `docs/index.md`
+  - `docs/pipelines/index.md`
+  - `docs/analysis/documentation-drift.md`
+  - `docs/architecture/traceability-matrix.md`
+- validation:
+  - scheduler/proactive coverage check passed
+  - local markdown link check passed
+  - `git diff --check -- docs .codex/context/PROJECT_STATE.md .codex/context/TASK_BOARD.md .codex/tasks/PRJ-943-scheduler-proactive-pipeline-reference.md`
+  - result: passed
+- next smallest useful task:
+  - create a dedicated tools pipeline doc
 
 ## Fresh Organizer Provider Activation Smoke (2026-05-03)
 
@@ -34,6 +74,28 @@ Last updated: 2026-05-03
   - `git diff --check`
 - next smallest useful task:
   - `PRJ-920` Minimal External Health Monitor
+
+## Fresh Deferred Reflection Pipeline Reference (2026-05-03)
+
+- `PRJ-942` is DONE:
+  - `.codex/tasks/PRJ-942-deferred-reflection-pipeline-reference.md`
+- purpose:
+  - split the background reflection queue and signal writer path into a
+    dedicated pipeline doc
+- created:
+  - `docs/pipelines/deferred-reflection.md`
+- updated:
+  - `docs/index.md`
+  - `docs/pipelines/index.md`
+  - `docs/analysis/documentation-drift.md`
+  - `docs/architecture/traceability-matrix.md`
+- validation:
+  - deferred reflection reference coverage check passed
+  - local markdown link check passed
+  - `git diff --check -- docs .codex/context/PROJECT_STATE.md .codex/context/TASK_BOARD.md .codex/tasks/PRJ-942-deferred-reflection-pipeline-reference.md`
+  - result: passed
+- next smallest useful task:
+  - create a dedicated scheduler/proactive pipeline doc
 
 ## Fresh Organizer Provider Credential Activation Runbook (2026-05-03)
 
@@ -55,6 +117,34 @@ Last updated: 2026-05-03
   - `PRJ-918` Organizer Provider Activation Smoke, blocked until provider
     credentials are configured
 
+## Fresh App Chat Pipeline Reference (2026-05-03)
+
+- `PRJ-941` is DONE:
+  - `.codex/tasks/PRJ-941-app-chat-pipeline-reference.md`
+- purpose:
+  - split the product-critical browser chat flow into a dedicated pipeline doc
+    covering optimistic local UI state, backend runtime handoff, durable
+    transcript projection, reconciliation, failure points, and tests
+- created:
+  - `docs/pipelines/app-chat.md`
+- updated:
+  - `docs/index.md`
+  - `docs/pipelines/index.md`
+  - `docs/analysis/documentation-drift.md`
+  - `docs/architecture/traceability-matrix.md`
+- validation:
+  - app chat reference coverage check passed for frontend/API/runtime/repository
+    terms
+  - local markdown link check passed
+  - `git diff --check -- docs .codex/context/PROJECT_STATE.md .codex/context/TASK_BOARD.md .codex/tasks/PRJ-941-app-chat-pipeline-reference.md`
+  - result: passed
+- remaining gaps:
+  - dedicated frontend e2e tests for chat send/history UI
+  - app chat sequence diagram
+  - dedicated docs for long-message/markdown rendering behavior
+- next smallest useful task:
+  - create a dedicated deferred reflection pipeline doc
+
 ## Fresh Web Empty And Error State Audit (2026-05-03)
 
 - `PRJ-916` is DONE:
@@ -73,6 +163,68 @@ Last updated: 2026-05-03
   - `git diff --check`
 - next smallest useful task:
   - `PRJ-917` Organizer Provider Credential Activation Runbook
+
+## Fresh Foreground Runtime Pipeline Reference (2026-05-03)
+
+- `PRJ-940` is DONE:
+  - `.codex/tasks/PRJ-940-foreground-runtime-pipeline-reference.md`
+- purpose:
+  - split the highest-risk pipeline registry entry into a dedicated foreground
+    runtime reference grounded in `runtime.py`, `runtime_graph.py`, contracts,
+    and runtime graph tests
+- created:
+  - `docs/pipelines/foreground-runtime.md`
+- updated:
+  - `docs/index.md`
+  - `docs/pipelines/index.md`
+  - `docs/analysis/documentation-drift.md`
+  - `docs/architecture/traceability-matrix.md`
+- validation:
+  - stage-order coverage check passed for:
+    `perception -> affective_assessment -> context -> motivation -> role -> planning -> expression -> action`
+  - local markdown link check passed
+  - `git diff --check -- docs .codex/context/PROJECT_STATE.md .codex/context/TASK_BOARD.md .codex/tasks/PRJ-940-foreground-runtime-pipeline-reference.md`
+  - result: passed
+- remaining gaps:
+  - rendered sequence diagram
+  - generated stage contract table from `backend/app/core/contracts.py`
+  - dedicated app chat, reflection, scheduler/proactive, and tools pipeline docs
+  - stable feature or pipeline IDs in tests
+- next smallest useful task:
+  - create a dedicated app chat pipeline doc
+
+## Fresh Data Model Reference Foundation (2026-05-03)
+
+- `PRJ-939` is DONE:
+  - `.codex/tasks/PRJ-939-data-model-reference-foundation.md`
+- purpose:
+  - close the persistence-side documentation gap by mapping real ORM models,
+    tables, migrations, repository capability groups, feature usage, tests, and
+    data-change rules
+- created:
+  - `docs/data/index.md`
+- updated:
+  - `docs/index.md`
+  - `docs/README.md`
+  - `docs/analysis/documentation-inventory.md`
+  - `docs/analysis/documentation-drift.md`
+  - `docs/architecture/codebase-map.md`
+  - `docs/architecture/traceability-matrix.md`
+- validation:
+  - model coverage check passed for 18 models
+  - table coverage check passed for 18 tables
+  - migration coverage check passed for 12 migrations
+  - local markdown link check passed
+  - `git diff --check -- docs .codex/context/PROJECT_STATE.md .codex/context/TASK_BOARD.md .codex/tasks/PRJ-939-data-model-reference-foundation.md`
+  - result: passed
+- remaining gaps:
+  - generated ERD
+  - column-by-column model reference
+  - exhaustive migration-to-column mapping
+  - one-by-one repository method reference
+- next smallest useful task:
+  - split the highest-risk pipeline registry entries into dedicated pipeline
+    docs, starting with foreground runtime
 
 ## Fresh Backend-Backed Dashboard Summary Surface (2026-05-03)
 
@@ -94,6 +246,36 @@ Last updated: 2026-05-03
 - next smallest useful task:
   - `PRJ-916` Web Empty And Error State Audit
 
+## Fresh API Reference Foundation (2026-05-03)
+
+- `PRJ-938` is DONE:
+  - `.codex/tasks/PRJ-938-api-reference-foundation.md`
+- purpose:
+  - close the first PRJ-937 follow-up by creating a dedicated API reference
+    from real FastAPI routes, Pydantic schemas, and the web API client
+- created:
+  - `docs/api/index.md`
+- updated:
+  - `docs/index.md`
+  - `docs/README.md`
+  - `docs/analysis/documentation-inventory.md`
+  - `docs/analysis/documentation-drift.md`
+  - `docs/architecture/codebase-map.md`
+  - `docs/architecture/traceability-matrix.md`
+- validation:
+  - all 18 verified backend routes from `backend/app/api/routes.py`, including
+    dynamic route constants, are present in `docs/api/index.md`
+  - local markdown link check passed
+  - `git diff --check -- docs .codex/context/PROJECT_STATE.md .codex/context/TASK_BOARD.md .codex/tasks/PRJ-938-api-reference-foundation.md`
+  - result: passed
+- remaining gaps:
+  - generated OpenAPI artifact or richer per-endpoint examples
+  - deeper shape docs for flexible `extra="allow"` overview responses
+  - dedicated event/debug payload contract reference
+  - test endpoint IDs or ownership metadata
+- next smallest useful task:
+  - create `docs/data/index.md` with model/table/migration/repository mapping
+
 ## Fresh Replace Static Personality Metrics (2026-05-03)
 
 - `PRJ-914` is DONE:
@@ -112,6 +294,40 @@ Last updated: 2026-05-03
   - `git diff --check`
 - next smallest useful task:
   - `PRJ-915` Backend-Backed Dashboard Summary Surface
+
+## Fresh Documentation System Map Foundation (2026-05-03)
+
+- `PRJ-937` is DONE:
+  - `.codex/tasks/PRJ-937-documentation-system-map-foundation.md`
+- purpose:
+  - convert the existing human-readable documentation into the first
+    engineering traceability foundation without rewriting canonical
+    architecture
+- created:
+  - `docs/index.md`
+  - `docs/analysis/documentation-inventory.md`
+  - `docs/analysis/documentation-drift.md`
+  - `docs/architecture/codebase-map.md`
+  - `docs/architecture/traceability-matrix.md`
+  - `docs/pipelines/index.md`
+  - `docs/modules/index.md`
+  - `docs/CONTRIBUTING-DOCS.md`
+- updated:
+  - `docs/README.md`
+- validation:
+  - documentation file existence check passed
+  - local markdown link check passed
+  - `git diff --check -- docs .codex/tasks/PRJ-937-documentation-system-map-foundation.md`
+  - result: passed
+- remaining gaps:
+  - dedicated API reference
+  - dedicated data/model and migration reference
+  - deeper per-pipeline docs for foreground runtime, app chat, reflection,
+    scheduler/proactive, and tools
+  - stable feature or pipeline IDs in tests
+- next smallest useful task:
+  - create `docs/api/index.md` from `backend/app/api/routes.py`,
+    `backend/app/api/schemas.py`, and `web/src/lib/api.ts`
 
 ## Fresh Web V1 Route Smoke After Release Candidate (2026-05-03)
 
