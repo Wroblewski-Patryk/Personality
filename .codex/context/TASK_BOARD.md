@@ -2,6 +2,34 @@
 
 Last updated: 2026-05-03
 
+## Fresh PRJ-826 Authenticated Sidebar Lockup Closure (2026-05-03)
+
+- `PRJ-826` is DONE:
+  - `.codex/tasks/PRJ-826-authenticated-sidebar-lockup-and-nav-rhythm-pass.md`
+- result:
+  - the authenticated sidebar lockup and nav rhythm pass is no longer a stale
+    `IN_PROGRESS` item
+  - historical implementation is preserved:
+    - narrower shared sidebar rail and shell gap
+    - calmer brand lockup and subtitle posture
+    - tighter nav-row height, icon scale, label rhythm, and active-pill
+      softness
+    - removed visible glyph drift from the shell emblem and quote closure
+  - current source keeps `SidebarBrandBlock`, `SidebarGlyph`, `ShellNavButton`,
+    `aion-app-rail`, `aion-sidebar-nav`, and the sidebar support stack
+  - later proof owners remain:
+    - `PRJ-868` canonical layout foundation
+    - `PRJ-875` canonical UI final route sweep
+    - `docs/ux/flagship-baseline-transfer.md`
+- validation:
+  - reviewed PRJ-826 task history, current sidebar source, design memory,
+    flagship baseline transfer, and later board/project proof
+  - `git diff --check`
+  - result: passed
+- next smallest useful task:
+  - review `PRJ-827` authenticated sidebar support closure pass for stale
+    status
+
 ## Fresh PRJ-825 Authenticated Shell Canvas Opening Closure (2026-05-03)
 
 - `PRJ-825` is DONE:

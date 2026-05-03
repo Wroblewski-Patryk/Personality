@@ -4,8 +4,8 @@
 - ID: PRJ-826
 - Title: Authenticated sidebar lockup and nav rhythm pass
 - Task Type: design
-- Current Stage: implementation
-- Status: IN_PROGRESS
+- Current Stage: release
+- Status: DONE
 - Owner: Frontend Builder
 - Depends on: PRJ-824, PRJ-825
 - Priority: P1
@@ -62,14 +62,14 @@ A bounded desktop-sidebar implementation slice plus updated repository truth.
 - stay within the declared current stage unless explicit approval changes it
 
 ## Definition of Done
-- [ ] Sidebar lockup and nav rhythm are refined in code.
-- [ ] Visible glyph drift is removed from the active desktop shell.
-- [ ] Build and focused diff validation pass.
+- [x] Sidebar lockup and nav rhythm are refined in code.
+- [x] Visible glyph drift is removed from the active desktop shell.
+- [x] Build and focused diff validation pass.
 
 ## Stage Exit Criteria
-- [ ] The output matches the declared `Current Stage`.
-- [ ] Work from later stages was not mixed in without explicit approval.
-- [ ] Risks and assumptions for this stage are stated clearly.
+- [x] The output matches the declared `Current Stage`.
+- [x] Work from later stages was not mixed in without explicit approval.
+- [x] Risks and assumptions for this stage are stated clearly.
 
 ## Forbidden
 - new systems without approval
@@ -132,20 +132,42 @@ A bounded desktop-sidebar implementation slice plus updated repository truth.
 - Staged rollout or feature flag: no
 
 ## Review Checklist (mandatory)
-- [ ] Current stage is declared and respected.
-- [ ] Deliverable for the current stage is complete.
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Current stage is declared and respected.
+- [x] Deliverable for the current stage is complete.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
+- [x] Learning journal update was not required; no new recurring pitfall was
+  confirmed in this closure sync.
 
 ## Notes
 This slice intentionally stays inside the authenticated desktop shell and does
 not reopen `dashboard`, `chat`, or `personality`.
+
+## Closure Sync - 2026-05-03
+
+- Current release status:
+  - DONE as a historical authenticated-sidebar lockup and nav rhythm slice.
+- Current source truth:
+  - `web/src/App.tsx` keeps `SidebarBrandBlock`, `SidebarGlyph`,
+    `ShellNavButton`, `aion-app-rail`, `aion-sidebar-nav`, and the sidebar
+    support stack.
+  - `web/src/index.css` keeps the narrower rail, brand lockup, nav-row,
+    support-card, and quote-signature rules from this slice.
+  - `docs/ux/design-memory.md` records the canonical authenticated sidebar
+    spine as a shared route pattern.
+- Superseding proof owners:
+  - `PRJ-868` canonical layout foundation.
+  - `PRJ-875` canonical UI final route sweep.
+  - `docs/ux/flagship-baseline-transfer.md`.
+- Closure evidence:
+  - reviewed this task history, current sidebar source, design memory,
+    flagship baseline transfer, and later project/board proof.
+  - no runtime files were changed by this closure sync.
 
 ## Production-Grade Required Contract
 
