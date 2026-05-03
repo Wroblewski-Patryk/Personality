@@ -2,6 +2,33 @@
 
 Last updated: 2026-05-03
 
+## Fresh PRJ-828 Authenticated Sidebar Support CSS Ownership Closure (2026-05-03)
+
+- `PRJ-828` is DONE:
+  - `.codex/tasks/PRJ-828-authenticated-sidebar-decomponentize-support-stack.md`
+- result:
+  - the authenticated sidebar support-stack decomponentization task is no
+    longer a stale `IN_PROGRESS` item
+  - historical implementation is preserved:
+    - redundant support-stack utility framing was reduced
+    - lower-card geometry moved into sidebar-specific CSS
+    - support-card border, shadow, background, and spacing now read as one
+      sidebar family
+  - current source keeps sidebar-specific hooks and `.aion-sidebar-*` CSS as
+    the lower-stack owner
+  - later proof owners remain:
+    - `PRJ-868` canonical layout foundation
+    - `PRJ-875` canonical UI final route sweep
+    - `docs/ux/flagship-baseline-transfer.md`
+- validation:
+  - reviewed PRJ-828 task history, current sidebar source, design memory,
+    flagship baseline transfer, and later board/project proof
+  - `git diff --check`
+  - result: passed
+- next smallest useful task:
+  - review `PRJ-829` authenticated sidebar final gap and copy rhythm pass for
+    stale status
+
 ## Fresh PRJ-827 Authenticated Sidebar Support Closure (2026-05-03)
 
 - `PRJ-827` is DONE:
