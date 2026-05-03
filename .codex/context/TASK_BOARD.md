@@ -2,16 +2,16 @@
 
 Last updated: 2026-05-03
 
-## Fresh PRJ-782 Shell Frame Cleanup Closure (2026-05-03)
+## Fresh PRJ-782 Shell Frame Decision Blocker (2026-05-03)
 
-- `PRJ-782` is DONE:
+- `PRJ-782` is BLOCKED:
   - `.codex/tasks/PRJ-782-remove-window-chrome-and-audit-layout-frame-drift.md`
 - result:
-  - the historical shell-frame cleanup task is no longer a stale
-    `IN_PROGRESS` item
-  - current source keeps the public and authenticated shells premium and
-    framed without a canonical `WindowChrome` component or fake browser
-    controls
+  - the historical shell-frame cleanup task is no longer a stale unchecked
+    `IN_PROGRESS` item, but it cannot be closed as `DONE`
+  - current source removed the old `WindowChrome` component, but later
+    public-home work reintroduced browser-like chrome under
+    `aion-public-browser-chrome`
   - durable UX truth remains in `docs/ux/design-memory.md`:
     - do not simulate browser controls, title bars, or fake window chrome
   - later proof tasks carry the active frame/sidebar/shell trail:
@@ -25,7 +25,8 @@ Last updated: 2026-05-03
   - `git diff --check`
   - result: passed
 - next smallest useful task:
-  - review `PRJ-784` for public-home first-viewport canonical status
+  - decide whether public home keeps the later browser-window frame or returns
+    to the frame-first/no-browser-controls rule before closing PRJ-784
 
 ## Fresh PRJ-781 Sidebar Desktop Spine Closure (2026-05-03)
 

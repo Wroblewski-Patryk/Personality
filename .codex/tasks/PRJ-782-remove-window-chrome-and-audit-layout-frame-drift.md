@@ -4,8 +4,8 @@
 - ID: PRJ-782
 - Title: Remove fake window chrome and realign flagship layout framing
 - Task Type: design
-- Current Stage: release
-- Status: DONE
+- Current Stage: planning
+- Status: BLOCKED
 - Owner: Frontend Builder
 - Depends on: PRJ-776, PRJ-781
 - Priority: P1
@@ -67,7 +67,7 @@ One frontend slice that:
 - build and focused diff checks pass
 
 ## Definition of Done
-- [x] Fake browser chrome is removed from shared layout surfaces.
+- [ ] Fake browser chrome is removed from shared layout surfaces.
 - [x] Canonical docs reflect the new frame-first shell rule.
 - [x] Focused frontend validation evidence is attached.
 
@@ -97,6 +97,10 @@ One frontend slice that:
   - confirmed current shell source uses `aion-public-shell`,
     `aion-shell-window`, and `aion-shell-frame-canonical` without a
     `WindowChrome` component
+  - 2026-05-03 follow-up found that later public-home work reintroduced
+    browser-like chrome under `aion-public-browser-chrome`, so the component
+    removal is true but the broader no-fake-controls rule is not currently
+    satisfied
   - confirmed design memory records the frame-first rule:
     no simulated browser controls, title bars, or fake window chrome
   - confirmed later `PRJ-800A`, `PRJ-800B`, `PRJ-868`, and `PRJ-875` carry
@@ -179,17 +183,24 @@ One frontend slice that:
 - This slice intentionally removes the rejected shell ornament before more
   dashboard-local polishing.
 
-## 2026-05-03 Closure Sync
+## 2026-05-03 Decision Blocker Sync
 
-- This is a historical shell-frame correction slice, no longer an active
-  `IN_PROGRESS` task.
+- This is a historical shell-frame correction slice, but it cannot be closed
+  as `DONE` while current public-home code contains browser-like shell
+  ornament under `aion-public-browser-chrome`.
 - Current runtime shell code does not expose the rejected `WindowChrome`
-  component or `aion-window-chrome*` styling as the canonical frame.
+  component or `aion-window-chrome*` styling, but later public-home work
+  reintroduced browser controls under a different class family.
 - `docs/ux/design-memory.md` is the durable source of truth for the
   frame-first rule: shells may be premium and inset, but must not simulate
   browser controls or fake window chrome.
 - Later `PRJ-800A`, `PRJ-800B`, `PRJ-868`, and `PRJ-875` carry the active
   frame, sidebar, and route-sweep proof trail.
+- Decision required:
+  - either keep the later browser-window reference as the canonical landing
+    direction and update `PRJ-782` plus design memory, or remove
+    `aion-public-browser-chrome` from public home and preserve the
+    frame-first/no-browser-controls rule.
 
 ## Production-Grade Required Contract
 
@@ -258,17 +269,17 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
 ## Closure Result Report
 
 - Goal:
-  - close `PRJ-782` without reintroducing the rejected shell ornament
+  - identify why `PRJ-782` cannot be closed without a product/design decision
 - Scope:
   - task status, task evidence, and context sync only
 - Implementation Plan:
   - verify current shell source and durable UX decision docs
   - identify later proof owners
-  - mark the historical task done
+  - mark the historical task blocked if later source contradicts the decision
   - update project context and board state
 - Acceptance Criteria:
   - no stale `IN_PROGRESS` state remains for `PRJ-782`
-  - `WindowChrome` remains rejected as canonical shell UI
+  - the `WindowChrome` versus public browser-chrome mismatch is explicit
   - no runtime, route, auth, or backend behavior changes are introduced
 - Definition of Done:
   - original validation evidence is preserved
@@ -277,4 +288,5 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
   - context files are updated
   - `git diff --check` passes
 - Next:
-  - review `PRJ-784` for public-home first-viewport canonical status
+  - obtain a decision on whether public home should keep the later
+    browser-window frame or return to the frame-first/no-browser-controls rule
