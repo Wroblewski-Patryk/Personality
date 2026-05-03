@@ -4,8 +4,8 @@
 - ID: PRJ-800F
 - Title: Dashboard Editorial Parity Slice
 - Task Type: design
-- Current Stage: verification
-- Status: IN_PROGRESS
+- Current Stage: release
+- Status: DONE
 - Owner: Frontend Builder
 - Depends on: PRJ-800D, PRJ-800E
 - Priority: P1
@@ -89,6 +89,15 @@ comparison.
     `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
   - used the existing parity ledger and micro-checklist to target the highest
     remaining compositional drift
+  - 2026-05-03 closure sync reviewed `web/src/App.tsx`,
+    `web/src/index.css`, `docs/ux/dashboard-proof-matrix.md`,
+    `docs/ux/design-memory.md`, `docs/ux/flagship-baseline-transfer.md`,
+    `.codex/context/TASK_BOARD.md`, and `.codex/context/PROJECT_STATE.md`
+  - confirmed current source uses `DASHBOARD_HERO_ART_SRC` with
+    `aviary-dashboard-hero-canonical-reference-v4.png`
+  - confirmed later `PRJ-870` and `PRJ-875` carry screenshot/build proof for
+    the dashboard route after this editorial parity lane
+  - `git diff --check` passed
 - Screenshots/logs:
   - canonical reference: `docs/ux/assets/aion-dashboard-canonical-reference-v2.png`
 - High-risk checks:
@@ -149,12 +158,32 @@ comparison.
 - [x] Definition of Done evidence is attached.
 - [x] Relevant validations were run.
 - [x] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 This slice intentionally stays within composition refinements because local
 preview still lacks a clean authenticated screenshot path without introducing a
 new mechanism.
+
+## 2026-05-03 Closure Sync
+
+- This dashboard editorial parity lane is historical and no longer an active
+  `IN_PROGRESS` task.
+- The task accumulated multiple bounded dashboard passes: hero hierarchy,
+  right rail calming, CTA hierarchy, figure-caption removal, unified hero
+  artwork, route-corrected dashboard hero artwork, proportions, crop/spacing,
+  callout scale, and flow/closure rhythm.
+- Current active dashboard truth points to:
+  - `docs/ux/dashboard-proof-matrix.md`
+  - `docs/ux/design-memory.md`
+  - `docs/ux/flagship-baseline-transfer.md`
+  - `web/src/App.tsx`
+  - `web/src/index.css`
+- Later proof owners:
+  - `PRJ-870` dashboard `99%` canonical evidence pass
+  - `PRJ-875` canonical UI final route sweep
+- Remaining dashboard proof gaps should be tracked from those newer artifacts,
+  not by keeping `PRJ-800F` open.
 
 ## Production-Grade Required Contract
 
@@ -254,3 +283,29 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
   - kept the existing dashboard information architecture and improved the
     composition through proportion and material tuning only
   - continued tightening the same dashboard task instead of inventing a second dashboard route structure
+
+## Closure Result Report
+
+- Goal:
+  - close stale `PRJ-800F` after confirming later dashboard proof owners carry
+    the active route evidence
+- Scope:
+  - task status, task evidence, and context sync only
+- Implementation Plan:
+  - verify current dashboard source and approved hero asset
+  - record later proof owners
+  - mark the historical task done
+  - update project context and task board
+- Acceptance Criteria:
+  - no stale `IN_PROGRESS` state remains for `PRJ-800F`
+  - dashboard editorial parity history is preserved
+  - current dashboard truth points to PRJ-870/PRJ-875 and dashboard proof docs
+  - no route, API, auth, DB, or runtime behavior changes are introduced
+- Definition of Done:
+  - original build and diff evidence is preserved
+  - current source review is recorded
+  - later screenshot/build proof ownership is recorded
+  - context files are updated
+  - `git diff --check` passes
+- Next:
+  - review `PRJ-800G` public home production parity slice for stale status

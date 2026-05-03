@@ -2,6 +2,29 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-800F` completed dashboard editorial parity closure:
+  - task:
+    - `.codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
+  - result:
+    - the dashboard editorial parity lane is no longer a stale `IN_PROGRESS`
+      item
+    - historical dashboard micro-passes are preserved: hero hierarchy, right
+      rail calming, CTA hierarchy correction, figure-caption removal, unified
+      and route-corrected dashboard hero artwork, proportions, crop/spacing,
+      callout scale, and flow/closure rhythm
+    - current source uses `DASHBOARD_HERO_ART_SRC` with
+      `aviary-dashboard-hero-canonical-reference-v4.png`
+    - active dashboard truth now points to `docs/ux/dashboard-proof-matrix.md`,
+      `docs/ux/design-memory.md`, `docs/ux/flagship-baseline-transfer.md`,
+      `PRJ-870`, and `PRJ-875`
+  - validation:
+    - PRJ-800F history, current dashboard source, dashboard proof matrix,
+      design memory, flagship baseline transfer, and later board/project proof
+      were reviewed
+    - `git diff --check` passed
+  - next execution priority:
+    - review `PRJ-800G` public home production parity slice for stale status
+
 - 2026-05-03: `PRJ-795` completed shared persona freeze closure:
   - task:
     - `.codex/tasks/PRJ-795-freeze-shared-canonical-persona-figure-and-dashboard-pass.md`
