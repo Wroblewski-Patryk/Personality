@@ -4,8 +4,8 @@
 - ID: PRJ-800G
 - Title: Public Home Production Parity Slice
 - Task Type: design
-- Current Stage: verification
-- Status: IN_PROGRESS
+- Current Stage: release
+- Status: DONE
 - Owner: Frontend Builder
 - Depends on: PRJ-800E
 - Priority: P1
@@ -84,6 +84,17 @@ A production-ready public-home parity refinement pass in `web/src/App.tsx` and
 - Manual checks:
   - compared the live production landing at `/login` against the canonical landing
   - targeted the first-viewport drift only, based on the production screenshot
+  - 2026-05-03 closure sync reviewed `web/src/App.tsx`,
+    `web/src/index.css`, `docs/ux/design-memory.md`,
+    `.codex/context/TASK_BOARD.md`, and `.codex/context/PROJECT_STATE.md`
+  - confirmed current public landing keeps `LANDING_HERO_ART_SRC`,
+    `aion-public-hero`, `aion-public-feature-bridge`, and
+    `aion-public-trust-band`
+  - confirmed current source has no `aion-public-browser*`, `WindowChrome`, or
+    `aion-window-chrome` references
+  - confirmed later `PRJ-869` and `PRJ-875` carry public-home screenshot/build
+    proof after this production parity slice
+  - `git diff --check` passed
 - Screenshots/logs:
   - `.codex/artifacts/prod-login-live-2026-04-29.png`
   - `.codex/artifacts/prod-root-live-wait-2026-04-29.png`
@@ -146,11 +157,27 @@ A production-ready public-home parity refinement pass in `web/src/App.tsx` and
 - [x] Definition of Done evidence is attached.
 - [x] Relevant validations were run.
 - [x] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 This slice intentionally stays above the fold because the production screenshot
 shows the main remaining brand drift in the first viewport.
+- Browser/mockup frames in canonical images are preview context and must be
+  ignored in implementation per the 2026-05-03 `PRJ-782` decision resolution.
+
+## 2026-05-03 Closure Sync
+
+- This public-home production parity slice is historical and no longer an
+  active `IN_PROGRESS` task.
+- The slice improved hero copy weight, CTA/micro-proof rhythm, and bridge-band
+  density from production screenshot evidence.
+- Later public-home proof owners:
+  - `PRJ-869` public home landing `99%` canonical pass
+  - `PRJ-875` canonical UI final route sweep
+- Current public landing truth is chrome-free:
+  - use the content/composition of canonical landing references
+  - ignore browser mockup frames from generated previews
+  - preserve the current public auth modal flow and route contract
 
 ## Production-Grade Required Contract
 
@@ -213,3 +240,30 @@ paths, placeholders, fake data, and temporary fixes are forbidden.
 - Decisions made:
   - reused existing trust-band content to form a lighter micro-proof row
   - avoided inventing a new landing section and kept the work above the fold
+
+## Closure Result Report
+
+- Goal:
+  - close stale `PRJ-800G` after confirming later public-home proof owners
+    carry the active landing evidence
+- Scope:
+  - task status, task evidence, and context sync only
+- Implementation Plan:
+  - verify current public landing source and chrome-free rule
+  - record later proof owners
+  - mark the historical task done
+  - update project context and task board
+- Acceptance Criteria:
+  - no stale `IN_PROGRESS` state remains for `PRJ-800G`
+  - public-home production parity history is preserved
+  - current landing truth points to PRJ-869/PRJ-875 and the PRJ-782 chrome-free
+    decision
+  - no route, API, auth, DB, or runtime behavior changes are introduced
+- Definition of Done:
+  - original build and diff evidence is preserved
+  - current source review is recorded
+  - later screenshot/build proof ownership is recorded
+  - context files are updated
+  - `git diff --check` passes
+- Next:
+  - review `PRJ-816` chat canonical parity closure lane

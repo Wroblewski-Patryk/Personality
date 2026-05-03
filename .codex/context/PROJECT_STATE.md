@@ -2,6 +2,33 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-800G` completed public-home production parity closure:
+  - task:
+    - `.codex/tasks/PRJ-800G-public-home-production-parity-slice.md`
+  - result:
+    - the public-home production parity slice is no longer a stale
+      `IN_PROGRESS` item
+    - historical first-viewport improvements are preserved: calmer hero
+      headline block, lighter micro-proof row, compressed feature bridge, and
+      preserved public auth route contract
+    - current public landing source keeps `LANDING_HERO_ART_SRC`,
+      `aion-public-hero`, `aion-public-feature-bridge`, and
+      `aion-public-trust-band`
+    - current public landing truth is chrome-free per `PRJ-782`: use
+      content/composition from canonical landing references and ignore browser
+      mockup frames from generated previews
+    - later PRJ-869 and PRJ-875 work remains the active public-home proof
+      history
+  - validation:
+    - PRJ-800G history, current public landing source, design memory, PRJ-782
+      user clarification, and later board/project proof were reviewed
+    - `Select-String -Path web\src\App.tsx,web\src\index.css -Pattern
+      "aion-public-browser|WindowChrome|aion-window-chrome"` returned no
+      matches
+    - `git diff --check` passed
+  - next execution priority:
+    - review `PRJ-816` chat canonical parity closure lane
+
 - 2026-05-03: `PRJ-800F` completed dashboard editorial parity closure:
   - task:
     - `.codex/tasks/PRJ-800F-dashboard-editorial-parity-slice.md`
