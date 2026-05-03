@@ -2,6 +2,25 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-782` completed shell-frame cleanup closure:
+  - task:
+    - `.codex/tasks/PRJ-782-remove-window-chrome-and-audit-layout-frame-drift.md`
+  - result:
+    - the shell-frame cleanup task is no longer a stale `IN_PROGRESS` item
+    - current source keeps the public and authenticated shells premium and
+      framed without a canonical `WindowChrome` component or fake browser
+      controls
+    - durable UX truth remains in `docs/ux/design-memory.md`: do not simulate
+      browser controls, title bars, or fake window chrome
+    - later PRJ-800A, PRJ-800B, PRJ-868, and PRJ-875 work remains the active
+      frame/sidebar/shell proof trail
+  - validation:
+    - PRJ-782 history, current shell source, design memory, flagship baseline
+      transfer, and later board evidence were reviewed
+    - `git diff --check` passed
+  - next execution priority:
+    - review `PRJ-784` for public-home first-viewport canonical status
+
 - 2026-05-03: `PRJ-781` completed sidebar desktop spine closure:
   - task:
     - `.codex/tasks/PRJ-781-implement-canonical-sidebar-desktop-spine-pass.md`

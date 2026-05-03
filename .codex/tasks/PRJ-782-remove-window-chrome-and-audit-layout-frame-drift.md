@@ -4,8 +4,8 @@
 - ID: PRJ-782
 - Title: Remove fake window chrome and realign flagship layout framing
 - Task Type: design
-- Current Stage: implementation
-- Status: IN_PROGRESS
+- Current Stage: release
+- Status: DONE
 - Owner: Frontend Builder
 - Depends on: PRJ-776, PRJ-781
 - Priority: P1
@@ -67,9 +67,9 @@ One frontend slice that:
 - build and focused diff checks pass
 
 ## Definition of Done
-- [ ] Fake browser chrome is removed from shared layout surfaces.
-- [ ] Canonical docs reflect the new frame-first shell rule.
-- [ ] Focused frontend validation evidence is attached.
+- [x] Fake browser chrome is removed from shared layout surfaces.
+- [x] Canonical docs reflect the new frame-first shell rule.
+- [x] Focused frontend validation evidence is attached.
 
 ## Stage Exit Criteria
 - [x] The output matches the declared `Current Stage`.
@@ -90,6 +90,18 @@ One frontend slice that:
 - Manual checks:
   - deployed public-home screenshot reviewed before implementation
   - local post-change screenshot reviewed after chrome removal
+  - 2026-05-03 closure sync reviewed `web/src/App.tsx`,
+    `web/src/index.css`, `docs/ux/design-memory.md`,
+    `docs/ux/flagship-baseline-transfer.md`, and
+    `.codex/context/TASK_BOARD.md`
+  - confirmed current shell source uses `aion-public-shell`,
+    `aion-shell-window`, and `aion-shell-frame-canonical` without a
+    `WindowChrome` component
+  - confirmed design memory records the frame-first rule:
+    no simulated browser controls, title bars, or fake window chrome
+  - confirmed later `PRJ-800A`, `PRJ-800B`, `PRJ-868`, and `PRJ-875` carry
+    active shell/frame refinement and proof history
+  - `git diff --check` passed
 - Screenshots/logs:
   - `.codex/artifacts/deploy-public-home-audit-2026-04-29.png`
   - `.codex/artifacts/local-public-home-no-window-chrome-2026-04-29.png`
@@ -161,11 +173,23 @@ One frontend slice that:
 - [x] Definition of Done evidence is attached.
 - [x] Relevant validations were run.
 - [x] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 - This slice intentionally removes the rejected shell ornament before more
   dashboard-local polishing.
+
+## 2026-05-03 Closure Sync
+
+- This is a historical shell-frame correction slice, no longer an active
+  `IN_PROGRESS` task.
+- Current runtime shell code does not expose the rejected `WindowChrome`
+  component or `aion-window-chrome*` styling as the canonical frame.
+- `docs/ux/design-memory.md` is the durable source of truth for the
+  frame-first rule: shells may be premium and inset, but must not simulate
+  browser controls or fake window chrome.
+- Later `PRJ-800A`, `PRJ-800B`, `PRJ-868`, and `PRJ-875` carry the active
+  frame, sidebar, and route-sweep proof trail.
 
 ## Production-Grade Required Contract
 
@@ -230,3 +254,27 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
 - Decisions made:
   - fake browser-window chrome is no longer considered canonical for Aviary
   - the flagship shell should remain inset and premium without title-bar ornament
+
+## Closure Result Report
+
+- Goal:
+  - close `PRJ-782` without reintroducing the rejected shell ornament
+- Scope:
+  - task status, task evidence, and context sync only
+- Implementation Plan:
+  - verify current shell source and durable UX decision docs
+  - identify later proof owners
+  - mark the historical task done
+  - update project context and board state
+- Acceptance Criteria:
+  - no stale `IN_PROGRESS` state remains for `PRJ-782`
+  - `WindowChrome` remains rejected as canonical shell UI
+  - no runtime, route, auth, or backend behavior changes are introduced
+- Definition of Done:
+  - original validation evidence is preserved
+  - current source review is recorded
+  - later `PRJ-800A`, `PRJ-800B`, `PRJ-868`, and `PRJ-875` ownership is recorded
+  - context files are updated
+  - `git diff --check` passes
+- Next:
+  - review `PRJ-784` for public-home first-viewport canonical status
