@@ -4,8 +4,8 @@
 - ID: PRJ-908
 - Title: Production Incident Evidence Bundle
 - Task Type: release
-- Current Stage: verification
-- Status: BLOCKED
+- Current Stage: release
+- Status: DONE
 - Owner: Ops/Release
 - Depends on: PRJ-907
 - Priority: P0
@@ -151,18 +151,21 @@ options.
 
 ## Result Report
 
-- Task summary: PRJ-908 is blocked because the canonical bundle helper depends
-  on full debug payload access, while production strict policy rejects that
-  posture.
+- Task summary: PRJ-908 originally found that the canonical bundle helper
+  depended on full debug payload access while production strict policy rejects
+  that posture. The blocker is now resolved by `PRJ-922`, which added a
+  production-safe strict-mode incident evidence export path.
 - Files changed:
   - `docs/planning/v1-production-incident-evidence-bundle.md`
   - `.codex/context/TASK_BOARD.md`
   - `.codex/context/PROJECT_STATE.md`
   - `.codex/tasks/PRJ-908-production-incident-evidence-bundle.md`
 - How tested: production release smoke passed after restoration.
-- What is incomplete: no production incident-evidence bundle was exported.
-- Next steps: choose a production-safe incident-evidence export route or carry
-  this as a known blocked evidence gap into PRJ-910.
+- What is incomplete: nothing remains for the original PRJ-908 evidence-path
+  blocker; `PRJ-909` and `PRJ-918` remain separate launch-channel/extension
+  blockers.
+- Next steps: keep using the `PRJ-922` strict-mode export path for production
+  incident evidence and refresh release evidence after later deploys.
 - Decisions made: do not repeat `EVENT_DEBUG_ENABLED=true` under current
   production strict policy.
 
@@ -208,3 +211,21 @@ options.
 - Docs updated: yes
 - Context updated: yes
 - Learning journal updated: not applicable.
+
+## Resolution Sync - 2026-05-03
+
+- Current release status:
+  - DONE. `PRJ-908` was a valid blocked evidence task when first executed, but
+    its blocker was resolved by `PRJ-922`.
+- Current source-of-truth evidence:
+  - `PRJ-922` added the strict-mode `/health`-derived incident evidence
+    fallback and passed focused tests, full backend baseline, production
+    export, and release smoke with the generated bundle.
+  - `docs/planning/v1-production-incident-evidence-bundle.md` records the
+    resolved path and generated production bundle.
+  - `docs/planning/v1-core-acceptance-bundle.md` records production
+    incident-evidence bundle as `GO`.
+- Closure evidence:
+  - reviewed `PRJ-908`, `PRJ-922`, `PRJ-923` evidence references, release
+    audit plan, core acceptance bundle, task board, and project state.
+  - no runtime files were changed by this closure sync.

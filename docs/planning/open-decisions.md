@@ -613,9 +613,12 @@ Current execution note:
 - `PRJ-631` is now complete:
   - final `T18.1..T18.2` scenarios now prove website-reading recall and
     organizer follow-up inside the no-UI `v1` acceptance lane
-- `PRJ-632` is now the next active slice:
-  - the next gap is to capture live production evidence for that final
-    acceptance contract
+- `PRJ-632..PRJ-633` are closed as superseded by the 2026-04-24 architecture
+  revision and later final release-evidence tasks:
+  - core no-UI v1 closure now uses the final acceptance bundle and
+    strict-mode incident evidence path recorded through `PRJ-922..PRJ-923`
+  - Telegram live-mode and organizer provider activation remain separate
+    launch-channel or extension blockers, not hidden core-v1 blockers
 - `PRJ-598` is complete in repo truth: deployment provenance is now
   machine-visible in `/health.deployment`, deploy webhook evidence, exported
   incident evidence, and release smoke.

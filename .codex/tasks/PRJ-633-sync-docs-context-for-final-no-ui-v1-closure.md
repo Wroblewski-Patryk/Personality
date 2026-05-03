@@ -3,7 +3,8 @@
 ## Header
 - ID: PRJ-633
 - Title: Sync docs/context for final no-UI V1 closure
-- Status: BLOCKED
+- Current Stage: release
+- Status: DONE
 - Owner: Product Docs Agent
 - Depends on: PRJ-632
 - Priority: P1
@@ -21,9 +22,9 @@ Synchronize docs/context for final no-UI `v1` closure.
 - do not duplicate logic
 
 ## Definition of Done
-- [ ] Product, runtime, testing, ops, planning, and context docs all describe the same final no-UI `v1` closure state.
-- [ ] Repository truth clearly distinguishes `v1` complete from later `v2` work.
-- [ ] The next queue is left to fresh analysis instead of backlog residue.
+- [x] Product, runtime, testing, ops, planning, and context docs all describe the same final no-UI `v1` closure state.
+- [x] Repository truth clearly distinguishes `v1` complete from later `v2` work.
+- [x] The next queue is left to fresh analysis instead of backlog residue.
 
 ## Forbidden
 - new systems without approval
@@ -46,14 +47,15 @@ Synchronize docs/context for final no-UI `v1` closure.
 - Follow-up architecture doc updates: product/runtime/testing/ops/planning/context as needed
 
 ## Review Checklist (mandatory)
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
+- [x] Learning journal update was not required; no new recurring pitfall was
+  confirmed in this closure sync.
 
 ## Notes
 This slice should make the repository speak with one voice about the final no-UI `v1` state.
@@ -61,3 +63,24 @@ This slice should make the repository speak with one voice about the final no-UI
 This task was superseded on 2026-04-24 by the approved architecture revision
 that makes internal time-aware planned work part of core `v1` and moves
 organizer-tool activation to a later extension lane.
+
+## Closure Sync - 2026-05-03
+
+- Current release status:
+  - DONE. The task remained `BLOCKED` after the final no-UI v1 boundary was
+    redefined and later synchronized by release-evidence tasks.
+- Current source-of-truth evidence:
+  - `docs/planning/v1-core-acceptance-bundle.md` now records core no-UI v1 as
+    `GO` and separates public/web-led and provider-extension holds from the
+    core declaration.
+  - `docs/planning/v1-release-audit-and-execution-plan.md` records `PRJ-923`
+    as the final acceptance refresh.
+  - `docs/planning/v1-production-incident-evidence-bundle.md` records the
+    resolved strict-mode incident evidence path.
+- Remaining related work:
+  - `PRJ-909` and `PRJ-918` are still valid blocked extension/launch-channel
+    tasks, not hidden core-v1 blockers.
+- Closure evidence:
+  - reviewed `PRJ-632`, `PRJ-633`, `PRJ-908`, `PRJ-922`, core acceptance
+    bundle, release audit plan, open decisions, task board, and project state.
+  - no runtime files were changed by this closure sync.

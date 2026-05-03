@@ -2,6 +2,36 @@
 
 Last updated: 2026-05-03
 
+## Fresh Remaining Blocked Queue Audit (2026-05-03)
+
+- `PRJ-632` is DONE:
+  - `.codex/tasks/PRJ-632-capture-live-production-acceptance-evidence-for-final-v1-closure.md`
+- `PRJ-633` is DONE:
+  - `.codex/tasks/PRJ-633-sync-docs-context-for-final-no-ui-v1-closure.md`
+- `PRJ-908` is DONE:
+  - `.codex/tasks/PRJ-908-production-incident-evidence-bundle.md`
+- result:
+  - `PRJ-632..PRJ-633` were historical `BLOCKED` tasks superseded by the
+    2026-04-24 core-v1 architecture revision and later final release-evidence
+    tasks
+  - `PRJ-908` was a real production strict-policy blocker, then `PRJ-922`
+    resolved it with the strict-mode incident evidence export path and
+    `PRJ-923` refreshed the final v1 acceptance bundle
+  - no task file remains `READY`, `BACKLOG`, or `IN_PROGRESS`
+  - the remaining open task-file blockers are true external/operator blockers:
+    - `PRJ-909` needs Telegram bot token, webhook secret, and a known chat id
+    - `PRJ-918` needs ClickUp, Google Calendar, and Google Drive provider
+      credentials
+- validation:
+  - reviewed `PRJ-632`, `PRJ-633`, `PRJ-908`, `PRJ-909`, `PRJ-918`, `PRJ-922`,
+    final v1 acceptance docs, release audit plan, open decisions, task board,
+    and project state
+  - `git diff --check`
+  - result: passed
+- next smallest useful task:
+  - wait for the operator inputs needed by `PRJ-909` or `PRJ-918`, or select a
+    fresh non-blocked task from planning analysis
+
 ## Fresh PRJ-643 Channel-Aware Delivery Status Closure (2026-05-03)
 
 - `PRJ-643` is DONE:

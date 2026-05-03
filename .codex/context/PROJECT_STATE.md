@@ -2,6 +2,31 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: remaining blocked queue audit normalized stale release tasks:
+  - tasks:
+    - `.codex/tasks/PRJ-632-capture-live-production-acceptance-evidence-for-final-v1-closure.md`
+    - `.codex/tasks/PRJ-633-sync-docs-context-for-final-no-ui-v1-closure.md`
+    - `.codex/tasks/PRJ-908-production-incident-evidence-bundle.md`
+  - result:
+    - `PRJ-632..PRJ-633` are now closed as superseded by the 2026-04-24 core
+      no-UI v1 architecture revision and later final release-evidence tasks
+    - `PRJ-908` is now closed as resolved by `PRJ-922` and refreshed by
+      `PRJ-923`
+    - no task file remains `READY`, `BACKLOG`, or `IN_PROGRESS`
+    - only true external/operator task-file blockers remain:
+      - `PRJ-909` production Telegram mode smoke needs Telegram operator
+        preconditions
+      - `PRJ-918` organizer provider activation smoke needs provider
+        credentials
+  - validation:
+    - reviewed `PRJ-632`, `PRJ-633`, `PRJ-908`, `PRJ-909`, `PRJ-918`,
+      `PRJ-922`, final v1 acceptance docs, release audit plan, open
+      decisions, task board, and project state
+    - `git diff --check` passed
+  - next execution priority:
+    - wait for operator inputs for `PRJ-909` or `PRJ-918`, or select fresh
+      non-blocked planning work
+
 - 2026-05-03: `PRJ-643` normalized channel-aware delivery task status:
   - task:
     - `.codex/tasks/PRJ-643-freeze-channel-aware-delivery-constraint-baseline.md`

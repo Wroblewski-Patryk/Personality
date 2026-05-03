@@ -272,13 +272,14 @@ Tasks:
     - runtime action smoke succeeds
 
 - `PRJ-908` Production Incident Evidence Bundle
-  - Status: UNBLOCKED by `PRJ-922`
+  - Status: DONE by `PRJ-922` and refreshed by `PRJ-923`
   - Output: `docs/planning/v1-production-incident-evidence-bundle.md` records
     the original strict-policy blocker and the passing strict-mode
     health-derived bundle path added by `PRJ-922`.
-  - Export current production incident-evidence bundle.
-  - Attach the latest behavior-validation report.
-  - Verify release smoke accepts the bundle path.
+  - Current production incident-evidence bundle was exported.
+  - Latest behavior-validation evidence was attached through the final
+    acceptance bundle.
+  - Release smoke accepted the bundle path.
 
 - `PRJ-922` Production-Safe Incident Evidence Export
   - Status: DONE
