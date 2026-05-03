@@ -2,6 +2,34 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-934` completed the v1 final go/no-go review:
+  - new task:
+    - `.codex/tasks/PRJ-934-v1-final-go-no-go-review.md`
+  - new planning source:
+    - `docs/planning/v1-final-go-no-go-review.md`
+  - decision:
+    - `NO-GO / HOLD` for final release marker
+  - result:
+    - reviewed current P0/P1/P2 release posture
+    - production health is green for deployed revision
+      `ed1c4d981314787d76252985b53c14ea1d7886ed`
+    - current local `HEAD` is
+      `92f7bf3af16502a1a3f661aa16bf6a9ead92e0cd`
+    - production backend `/health.deployment.runtime_build_revision` and web
+      shell meta revision both report the deployed `ed1c4d9...` SHA, not local
+      `HEAD`
+    - release marker remains blocked until the chosen release SHA has green
+      production smoke and acceptance evidence
+  - validation:
+    - `git rev-parse HEAD`
+    - production `GET https://aviary.luckysparrow.ch/health`
+    - production `GET https://aviary.luckysparrow.ch/settings`
+    - `git diff --check` passed with CRLF normalization warnings only
+  - next execution priority:
+    - `PRJ-935` release notes and operator handoff with the current HOLD
+      posture, or deploy the selected release candidate and rerun production
+      release smoke
+
 - 2026-05-03: `PRJ-930` completed deployment trigger SLO evidence:
   - new task:
     - `.codex/tasks/PRJ-930-deployment-trigger-slo-evidence.md`
@@ -23,8 +51,9 @@ Last updated: 2026-05-03
     - result: `20 passed, 32 deselected`
     - `git diff --check` passed with CRLF normalization warnings only
   - next execution priority:
-    - `PRJ-934` final go/no-go review once remaining evidence gaps are
-      accepted or closed
+    - `PRJ-935` release notes and operator handoff with the current HOLD
+      posture, or deploy the selected release candidate and rerun production
+      release smoke
 
 - 2026-05-03: `PRJ-933` completed the provider payload leakage audit:
   - new task:

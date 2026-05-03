@@ -109,7 +109,11 @@ broader public or web-led release claim:
   `docs/security/v1-provider-payload-leakage-audit.md`; follow-up live
   provider, red-team execution, strict-mode incident sentinel, and frontend
   fixture smoke gaps remain
-- `PRJ-934..PRJ-936` final go/no-go, handoff, and release marker
+- `PRJ-934` final go/no-go review: DONE with
+  `docs/planning/v1-final-go-no-go-review.md`; release marker is `NO-GO / HOLD`
+  because production is not serving the current local candidate SHA
+- `PRJ-935..PRJ-936` handoff and release marker remain open; PRJ-936 is blocked
+  until the chosen release SHA has green production evidence
 
 ## Go / No-Go
 
@@ -117,6 +121,7 @@ broader public or web-led release claim:
 - Production deploy parity: GO
 - Production incident-evidence bundle: GO
 - Core no-UI v1 declaration: GO
+- Current local candidate release marker: NO-GO / HOLD
 - Public/web-led v1 launch marker: HOLD until the remaining launch-channel,
   rollback, privacy/debug, and AI/security hardening gates are complete or
   explicitly waived by a documented release decision.
@@ -125,5 +130,6 @@ broader public or web-led release claim:
 
 Rerun `PRJ-909` when Telegram operator preconditions are available. Until then,
 continue with locally actionable public-launch hardening, starting with
-`PRJ-934` final go/no-go review when the remaining evidence gaps are accepted
-or closed.
+`PRJ-935` release notes and operator handoff, or deploy the selected release
+candidate and rerun production release smoke if the marker should target the
+current local `HEAD`.

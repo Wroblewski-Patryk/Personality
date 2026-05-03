@@ -494,9 +494,15 @@ Goal: make the statement "v1 is real" defensible.
 Tasks:
 
 - `PRJ-934` V1 Final Go/No-Go Review
-  - Review all P0/P1 findings.
-  - Confirm which P2 extension gaps remain intentionally deferred.
-  - Verify production is serving the intended SHA.
+  - Status: DONE
+  - Output: `docs/planning/v1-final-go-no-go-review.md` records the final
+    decision as `NO-GO / HOLD` for the release marker.
+  - Production currently serves
+    `ed1c4d981314787d76252985b53c14ea1d7886ed`, while local `HEAD` is
+    `92f7bf3af16502a1a3f661aa16bf6a9ead92e0cd`.
+  - Core deployed production gates remain green for the deployed SHA, but the
+    current local candidate is not yet deployed and must not be tagged as
+    released.
 
 - `PRJ-935` V1 Release Notes And Operator Handoff
   - Record capabilities, known limits, rollback, smoke commands, and support
@@ -539,6 +545,8 @@ Tasks:
     follow-up test gaps
 12. `PRJ-933` Provider Payload Leakage Audit - DONE locally with follow-up
     provider/red-team evidence gaps
+13. `PRJ-934` V1 Final Go/No-Go Review - DONE with `NO-GO / HOLD`
+    release-marker decision
 
 ### P2 Extensions
 
