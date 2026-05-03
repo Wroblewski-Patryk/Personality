@@ -4,8 +4,8 @@
 - ID: PRJ-824
 - Title: Authenticated Shell Utility Bar Calm Pass
 - Task Type: design
-- Current Stage: implementation
-- Status: IN_PROGRESS
+- Current Stage: release
+- Status: DONE
 - Owner: Frontend Builder
 - Depends on: PRJ-823
 - Priority: P1
@@ -60,14 +60,14 @@ A bounded CSS-only authenticated-shell refinement pass plus context updates.
 - focused validation passes
 
 ## Definition of Done
-- [ ] utility-bar styles are refined
-- [ ] context is synced
-- [ ] focused validation evidence is attached
+- [x] utility-bar styles are refined
+- [x] context is synced
+- [x] focused validation evidence is attached
 
 ## Stage Exit Criteria
-- [ ] The output matches the declared `Current Stage`.
-- [ ] Work from later stages was not mixed in without explicit approval.
-- [ ] Risks and assumptions for this stage are stated clearly.
+- [x] The output matches the declared `Current Stage`.
+- [x] Work from later stages was not mixed in without explicit approval.
+- [x] Risks and assumptions for this stage are stated clearly.
 
 ## Forbidden
 - new systems without approval
@@ -132,20 +132,44 @@ A bounded CSS-only authenticated-shell refinement pass plus context updates.
 - Staged rollout or feature flag: no
 
 ## Review Checklist (mandatory)
-- [ ] Current stage is declared and respected.
-- [ ] Deliverable for the current stage is complete.
-- [ ] Architecture alignment confirmed.
-- [ ] Existing systems were reused where applicable.
-- [ ] No workaround paths were introduced.
-- [ ] No logic duplication was introduced.
-- [ ] Definition of Done evidence is attached.
-- [ ] Relevant validations were run.
-- [ ] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Current stage is declared and respected.
+- [x] Deliverable for the current stage is complete.
+- [x] Architecture alignment confirmed.
+- [x] Existing systems were reused where applicable.
+- [x] No workaround paths were introduced.
+- [x] No logic duplication was introduced.
+- [x] Definition of Done evidence is attached.
+- [x] Relevant validations were run.
+- [x] Docs or context were updated if repository truth changed.
+- [x] Learning journal update was not required; no new recurring pitfall was
+  confirmed in this closure sync.
 
 ## Notes
 This slice intentionally starts the authenticated shell group and does not yet
 touch sidebar exactness or route-local dashboard/chat/personality composition.
+
+## Closure Sync - 2026-05-03
+
+- Current release status:
+  - DONE as a historical authenticated-shell utility-bar calm slice.
+- Current source truth:
+  - `web/src/App.tsx` keeps `ShellUtilityBar` mounted inside the authenticated
+    shell toolbar.
+  - `web/src/index.css` keeps the route-shared `.aion-utility-*` CSS for the
+    calmer context, search, action, and account-control posture.
+  - `docs/ux/design-memory.md` records the flagship utility bar as the shared
+    authenticated route pattern.
+- Superseding proof owners:
+  - `PRJ-868` canonical layout foundation.
+  - `PRJ-875` canonical UI final route sweep.
+  - `docs/ux/flagship-baseline-transfer.md`.
+- Browser/mockup note:
+  - the shared authenticated shell should remain premium and composed without
+    simulated browser controls, title bars, or fake window chrome.
+- Closure evidence:
+  - reviewed this task history, current authenticated shell source, design
+    memory, flagship baseline transfer, and later project/board proof.
+  - no runtime files were changed by this closure sync.
 
 ## Production-Grade Required Contract
 

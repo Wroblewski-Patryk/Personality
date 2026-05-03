@@ -2,6 +2,33 @@
 
 Last updated: 2026-05-03
 
+## Fresh PRJ-824 Authenticated Utility Bar Closure (2026-05-03)
+
+- `PRJ-824` is DONE:
+  - `.codex/tasks/PRJ-824-authenticated-shell-utility-bar-calm-pass.md`
+- result:
+  - the authenticated-shell utility bar calm pass is no longer a stale
+    `IN_PROGRESS` item
+  - historical implementation is preserved:
+    - calmer shared `ShellUtilityBar` posture
+    - reduced `.aion-utility-*` chrome weight and rhythm
+    - authenticated route canvas opening tuned around the utility band
+  - current source keeps `ShellUtilityBar` and the shared `.aion-utility-*`
+    CSS as the approved authenticated-shell pattern
+  - design memory keeps the flagship utility bar as a shared route pattern,
+    not route-local chrome
+  - later proof owners remain:
+    - `PRJ-868` canonical layout foundation
+    - `PRJ-875` canonical UI final route sweep
+    - `docs/ux/flagship-baseline-transfer.md`
+- validation:
+  - reviewed PRJ-824 task history, current authenticated shell source, design
+    memory, flagship baseline transfer, and later board/project proof
+  - `git diff --check`
+  - result: passed
+- next smallest useful task:
+  - review `PRJ-825` authenticated shell canvas opening pass for stale status
+
 ## Fresh PRJ-823 Public Home Bridge And Trust Closure (2026-05-03)
 
 - `PRJ-823` is DONE:
