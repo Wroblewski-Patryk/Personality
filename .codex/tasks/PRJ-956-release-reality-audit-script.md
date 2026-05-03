@@ -4,8 +4,8 @@
 - ID: PRJ-956
 - Title: Release Reality Audit Script
 - Task Type: feature
-- Current Stage: planning
-- Status: READY
+- Current Stage: verification
+- Status: DONE
 - Owner: Ops/Release
 - Depends on: PRJ-951
 - Priority: P0
@@ -65,10 +65,10 @@ backend revision, production web revision, `/health.release_readiness`, and
 - Docs show when to run it before release smoke or tagging.
 
 ## Definition of Done
-- [ ] `DEFINITION_OF_DONE.md` relevant checks are satisfied.
-- [ ] Script and tests are implemented.
-- [ ] Docs/context are updated.
-- [ ] Relevant validation passes.
+- [x] `DEFINITION_OF_DONE.md` relevant checks are satisfied.
+- [x] Script and tests are implemented.
+- [x] Docs/context are updated.
+- [x] Relevant validation passes.
 
 ## Stage Exit Criteria
 - [x] The output matches the declared `Current Stage`.
@@ -83,9 +83,13 @@ backend revision, production web revision, `/health.release_readiness`, and
 
 ## Validation Evidence
 - Tests:
-  - pending
+  - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py -k "release_reality_audit or backend_operator_scripts_expose_help"; Pop-Location`
+  - result: `11 passed, 44 deselected`
 - Manual checks:
-  - pending
+  - `Push-Location .\backend; ..\.venv\Scripts\python .\scripts\audit_release_reality.py --base-url "https://aviary.luckysparrow.ch"; Pop-Location`
+  - result: exited non-zero with `HOLD_REVISION_DRIFT`, selected SHA
+    `0011d5c932700531d2a617fae18aeb57c1b3695f`, production backend/web SHA
+    `c7c3db639443df7ba5c26edacaf1e5ca368dd3f5`
 - Screenshots/logs:
   - not applicable
 - High-risk checks:
@@ -114,12 +118,24 @@ backend revision, production web revision, `/health.release_readiness`, and
 - Staged rollout or feature flag: not applicable
 
 ## Result Report
-- Task summary: pending
-- Files changed: pending
-- How tested: pending
-- What is incomplete: pending
-- Next steps: pending
-- Decisions made: pending
+- Task summary:
+  - added a read-only release reality audit script that blocks release marker
+    claims when production backend/web revisions drift from the selected SHA
+- Files changed:
+  - `backend/scripts/audit_release_reality.py`
+  - `backend/scripts/audit_release_reality.ps1`
+  - `backend/tests/test_deployment_trigger_scripts.py`
+  - `docs/operations/runtime-ops-runbook.md`
+  - `docs/planning/v1-reality-audit-and-roadmap.md`
+  - context files
+- How tested:
+  - focused pytest and live production audit command
+- What is incomplete:
+  - none for script implementation
+- Next steps:
+  - `PRJ-957` revision-aware production health monitor
+- Decisions made:
+  - the audit script is read-only and returns non-zero for all `HOLD_*` states
 
 ## Autonomous Loop Evidence
 
@@ -154,27 +170,29 @@ backend revision, production web revision, `/health.release_readiness`, and
 
 ### 4. Execute Implementation
 - Implementation notes:
-  - pending
+  - added Python and PowerShell entrypoints
+  - added verdict states for revision drift, missing revision, readiness hold,
+    v1 acceptance hold, and selected-SHA GO
 
 ### 5. Verify And Test
 - Validation performed:
-  - pending
+  - focused pytest and live production audit command
 - Result:
-  - pending
+  - script works and blocks release marker on revision drift
 
 ### 6. Self-Review
 - Simpler option considered:
   - documenting manual commands only, rejected because PRJ-938 showed manual
     release checks are too easy to scatter
-- Technical debt introduced: pending
+- Technical debt introduced: no
 - Scalability assessment:
-  - pending
+  - script can later feed PRJ-970 go/no-go wrapper
 - Refinements made:
-  - pending
+  - kept it separate from release smoke so it remains a fast preflight
 
 ### 7. Update Documentation And Knowledge
 - Docs updated:
-  - pending
+  - runtime ops runbook and roadmap
 - Context updated:
-  - pending
+  - task board and project state
 - Learning journal updated: not applicable

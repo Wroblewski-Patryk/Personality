@@ -2,6 +2,31 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-956` completed the release reality audit script:
+  - task:
+    - `.codex/tasks/PRJ-956-release-reality-audit-script.md`
+  - result:
+    - added read-only release reality audit entrypoints:
+      - `backend/scripts/audit_release_reality.py`
+      - `backend/scripts/audit_release_reality.ps1`
+    - the audit compares local `HEAD`, `origin/main`, production backend
+      revision, production web revision, release readiness, and v1 gate state
+    - the script returns non-zero for `HOLD_*` verdicts and allows release
+      marker only on `GO_FOR_SELECTED_SHA`
+    - live production currently returns `HOLD_REVISION_DRIFT`
+  - validation:
+    - `Push-Location .\backend; ..\.venv\Scripts\python -m pytest -q tests/test_deployment_trigger_scripts.py -k "release_reality_audit or backend_operator_scripts_expose_help"; Pop-Location`
+    - result: `11 passed, 44 deselected`
+    - `Push-Location .\backend; ..\.venv\Scripts\python .\scripts\audit_release_reality.py --base-url "https://aviary.luckysparrow.ch" --output ..\.codex\tmp\release-reality-audit.json; Pop-Location`
+    - result: expected non-zero `HOLD_REVISION_DRIFT`
+    - selected SHA:
+      `0011d5c932700531d2a617fae18aeb57c1b3695f`
+    - production backend/web SHA:
+      `c7c3db639443df7ba5c26edacaf1e5ca368dd3f5`
+  - next execution priority:
+    - `PRJ-957` revision-aware production health monitor while deploy parity
+      remains behind current `origin/main`
+
 - 2026-05-03: `PRJ-951` completed the v1 reality audit and roadmap:
   - task:
     - `.codex/tasks/PRJ-951-v1-reality-audit-and-roadmap.md`

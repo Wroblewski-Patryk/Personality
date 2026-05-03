@@ -59,7 +59,7 @@ current blocker is release reality:
 | PRJ-953 | Rerun production release smoke for selected SHA | READY_AFTER_PRJ-952 | backend revision, web revision, release smoke, and optional fallback evidence all match selected SHA |
 | PRJ-954 | Refresh v1 acceptance bundle for current selected SHA | READY_AFTER_PRJ-953 | acceptance bundle no longer implies stale deploy parity and records exact SHA evidence |
 | PRJ-955 | Create release marker only after green production evidence | READY_AFTER_PRJ-954 | tag/marker created for selected SHA; task board/project state record evidence |
-| PRJ-956 | Add a release reality audit script | READY | local script checks git SHA, production backend SHA, web meta SHA, release readiness, and v1 gates in one command |
+| PRJ-956 | Add a release reality audit script | DONE | local script checks git SHA, production backend SHA, web meta SHA, release readiness, and v1 gates in one command |
 | PRJ-957 | Make production health monitor revision-aware | READY | monitor can alert on revision drift, not only HTTP health |
 
 ### P1: Close Hardening Evidence Gaps

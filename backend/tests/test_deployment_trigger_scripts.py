@@ -18,9 +18,11 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = ROOT / "backend"
 TRIGGER_SCRIPT_PATH = BACKEND_ROOT / "scripts" / "trigger_coolify_deploy_webhook.py"
+RELEASE_AUDIT_SCRIPT_PATH = BACKEND_ROOT / "scripts" / "audit_release_reality.py"
 RELEASE_SMOKE_PS1_PATH = BACKEND_ROOT / "scripts" / "run_release_smoke.ps1"
 PYTHON_EXE = ROOT / ".venv" / "Scripts" / "python.exe"
 BACKEND_SCRIPT_ENTRYPOINTS = [
+    "audit_release_reality.py",
     "export_incident_evidence_bundle.py",
     "run_behavior_validation.py",
     "run_communication_boundary_backfill_once.py",
@@ -43,6 +45,12 @@ assert TRIGGER_SPEC is not None and TRIGGER_SPEC.loader is not None
 TRIGGER_MODULE = importlib.util.module_from_spec(TRIGGER_SPEC)
 sys.modules[TRIGGER_SPEC.name] = TRIGGER_MODULE
 TRIGGER_SPEC.loader.exec_module(TRIGGER_MODULE)
+
+RELEASE_AUDIT_SPEC = importlib.util.spec_from_file_location("audit_release_reality_script", RELEASE_AUDIT_SCRIPT_PATH)
+assert RELEASE_AUDIT_SPEC is not None and RELEASE_AUDIT_SPEC.loader is not None
+RELEASE_AUDIT_MODULE = importlib.util.module_from_spec(RELEASE_AUDIT_SPEC)
+sys.modules[RELEASE_AUDIT_SPEC.name] = RELEASE_AUDIT_MODULE
+RELEASE_AUDIT_SPEC.loader.exec_module(RELEASE_AUDIT_MODULE)
 
 LEARNED_STATE_INSPECTION_SECTIONS = [
     "identity_state",
@@ -3126,3 +3134,44 @@ def test_release_smoke_fails_when_external_cadence_cutover_fields_are_missing(
     assert result.returncode != 0
     combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     assert "scheduler.external_owner_policy is missing cutover_proof_owner" in combined_output
+
+
+def test_release_reality_audit_reports_go_when_selected_sha_matches_stub_production(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    report = RELEASE_AUDIT_MODULE.build_report(
+        base_url=stub_aion_server.base_url,
+        selected_sha=LOCAL_REPO_HEAD_SHA,
+        timeout_seconds=5,
+    )
+
+    assert report["verdict"] == "GO_FOR_SELECTED_SHA"
+    assert report["release_marker_allowed"] is True
+    assert report["production"]["backend_runtime_build_revision"] == LOCAL_REPO_HEAD_SHA
+    assert report["production"]["web_build_revision"] == LOCAL_REPO_HEAD_SHA
+
+
+def test_release_reality_audit_reports_revision_drift_when_production_sha_is_stale(
+    stub_aion_server: _StubAionServer,
+) -> None:
+    original_deployment = dict(_StubAionHandler.health_payload["deployment"])
+    original_web_revision = _StubAionHandler.web_build_revision
+    stale_sha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    stale_deployment = dict(original_deployment)
+    stale_deployment["runtime_build_revision"] = stale_sha
+    _StubAionHandler.health_payload["deployment"] = stale_deployment
+    _StubAionHandler.web_build_revision = stale_sha
+
+    try:
+        report = RELEASE_AUDIT_MODULE.build_report(
+            base_url=stub_aion_server.base_url,
+            selected_sha=LOCAL_REPO_HEAD_SHA,
+            timeout_seconds=5,
+        )
+    finally:
+        _StubAionHandler.health_payload["deployment"] = original_deployment
+        _StubAionHandler.web_build_revision = original_web_revision
+
+    assert report["verdict"] == "HOLD_REVISION_DRIFT"
+    assert report["release_marker_allowed"] is False
+    assert report["production"]["backend_runtime_build_revision"] == stale_sha

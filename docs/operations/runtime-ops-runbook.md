@@ -875,6 +875,17 @@ Explicit fallback path (when automation is delayed or missing):
 
 Release smoke ownership:
 
+- before release smoke or tagging, run the read-only release-reality audit to
+  compare local Git, `origin/main`, production backend revision, production web
+  revision, release readiness, and v1 gate state:
+  - Windows:
+    `.\backend\scripts\audit_release_reality.ps1 -BaseUrl "https://aviary.luckysparrow.ch"`
+  - Python:
+    `Push-Location .\backend; ..\.venv\Scripts\python .\scripts\audit_release_reality.py --base-url "https://aviary.luckysparrow.ch"; Pop-Location`
+  - expected release-marker verdict:
+    - `GO_FOR_SELECTED_SHA`
+  - any `HOLD_*` verdict means do not tag and do not claim the selected SHA is
+    deployed
 - release operator (Ops/Release owner of the deploy) runs:
   - Windows: `.\backend\scripts\run_release_smoke.ps1 -BaseUrl "<deployment_url>"`
   - Debian/bash: `./backend/scripts/run_release_smoke.sh "<deployment_url>"`
