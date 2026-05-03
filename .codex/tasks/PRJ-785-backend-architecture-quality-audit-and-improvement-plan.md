@@ -4,8 +4,8 @@
 - ID: PRJ-785
 - Title: Backend Architecture Quality Audit And Improvement Plan
 - Task Type: research
-- Current Stage: planning
-- Status: READY
+- Current Stage: release
+- Status: DONE
 - Owner: Planning Agent
 - Depends on: PRJ-783
 - Priority: P1
@@ -114,7 +114,7 @@ No source-code implementation is included in this task.
 - [x] Current backend code shape was sampled for ownership and file-size risk.
 - [x] Production health posture was checked.
 - [x] Improvement lanes are ordered by risk and dependency.
-- [ ] Follow-up implementation tasks are executed and validated separately.
+- [x] Follow-up implementation tasks are executed and validated separately.
 
 ## Stage Exit Criteria
 
@@ -291,10 +291,20 @@ No source-code implementation is included in this task.
 - Tests:
   - not run for this planning-only task
   - latest recorded full backend gate after `PRJ-783`: `971 passed`
+  - 2026-05-03 closure sync: no runtime code changed; `git diff --check`
+    passed
 - Manual checks:
   - `git status --short --branch`
   - production `/health` read on 2026-04-29
   - architecture and planning source-of-truth review
+  - 2026-05-03 closure sync reviewed `.codex/context/PROJECT_STATE.md`,
+    `.codex/context/TASK_BOARD.md`, `docs/architecture/codebase-map.md`,
+    `docs/architecture/traceability-matrix.md`, `docs/api/index.md`,
+    `docs/api/openapi.json`, `docs/data/index.md`, `docs/data/columns.md`,
+    `docs/data/erd.mmd`, and `docs/analysis/documentation-drift.md`
+  - confirmed newer documentation repair work completed generated OpenAPI,
+    ERD/column reference, test ownership ledger, frontend route/component map,
+    and provider integration reference
 - Screenshots/logs:
   - not applicable
 - High-risk checks:
@@ -375,6 +385,22 @@ reflection, and proactive mechanisms influence behavior across time, then
 reduce the maintenance risk of the largest backend owners through
 behavior-neutral extraction.
 
+## 2026-05-03 Closure Sync
+
+- This planning/audit task is historical and no longer a `READY` item.
+- `.codex/context/PROJECT_STATE.md` already recorded the backend architecture
+  quality audit as complete on 2026-04-29.
+- Follow-up implementation and documentation repair lanes have moved on:
+  - PRJ-787+ backend evidence/refactor follow-ups are recorded in project
+    state as active or completed history.
+  - PRJ-937 through PRJ-950 converted the engineering documentation system
+    into a traceable map with generated OpenAPI, ERD, column reference, test
+    ownership ledger, frontend route/component map, and provider integration
+    docs.
+- The remaining backend quality work should be selected from current board
+  priorities and current documentation drift, not by reopening this audit
+  plan.
+
 ## Result Report
 
 - Task summary:
@@ -393,3 +419,28 @@ behavior-neutral extraction.
 - Decisions made:
   - no new subsystem is needed for continuity; current architecture should be
     improved through proof, observability, and ownership reduction
+
+## Closure Result Report
+
+- Goal:
+  - close stale `PRJ-785` after confirming it already served as the backend
+    audit and planning source
+- Scope:
+  - task status, task evidence, and context sync only
+- Implementation Plan:
+  - verify current project state and documentation repair trail
+  - preserve the original audit findings
+  - mark the task done and point future work to current board priorities
+- Acceptance Criteria:
+  - no stale `READY` state remains for `PRJ-785`
+  - no backend runtime behavior changes are introduced
+  - current generated API/data/test/docs artifacts remain the active
+    engineering map
+- Definition of Done:
+  - audit history preserved
+  - current follow-up ownership recorded
+  - context files updated
+  - `git diff --check` passes
+- Next:
+  - select the next active `IN_PROGRESS` item from the board after excluding
+    stale visual and audit tasks already superseded by later proof

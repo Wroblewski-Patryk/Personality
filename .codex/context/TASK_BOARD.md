@@ -2,6 +2,31 @@
 
 Last updated: 2026-05-03
 
+## Fresh PRJ-785 Backend Architecture Audit Closure (2026-05-03)
+
+- `PRJ-785` is DONE:
+  - `.codex/tasks/PRJ-785-backend-architecture-quality-audit-and-improvement-plan.md`
+- result:
+  - the backend architecture quality audit task is no longer a stale `READY`
+    item
+  - original audit findings are preserved as history
+  - later backend follow-up history and documentation repair lanes now carry
+    the active engineering map:
+    - generated OpenAPI reference
+    - ERD and column model reference
+    - test feature/pipeline ownership ledger
+    - frontend route/component map
+    - provider-specific integration docs
+    - architecture codebase map and traceability matrix
+- validation:
+  - reviewed PRJ-785 task history, project state, task board, codebase map,
+    traceability matrix, API docs, data docs, and documentation drift report
+  - `git diff --check`
+  - result: passed
+- next smallest useful task:
+  - select the next active `IN_PROGRESS` task after excluding stale visual and
+    audit tasks already superseded by later proof
+
 ## Fresh PRJ-784 Public Home First Viewport Closure (2026-05-03)
 
 - `PRJ-784` is DONE:
