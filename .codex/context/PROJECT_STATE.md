@@ -2,6 +2,31 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-784` completed public-home first-viewport closure:
+  - task:
+    - `.codex/tasks/PRJ-784-public-home-first-viewport-canonical-pass.md`
+  - result:
+    - the public-home first-viewport task is no longer a stale `IN_PROGRESS`
+      item
+    - current public landing keeps the embodied/scenic hero stage, integrated
+      motif notes, CTA path, and feature bridge on the chrome-free shell
+    - later PRJ-866, PRJ-869, and PRJ-875 work remains useful landing proof
+      history
+    - browser-window/frame wording in older landing proof notes is superseded
+      by the PRJ-782 decision resolution: browser mockups in canonical images
+      are preview context and must not be implemented as product UI
+  - validation:
+    - PRJ-784 history, current public landing source, design memory, user
+      clarification, and later board evidence were reviewed
+    - `Select-String -Path web\src\App.tsx,web\src\index.css -Pattern
+      "aion-public-browser|WindowChrome|aion-window-chrome"` returned no
+      matches
+    - `Push-Location .\web; npm run build; Pop-Location` passed
+    - `git diff --check` passed
+  - next execution priority:
+    - review `PRJ-800A` and landing follow-up drift entries for stale
+      browser-frame wording before reopening route-local visual work
+
 - 2026-05-03: `PRJ-782` completed shell-frame decision resolution:
   - task:
     - `.codex/tasks/PRJ-782-remove-window-chrome-and-audit-layout-frame-drift.md`

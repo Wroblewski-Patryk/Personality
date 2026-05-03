@@ -4,8 +4,8 @@
 - ID: PRJ-784
 - Title: Rebuild public home first viewport toward canonical landing parity
 - Task Type: design
-- Current Stage: implementation
-- Status: IN_PROGRESS
+- Current Stage: release
+- Status: DONE
 - Owner: Frontend Builder
 - Depends on: PRJ-782
 - Priority: P1
@@ -64,9 +64,9 @@ One frontend slice that:
 - build and focused diff checks pass
 
 ## Definition of Done
-- [ ] The public landing first viewport is materially closer to the canonical landing.
-- [ ] Existing auth entry behavior remains intact.
-- [ ] Focused frontend validation and screenshot evidence are attached.
+- [x] The public landing first viewport is materially closer to the canonical landing.
+- [x] Existing auth entry behavior remains intact.
+- [x] Focused frontend validation and screenshot evidence are attached.
 
 ## Stage Exit Criteria
 - [x] The output matches the declared `Current Stage`.
@@ -86,6 +86,20 @@ One frontend slice that:
   - `git diff --check -- web/src/App.tsx web/src/index.css .codex/tasks/PRJ-784-public-home-first-viewport-canonical-pass.md`
 - Manual checks:
   - compared the local first viewport against the canonical landing reference
+  - 2026-05-03 closure sync reviewed `web/src/App.tsx`,
+    `web/src/index.css`, `docs/ux/design-memory.md`,
+    `.codex/context/TASK_BOARD.md`, and later PRJ-866/PRJ-869/PRJ-875
+    evidence
+  - confirmed current public landing uses `LANDING_HERO_ART_SRC`,
+    `aion-public-hero`, `aion-public-hero-stage`, integrated motif notes, and
+    `aion-public-feature-bridge`
+  - confirmed `PRJ-782` user clarification supersedes browser-frame cues from
+    canonical images: browser mockup frames are preview context and ignored in
+    implementation
+  - `Select-String -Path web\src\App.tsx,web\src\index.css -Pattern
+    "aion-public-browser|WindowChrome|aion-window-chrome"` returned no matches
+  - `Push-Location .\web; npm run build; Pop-Location` passed
+  - `git diff --check` passed
 - Screenshots/logs:
   - `.codex/artifacts/local-public-home-hero-pass-v2-2026-04-29.png`
 - High-risk checks:
@@ -155,10 +169,26 @@ One frontend slice that:
 - [x] Definition of Done evidence is attached.
 - [x] Relevant validations were run.
 - [x] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 - This slice intentionally stops at the first viewport and its bridge band.
+- Browser-window framing in later canonical screenshots or board notes is not
+  implementation guidance. Per 2026-05-03 user clarification, browser mockup
+  chrome is presentation context and must be ignored.
+
+## 2026-05-03 Closure Sync
+
+- This is a historical public-home first-viewport implementation slice, no
+  longer an active `IN_PROGRESS` task.
+- Later `PRJ-866`, `PRJ-869`, and `PRJ-875` carry the active landing proof
+  trail, but their browser-window/frame wording is superseded by the
+  `PRJ-782` decision resolution and `docs/ux/design-memory.md`.
+- Current public landing source keeps the embodied/scenic hero stage and
+  bridge band while removing browser mockup chrome.
+- Remaining landing parity work should proceed from the chrome-free shell and
+  compare against the canonical content/composition, not the preview browser
+  container.
 
 ## Production-Grade Required Contract
 
@@ -220,3 +250,31 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
 - Decisions made:
   - the public first viewport now prefers a real embodied asset over abstract
     CSS-only placeholder geometry
+
+## Closure Result Report
+
+- Goal:
+  - close `PRJ-784` after resolving the public chrome-free landing direction
+- Scope:
+  - task status, evidence, and context sync only
+- Implementation Plan:
+  - verify current public landing source
+  - verify later landing proof owners
+  - record the PRJ-782 browser-mockup clarification as superseding old
+    browser-frame cues
+  - update project context and board state
+- Acceptance Criteria:
+  - no stale `IN_PROGRESS` state remains for `PRJ-784`
+  - public first viewport remains on the embodied/scenic landing path
+  - no browser mockup chrome is treated as canonical implementation guidance
+  - auth entry behavior remains unchanged
+- Definition of Done:
+  - original validation evidence is preserved
+  - current source review is recorded
+  - later PRJ-866/PRJ-869/PRJ-875 proof ownership is recorded
+  - context files are updated
+  - `Push-Location .\web; npm run build; Pop-Location` passes
+  - `git diff --check` passes
+- Next:
+  - review `PRJ-800A`/landing follow-up drift entries for stale browser-frame
+    wording before reopening route-local visual work
