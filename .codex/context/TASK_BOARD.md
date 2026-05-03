@@ -2,6 +2,30 @@
 
 Last updated: 2026-05-03
 
+## Fresh PRJ-779 Dashboard Structural Closure (2026-05-03)
+
+- `PRJ-779` is DONE:
+  - `.codex/tasks/PRJ-779-dashboard-structural-canonical-convergence-pass.md`
+- result:
+  - the historical dashboard structural convergence task is no longer a stale
+    `IN_PROGRESS` item
+  - later dashboard work supersedes it as active proof:
+    - `PRJ-800D` dashboard canonical convergence
+    - `PRJ-864` dashboard canonical density pass
+    - `PRJ-870` dashboard `99%` canonical evidence pass
+    - `PRJ-875` canonical UI final route sweep
+  - current dashboard truth points to:
+    - `docs/ux/dashboard-proof-matrix.md`
+    - `docs/ux/flagship-baseline-transfer.md`
+    - `docs/ux/design-memory.md`
+- validation:
+  - reviewed PRJ-779 task history, dashboard convergence loop plan, dashboard
+    proof matrix, design memory, and later board evidence
+  - `git diff --check`
+  - result: passed
+- next smallest useful task:
+  - review `PRJ-780` for canonical sidebar/shell convergence planning status
+
 ## Fresh PRJ-776 Public Home And Shell Frame Closure (2026-05-03)
 
 - `PRJ-776` is DONE:

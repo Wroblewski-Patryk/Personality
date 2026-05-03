@@ -4,8 +4,8 @@
 - ID: PRJ-779
 - Title: Dashboard structural canonical convergence pass
 - Task Type: design
-- Current Stage: implementation
-- Status: IN_PROGRESS
+- Current Stage: release
+- Status: DONE
 - Owner: Frontend Builder
 - Depends on: PRJ-776
 - Priority: P1
@@ -60,9 +60,9 @@ One frontend slice in `web/src/App.tsx` and `web/src/index.css` that:
 - closure gives more visual authority to the scenic summary than to stat blocks
 
 ## Definition of Done
-- [ ] Dashboard structure is materially closer to the canonical audit target.
-- [ ] No route contracts or data ownership rules changed.
-- [ ] Focused frontend validation evidence is attached.
+- [x] Dashboard structure is materially closer to the canonical audit target.
+- [x] No route contracts or data ownership rules changed.
+- [x] Focused frontend validation evidence is attached.
 
 ## Stage Exit Criteria
 - [x] The output matches the declared `Current Stage`.
@@ -82,6 +82,13 @@ One frontend slice in `web/src/App.tsx` and `web/src/index.css` that:
   - `git diff --check -- web/src/App.tsx web/src/index.css`
 - Manual checks:
   - structure review against the dashboard sections named in the master audit
+  - 2026-05-03 closure sync reviewed later dashboard convergence/proof owners:
+    - `docs/ux/dashboard-proof-matrix.md`
+    - `docs/ux/design-memory.md`
+    - `docs/planning/dashboard-canonical-convergence-loop-plan.md`
+    - `.codex/context/TASK_BOARD.md`
+  - confirmed later PRJ-800D, PRJ-864, PRJ-870, and PRJ-875 supersede this slice as the current dashboard proof history
+  - `git diff --check` passed
 - Screenshots/logs:
   - browser screenshot parity remains a follow-up loop
 - High-risk checks:
@@ -149,7 +156,7 @@ One frontend slice in `web/src/App.tsx` and `web/src/index.css` that:
 - [x] Definition of Done evidence is attached.
 - [x] Relevant validations were run.
 - [x] Docs or context were updated if repository truth changed.
-- [ ] Learning journal was updated if a recurring pitfall was confirmed.
+- [x] Learning journal was updated if a recurring pitfall was confirmed.
 
 ## Notes
 - This slice intentionally stops before browser screenshot parity and further
@@ -209,3 +216,42 @@ Runtime tasks must be delivered as a vertical slice: UI -> logic -> API -> DB ->
   - capture fresh deploy screenshots and compare `public home + dashboard` against canonical references
 - Decisions made:
   - keep existing data and assets; change composition and pacing only
+
+## 2026-05-03 Closure Sync
+
+- This task is closed as a historical dashboard structural convergence slice.
+- Later dashboard work supersedes this task as the active proof trail:
+  - `PRJ-800D` compressed the dashboard toward a canonical one-screen read.
+  - `PRJ-864` added focused dashboard canonical density proof.
+  - `PRJ-870` added dashboard `99%` canonical evidence and screenshot proof.
+  - `PRJ-875` added final route-sweep evidence for the canonical UI package.
+- Current dashboard proof ownership now lives in:
+  - `docs/ux/dashboard-proof-matrix.md`
+  - `docs/ux/flagship-baseline-transfer.md`
+  - `docs/ux/design-memory.md`
+- Remaining dashboard evidence gaps are not hidden in this task:
+  - dashboard-specific tablet screenshot
+  - named keyboard traversal evidence
+  - named touch-target evidence
+  - contrast and reduced-motion evidence when dashboard visuals change again
+
+## Closure Result Report
+
+- Goal:
+  - Close PRJ-779 without duplicating later dashboard canonical proof work.
+- Scope:
+  - Task status synchronization and evidence consolidation only.
+- Implementation Plan:
+  - Verify original task result and later dashboard convergence/proof owners.
+  - Mark task complete and update context truth.
+- Acceptance Criteria:
+  - PRJ-779 no longer remains a stale `IN_PROGRESS` item.
+  - Current dashboard proof points to durable proof docs and later route tasks.
+  - No dashboard UI or data ownership change is introduced.
+- Definition of Done:
+  - Satisfied by original implementation validation, later PRJ-800D/864/870/875
+    proof, dashboard proof matrix, context updates, and `git diff --check`.
+- Result:
+  - PRJ-779 is closed as a historical dashboard structural convergence slice.
+- Next:
+  - Review `PRJ-780` for canonical sidebar/shell convergence planning status.

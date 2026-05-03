@@ -2,6 +2,25 @@
 
 Last updated: 2026-05-03
 
+- 2026-05-03: `PRJ-779` completed dashboard structural closure:
+  - task:
+    - `.codex/tasks/PRJ-779-dashboard-structural-canonical-convergence-pass.md`
+  - result:
+    - the dashboard structural convergence task is no longer a stale
+      `IN_PROGRESS` item
+    - later PRJ-800D, PRJ-864, PRJ-870, and PRJ-875 dashboard proof work remains
+      the active route-proof history
+    - current dashboard proof truth points to `docs/ux/dashboard-proof-matrix.md`,
+      `docs/ux/flagship-baseline-transfer.md`, and `docs/ux/design-memory.md`
+    - no UI behavior, data ownership, route contract, backend contract, or
+      duplicate dashboard path was introduced
+  - validation:
+    - PRJ-779 history, dashboard convergence loop plan, dashboard proof matrix,
+      design memory, and later board evidence were reviewed
+    - `git diff --check` passed
+  - next execution priority:
+    - review `PRJ-780` for canonical sidebar/shell convergence planning status
+
 - 2026-05-03: `PRJ-776` completed public-home/authenticated-shell frame closure:
   - task:
     - `.codex/tasks/PRJ-776-implement-public-home-and-authenticated-shell-frame-pass.md`
